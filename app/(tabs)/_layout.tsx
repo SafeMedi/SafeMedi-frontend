@@ -3,17 +3,18 @@ import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
+import { palette } from '@/constants/design-tokens';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const scheme = colorScheme ?? 'light';
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].icon,
+        tabBarActiveTintColor: palette[scheme].tint,
+        tabBarInactiveTintColor: palette[scheme].icon,
         headerShown: false,
         tabBarButton: HapticTab,
       }}>

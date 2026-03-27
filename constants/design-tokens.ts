@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 
 /**
- * 앱 전역 색·폰트의 단일 원본. tamagui.config / constants/theme / 네비게이션이 여기서 파생됩니다.
+ * 앱 전역 색·폰트의 단일 원본. Tamagui·React Navigation·useThemeColor가 모두 여기서 파생됩니다.
  */
 export const palette = {
   light: {
@@ -20,7 +20,7 @@ export const palette = {
   },
 } as const;
 
-export const fontFamilies = Platform.select({
+export const Fonts = Platform.select({
   ios: {
     sans: 'system-ui',
     serif: 'ui-serif',
