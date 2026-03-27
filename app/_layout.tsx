@@ -1,13 +1,13 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-import { TamaguiProvider } from 'tamagui';
+import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import "react-native-reanimated";
+import { TamaguiProvider } from "tamagui";
 
-import { palette } from '@/constants/design-tokens';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { tamaguiConfig } from '../tamagui.config';
+import { palette } from "@/constants/design-tokens";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { tamaguiConfig } from "../tamagui.config";
 
 const queryClient = new QueryClient();
 
@@ -38,7 +38,7 @@ const navigationDark = {
 };
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: "(tabs)",
 };
 
 export default function RootLayout() {
@@ -46,11 +46,14 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TamaguiProvider config={tamaguiConfig} defaultTheme={(colorScheme ?? 'light') as 'light' | 'dark'}>
-        <ThemeProvider value={colorScheme === 'dark' ? navigationDark : navigationLight}>
+      <TamaguiProvider
+        config={tamaguiConfig}
+        defaultTheme={(colorScheme ?? "light") as "light" | "dark"}
+      >
+        <ThemeProvider value={colorScheme === "dark" ? navigationDark : navigationLight}>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+            <Stack.Screen name="modal" options={{ presentation: "modal", title: "Modal" }} />
           </Stack>
           <StatusBar style="auto" />
         </ThemeProvider>

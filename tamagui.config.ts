@@ -1,9 +1,9 @@
-import { defaultConfig } from '@tamagui/config/v5';
-import { createTamagui } from 'tamagui';
+import { defaultConfig } from "@tamagui/config/v5";
+import { createTamagui } from "tamagui";
 
-import { palette } from './constants/design-tokens';
+import { palette } from "./constants/design-tokens";
 
-function semanticTheme(mode: 'light' | 'dark') {
+function semanticTheme(mode: "light" | "dark") {
   const p = palette[mode];
   return {
     background: p.background,
@@ -26,11 +26,11 @@ export const tamaguiConfig = createTamagui({
     ...defaultConfig.themes,
     light: {
       ...defaultConfig.themes.light,
-      ...semanticTheme('light'),
+      ...semanticTheme("light"),
     },
     dark: {
       ...defaultConfig.themes.dark,
-      ...semanticTheme('dark'),
+      ...semanticTheme("dark"),
     },
   },
 });
@@ -39,6 +39,6 @@ export default tamaguiConfig;
 
 export type Conf = typeof tamaguiConfig;
 
-declare module 'tamagui' {
+declare module "tamagui" {
   interface TamaguiCustomConfig extends Conf {}
 }
