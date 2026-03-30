@@ -11,7 +11,7 @@ import { Fonts } from "@/constants/design-tokens";
 export default function TabTwoScreen() {
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: "#D0D0D0", dark: "#353636" }}
+      headerBackgroundColor="#D0D0D0"
       headerImage={
         <IconSymbol
           size={310}
@@ -66,15 +66,11 @@ export default function TabTwoScreen() {
           <ThemedText type="link">Learn more</ThemedText>
         </ExternalLink>
       </Collapsible>
-      <Collapsible title="Light and dark mode components">
+      <Collapsible title="Theme colors">
         <ThemedText>
-          This template has light and dark mode support. The{" "}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
+          앱 색은 <ThemedText type="defaultSemiBold">constants/design-tokens.ts</ThemedText>의{" "}
+          <ThemedText type="defaultSemiBold">palette</ThemedText>로 일원화되어 있습니다.
         </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
       </Collapsible>
       <Collapsible title="Animations">
         <ThemedText>

@@ -1,24 +1,17 @@
 import { StyleSheet, Text, type TextProps } from "react-native";
 
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { palette } from "@/constants/design-tokens";
 
 export type ThemedTextProps = TextProps & {
-  lightColor?: string;
-  darkColor?: string;
+  /** 지정 시 팔레트 대신 이 색을 씁니다. */
+  color?: string;
   type?: "default" | "title" | "defaultSemiBold" | "subtitle" | "link";
 };
 
-export function ThemedText({
-  style,
-  lightColor,
-  darkColor,
-  type = "default",
-  ...rest
-}: ThemedTextProps) {
-  const color = useThemeColor(
-    { light: lightColor, dark: darkColor },
-    type === "link" ? "link" : "text",
-  );
+export function ThemedText({ style, color: colorOverride, type = "default", ...rest }: ThemedTextProps) {
+  const color =
+    colorOverride ??
+    (type === "link" ? palette.link : palette.text);
 
   return (
     <Text
