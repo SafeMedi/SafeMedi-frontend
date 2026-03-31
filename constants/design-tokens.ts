@@ -7,8 +7,14 @@ export const palette = {
   text: "#11181C",
   background: "#ffffff",
   tint: "#0a7ea4",
-  icon: "#687076",
+  icon: "#4A5565",
   link: "#0a7ea4",
+
+  text_black: "#364153",
+
+  color_green: "#00A63E",
+
+  bg_green_line: ["#00C950", "#00BC7D", "#00BBA7"],
 } as const;
 
 type FontFaces = {
