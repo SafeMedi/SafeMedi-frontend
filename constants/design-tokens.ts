@@ -15,6 +15,7 @@ export const palette = {
   color_green: "#00A63E",
 
   bg_green_line: ["#00C950", "#00BC7D", "#00BBA7"],
+  bg_pink_line: ["#EFF6FF", "#FAF5FF", "#FDF2F8"],
 } as const;
 
 type FontFaces = {
