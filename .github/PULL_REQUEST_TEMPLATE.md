@@ -1,13 +1,3 @@
----
-name: PR 템플릿
-about: 기본 PR 템플릿
-title: "[SAF-00] feat: "
-labels: feat
-assignees: gunhee0421
-type: Feature
-
----
-
 ## 🔥 작업 개요
 
 - 어떤 작업을 했는지 요약
