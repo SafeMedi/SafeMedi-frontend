@@ -20,7 +20,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <YStack flex={1} p="$4" bg={palette.background} style={{ justifyContent: "center" }}>
+    <YStack flex={1} p="$4" bg="$background" style={{ justifyContent: "center" }}>
       <Text fontSize={24} fontWeight="700" color={palette.text} mb="$3">
         로그인
       </Text>

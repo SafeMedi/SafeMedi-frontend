@@ -7,7 +7,7 @@ export default function ProfileScreen() {
   const clearUser = useUserStore((s) => s.clearUser);
 
   return (
-    <YStack flex={1} p="$4" bg={palette.background} gap="$4">
+    <YStack flex={1} p="$4" bg="$background" gap="$4">
       <Text fontSize={20} fontWeight="700" color={palette.text}>
         프로필
       </Text>

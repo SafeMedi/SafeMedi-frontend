@@ -39,7 +39,7 @@ function AuthRedirectBoundary({ children }: { children: ReactNode }) {
     const inAuthGroup = first === "(auth)";
 
     if (!user) {
-      if (first === "(tabs)" || first === "modal") {
+      if (!first || first === "(tabs)" || first === "modal") {
         router.replace("/(auth)/login");
       }
       return;
