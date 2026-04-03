@@ -4,12 +4,19 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 
 import { HapticTab } from "@/components/haptic-tab";
 import { palette } from "@/constants/design-tokens";
+import { useUserStore } from "@/stores/userStore";
 
 export default function TabLayout() {
+  const user = useUserStore((s) => s.user);
+
+  if (!user) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
   return (
     <Tabs
       screenOptions={{
