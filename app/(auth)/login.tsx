@@ -14,11 +14,14 @@ export default function LoginScreen() {
 
   const imageSize = 280;
   const imageHalf = imageSize / 2;
-  
+
   // 화면 y 높이 중간보다 살짝 높게
   const introImageMarginTop = Math.max(16, windowHeight * 0.44 - imageHalf);
 
   if (user) {
+    if (!user.isTutorial) {
+      return <Redirect href="/(auth)/tutorial" />;
+    }
     return <Redirect href="/(tabs)/dashboard" />;
   }
 
@@ -32,6 +35,7 @@ export default function LoginScreen() {
       weight: null,
       gender: null,
       bloodType: null,
+      isTutorial: false,
     });
   };
 
@@ -48,11 +52,12 @@ export default function LoginScreen() {
               zIndex: 0,
             }}
           />
-          <Pressable onPress={handleLogin} accessibilityLabel="카카오 소셜로그인" style={{ marginTop: 20}}>
-            <Image
-              source={KakaoButtonImage}
-              style={{ width: 183, height: 45}}
-            />
+          <Pressable
+            onPress={handleLogin}
+            accessibilityLabel="카카오 소셜로그인"
+            style={{ marginTop: 20 }}
+          >
+            <Image source={KakaoButtonImage} style={{ width: 183, height: 45 }} />
           </Pressable>
         </View>
       </LinearGradient>

@@ -6,7 +6,6 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { Redirect, Tabs } from "expo-router";
 
-import { HapticTab } from "@/components/haptic-tab";
 import { palette } from "@/constants/design-tokens";
 import { useUserStore } from "@/stores/userStore";
 
@@ -23,7 +22,6 @@ export default function TabLayout() {
         tabBarActiveTintColor: palette.color_green,
         tabBarInactiveTintColor: palette.icon,
         headerShown: false,
-        tabBarButton: HapticTab,
         tabBarStyle: {
           height: 60,
           paddingTop: 6,
@@ -54,7 +52,7 @@ export default function TabLayout() {
           tabBarIconStyle: {
             marginTop: -25,
             width: 48,
-            height: 48
+            height: 48,
           },
           tabBarIcon: ({ color }) => <MaterialIcons name="camera" size={48} color={color} />,
         }}
