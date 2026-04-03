@@ -1,23 +1,21 @@
 import { Platform } from "react-native";
 
 /**
- * 앱 전역 색·폰트의 단일 원본. Tamagui·React Navigation·useThemeColor가 모두 여기서 파생됩니다.
+ * 앱 전역 색·폰트의 단일 원본. Tamagui·React Navigation·컴포넌트가 모두 여기서 파생됩니다.
  */
 export const palette = {
-  light: {
-    text: "#11181C",
-    background: "#ffffff",
-    tint: "#0a7ea4",
-    icon: "#687076",
-    link: "#0a7ea4",
-  },
-  dark: {
-    text: "#ECEDEE",
-    background: "#151718",
-    tint: "#ffffff",
-    icon: "#9BA1A6",
-    link: "#6eb6ff",
-  },
+  text: "#11181C",
+  background: "#ffffff",
+  tint: "#0a7ea4",
+  icon: "#4A5565",
+  link: "#0a7ea4",
+
+  text_black: "#364153",
+
+  color_green: "#00A63E",
+
+  bg_green_line: ["#00C950", "#00BC7D", "#00BBA7"],
+  bg_pink_line: ["#EFF6FF", "#FAF5FF", "#FDF2F8"],
 } as const;
 
 type FontFaces = {

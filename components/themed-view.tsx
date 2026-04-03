@@ -1,14 +1,14 @@
 import { View, type ViewProps } from "react-native";
 
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { palette } from "@/constants/design-tokens";
 
 export type ThemedViewProps = ViewProps & {
-  lightColor?: string;
-  darkColor?: string;
+  /** 지정 시 팔레트 배경 대신 이 색을 씁니다. */
+  backgroundColor?: string;
 };
 
-export function ThemedView({ style, lightColor, darkColor, ...otherProps }: ThemedViewProps) {
-  const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, "background");
+export function ThemedView({ style, backgroundColor: backgroundOverride, ...otherProps }: ThemedViewProps) {
+  const backgroundColor = backgroundOverride ?? palette.background;
 
   return <View style={[{ backgroundColor }, style]} {...otherProps} />;
 }

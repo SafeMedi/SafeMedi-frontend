@@ -3,8 +3,8 @@ import { createTamagui } from "tamagui";
 
 import { palette } from "./constants/design-tokens";
 
-function semanticTheme(mode: "light" | "dark") {
-  const p = palette[mode];
+function semanticTheme() {
+  const p = palette;
   return {
     background: p.background,
     backgroundHover: p.background,
@@ -26,11 +26,11 @@ export const tamaguiConfig = createTamagui({
     ...defaultConfig.themes,
     light: {
       ...defaultConfig.themes.light,
-      ...semanticTheme("light"),
+      ...semanticTheme(),
     },
     dark: {
       ...defaultConfig.themes.dark,
-      ...semanticTheme("dark"),
+      ...semanticTheme(),
     },
   },
 });
