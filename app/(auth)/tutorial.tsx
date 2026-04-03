@@ -1,14 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Redirect, Stack, useRouter } from "expo-router";
-import { useState } from "react";
+import { Redirect, useRouter } from "expo-router";
+import { useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, XStack, YStack } from "tamagui";
 import { PillButton } from "@/components/ui/pill-button";
 import { SegmentedStepProgress } from "@/components/ui/segmented-step-progress";
 import { palette } from "@/constants/design-tokens";
 import { useUserStore } from "@/stores/userStore";
-import Step1 from "./tutorial/step1";
+import Step1, { type Step1Handle } from "./tutorial/step1";
 
 const TOTAL_STEPS = 4;
 
@@ -19,6 +19,7 @@ export default function TutorialScreen() {
   const updateUser = useUserStore((s) => s.updateUser);
 
   const [step, setStep] = useState(0);
+  const step1Ref = useRef<Step1Handle>(null);
 
   if (!user) {
     return <Redirect href="/(auth)/login" />;
@@ -33,7 +34,11 @@ export default function TutorialScreen() {
     router.replace("/(tabs)/dashboard");
   };
 
-  const goNext = () => {
+  const goNext = async () => {
+    if (step === 0) {
+      const ok = await step1Ref.current?.submit();
+      if (!ok) return;
+    }
     if (step < TOTAL_STEPS - 1) {
       setStep((s) => s + 1);
     } else {
@@ -57,7 +62,7 @@ export default function TutorialScreen() {
             <SegmentedStepProgress currentIndex={step} totalSteps={TOTAL_STEPS} />
           </XStack>
 
-          <YStack flex={1}>{step === 1 && <Step1 />}</YStack>
+          <YStack flex={1}>{step === 0 && <Step1 ref={step1Ref} />}</YStack>
 
           <XStack
             bg="$background"
