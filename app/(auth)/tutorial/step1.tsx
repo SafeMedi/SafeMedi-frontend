@@ -1,17 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { forwardRef, useImperativeHandle } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Pressable, ScrollView, TextInput } from "react-native";
+import { ScrollView, TextInput } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
 import {
   type TutorialStep1FormValues,
   tutorialStep1Schema,
 } from "@/app/(auth)/tutorial/schema";
+import { SelectChip } from "@/components/ui/select-chip";
 import { palette } from "@/constants/design-tokens";
 import { bloodOptions, genderOptions } from "@/constants/health-profile-options";
 import { useUserStore } from "@/stores/userStore";
-
-const BORDER = "#E5E7EB";
 
 export type Step1Handle = {
   submit: () => Promise<boolean>;
@@ -79,7 +78,7 @@ const Step1 = forwardRef<Step1Handle>(function Step1(_props, ref) {
                   placeholderTextColor={palette.icon}
                   style={{
                     borderWidth: 1,
-                    borderColor: error ? "#DC2626" : BORDER,
+                    borderColor: error ? palette.color_red : palette.color_gray,
                     borderRadius: 12,
                     paddingHorizontal: 14,
                     paddingVertical: 12,
@@ -88,7 +87,7 @@ const Step1 = forwardRef<Step1Handle>(function Step1(_props, ref) {
                   }}
                 />
                 {error ? (
-                  <Text fontSize={12} style={{ color: "#DC2626" }}>
+                  <Text fontSize={12} style={{ color: palette.color_red }}>
                     {error.message}
                   </Text>
                 ) : null}
@@ -113,7 +112,7 @@ const Step1 = forwardRef<Step1Handle>(function Step1(_props, ref) {
                   placeholderTextColor={palette.icon}
                   style={{
                     borderWidth: 1,
-                    borderColor: error ? "#DC2626" : BORDER,
+                    borderColor: error ? palette.color_red : palette.color_gray,
                     borderRadius: 12,
                     paddingHorizontal: 14,
                     paddingVertical: 12,
@@ -122,7 +121,7 @@ const Step1 = forwardRef<Step1Handle>(function Step1(_props, ref) {
                   }}
                 />
                 {error ? (
-                  <Text fontSize={12} style={{ color: "#DC2626" }}>
+                  <Text fontSize={12} style={{ color: palette.color_red }}>
                     {error.message}
                   </Text>
                 ) : null}
@@ -142,34 +141,18 @@ const Step1 = forwardRef<Step1Handle>(function Step1(_props, ref) {
                   {bloodOptions.map((opt) => {
                     const selected = value === opt.value;
                     return (
-                      <Pressable
+                      <SelectChip
                         key={opt.value}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected }}
-                        accessibilityLabel={opt.label}
                         onPress={() => onChange(opt.value)}
-                        style={{
-                          paddingVertical: 10,
-                          paddingHorizontal: 16,
-                          borderRadius: 999,
-                          borderWidth: 1,
-                          borderColor: selected ? palette.color_green : BORDER,
-                          backgroundColor: selected ? palette.color_green : "rgba(255,255,255,0.9)",
-                        }}
-                      >
-                        <Text
-                          fontSize={14}
-                          fontWeight="600"
-                          style={{ color: selected ? "#FFFFFF" : palette.text_black }}
-                        >
-                          {opt.label}
-                        </Text>
-                      </Pressable>
+                        label={opt.label}
+                        selected={selected}
+                        accessibilityLabel={opt.label}
+                      />
                     );
                   })}
                 </XStack>
                 {error ? (
-                  <Text fontSize={12} style={{ color: "#DC2626" }}>
+                  <Text fontSize={12} style={{ color: palette.color_red }}>
                     {error.message}
                   </Text>
                 ) : null}
@@ -189,36 +172,19 @@ const Step1 = forwardRef<Step1Handle>(function Step1(_props, ref) {
                   {genderOptions.map((opt) => {
                     const selected = value === opt.value;
                     return (
-                      <Pressable
+                      <SelectChip
                         key={opt.value}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected }}
-                        accessibilityLabel={opt.label}
                         onPress={() => onChange(opt.value)}
-                        style={{
-                          flex: 1,
-                          paddingVertical: 10,
-                          paddingHorizontal: 16,
-                          borderRadius: 999,
-                          borderWidth: 1,
-                          borderColor: selected ? palette.color_green : BORDER,
-                          backgroundColor: selected ? palette.color_green : "rgba(255,255,255,0.9)",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Text
-                          fontSize={14}
-                          fontWeight="600"
-                          style={{ color: selected ? "#FFFFFF" : palette.text_black }}
-                        >
-                          {opt.label}
-                        </Text>
-                      </Pressable>
+                        label={opt.label}
+                        selected={selected}
+                        accessibilityLabel={opt.label}
+                        flex={1}
+                      />
                     );
                   })}
                 </XStack>
                 {error ? (
-                  <Text fontSize={12} style={{ color: "#DC2626" }}>
+                  <Text fontSize={12} style={{ color: palette.color_red }}>
                     {error.message}
                   </Text>
                 ) : null}

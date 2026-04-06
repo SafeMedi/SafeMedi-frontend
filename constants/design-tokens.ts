@@ -13,6 +13,9 @@ export const palette = {
   text_black: "#364153",
 
   color_green: "#00A63E",
+  color_red: "#DC2626",
+  color_gray: "#E5E7EB",
+  color_orange: "#FF4B22",
 
   bg_green_line: ["#00C950", "#00BC7D", "#00BBA7"],
   bg_pink_line: ["#EFF6FF", "#FAF5FF", "#FDF2F8"],
