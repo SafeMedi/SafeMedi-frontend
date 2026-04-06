@@ -9,6 +9,7 @@ import { SegmentedStepProgress } from "@/components/ui/segmented-step-progress";
 import { palette } from "@/constants/design-tokens";
 import { useUserStore } from "@/stores/userStore";
 import Step1, { type Step1Handle } from "./tutorial/step1";
+import Step2, { type Step2Handle } from "./tutorial/step2";
 
 const TOTAL_STEPS = 4;
 
@@ -20,6 +21,7 @@ export default function TutorialScreen() {
 
   const [step, setStep] = useState(0);
   const step1Ref = useRef<Step1Handle>(null);
+  const step2Ref = useRef<Step2Handle>(null);
 
   if (!user) {
     return <Redirect href="/(auth)/login" />;
@@ -37,6 +39,10 @@ export default function TutorialScreen() {
   const goNext = async () => {
     if (step === 0) {
       const ok = await step1Ref.current?.submit();
+      if (!ok) return;
+    }
+    if (step === 1) {
+      const ok = await step2Ref.current?.submit();
       if (!ok) return;
     }
     if (step < TOTAL_STEPS - 1) {
@@ -62,7 +68,10 @@ export default function TutorialScreen() {
             <SegmentedStepProgress currentIndex={step} totalSteps={TOTAL_STEPS} />
           </XStack>
 
-          <YStack flex={1}>{step === 0 && <Step1 ref={step1Ref} />}</YStack>
+          <YStack flex={1}>
+            {step === 0 && <Step1 ref={step1Ref} />}
+            {step === 1 && <Step2 ref={step2Ref} />}
+          </YStack>
 
           <XStack
             bg="$background"
