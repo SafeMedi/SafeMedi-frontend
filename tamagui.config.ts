@@ -10,6 +10,7 @@ function semanticTheme() {
     backgroundHover: p.background,
     backgroundPress: p.background,
     backgroundFocus: p.background,
+    backgroundGreen: p.green,
     color: p.text,
     color12: p.text,
     accentBackground: p.tint,

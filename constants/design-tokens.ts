@@ -10,10 +10,20 @@ export const palette = {
   icon: "#4A5565",
   link: "#0a7ea4",
 
-  text_black: "#364153",
+  // color 설정
+  white: "#ffffff",
+  black: "#364153",
+  green: "#00C950",
+  light_green: "#B9F8CF",
+  blue: "#2B7FFF",
+  red: "#DC2626",
+  gray: "#F8FAFC",
+  dark_gray: "#E5E7EB",
+  orange: "#FF4B22",
+  purple: "#AD46FF",
+  opal: "#00BBA7",
 
-  color_green: "#00A63E",
-
+  // linearGradient 3중첩 설정
   bg_green_line: ["#00C950", "#00BC7D", "#00BBA7"],
   bg_pink_line: ["#EFF6FF", "#FAF5FF", "#FDF2F8"],
 } as const;
