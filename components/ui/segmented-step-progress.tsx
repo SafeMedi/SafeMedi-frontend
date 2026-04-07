@@ -21,7 +21,7 @@ export type SegmentedStepProgressProps = {
 export function SegmentedStepProgress({
   currentIndex,
   totalSteps,
-  activeColor = palette.color_green,
+  activeColor = palette.green,
   inactiveColor = DEFAULT_INACTIVE,
   labelColor = DEFAULT_LABEL,
   segmentHeight = 5,

@@ -4,6 +4,7 @@ import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 
 import { Pressable, ScrollView } from "react-native";
 import { Input, Text, XStack, YStack } from "tamagui";
 import type { StepHandle } from "@/app/(auth)/tutorial";
+import { Button } from "@/components/ui/Button";
 import { SelectChip } from "@/components/ui/select-chip";
 import { palette } from "@/constants/design-tokens";
 import { useUserStore } from "@/stores/userStore";
@@ -85,7 +86,7 @@ const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
       <YStack gap={20} pt={8} pb={16}>
         <YStack items="center" gap={10} mt={8}>
           <LinearGradient
-            colors={[palette.color_red, palette.color_orange]}
+            colors={[palette.red, palette.orange]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
@@ -98,7 +99,7 @@ const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
           >
             <Ionicons name="warning-outline" size={42} color="#FFFFFF" />
           </LinearGradient>
-          <Text fontSize={18} fontWeight="700" color={palette.text_black}>
+          <Text fontSize={18} fontWeight="700" color={palette.black}>
             알러지 정보
           </Text>
           <Text fontSize={16} color={palette.icon}>
@@ -121,7 +122,7 @@ const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
         />
 
         <YStack gap={10}>
-          <Text fontSize={14} fontWeight="600" color={palette.text_black}>
+          <Text fontSize={14} fontWeight="600" color={palette.black}>
             ✏️ 직접 입력
           </Text>
 
@@ -131,38 +132,32 @@ const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
               onChangeText={setCustomInput}
               onSubmitEditing={handleAddCustomAllergy}
               placeholder="선택지에 없는 알러지 입력"
-              bg={palette.bg_gray}
+              bg={palette.gray}
               fontSize={15}
               flex={1}
               style={{
-                color: palette.text_black,
+                color: palette.black,
                 borderRadius: 12,
                 borderWidth: 1,
-                borderColor: palette.color_gray,
+                borderColor: palette.dark_gray,
               }}
             />
 
             <LinearGradient
-              colors={[palette.color_red, palette.color_orange]}
+              colors={[palette.red, palette.orange]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{ borderRadius: 99 }}>
-              <Pressable
+              <Button
                 onPress={handleAddCustomAllergy}
-                android_ripple={{ color: "transparent", borderless: true }}
-                style={({ pressed }) => ({
-                  width: 44,
-                  height: 44,
-                  borderRadius: 999,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  opacity: pressed ? 0.85 : 1,
-                })}
+                width={44}
+                height={44}
+                borderRadius={99}
                 accessibilityRole="button"
                 accessibilityLabel="알러지 직접 입력 추가"
               >
                 <Ionicons name="add" size={18} color={palette.background} />
-              </Pressable>
+              </Button>
             </LinearGradient>
           </XStack>
 
@@ -174,8 +169,8 @@ const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
                   label={item}
                   selected
                   borderWidth={0}
-                  unselectedBackground={palette.color_gray}
-                  selectedBackground={palette.color_orange}
+                  unselectedBackground={palette.dark_gray}
+                  selectedBackground={palette.orange}
                   onPress={() =>
                     setCustomAllergies((prev) => prev.filter((value) => value !== item))
                   }
@@ -203,7 +198,7 @@ type AllergySectionProps = {
 function AllergySection({ title, options, selectedItems, onToggle }: AllergySectionProps) {
   return (
     <YStack gap={10}>
-      <Text fontSize={14} fontWeight="600" color={palette.text_black}>
+      <Text fontSize={14} fontWeight="600" color={palette.black}>
         {title}
       </Text>
       <XStack gap={8} flexWrap="wrap">
@@ -213,8 +208,8 @@ function AllergySection({ title, options, selectedItems, onToggle }: AllergySect
             label={item}
             selected={selectedItems.includes(item)}
             borderWidth={0}
-            unselectedBackground={palette.color_gray}
-            selectedBackground={palette.color_orange}
+            unselectedBackground={palette.dark_gray}
+            selectedBackground={palette.orange}
             onPress={() => onToggle(item)}
           />
         ))}

@@ -51,7 +51,7 @@ export function PillButton({
                 backgroundColor: "rgba(255, 255, 255, 0.85)",
               }
             : {
-                backgroundColor: palette.color_green,
+                backgroundColor: palette.green,
               }),
           alignItems: "center",
           justifyContent: "center",

@@ -7,6 +7,7 @@ import { Text, XStack, YStack } from "tamagui";
 import Step1 from "@/components/domains/tutorial/step1";
 import Step2 from "@/components/domains/tutorial/step2";
 import Step3 from "@/components/domains/tutorial/step3";
+import Step4 from "@/components/domains/tutorial/step4";
 import { PillButton } from "@/components/ui/pill-button";
 import { SegmentedStepProgress } from "@/components/ui/segmented-step-progress";
 import { palette } from "@/constants/design-tokens";
@@ -16,7 +17,7 @@ export type StepHandle = {
   submit: () => Promise<boolean>;
 };
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 4;
 
 export default function TutorialScreen() {
   const router = useRouter();
@@ -28,6 +29,7 @@ export default function TutorialScreen() {
   const step1Ref = useRef<StepHandle>(null);
   const step2Ref = useRef<StepHandle>(null);
   const step3Ref = useRef<StepHandle>(null);
+  const step4Ref = useRef<StepHandle>(null);
 
   if (!user) {
     return <Redirect href="/(auth)/login" />;
@@ -53,6 +55,10 @@ export default function TutorialScreen() {
     }
     if (step === 2) {
       const ok = await step3Ref.current?.submit();
+      if (!ok) return;
+    }
+    if (step === 3) {
+      const ok = await step4Ref.current?.submit();
       if (!ok) return;
     }
     if (step < TOTAL_STEPS - 1) {
@@ -82,6 +88,7 @@ export default function TutorialScreen() {
             {step === 0 && <Step1 ref={step1Ref} />}
             {step === 1 && <Step2 ref={step2Ref} />}
             {step === 2 && <Step3 ref={step3Ref} />}
+            {step === 3 && <Step4 ref={step4Ref} />}
           </YStack>
 
           <XStack
@@ -99,7 +106,7 @@ export default function TutorialScreen() {
               disabled={isFirstStep}
               onPress={goPrev}
             >
-              <Text fontSize={14} fontWeight="600" color={palette.text_black}>
+              <Text fontSize={14} fontWeight="600" color={palette.black}>
                 이전
               </Text>
             </PillButton>
@@ -110,7 +117,7 @@ export default function TutorialScreen() {
               rightElement={<Ionicons name="chevron-forward" size={16} color="#FFFFFF" />}
             >
               <Text fontSize={14} fontWeight="600" color="#FFFFFF">
-                다음
+                {step === TOTAL_STEPS - 1 ? "시작하기" : "다음"}
               </Text>
             </PillButton>
           </XStack>

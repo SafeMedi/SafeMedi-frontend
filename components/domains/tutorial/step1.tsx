@@ -53,7 +53,7 @@ const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
       contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
     >
       <YStack gap={22} pt={8}>
-        <Text fontSize={18} fontWeight="700" color={palette.text_black}>
+        <Text fontSize={18} fontWeight="700" color={palette.black}>
           기본 건강 정보
         </Text>
         <Text fontSize={14} color={palette.icon} lineHeight={20}>
@@ -76,16 +76,17 @@ const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
                   placeholderTextColor={palette.icon}
                   style={{
                     borderWidth: 1,
-                    borderColor: error ? palette.color_red : palette.color_gray,
+                    borderColor: error ? palette.red : palette.dark_gray,
                     borderRadius: 12,
                     paddingHorizontal: 14,
                     paddingVertical: 12,
                     fontSize: 16,
-                    color: palette.text_black,
+                    color: palette.black,
+                    backgroundColor: palette.gray,
                   }}
                 />
                 {error ? (
-                  <Text fontSize={12} style={{ color: palette.color_red }}>
+                  <Text fontSize={12} style={{ color: palette.red }}>
                     {error.message}
                   </Text>
                 ) : null}
@@ -110,16 +111,17 @@ const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
                   placeholderTextColor={palette.icon}
                   style={{
                     borderWidth: 1,
-                    borderColor: error ? palette.color_red : palette.color_gray,
+                    borderColor: error ? palette.red : palette.dark_gray,
                     borderRadius: 12,
                     paddingHorizontal: 14,
                     paddingVertical: 12,
                     fontSize: 16,
-                    color: palette.text_black,
+                    color: palette.black,
+                    backgroundColor: palette.gray,
                   }}
                 />
                 {error ? (
-                  <Text fontSize={12} style={{ color: palette.color_red }}>
+                  <Text fontSize={12} style={{ color: palette.red }}>
                     {error.message}
                   </Text>
                 ) : null}
@@ -150,7 +152,7 @@ const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
                   })}
                 </XStack>
                 {error ? (
-                  <Text fontSize={12} style={{ color: palette.color_red }}>
+                  <Text fontSize={12} style={{ color: palette.red }}>
                     {error.message}
                   </Text>
                 ) : null}
@@ -182,7 +184,7 @@ const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
                   })}
                 </XStack>
                 {error ? (
-                  <Text fontSize={12} style={{ color: palette.color_red }}>
+                  <Text fontSize={12} style={{ color: palette.red }}>
                     {error.message}
                   </Text>
                 ) : null}
@@ -197,7 +199,7 @@ const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
 
 function FieldLabel({ children }: { children: string }) {
   return (
-    <Text fontSize={14} fontWeight="600" color={palette.text_black}>
+    <Text fontSize={14} fontWeight="600" color={palette.black}>
       {children}
     </Text>
   );

@@ -24,10 +24,10 @@ export function SelectChip({
   flex,
   height = 38,
   px = 16,
-  selectedBackground = palette.color_green,
+  selectedBackground = palette.green,
   unselectedBackground = "rgba(255,255,255,0.9)",
-  selectedBorderColor = palette.color_green,
-  unselectedBorderColor = palette.color_gray,
+  selectedBorderColor = palette.green,
+  unselectedBorderColor = palette.dark_gray,
   borderWidth = 1,
 }: SelectChipProps) {
   return (
@@ -52,7 +52,7 @@ export function SelectChip({
         overflow: "hidden",
       }}
     >
-      <Text fontSize={14} fontWeight="600" style={{ color: selected ? "#FFFFFF" : palette.text_black }}>
+      <Text fontSize={14} fontWeight="600" style={{ color: selected ? "#FFFFFF" : palette.black }}>
         {label}
       </Text>
     </Button>

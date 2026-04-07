@@ -4,6 +4,7 @@ import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 
 import { Pressable, ScrollView } from "react-native";
 import { Input, Text, XStack, YStack } from "tamagui";
 import type { StepHandle } from "@/app/(auth)/tutorial";
+import { Button } from "@/components/ui/Button";
 import EmojiCard from "@/components/ui/EmojiCard";
 import { SelectChip } from "@/components/ui/select-chip";
 import { palette } from "@/constants/design-tokens";
@@ -80,7 +81,7 @@ const Step3 = forwardRef<StepHandle>(function Step3(_props, ref) {
       <YStack gap={20} pt={8} pb={16}>
         <YStack items="center" gap={10} mt={8}>
           <LinearGradient
-            colors={[palette.color_blue, palette.color_purple]}
+            colors={[palette.blue, palette.purple]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
@@ -93,7 +94,7 @@ const Step3 = forwardRef<StepHandle>(function Step3(_props, ref) {
           >
             <Ionicons name="shield-outline" size={42} color={palette.background} />
           </LinearGradient>
-          <Text fontSize={18} fontWeight="700" color={palette.text_black}>
+          <Text fontSize={18} fontWeight="700" color={palette.black}>
             기저질환
           </Text>
           <Text fontSize={16} color={palette.icon}>
@@ -121,7 +122,7 @@ const Step3 = forwardRef<StepHandle>(function Step3(_props, ref) {
         </YStack>
 
         <YStack gap={10}>
-          <Text fontSize={14} fontWeight="600" color={palette.text_black}>
+          <Text fontSize={14} fontWeight="600" color={palette.black}>
             ✏️ 직접 입력
           </Text>
 
@@ -131,39 +132,33 @@ const Step3 = forwardRef<StepHandle>(function Step3(_props, ref) {
               onChangeText={setCustomInput}
               onSubmitEditing={handleAddCustom}
               placeholder="선택지에 없는 기저질환 입력"
-              bg={palette.bg_gray}
+              bg={palette.gray}
               fontSize={15}
               flex={1}
               style={{
-                color: palette.text_black,
+                color: palette.black,
                 borderRadius: 12,
                 borderWidth: 1,
-                borderColor: palette.color_gray,
+                borderColor: palette.dark_gray,
               }}
             />
 
             <LinearGradient
-              colors={[palette.color_blue, palette.color_purple]}
+              colors={[palette.blue, palette.purple]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={{ borderRadius: 12 }}
             >
-              <Pressable
+              <Button
                 onPress={handleAddCustom}
-                android_ripple={{ color: "transparent", borderless: true }}
-                style={({ pressed }) => ({
-                  width: 44,
-                  height: 44,
-                  borderRadius: 999,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  opacity: pressed ? 0.85 : 1,
-                })}
+                width={44}
+                height={44}
+                borderRadius={12}
                 accessibilityRole="button"
                 accessibilityLabel="기저질환 직접 입력 추가"
               >
                 <Ionicons name="add" size={18} color={palette.background} />
-              </Pressable>
+              </Button>
             </LinearGradient>
           </XStack>
 
@@ -175,8 +170,8 @@ const Step3 = forwardRef<StepHandle>(function Step3(_props, ref) {
                   label={item}
                   selected
                   borderWidth={0}
-                  unselectedBackground={palette.color_gray}
-                  selectedBackground={palette.color_blue}
+                  unselectedBackground={palette.dark_gray}
+                  selectedBackground={palette.blue}
                   onPress={() =>
                     setCustomConditions((prev) => prev.filter((value) => value !== item))
                   }

@@ -21,7 +21,7 @@ function EmojiCard({ emoji, label, selected, onPress }: EmojiCardProps) {
       <YStack
         p={15}
         borderWidth={1.5}
-        borderColor={selected ? palette.color_blue : "rgba(255,255,255,0.3)"}
+        borderColor={selected ? palette.blue : "rgba(255,255,255,0.3)"}
         bg={palette.background}
         style={{
           minHeight: 107,
@@ -35,7 +35,7 @@ function EmojiCard({ emoji, label, selected, onPress }: EmojiCardProps) {
         gap={10}
       >
         <Text fontSize={26}>{emoji}</Text>
-        <Text fontSize={12} fontWeight="500" color={palette.text_black}>
+        <Text fontSize={12} fontWeight="500" color={palette.black}>
           {label}
         </Text>
       </YStack>
