@@ -1,8 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { forwardRef, useImperativeHandle } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ScrollView, TextInput } from "react-native";
-import { Text, XStack, YStack } from "tamagui";
+import { ScrollView } from "react-native";
+import { Input, Text, XStack, YStack } from "tamagui";
 import type { StepHandle } from "@/app/(auth)/tutorial";
 import {
   type TutorialStep1FormValues,
@@ -27,23 +27,27 @@ const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
     },
   });
 
-  useImperativeHandle(ref, () => ({
-    submit: () =>
-      new Promise<boolean>((resolve) => {
-        void handleSubmit(
-          (data) => {
-            updateUser({
-              height: Math.round(Number(data.height.replace(",", "."))),
-              weight: Math.round(Number(data.weight.replace(",", "."))),
-              bloodType: data.bloodType,
-              gender: data.gender,
-            });
-            resolve(true);
-          },
-          () => resolve(false),
-        )();
-      }),
-  }));
+  useImperativeHandle(
+    ref,
+    () => ({
+      submit: () =>
+        new Promise<boolean>((resolve) => {
+          void handleSubmit(
+            (data) => {
+              updateUser({
+                height: Math.round(Number(data.height.replace(",", "."))),
+                weight: Math.round(Number(data.weight.replace(",", "."))),
+                bloodType: data.bloodType,
+                gender: data.gender,
+              });
+              resolve(true);
+            },
+            () => resolve(false),
+          )();
+        }),
+    }),
+    [handleSubmit, updateUser],
+  );
 
   return (
     <ScrollView
@@ -66,23 +70,18 @@ const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
             name="height"
             render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
               <>
-                <TextInput
+                <Input
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   keyboardType="decimal-pad"
                   placeholder="예: 170"
-                  placeholderTextColor={palette.icon}
-                  style={{
-                    borderWidth: 1,
-                    borderColor: error ? palette.red : palette.dark_gray,
-                    borderRadius: 12,
-                    paddingHorizontal: 14,
-                    paddingVertical: 12,
-                    fontSize: 16,
-                    color: palette.black,
-                    backgroundColor: palette.gray,
-                  }}
+                  bg={palette.gray}
+                  borderWidth={1}
+                  borderColor={error ? palette.red : palette.dark_gray}
+                  color={palette.black}
+                  px={14}
+                  height={45}
                 />
                 {error ? (
                   <Text fontSize={12} style={{ color: palette.red }}>
@@ -101,23 +100,18 @@ const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
             name="weight"
             render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
               <>
-                <TextInput
+                <Input
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   keyboardType="decimal-pad"
                   placeholder="예: 65"
-                  placeholderTextColor={palette.icon}
-                  style={{
-                    borderWidth: 1,
-                    borderColor: error ? palette.red : palette.dark_gray,
-                    borderRadius: 12,
-                    paddingHorizontal: 14,
-                    paddingVertical: 12,
-                    fontSize: 16,
-                    color: palette.black,
-                    backgroundColor: palette.gray,
-                  }}
+                  bg={palette.gray}
+                  borderWidth={1}
+                  borderColor={error ? palette.red : palette.dark_gray}
+                  color={palette.black}
+                  px={14}
+                  height={45}
                 />
                 {error ? (
                   <Text fontSize={12} style={{ color: palette.red }}>

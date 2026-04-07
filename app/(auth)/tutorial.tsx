@@ -45,22 +45,11 @@ export default function TutorialScreen() {
   };
 
   const goNext = async () => {
-    if (step === 0) {
-      const ok = await step1Ref.current?.submit();
-      if (!ok) return;
-    }
-    if (step === 1) {
-      const ok = await step2Ref.current?.submit();
-      if (!ok) return;
-    }
-    if (step === 2) {
-      const ok = await step3Ref.current?.submit();
-      if (!ok) return;
-    }
-    if (step === 3) {
-      const ok = await step4Ref.current?.submit();
-      if (!ok) return;
-    }
+    const stepRefs = [step1Ref, step2Ref, step3Ref, step4Ref];
+    const ok = await stepRefs[step]?.current?.submit;
+
+    if (!ok) return;
+
     if (step < TOTAL_STEPS - 1) {
       setStep((s) => s + 1);
     } else {

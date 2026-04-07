@@ -9,6 +9,7 @@ import EmojiCard from "@/components/ui/EmojiCard";
 import { SelectChip } from "@/components/ui/select-chip";
 import { palette } from "@/constants/design-tokens";
 import { useUserStore } from "@/stores/userStore";
+import { toggleSelection } from "@/utils/array";
 
 const chronicConditionOptions = [
   { emoji: "❤️", label: "고혈압" },
@@ -18,10 +19,6 @@ const chronicConditionOptions = [
   { emoji: "🫀", label: "간질환" },
   { emoji: "💓", label: "심장질환" },
 ] as const;
-
-function toggleSelection(list: string[], item: string) {
-  return list.includes(item) ? list.filter((value) => value !== item) : [...list, item];
-}
 
 const Step3 = forwardRef<StepHandle>(function Step3(_props, ref) {
   const user = useUserStore((s) => s.user);

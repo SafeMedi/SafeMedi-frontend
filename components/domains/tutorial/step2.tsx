@@ -8,13 +8,10 @@ import { Button } from "@/components/ui/Button";
 import { SelectChip } from "@/components/ui/select-chip";
 import { palette } from "@/constants/design-tokens";
 import { useUserStore } from "@/stores/userStore";
+import { toggleSelection } from "@/utils/array";
 
 const medicineAllergyOptions = ["페니실린", "아스피린", "소염진통제", "설파제"] as const;
 const foodAllergyOptions = ["땅콩", "해산물", "유제품", "계란"] as const;
-
-function toggleSelection(list: string[], item: string) {
-  return list.includes(item) ? list.filter((value) => value !== item) : [...list, item];
-}
 
 const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
   const user = useUserStore((s) => s.user);

@@ -34,7 +34,7 @@ export function Button({
   borderRadius = 12,
   backgroundColor = "transparent",
   pressedOpacity = 0.85,
-  androidRipple = { color: "transparent", borderless: true },
+  androidRipple = { color: "rgba(0, 0, 0, 0.1)", borderless: false },
 }: ButtonProps) {
   return (
     <Pressable
