@@ -27,7 +27,7 @@ export function SelectChip({
   selectedBackground = palette.color_green,
   unselectedBackground = "rgba(255,255,255,0.9)",
   selectedBorderColor = palette.color_green,
-  unselectedBorderColor = "#E5E7EB",
+  unselectedBorderColor = palette.color_gray,
   borderWidth = 1,
 }: SelectChipProps) {
   return (

@@ -35,6 +35,8 @@ export default function LoginScreen() {
       weight: null,
       gender: null,
       bloodType: null,
+      allergies: [],
+      chronicConditions: [],
       isTutorial: false,
     });
   };

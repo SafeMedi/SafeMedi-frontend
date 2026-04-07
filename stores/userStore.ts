@@ -9,6 +9,8 @@ export type User = {
   weight: number | null;
   gender: "male" | "female" | null;
   bloodType: "A" | "B" | "O" | "AB" | null;
+  allergies: string[];
+  chronicConditions: string[];
   isTutorial: boolean;
 };
 

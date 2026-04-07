@@ -4,14 +4,19 @@ import { Redirect, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, XStack, YStack } from "tamagui";
+import Step1 from "@/app/(auth)/tutorial/step1";
+import Step2 from "@/app/(auth)/tutorial/step2";
+import Step3 from "@/app/(auth)/tutorial/step3";
 import { PillButton } from "@/components/ui/pill-button";
 import { SegmentedStepProgress } from "@/components/ui/segmented-step-progress";
 import { palette } from "@/constants/design-tokens";
 import { useUserStore } from "@/stores/userStore";
-import Step1, { type Step1Handle } from "./tutorial/step1";
-import Step2, { type Step2Handle } from "./tutorial/step2";
 
-const TOTAL_STEPS = 4;
+export type StepHandle = {
+  submit: () => Promise<boolean>;
+};
+
+const TOTAL_STEPS = 3;
 
 export default function TutorialScreen() {
   const router = useRouter();
@@ -20,8 +25,9 @@ export default function TutorialScreen() {
   const updateUser = useUserStore((s) => s.updateUser);
 
   const [step, setStep] = useState(0);
-  const step1Ref = useRef<Step1Handle>(null);
-  const step2Ref = useRef<Step2Handle>(null);
+  const step1Ref = useRef<StepHandle>(null);
+  const step2Ref = useRef<StepHandle>(null);
+  const step3Ref = useRef<StepHandle>(null);
 
   if (!user) {
     return <Redirect href="/(auth)/login" />;
@@ -43,6 +49,10 @@ export default function TutorialScreen() {
     }
     if (step === 1) {
       const ok = await step2Ref.current?.submit();
+      if (!ok) return;
+    }
+    if (step === 2) {
+      const ok = await step3Ref.current?.submit();
       if (!ok) return;
     }
     if (step < TOTAL_STEPS - 1) {
@@ -71,6 +81,7 @@ export default function TutorialScreen() {
           <YStack flex={1}>
             {step === 0 && <Step1 ref={step1Ref} />}
             {step === 1 && <Step2 ref={step2Ref} />}
+            {step === 2 && <Step3 ref={step3Ref} />}
           </YStack>
 
           <XStack

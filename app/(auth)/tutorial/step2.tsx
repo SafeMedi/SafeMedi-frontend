@@ -2,25 +2,36 @@ import { Ionicons } from "@expo/vector-icons";
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from "react";
 import { ScrollView } from "react-native";
 import { Button, Input, Text, XStack, YStack } from "tamagui";
+import type { StepHandle } from "@/app/(auth)/tutorial";
 import { SelectChip } from "@/components/ui/select-chip";
 import { palette } from "@/constants/design-tokens";
+import { useUserStore } from "@/stores/userStore";
 
 const medicineAllergyOptions = ["페니실린", "아스피린", "소염진통제", "설파제"] as const;
 const foodAllergyOptions = ["땅콩", "해산물", "유제품", "계란"] as const;
-
-export type Step2Handle = {
-  submit: () => Promise<boolean>;
-};
 
 function toggleSelection(list: string[], item: string) {
   return list.includes(item) ? list.filter((value) => value !== item) : [...list, item];
 }
 
-const Step2 = forwardRef<Step2Handle>(function Step2(_props, ref) {
-  const [selectedMedicine, setSelectedMedicine] = useState<string[]>([]);
-  const [selectedFood, setSelectedFood] = useState<string[]>([]);
+const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
+  const user = useUserStore((s) => s.user);
+  const updateUser = useUserStore((s) => s.updateUser);
+
+  const [selectedMedicine, setSelectedMedicine] = useState<string[]>(() =>
+    (user?.allergies ?? []).filter((item) => medicineAllergyOptions.includes(item as (typeof medicineAllergyOptions)[number])),
+  );
+  const [selectedFood, setSelectedFood] = useState<string[]>(() =>
+    (user?.allergies ?? []).filter((item) => foodAllergyOptions.includes(item as (typeof foodAllergyOptions)[number])),
+  );
   const [customInput, setCustomInput] = useState("");
-  const [customAllergies, setCustomAllergies] = useState<string[]>([]);
+  const [customAllergies, setCustomAllergies] = useState<string[]>(() =>
+    (user?.allergies ?? []).filter(
+      (item) =>
+        !medicineAllergyOptions.includes(item as (typeof medicineAllergyOptions)[number]) &&
+        !foodAllergyOptions.includes(item as (typeof foodAllergyOptions)[number]),
+    ),
+  );
 
   const allSelectedAllergies = useMemo(
     () => [...selectedMedicine, ...selectedFood, ...customAllergies],
@@ -43,13 +54,25 @@ const Step2 = forwardRef<Step2Handle>(function Step2(_props, ref) {
     () => ({
       submit: () =>
         new Promise<boolean>((resolve) => {
-          if (customInput.trim()) {
-            handleAddCustomAllergy();
-          }
+          const trimmed = customInput.trim();
+          const mergedCustom =
+            trimmed && !allSelectedAllergies.includes(trimmed)
+              ? [...customAllergies, trimmed]
+              : customAllergies;
+          updateUser({
+            allergies: [...selectedMedicine, ...selectedFood, ...mergedCustom],
+          });
           resolve(true);
         }),
     }),
-    [customInput, handleAddCustomAllergy],
+    [
+      allSelectedAllergies,
+      customAllergies,
+      customInput,
+      selectedFood,
+      selectedMedicine,
+      updateUser,
+    ],
   );
 
   return (
@@ -103,7 +126,7 @@ const Step2 = forwardRef<Step2Handle>(function Step2(_props, ref) {
               onChangeText={setCustomInput}
               onSubmitEditing={handleAddCustomAllergy}
               placeholder="선택지에 없는 알러지 입력"
-              bg="#F4F5F7"
+              bg={palette.bg_gray}
               fontSize={15}
               flex={1}
               style={{
@@ -118,9 +141,9 @@ const Step2 = forwardRef<Step2Handle>(function Step2(_props, ref) {
               size="$4"
               circular
               onPress={handleAddCustomAllergy}
-              bg="#FF2D7A"
+              bg={palette.color_red}
               pressStyle={{ opacity: 0.85 }}
-              icon={<Ionicons name="add" size={18} color="#FFFFFF" />}
+              icon={<Ionicons name="add" size={18} color={palette.background} />}
               accessibilityLabel="알러지 직접 입력 추가"
             />
           </XStack>
@@ -133,7 +156,8 @@ const Step2 = forwardRef<Step2Handle>(function Step2(_props, ref) {
                   label={item}
                   selected
                   borderWidth={0}
-                  unselectedBackground="#EDEFF2"
+                  unselectedBackground={palette.color_gray}
+                  selectedBackground={palette.color_orange}
                   onPress={() => setCustomAllergies((prev) => prev.filter((value) => value !== item))}
                 />
               ))}
@@ -169,7 +193,8 @@ function AllergySection({ title, options, selectedItems, onToggle }: AllergySect
             label={item}
             selected={selectedItems.includes(item)}
             borderWidth={0}
-            unselectedBackground="#EDEFF2"
+            unselectedBackground={palette.color_gray}
+            selectedBackground={palette.color_orange}
             onPress={() => onToggle(item)}
           />
         ))}

@@ -3,6 +3,7 @@ import { forwardRef, useImperativeHandle } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ScrollView, TextInput } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
+import type { StepHandle } from "@/app/(auth)/tutorial";
 import {
   type TutorialStep1FormValues,
   tutorialStep1Schema,
@@ -12,11 +13,8 @@ import { palette } from "@/constants/design-tokens";
 import { bloodOptions, genderOptions } from "@/constants/health-profile-options";
 import { useUserStore } from "@/stores/userStore";
 
-export type Step1Handle = {
-  submit: () => Promise<boolean>;
-};
 
-const Step1 = forwardRef<Step1Handle>(function Step1(_props, ref) {
+const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
   const user = useUserStore((s) => s.user);
   const updateUser = useUserStore((s) => s.updateUser);
 
