@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from "react";
-import { Pressable, ScrollView } from "react-native";
+import { ScrollView } from "react-native";
 import { Input, Text, XStack, YStack } from "tamagui";
 import type { StepHandle } from "@/app/(auth)/tutorial";
 import { Button } from "@/components/ui/Button";
@@ -21,10 +21,14 @@ const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
   const updateUser = useUserStore((s) => s.updateUser);
 
   const [selectedMedicine, setSelectedMedicine] = useState<string[]>(() =>
-    (user?.allergies ?? []).filter((item) => medicineAllergyOptions.includes(item as (typeof medicineAllergyOptions)[number])),
+    (user?.allergies ?? []).filter((item) =>
+      medicineAllergyOptions.includes(item as (typeof medicineAllergyOptions)[number]),
+    ),
   );
   const [selectedFood, setSelectedFood] = useState<string[]>(() =>
-    (user?.allergies ?? []).filter((item) => foodAllergyOptions.includes(item as (typeof foodAllergyOptions)[number])),
+    (user?.allergies ?? []).filter((item) =>
+      foodAllergyOptions.includes(item as (typeof foodAllergyOptions)[number]),
+    ),
   );
   const [customInput, setCustomInput] = useState("");
   const [customAllergies, setCustomAllergies] = useState<string[]>(() =>
@@ -147,7 +151,8 @@ const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
               colors={[palette.red, palette.orange]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={{ borderRadius: 99 }}>
+              style={{ borderRadius: 99 }}
+            >
               <Button
                 onPress={handleAddCustomAllergy}
                 width={44}

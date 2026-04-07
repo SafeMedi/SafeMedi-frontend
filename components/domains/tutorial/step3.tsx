@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from "react";
-import { Pressable, ScrollView } from "react-native";
+import { ScrollView } from "react-native";
 import { Input, Text, XStack, YStack } from "tamagui";
 import type { StepHandle } from "@/app/(auth)/tutorial";
 import { Button } from "@/components/ui/Button";

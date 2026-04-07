@@ -13,7 +13,6 @@ import { palette } from "@/constants/design-tokens";
 import { bloodOptions, genderOptions } from "@/constants/health-profile-options";
 import { useUserStore } from "@/stores/userStore";
 
-
 const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
   const user = useUserStore((s) => s.user);
   const updateUser = useUserStore((s) => s.updateUser);

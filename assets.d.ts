@@ -24,4 +24,3 @@ declare module "*.webp" {
   const value: ImageAsset;
   export default value;
 }
-
