@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from "react";
-import { ScrollView } from "react-native";
-import { Button, Input, Text, XStack, YStack } from "tamagui";
+import { Pressable, ScrollView } from "react-native";
+import { Input, Text, XStack, YStack } from "tamagui";
 import type { StepHandle } from "@/app/(auth)/tutorial";
 import { SelectChip } from "@/components/ui/select-chip";
 import { palette } from "@/constants/design-tokens";
@@ -83,16 +84,20 @@ const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
     >
       <YStack gap={20} pt={8} pb={16}>
         <YStack items="center" gap={10} mt={8}>
-          <YStack
-            width={82}
-            height={82}
-            bg={palette.color_orange}
-            items="center"
-            justify="center"
-            style={{ borderRadius: 999 }}
+          <LinearGradient
+            colors={[palette.color_red, palette.color_orange]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              width: 82,
+              height: 82,
+              borderRadius: 999,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
             <Ionicons name="warning-outline" size={42} color="#FFFFFF" />
-          </YStack>
+          </LinearGradient>
           <Text fontSize={18} fontWeight="700" color={palette.text_black}>
             알러지 정보
           </Text>
@@ -137,15 +142,28 @@ const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
               }}
             />
 
-            <Button
-              size="$4"
-              circular
-              onPress={handleAddCustomAllergy}
-              bg={palette.color_red}
-              pressStyle={{ opacity: 0.85 }}
-              icon={<Ionicons name="add" size={18} color={palette.background} />}
-              accessibilityLabel="알러지 직접 입력 추가"
-            />
+            <LinearGradient
+              colors={[palette.color_red, palette.color_orange]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ borderRadius: 99 }}>
+              <Pressable
+                onPress={handleAddCustomAllergy}
+                android_ripple={{ color: "transparent", borderless: true }}
+                style={({ pressed }) => ({
+                  width: 44,
+                  height: 44,
+                  borderRadius: 999,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: pressed ? 0.85 : 1,
+                })}
+                accessibilityRole="button"
+                accessibilityLabel="알러지 직접 입력 추가"
+              >
+                <Ionicons name="add" size={18} color={palette.background} />
+              </Pressable>
+            </LinearGradient>
           </XStack>
 
           {customAllergies.length > 0 ? (
@@ -158,7 +176,9 @@ const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
                   borderWidth={0}
                   unselectedBackground={palette.color_gray}
                   selectedBackground={palette.color_orange}
-                  onPress={() => setCustomAllergies((prev) => prev.filter((value) => value !== item))}
+                  onPress={() =>
+                    setCustomAllergies((prev) => prev.filter((value) => value !== item))
+                  }
                 />
               ))}
             </XStack>

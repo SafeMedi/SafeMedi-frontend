@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from "react";
-import { ScrollView } from "react-native";
-import { Button, Input, Text, XStack, YStack } from "tamagui";
+import { Pressable, ScrollView } from "react-native";
+import { Input, Text, XStack, YStack } from "tamagui";
 import type { StepHandle } from "@/app/(auth)/tutorial";
 import EmojiCard from "@/components/ui/EmojiCard";
 import { SelectChip } from "@/components/ui/select-chip";
@@ -148,15 +148,22 @@ const Step3 = forwardRef<StepHandle>(function Step3(_props, ref) {
               end={{ x: 1, y: 0 }}
               style={{ borderRadius: 12 }}
             >
-              <Button
-                size="$4"
-                circular
+              <Pressable
                 onPress={handleAddCustom}
-                bg="transparent"
-                pressStyle={{ opacity: 0.85 }}
-                icon={<Ionicons name="add" size={18} color={palette.background} />}
+                android_ripple={{ color: "transparent", borderless: true }}
+                style={({ pressed }) => ({
+                  width: 44,
+                  height: 44,
+                  borderRadius: 999,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: pressed ? 0.85 : 1,
+                })}
+                accessibilityRole="button"
                 accessibilityLabel="기저질환 직접 입력 추가"
-              />
+              >
+                <Ionicons name="add" size={18} color={palette.background} />
+              </Pressable>
             </LinearGradient>
           </XStack>
 
