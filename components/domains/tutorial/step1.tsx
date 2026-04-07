@@ -7,7 +7,7 @@ import type { StepHandle } from "@/app/(auth)/tutorial";
 import {
   type TutorialStep1FormValues,
   tutorialStep1Schema,
-} from "@/app/(auth)/tutorial/schema";
+} from "@/components/domains/tutorial/schema";
 import { SelectChip } from "@/components/ui/select-chip";
 import { palette } from "@/constants/design-tokens";
 import { bloodOptions, genderOptions } from "@/constants/health-profile-options";
