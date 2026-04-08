@@ -11,14 +11,7 @@ export function pathRelativeToApiBase(
 ): { pathname: string; searchParams: URLSearchParams } {
   const baseString = apiBaseUrl.endsWith("/") ? apiBaseUrl : `${apiBaseUrl}/`;
   const req = new URL(requestUrl, baseString);
-  const base = new URL(baseString);
-
-  const basePath = base.pathname.replace(/\/$/, "") || "";
   let pathname = req.pathname;
-
-  if (basePath && pathname.startsWith(basePath)) {
-    pathname = pathname.slice(basePath.length) || "/";
-  }
 
   if (!pathname.startsWith("/")) pathname = `/${pathname}`;
 
