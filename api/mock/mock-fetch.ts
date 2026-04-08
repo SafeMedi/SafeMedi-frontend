@@ -48,7 +48,7 @@ export function createMockFetch(registry: MockRegistry): typeof fetch {
 
     if (route.delayMs) await delay(route.delayMs);
 
-    const jsonBody = await readJsonBody(input, init);
+    const jsonBody = method !== "GET" ? await readJsonBody(input, init) : undefined;
 
     const result = await route.handler({ method, path: pathname, searchParams, jsonBody });
     if (result instanceof Response) {
