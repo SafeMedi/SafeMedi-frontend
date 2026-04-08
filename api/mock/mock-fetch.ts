@@ -32,7 +32,7 @@ async function readJsonBody(input: RequestInfo | URL, init?: RequestInit): Promi
 export function createMockFetch(registry: MockRegistry): typeof fetch {
   return async (input, init) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-    const method = toMethod(init?.method);
+    const method = toMethod(init?.method ?? (input instanceof Request ? input.method : undefined));
     const { pathname, searchParams } = pathRelativeToApiBase(url);
 
     const route = registry.find(method, pathname);

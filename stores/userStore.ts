@@ -1,5 +1,6 @@
 import { create } from "zustand";
 
+/** 앱 UI·튜토리얼 폼용 로컬 모델. 서버 진실은 `useUserProfile` + `UserProfile` */
 export type User = {
   id: string;
   displayName: string | null;

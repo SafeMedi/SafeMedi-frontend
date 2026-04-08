@@ -1,3 +1,4 @@
+export type { SocialLoginResponse } from "./auth";
 export type {
   FamilyDetail,
   FamilySummary,
@@ -8,4 +9,5 @@ export type {
   NotificationListResponse,
   NotificationSettings,
 } from "./notification";
+export type { TutorialRegistrationBody, TutorialRegistrationResponse } from "./tutorial";
 export type { AllergyItem, UserProfile } from "./user";

@@ -1,15 +1,17 @@
 import { apiConfig } from "@/constants/api-config";
 
 /**
- * ky가 요청하는 전체 URL에서 prefixUrl에 해당하는 부분을 뺀 경로를 반환합니다.
- * 예: base `https://a.com/v1`, full `https://a.com/v1/users` → `/users`
+ * ky가 넘기는 URL에서 pathname을 뽑습니다.
+ * React Native 등에서는 `Request.url`이 상대 경로(`/api/v1/...`)만 올 수 있어
+ * `new URL(절대만)` 대신 `new URL(input, apiBase)`로 해석합니다.
  */
 export function pathRelativeToApiBase(
   requestUrl: string,
   apiBaseUrl: string = apiConfig.baseUrl,
 ): { pathname: string; searchParams: URLSearchParams } {
-  const req = new URL(requestUrl);
-  const base = new URL(apiBaseUrl.endsWith("/") ? apiBaseUrl : `${apiBaseUrl}/`);
+  const baseString = apiBaseUrl.endsWith("/") ? apiBaseUrl : `${apiBaseUrl}/`;
+  const req = new URL(requestUrl, baseString);
+  const base = new URL(baseString);
 
   const basePath = base.pathname.replace(/\/$/, "") || "";
   let pathname = req.pathname;

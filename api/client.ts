@@ -1,6 +1,7 @@
 import ky, { type KyInstance } from "ky";
 import { mockRegistry, resolveFetchImplementation } from "@/api/mock";
 import { apiConfig } from "@/constants/api-config";
+import { useSessionStore } from "@/stores/sessionStore";
 
 const fetchImpl = resolveFetchImplementation(mockRegistry);
 
@@ -17,7 +18,12 @@ export const api: KyInstance = ky.create({
   hooks: {
     beforeRequest: [
       ({ request }) => {
-        // 추후 Authorization 등 공통 헤더
+        if (!request.headers.has("Authorization")) {
+          const token = useSessionStore.getState().accessToken;
+          if (token) {
+            request.headers.set("Authorization", `Bearer ${token}`);
+          }
+        }
         if (__DEV__ && apiConfig.useMock) {
           console.debug("[api mock]", request.method, request.url);
         }

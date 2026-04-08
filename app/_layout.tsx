@@ -5,10 +5,17 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { TamaguiProvider } from "tamagui";
 
+import { ProfileSync } from "@/components/profile-sync";
 import { palette } from "@/constants/design-tokens";
 import { tamaguiConfig } from "../tamagui.config";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+    },
+  },
+});
 
 const navigationLight = {
   ...DefaultTheme,
@@ -30,6 +37,7 @@ export const unstable_settings = {
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
+      <ProfileSync />
       <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
         <ThemeProvider value={navigationLight}>
           <Stack>

@@ -5,15 +5,28 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { Redirect, Tabs } from "expo-router";
+import { ActivityIndicator, View } from "react-native";
 
+import { useUserProfile } from "@/api/queries/user";
 import { palette } from "@/constants/design-tokens";
+import { useSessionStore } from "@/stores/sessionStore";
 import { useUserStore } from "@/stores/userStore";
 
 export default function TabLayout() {
+  const accessToken = useSessionStore((s) => s.accessToken);
   const user = useUserStore((s) => s.user);
+  const { isPending } = useUserProfile();
 
-  if (!user) {
+  if (!accessToken) {
     return <Redirect href="/(auth)/login" />;
+  }
+
+  if (isPending || !user) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   return (

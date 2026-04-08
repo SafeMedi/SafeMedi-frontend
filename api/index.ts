@@ -8,6 +8,12 @@ export {
   mockRegistry,
 } from "./mock";
 export { apiPaths } from "./paths";
+export {
+  useCompleteTutorialMutation,
+  useLoginMutation,
+  useUserProfile,
+} from "./queries/user";
+export { queryKeys } from "./query-keys";
 export type {
   AllergyItem,
   FamilyDetail,
@@ -16,5 +22,8 @@ export type {
   NotificationListResponse,
   NotificationSettings,
   ReceivedFamilyRequest,
+  SocialLoginResponse,
+  TutorialRegistrationBody,
+  TutorialRegistrationResponse,
   UserProfile,
 } from "./types";
