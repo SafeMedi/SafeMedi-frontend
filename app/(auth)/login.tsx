@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { Redirect } from "expo-router";
+import { isHTTPError } from "ky";
 import { useEffect } from "react";
 import {
   ActivityIndicator,
@@ -29,16 +30,22 @@ export default function LoginScreen() {
   const queryClient = useQueryClient();
   const accessToken = useSessionStore((s) => s.accessToken);
   const clearSession = useSessionStore((s) => s.clearSession);
-  const { data: profile, isPending: profilePending, isError: profileError } = useUserProfile();
+  const {
+    data: profile,
+    error: profileQueryError,
+    isPending: profilePending,
+    isError: hasProfileError,
+  } = useUserProfile();
   const loginMutation = useLoginMutation();
 
   useEffect(() => {
-    // 이전 세션의 에러 캐시 등으로 인한 오탐 방지: 로그인 뮤테이션 중에는 세션을 비우지 않음
-    if (accessToken && profileError && !loginMutation.isPending) {
+    // 네트워크 일시 장애(5xx 등)에서는 세션을 유지하고, 인증 만료(401)일 때만 세션을 비웁니다.
+    const isUnauthorized = isHTTPError(profileQueryError) && profileQueryError.response.status === 401;
+    if (accessToken && hasProfileError && isUnauthorized && !loginMutation.isPending) {
       clearSession();
       queryClient.removeQueries({ queryKey: queryKeys.user.me });
     }
-  }, [accessToken, profileError, clearSession, queryClient, loginMutation.isPending]);
+  }, [accessToken, hasProfileError, profileQueryError, clearSession, queryClient, loginMutation.isPending]);
 
   const imageSize = 280;
   const imageHalf = imageSize / 2;
