@@ -1,44 +1,82 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { Redirect } from "expo-router";
-import { Image, ImageBackground, Pressable, useWindowDimensions, View } from "react-native";
+import { isHTTPError } from "ky";
+import { useEffect } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  ImageBackground,
+  Pressable,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { YStack } from "tamagui";
+import { useLoginMutation, useUserProfile } from "@/api/queries/user";
+import { queryKeys } from "@/api/query-keys";
 import IntroContentImage from "@/assets/images/intro_content.png";
 import KakaoButtonImage from "@/assets/images/kakaoLoginButton.png";
 import { palette } from "@/constants/design-tokens";
-import { useUserStore } from "@/stores/userStore";
+import { useSessionHydrated } from "@/hooks/use-session-hydrated";
+import { useSessionStore } from "@/stores/sessionStore";
+
+/** 개발·mock용 소셜 액세스 토큰 (실제 연동 시 카카오 SDK에서 발급) */
+const DEV_KAKAO_ACCESS_TOKEN =
+  process.env.EXPO_PUBLIC_DEV_KAKAO_ACCESS_TOKEN ?? "kakao-dev-access-token";
 
 export default function LoginScreen() {
   const { height: windowHeight } = useWindowDimensions();
-  const user = useUserStore((s) => s.user);
-  const setUser = useUserStore((s) => s.setUser);
+  const hydrated = useSessionHydrated();
+  const queryClient = useQueryClient();
+  const accessToken = useSessionStore((s) => s.accessToken);
+  const clearSession = useSessionStore((s) => s.clearSession);
+  const {
+    data: profile,
+    error: profileQueryError,
+    isPending: profilePending,
+    isError: hasProfileError,
+  } = useUserProfile();
+  const loginMutation = useLoginMutation();
+
+  useEffect(() => {
+    // 네트워크 일시 장애(5xx 등)에서는 세션을 유지하고, 인증 만료(401)일 때만 세션을 비웁니다.
+    const isUnauthorized = isHTTPError(profileQueryError) && profileQueryError.response.status === 401;
+    if (accessToken && hasProfileError && isUnauthorized && !loginMutation.isPending) {
+      clearSession();
+      queryClient.removeQueries({ queryKey: queryKeys.user.me });
+    }
+  }, [accessToken, hasProfileError, profileQueryError, clearSession, queryClient, loginMutation.isPending]);
 
   const imageSize = 280;
   const imageHalf = imageSize / 2;
 
-  // 화면 y 높이 중간보다 살짝 높게
   const introImageMarginTop = Math.max(16, windowHeight * 0.44 - imageHalf);
 
-  if (user) {
-    if (!user.isTutorial) {
-      return <Redirect href="/(auth)/tutorial" />;
+  if (!hydrated) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (accessToken && profilePending) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (accessToken && profile) {
+    if (profile.isTutorialCompleted) {
+      return <Redirect href="/(tabs)/dashboard" />;
     }
-    return <Redirect href="/(tabs)/dashboard" />;
+    return <Redirect href="/(auth)/tutorial" />;
   }
 
   const handleLogin = () => {
-    setUser({
-      id: "dev-user",
-      displayName: "테스트 사용자",
-      email: "user@example.com",
-      birthDate: null,
-      height: null,
-      weight: null,
-      gender: null,
-      bloodType: null,
-      allergies: [],
-      chronicConditions: [],
-      isTutorial: false,
-    });
+    loginMutation.mutate({ provider: "kakao", accessToken: DEV_KAKAO_ACCESS_TOKEN });
   };
 
   return (
@@ -56,6 +94,7 @@ export default function LoginScreen() {
           />
           <Pressable
             onPress={handleLogin}
+            disabled={loginMutation.isPending}
             accessibilityLabel="카카오 소셜로그인"
             style={{ marginTop: 20 }}
           >

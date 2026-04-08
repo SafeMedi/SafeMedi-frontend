@@ -1,0 +1,30 @@
+/**
+ * SAF-26 API 경로. `baseUrl`은 호스트 루트이며, 여기 값은 `/api/v1/...` 로 시작합니다.
+ */
+export const apiPaths = {
+  authLogin: (provider: "kakao" | "naver") => `/api/v1/auth/login/${provider}`,
+  usersMeTutorial: "/api/v1/users/me/tutorial",
+  usersMe: "/api/v1/users/me",
+  usersDeviceToken: "/api/v1/users/device-token",
+
+  familiesRequests: "/api/v1/families/requests",
+  familiesRequestsReceived: "/api/v1/families/requests/received",
+  familyRequest: (requestId: number | string) => `/api/v1/families/requests/${requestId}`,
+
+  families: "/api/v1/families",
+  family: (familyId: number | string) => `/api/v1/families/${familyId}`,
+  familySettings: (familyId: number | string) => `/api/v1/families/${familyId}/settings`,
+
+  drugsSearch: "/api/v1/drugs/search",
+
+  prescriptions: "/api/v1/prescriptions",
+  prescription: (prescriptionId: number | string) => `/api/v1/prescriptions/${prescriptionId}`,
+
+  medicationRecords: "/api/v1/medication-records",
+  medicationRecord: (recordId: number | string) => `/api/v1/medication-records/${recordId}`,
+
+  medicationsStatistics: "/api/v1/medications/statistics",
+
+  notifications: "/api/v1/notifications",
+  notificationsSettings: "/api/v1/notifications/settings",
+} as const;
