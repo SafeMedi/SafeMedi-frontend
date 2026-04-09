@@ -1,7 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { Redirect } from "expo-router";
-import { isHTTPError } from "ky";
 import { useEffect } from "react";
 import {
   ActivityIndicator,
@@ -14,6 +13,7 @@ import {
 import { YStack } from "tamagui";
 import { useLoginMutation, useUserProfile } from "@/api/queries/user";
 import { queryKeys } from "@/api/query-keys";
+import { isUnauthorizedError } from "@/api/error";
 import IntroContentImage from "@/assets/images/intro_content.png";
 import KakaoButtonImage from "@/assets/images/kakaoLoginButton.png";
 import { palette } from "@/constants/design-tokens";
@@ -40,7 +40,7 @@ export default function LoginScreen() {
 
   useEffect(() => {
     // 네트워크 일시 장애(5xx 등)에서는 세션을 유지하고, 인증 만료(401)일 때만 세션을 비웁니다.
-    const isUnauthorized = isHTTPError(profileQueryError) && profileQueryError.response.status === 401;
+    const isUnauthorized = isUnauthorizedError(profileQueryError);
     if (accessToken && hasProfileError && isUnauthorized && !loginMutation.isPending) {
       clearSession();
       queryClient.removeQueries({ queryKey: queryKeys.user.me });
