@@ -1,13 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
+import { postSocialLogin } from "@/api/endpoints/auth";
+import { postTutorialRegistration } from "@/api/endpoints/tutorial";
+import { fetchUserProfile, fetchUserProfileWithAccessToken } from "@/api/endpoints/user";
 import { queryKeys } from "@/api/query-keys";
 import type { TutorialRegistrationBody } from "@/api/types/tutorial";
-import {
-  fetchUserProfile,
-  fetchUserProfileWithAccessToken,
-  postSocialLogin,
-  postTutorialRegistration,
-} from "@/api/user-api";
 import { useSessionStore } from "@/stores/sessionStore";
 
 const STALE_MS = 5 * 60 * 1000;

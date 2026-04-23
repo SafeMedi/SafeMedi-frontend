@@ -5,7 +5,7 @@ import { ScrollView } from "react-native";
 import { Input, Text, XStack, YStack } from "tamagui";
 import type { StepHandle } from "@/app/(auth)/tutorial";
 import { Button } from "@/components/ui/Button";
-import { SelectChip } from "@/components/ui/select-chip";
+import { SelectChip } from "@/components/ui/SelectChip";
 import { palette } from "@/constants/design-tokens";
 import { useUserStore } from "@/stores/userStore";
 import { toggleSelection } from "@/utils/array";

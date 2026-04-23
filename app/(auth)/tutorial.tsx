@@ -6,13 +6,14 @@ import { ActivityIndicator, Alert, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, XStack, YStack } from "tamagui";
 
+import { parseApiError } from "@/api/error";
 import { useCompleteTutorialMutation, useUserProfile } from "@/api/queries/user";
-import Step1 from "@/components/domains/tutorial/step1";
-import Step2 from "@/components/domains/tutorial/step2";
-import Step3 from "@/components/domains/tutorial/step3";
-import Step4 from "@/components/domains/tutorial/step4";
-import { PillButton } from "@/components/ui/pill-button";
-import { SegmentedStepProgress } from "@/components/ui/segmented-step-progress";
+import Step1 from "@/components/domains/tutorial/Step1";
+import Step2 from "@/components/domains/tutorial/Step2";
+import Step3 from "@/components/domains/tutorial/Step3";
+import Step4 from "@/components/domains/tutorial/Step4";
+import { PillButton } from "@/components/ui/PillButton";
+import { SegmentedStepProgress } from "@/components/ui/SegmentedStepProgress";
 import { palette } from "@/constants/design-tokens";
 import { useSessionHydrated } from "@/hooks/use-session-hydrated";
 import { useSessionStore } from "@/stores/sessionStore";
@@ -78,8 +79,9 @@ export default function TutorialScreen() {
     try {
       await completeTutorial.mutateAsync(userToTutorialRegistrationBody(latest));
       router.replace("/(tabs)/dashboard");
-    } catch {
-      Alert.alert("오류", "튜토리얼 저장에 실패했습니다. 다시 시도해 주세요.");
+    } catch (error) {
+      const parsedError = await parseApiError(error);
+      Alert.alert("오류", parsedError.message);
     }
   };
 

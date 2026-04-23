@@ -1,3 +1,4 @@
+import { animationsReanimated } from "@tamagui/config/v5-reanimated";
 import { defaultConfig } from "@tamagui/config/v5";
 import { createTamagui } from "tamagui";
 
@@ -23,6 +24,7 @@ function semanticTheme() {
 
 export const tamaguiConfig = createTamagui({
   ...defaultConfig,
+  animations: animationsReanimated,
   themes: {
     ...defaultConfig.themes,
     light: {
