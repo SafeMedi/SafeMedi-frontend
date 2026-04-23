@@ -6,6 +6,7 @@ export type AllergyItem = {
 
 /** GET /api/v1/users/me 응답 (SAF-26) */
 export type UserProfile = {
+  displayName: string;
   birthDate: string;
   gender: "M" | "F";
   height: number;

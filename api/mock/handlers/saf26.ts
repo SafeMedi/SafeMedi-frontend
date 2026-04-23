@@ -498,6 +498,10 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
   });
 
   // --- Notifications ---
+  registry.register("GET", apiPaths.notificationsSettings, () => ({
+    ...mockState.notificationSettings,
+  }));
+
   registry.register("PATCH", apiPaths.notificationsSettings, (ctx) => {
     const body = ctx.jsonBody as Partial<typeof mockState.notificationSettings>;
     Object.assign(mockState.notificationSettings, body, {

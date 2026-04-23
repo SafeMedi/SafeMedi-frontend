@@ -1,8 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Text, YStack } from "tamagui";
 
+import { useNotificationSettings, useUpdateNotificationSettings } from "@/api/queries/profile";
 import { ListLinkRow } from "@/components/ui/ListLinkRow";
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 import { palette } from "@/constants/design-tokens";
@@ -12,8 +12,11 @@ export type SettingsSectionProps = {
 };
 
 export function SettingsSection({ onPrivacyPress }: SettingsSectionProps) {
-  const [medicationAlarm, setMedicationAlarm] = useState(true);
-  const [familyAlarm, setFamilyAlarm] = useState(true);
+  const { data: settings } = useNotificationSettings();
+  const { mutate: updateSettings } = useUpdateNotificationSettings();
+
+  const medicationAlarm = settings?.isMyReminderOn ?? true;
+  const familyAlarm = settings?.isFamilyReminderOn ?? true;
 
   return (
     <YStack gap={10}>
@@ -26,7 +29,7 @@ export function SettingsSection({ onPrivacyPress }: SettingsSectionProps) {
           trailing={
             <ToggleSwitch
               value={medicationAlarm}
-              onValueChange={setMedicationAlarm}
+              onValueChange={(next) => updateSettings({ isMyReminderOn: next })}
               accessibilityLabel="복약 알림 토글"
             />
           }
@@ -39,7 +42,7 @@ export function SettingsSection({ onPrivacyPress }: SettingsSectionProps) {
           trailing={
             <ToggleSwitch
               value={familyAlarm}
-              onValueChange={setFamilyAlarm}
+              onValueChange={(next) => updateSettings({ isFamilyReminderOn: next })}
               accessibilityLabel="가족 알림 토글"
             />
           }

@@ -26,7 +26,7 @@ function mapAllergyLabelsToAtc(labels: string[]): string[] {
 export function profileToUser(profile: UserProfile): User {
   return {
     id: "me",
-    displayName: null,
+    displayName: profile.displayName,
     email: null,
     birthDate: profile.birthDate,
     height: profile.height,

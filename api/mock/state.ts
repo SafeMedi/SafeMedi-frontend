@@ -29,6 +29,7 @@ export const mockState: MockOnlyState & {
   userDeleted: false,
   tutorialCompleted: false,
   profile: {
+    displayName: "홍길동",
     birthDate: "2000-01-01",
     gender: "M",
     height: 180,
@@ -67,10 +68,17 @@ export const mockState: MockOnlyState & {
   families: [
     {
       familyId: 1,
-      name: "김영희",
+      name: "어머니",
       relation: "MOTHER",
       birthDate: "1965-05-15",
       gender: "F",
+    },
+    {
+      familyId: 2,
+      name: "아버지",
+      relation: "FATHER",
+      birthDate: "1962-03-10",
+      gender: "M",
     },
   ],
 

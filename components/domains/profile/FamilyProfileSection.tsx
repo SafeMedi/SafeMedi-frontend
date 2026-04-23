@@ -5,8 +5,8 @@ import { YStack } from "tamagui";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { palette } from "@/constants/design-tokens";
 
+import type { FamilyProfile } from "@/api/queries/profile";
 import { FamilyProfileItem } from "./FamilyProfileItem";
-import type { FamilyProfile } from "./mock-data";
 
 export type FamilyProfileSectionProps = {
   profiles: readonly FamilyProfile[];

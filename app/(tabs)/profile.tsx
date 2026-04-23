@@ -3,24 +3,19 @@ import { useMemo } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
-
+import { useFamilyProfiles, useHealthInfo, useProfileUser } from "@/api/queries/profile";
 import { queryKeys } from "@/api/query-keys";
 import { AppInfoSection } from "@/components/domains/profile/AppInfoSection";
 import { FamilyProfileSection } from "@/components/domains/profile/FamilyProfileSection";
 import { HealthInfoSection } from "@/components/domains/profile/HealthInfoSection";
 import { LogoutButton } from "@/components/domains/profile/LogoutButton";
-import {
-  APP_VERSION,
-  MOCK_ALLERGIES,
-  MOCK_CHRONIC_CONDITIONS,
-  MOCK_FAMILY_PROFILES,
-  MOCK_USER,
-} from "@/components/domains/profile/mock-data";
 import { ProfilePageHeader } from "@/components/domains/profile/ProfilePageHeader";
 import { SettingsSection } from "@/components/domains/profile/SettingsSection";
 import { UserHeroCard } from "@/components/domains/profile/UserHeroCard";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUserStore } from "@/stores/userStore";
+
+const APP_VERSION = "v1.0.0";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -28,10 +23,16 @@ export default function ProfileScreen() {
   const clearSession = useSessionStore((s) => s.clearSession);
   const clearUser = useUserStore((s) => s.clearUser);
 
+  const profileUser = useProfileUser();
+  const { data: familyProfiles = [] } = useFamilyProfiles();
+  const { allergies, chronicConditions } = useHealthInfo();
+
   const handleLogout = () => {
     clearSession();
     clearUser();
     queryClient.removeQueries({ queryKey: queryKeys.user.me });
+    queryClient.removeQueries({ queryKey: queryKeys.profile.families });
+    queryClient.removeQueries({ queryKey: queryKeys.profile.notificationSettings });
   };
 
   const appInfoItems = useMemo(
@@ -46,14 +47,14 @@ export default function ProfileScreen() {
   return (
     <ScrollView
       style={styles.scroll}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: 32 }]}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: 120 }]}
       showsVerticalScrollIndicator={false}
     >
       <YStack gap={20}>
         <ProfilePageHeader />
-        <UserHeroCard name={MOCK_USER.name} role={MOCK_USER.role} />
-        <FamilyProfileSection profiles={MOCK_FAMILY_PROFILES} />
-        <HealthInfoSection allergies={MOCK_ALLERGIES} chronicConditions={MOCK_CHRONIC_CONDITIONS} />
+        <UserHeroCard name={profileUser.name} role={profileUser.role} />
+        <FamilyProfileSection profiles={familyProfiles} />
+        <HealthInfoSection allergies={allergies} chronicConditions={chronicConditions} />
         <SettingsSection />
         <AppInfoSection items={appInfoItems} />
         <LogoutButton onPress={handleLogout} />
