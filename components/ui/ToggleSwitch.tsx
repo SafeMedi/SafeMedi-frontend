@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { Switch } from "tamagui";
 
 import { palette } from "@/constants/design-tokens";
 
@@ -9,11 +9,6 @@ export type ToggleSwitchProps = {
   accessibilityLabel?: string;
 };
 
-const TRACK_WIDTH = 44;
-const TRACK_HEIGHT = 26;
-const THUMB_SIZE = 20;
-const PADDING = 3;
-
 export function ToggleSwitch({
   value,
   onValueChange,
@@ -21,44 +16,20 @@ export function ToggleSwitch({
   accessibilityLabel,
 }: ToggleSwitchProps) {
   return (
-    <Pressable
-      onPress={() => onValueChange(!value)}
+    <Switch
+      checked={value}
+      onCheckedChange={onValueChange}
       disabled={disabled}
-      accessibilityRole="switch"
-      accessibilityState={{ checked: value, disabled }}
       accessibilityLabel={accessibilityLabel}
-      style={[
-        styles.track,
-        { backgroundColor: value ? palette.blue : palette.dark_gray, opacity: disabled ? 0.5 : 1 },
-      ]}
+      size="$2"
+      backgroundColor={palette.dark_gray}
+      borderWidth={1.5}
+      activeStyle={{
+        backgroundColor: palette.blue,
+      }}
+      opacity={disabled ? 0.5 : 1}
     >
-      <View
-        style={[
-          styles.thumb,
-          { transform: [{ translateX: value ? TRACK_WIDTH - THUMB_SIZE - PADDING * 2 : 0 }] },
-        ]}
-      />
-    </Pressable>
+      <Switch.Thumb transition="quicker" backgroundColor={palette.white} />
+    </Switch>
   );
 }
-
-const styles = StyleSheet.create({
-  track: {
-    width: TRACK_WIDTH,
-    height: TRACK_HEIGHT,
-    borderRadius: TRACK_HEIGHT / 2,
-    padding: PADDING,
-    justifyContent: "center",
-  },
-  thumb: {
-    width: THUMB_SIZE,
-    height: THUMB_SIZE,
-    borderRadius: THUMB_SIZE / 2,
-    backgroundColor: palette.white,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-});

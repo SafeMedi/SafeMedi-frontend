@@ -46,7 +46,7 @@ export default function ProfileScreen() {
   return (
     <ScrollView
       style={styles.scroll}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: 120 }]}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: 32 }]}
       showsVerticalScrollIndicator={false}
     >
       <YStack gap={20}>

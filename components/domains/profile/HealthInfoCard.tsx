@@ -2,7 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/Badge";
 import { palette } from "@/constants/design-tokens";
 
 import { HEALTH_INFO_STYLES, type HealthInfoVariant } from "./constants";
