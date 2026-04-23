@@ -8,7 +8,7 @@ import {
   type TutorialStep1FormValues,
   tutorialStep1Schema,
 } from "@/components/domains/tutorial/schema";
-import { SelectChip } from "@/components/ui/select-chip";
+import { SelectChip } from "@/components/ui/SelectChip";
 import { palette } from "@/constants/design-tokens";
 import { bloodOptions, genderOptions } from "@/constants/health-profile-options";
 import { useUserStore } from "@/stores/userStore";

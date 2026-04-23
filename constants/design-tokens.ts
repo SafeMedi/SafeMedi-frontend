@@ -23,9 +23,29 @@ export const palette = {
   purple: "#AD46FF",
   opal: "#00BBA7",
 
+  // variant 톤 - red (알러지 / 위험)
+  red_soft: "#FFC9C9",
+  red_medium: "#FB2C36",
+  red_strong: "#E7000B",
+  red_deep: "#9F0712",
+
+  // variant 톤 - blue (기저질환 / 정보)
+  blue_soft: "#BEDBFF",
+  blue_strong: "#155DFC",
+  blue_deep: "#193CB8",
+
+  // variant 톤 - green (활성 / 성공)
+  green_soft: "#7BF1A8",
+  green_deep: "#00A63E",
+
   // linearGradient 3중첩 설정
   bg_green_line: ["#00C950", "#00BC7D", "#00BBA7"],
   bg_pink_line: ["#EFF6FF", "#FAF5FF", "#FDF2F8"],
+
+  // linearGradient 2중첩 설정 (카드 배경)
+  bg_allergy_card: ["#FEF2F2", "#FDF2F8"],
+  bg_chronic_card: ["#EFF6FF", "#ECFEFF"],
+  bg_family_active_card: ["#F0FDF4", "#ECFDF5"],
 } as const;
 
 type FontFaces = {

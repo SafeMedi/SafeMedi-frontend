@@ -45,7 +45,14 @@ export default function LoginScreen() {
       clearSession();
       queryClient.removeQueries({ queryKey: queryKeys.user.me });
     }
-  }, [accessToken, hasProfileError, profileQueryError, clearSession, queryClient, loginMutation.isPending]);
+  }, [
+    accessToken,
+    hasProfileError,
+    profileQueryError,
+    clearSession,
+    queryClient,
+    loginMutation.isPending,
+  ]);
 
   const imageSize = 280;
   const imageHalf = imageSize / 2;

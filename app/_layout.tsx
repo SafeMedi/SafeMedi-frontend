@@ -5,7 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { TamaguiProvider } from "tamagui";
 
-import { ProfileSync } from "@/components/profile-sync";
+import { ProfileSync } from "@/components/ProfileSync";
 import { palette } from "@/constants/design-tokens";
 import { tamaguiConfig } from "../tamagui.config";
 
