@@ -1,10 +1,6 @@
 import { api } from "@/api/client";
 import { apiPaths } from "@/api/paths";
-import type { FamilySummary, NotificationSettings } from "@/api/types";
-
-export async function fetchFamilies(): Promise<FamilySummary[]> {
-  return api.get(apiPaths.families).json<FamilySummary[]>();
-}
+import type { NotificationSettings } from "@/api/types/notification";
 
 export async function fetchNotificationSettings(): Promise<NotificationSettings> {
   return api.get(apiPaths.notificationsSettings).json<NotificationSettings>();
