@@ -1,7 +1,13 @@
 import { z } from "zod";
-import { BLOOD_TYPES, GENDERS } from "@/constants/health-profile-options";
+import { BLOOD_TYPES, GENDERS, RH_FACTORS } from "@/constants/health-profile-options";
 
-export const tutorialStep1Schema = z.object({
+export const tutorialBasicInfoSchema = z.object({
+  bloodType: z.enum(BLOOD_TYPES, { message: "혈액형을 선택해 주세요" }),
+  rhFactor: z.enum(RH_FACTORS, { message: "Rh 타입을 선택해 주세요" }),
+  gender: z.enum(GENDERS, { message: "성별을 선택해 주세요" }),
+});
+
+export const tutorialStep1Schema = tutorialBasicInfoSchema.extend({
   height: z
     .string()
     .trim()
@@ -18,8 +24,7 @@ export const tutorialStep1Schema = z.object({
       const n = Number(val.replace(",", "."));
       return !Number.isNaN(n) && n >= 10 && n <= 300;
     }, "10~300kg 사이로 입력해 주세요"),
-  bloodType: z.enum(BLOOD_TYPES, { message: "혈액형을 선택해 주세요" }),
-  gender: z.enum(GENDERS, { message: "성별을 선택해 주세요" }),
 });
 
 export type TutorialStep1FormValues = z.infer<typeof tutorialStep1Schema>;
+export type TutorialBasicInfoFormValues = z.infer<typeof tutorialBasicInfoSchema>;

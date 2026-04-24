@@ -10,13 +10,23 @@ import {
 } from "@/components/domains/tutorial/schema";
 import { SelectChip } from "@/components/ui/SelectChip";
 import { palette } from "@/constants/design-tokens";
-import { BLOOD_TYPES, bloodOptions, genderOptions } from "@/constants/health-profile-options";
+import {
+  BLOOD_TYPES,
+  bloodOptions,
+  genderOptions,
+  rhOptions,
+} from "@/constants/health-profile-options";
 import { useUserStore } from "@/stores/userStore";
 
 const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
   const user = useUserStore((s) => s.user);
   const updateUser = useUserStore((s) => s.updateUser);
   const defaultBloodType = user?.bloodType?.replace("+", "").replace("-", "");
+  const defaultRhFactor = user?.bloodType
+    ? user.bloodType.endsWith("-")
+      ? "negative"
+      : "positive"
+    : undefined;
 
   const { control, handleSubmit } = useForm<TutorialStep1FormValues>({
     resolver: zodResolver(tutorialStep1Schema),
@@ -27,6 +37,7 @@ const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
         defaultBloodType && BLOOD_TYPES.includes(defaultBloodType as (typeof BLOOD_TYPES)[number])
           ? (defaultBloodType as (typeof BLOOD_TYPES)[number])
           : undefined,
+      rhFactor: defaultRhFactor,
       gender: user?.gender ?? undefined,
     },
   });
@@ -41,7 +52,7 @@ const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
               updateUser({
                 height: Math.round(Number(data.height.replace(",", "."))),
                 weight: Math.round(Number(data.weight.replace(",", "."))),
-                bloodType: data.bloodType,
+                bloodType: `${data.bloodType}${data.rhFactor === "negative" ? "-" : "+"}`,
                 gender: data.gender,
               });
               resolve(true);
@@ -153,6 +164,34 @@ const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
                     {error.message}
                   </Text>
                 ) : null}
+                <Controller
+                  control={control}
+                  name="rhFactor"
+                  render={({
+                    field: { onChange: onRhFactorChange, value: rhValue },
+                    fieldState: { error: rhError },
+                  }) => (
+                    <>
+                      <XStack gap={10} mt={10}>
+                        {rhOptions.map((opt) => (
+                          <SelectChip
+                            key={opt.value}
+                            onPress={() => onRhFactorChange(opt.value)}
+                            label={opt.label}
+                            selected={rhValue === opt.value}
+                            accessibilityLabel={opt.label}
+                            flex={1}
+                          />
+                        ))}
+                      </XStack>
+                      {rhError ? (
+                        <Text fontSize={12} style={{ color: palette.red }}>
+                          {rhError.message}
+                        </Text>
+                      ) : null}
+                    </>
+                  )}
+                />
               </>
             )}
           />

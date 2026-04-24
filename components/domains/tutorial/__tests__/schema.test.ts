@@ -6,6 +6,7 @@ describe("tutorialStep1Schema", () => {
       height: "170",
       weight: "65",
       bloodType: "AB",
+      rhFactor: "positive",
       gender: "female",
     });
 
@@ -17,6 +18,7 @@ describe("tutorialStep1Schema", () => {
       height: "170,4",
       weight: "65.7",
       bloodType: "A",
+      rhFactor: "negative",
       gender: "male",
     });
 
@@ -28,6 +30,7 @@ describe("tutorialStep1Schema", () => {
       height: "49",
       weight: "9",
       bloodType: "B",
+      rhFactor: "positive",
       gender: "female",
     });
 
@@ -43,6 +46,7 @@ describe("tutorialStep1Schema", () => {
       height: "",
       weight: "",
       bloodType: undefined,
+      rhFactor: undefined,
       gender: undefined,
     });
 
