@@ -13,6 +13,7 @@ export { apiPaths } from "./paths";
 export {
   useCompleteTutorialMutation,
   useLoginMutation,
+  useUpdateUserProfileMutation,
   useUserProfile,
 } from "./queries/user";
 export { queryKeys } from "./query-keys";
@@ -27,5 +28,6 @@ export type {
   SocialLoginResponse,
   TutorialRegistrationBody,
   TutorialRegistrationResponse,
+  UpdateUserProfileBody,
   UserProfile,
 } from "./types";

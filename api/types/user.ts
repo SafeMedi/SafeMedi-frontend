@@ -16,3 +16,12 @@ export type UserProfile = {
   allergies: AllergyItem[];
   isTutorialCompleted: boolean;
 };
+
+/** PATCH /api/v1/users/me */
+export type UpdateUserProfileBody = Partial<{
+  displayName: string;
+  diseases: string[];
+  allergies: string[];
+  weight: number;
+  height: number;
+}>;

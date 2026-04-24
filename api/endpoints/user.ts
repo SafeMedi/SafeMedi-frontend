@@ -1,6 +1,6 @@
 import { api } from "@/api/client";
 import { apiPaths } from "@/api/paths";
-import type { UserProfile } from "@/api/types/user";
+import type { UpdateUserProfileBody, UserProfile } from "@/api/types/user";
 
 export async function fetchUserProfile(): Promise<UserProfile> {
   return api.get(apiPaths.usersMe).json<UserProfile>();
@@ -13,4 +13,8 @@ export async function fetchUserProfileWithAccessToken(accessToken: string): Prom
       headers: { Authorization: `Bearer ${accessToken}` },
     })
     .json<UserProfile>();
+}
+
+export async function patchUserProfile(body: UpdateUserProfileBody): Promise<UserProfile> {
+  return api.patch(apiPaths.usersMe, { json: body }).json<UserProfile>();
 }

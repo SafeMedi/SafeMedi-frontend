@@ -1,10 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { postSocialLogin } from "@/api/endpoints/auth";
 import { postTutorialRegistration } from "@/api/endpoints/tutorial";
-import { fetchUserProfile, fetchUserProfileWithAccessToken } from "@/api/endpoints/user";
+import {
+  fetchUserProfile,
+  fetchUserProfileWithAccessToken,
+  patchUserProfile,
+} from "@/api/endpoints/user";
 import { queryKeys } from "@/api/query-keys";
 import type { TutorialRegistrationBody } from "@/api/types/tutorial";
 import { useSessionStore } from "@/stores/sessionStore";
+import { useUserStore } from "@/stores/userStore";
+import { profileToUser } from "@/utils/user-mapper";
 
 const STALE_MS = 5 * 60 * 1000;
 const GC_MS = 1000 * 60 * 60 * 24;
@@ -44,6 +50,19 @@ export function useCompleteTutorialMutation() {
   return useMutation({
     mutationFn: (body: TutorialRegistrationBody) => postTutorialRegistration(body),
     onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.user.me });
+    },
+  });
+}
+
+export function useUpdateUserProfileMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: patchUserProfile,
+    onSuccess: async (updatedProfile) => {
+      queryClient.setQueryData(queryKeys.user.me, updatedProfile);
+      useUserStore.getState().setUser(profileToUser(updatedProfile));
       await queryClient.invalidateQueries({ queryKey: queryKeys.user.me });
     },
   });

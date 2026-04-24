@@ -10,4 +10,4 @@ export type {
   NotificationSettings,
 } from "./notification";
 export type { TutorialRegistrationBody, TutorialRegistrationResponse } from "./tutorial";
-export type { AllergyItem, UserProfile } from "./user";
+export type { AllergyItem, UpdateUserProfileBody, UserProfile } from "./user";

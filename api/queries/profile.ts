@@ -85,8 +85,32 @@ export function useUpdateNotificationSettings() {
     mutationFn: (
       body: Partial<Pick<NotificationSettings, "isMyReminderOn" | "isFamilyReminderOn">>,
     ) => patchNotificationSettings(body),
+    onMutate: async (patch) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.profile.notificationSettings });
+
+      const previous = queryClient.getQueryData<NotificationSettings>(
+        queryKeys.profile.notificationSettings,
+      );
+
+      if (previous) {
+        queryClient.setQueryData<NotificationSettings>(queryKeys.profile.notificationSettings, {
+          ...previous,
+          ...patch,
+        });
+      }
+
+      return { previous };
+    },
+    onError: (_error, _patch, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKeys.profile.notificationSettings, context.previous);
+      }
+    },
     onSuccess: (updated) => {
       queryClient.setQueryData(queryKeys.profile.notificationSettings, updated);
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.profile.notificationSettings });
     },
   });
 }
