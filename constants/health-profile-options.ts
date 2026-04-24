@@ -3,6 +3,9 @@
 export const BLOOD_TYPES = ["A", "B", "O", "AB"] as const;
 export type BloodTypeOptionValue = (typeof BLOOD_TYPES)[number];
 
+export const RH_FACTORS = ["positive", "negative"] as const;
+export type RhFactorOptionValue = (typeof RH_FACTORS)[number];
+
 export const GENDERS = ["male", "female"] as const;
 export type GenderOptionValue = (typeof GENDERS)[number];
 
@@ -11,6 +14,11 @@ export const bloodOptions: readonly { value: BloodTypeOptionValue; label: string
   { value: "B", label: "B형" },
   { value: "O", label: "O형" },
   { value: "AB", label: "AB형" },
+];
+
+export const rhOptions: readonly { value: RhFactorOptionValue; label: string }[] = [
+  { value: "positive", label: "Rh+" },
+  { value: "negative", label: "Rh-" },
 ];
 
 export const genderOptions: readonly { value: GenderOptionValue; label: string }[] = [

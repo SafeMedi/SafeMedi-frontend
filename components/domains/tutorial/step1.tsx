@@ -10,19 +10,23 @@ import {
 } from "@/components/domains/tutorial/schema";
 import { SelectChip } from "@/components/ui/SelectChip";
 import { palette } from "@/constants/design-tokens";
-import { bloodOptions, genderOptions } from "@/constants/health-profile-options";
+import { BLOOD_TYPES, bloodOptions, genderOptions } from "@/constants/health-profile-options";
 import { useUserStore } from "@/stores/userStore";
 
 const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
   const user = useUserStore((s) => s.user);
   const updateUser = useUserStore((s) => s.updateUser);
+  const defaultBloodType = user?.bloodType?.replace("+", "").replace("-", "");
 
   const { control, handleSubmit } = useForm<TutorialStep1FormValues>({
     resolver: zodResolver(tutorialStep1Schema),
     defaultValues: {
       height: user?.height != null ? String(user.height) : "",
       weight: user?.weight != null ? String(user.weight) : "",
-      bloodType: user?.bloodType ?? undefined,
+      bloodType:
+        defaultBloodType && BLOOD_TYPES.includes(defaultBloodType as (typeof BLOOD_TYPES)[number])
+          ? (defaultBloodType as (typeof BLOOD_TYPES)[number])
+          : undefined,
       gender: user?.gender ?? undefined,
     },
   });

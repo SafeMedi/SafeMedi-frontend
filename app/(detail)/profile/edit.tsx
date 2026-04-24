@@ -9,11 +9,19 @@ import { YStack } from "tamagui";
 import { useUpdateUserProfileMutation } from "@/api/queries/user";
 import {
   ProfileEditActionBar,
+  ProfileBasicInfoCard,
   ProfileEditHeader,
   ProfileEditNoticeCard,
   ProfileNicknameCard,
   ProfileTagEditorCard,
 } from "@/components/domains/profile/edit";
+import {
+  BLOOD_TYPES,
+  type BloodTypeOptionValue,
+  type GenderOptionValue,
+  type RhFactorOptionValue,
+  GENDERS,
+} from "@/constants/health-profile-options";
 import {
   type ProfileEditFormValues,
   profileEditSchema,
@@ -35,10 +43,29 @@ function createUniqueItems(items: readonly string[]): string[] {
   return next;
 }
 
+function parseBloodTypeValue(value: string | null | undefined): {
+  bloodType: BloodTypeOptionValue;
+  rhFactor: RhFactorOptionValue;
+} {
+  const raw = (value ?? "").toUpperCase().trim();
+  const base = raw.replace("+", "").replace("-", "");
+  const bloodType = BLOOD_TYPES.includes(base as BloodTypeOptionValue)
+    ? (base as BloodTypeOptionValue)
+    : "O";
+  const rhFactor = raw.endsWith("-") ? "negative" : "positive";
+  return { bloodType, rhFactor };
+}
+
 export default function ProfileEditScreen() {
   const insets = useSafeAreaInsets();
   const user = useUserStore((s) => s.user);
   const saveMutation = useUpdateUserProfileMutation();
+  const initialGender: GenderOptionValue = GENDERS.includes((user?.gender ?? "male") as GenderOptionValue)
+    ? ((user?.gender ?? "male") as GenderOptionValue)
+    : "male";
+  const { bloodType: initialBloodType, rhFactor: initialRhFactor } = parseBloodTypeValue(
+    user?.bloodType,
+  );
 
   const initialName = user?.displayName ?? "";
   const initialAllergies = useMemo(() => createUniqueItems(user?.allergies ?? []), [user?.allergies]);
@@ -51,6 +78,9 @@ export default function ProfileEditScreen() {
     resolver: zodResolver(profileEditSchema),
     defaultValues: {
       displayName: initialName,
+      gender: initialGender,
+      bloodType: initialBloodType,
+      rhFactor: initialRhFactor,
       allergies: initialAllergies,
       chronicConditions: initialChronic,
       allergyInput: "",
@@ -61,12 +91,15 @@ export default function ProfileEditScreen() {
   useEffect(() => {
     reset({
       displayName: initialName,
+      gender: initialGender,
+      bloodType: initialBloodType,
+      rhFactor: initialRhFactor,
       allergies: initialAllergies,
       chronicConditions: initialChronic,
       allergyInput: "",
       chronicInput: "",
     });
-  }, [initialAllergies, initialChronic, initialName, reset]);
+  }, [initialAllergies, initialBloodType, initialChronic, initialGender, initialName, initialRhFactor, reset]);
 
   const addItem = (value: string, listField: "allergies" | "chronicConditions", inputField?: "allergyInput" | "chronicInput") => {
     const normalized = value.trim();
@@ -94,6 +127,8 @@ export default function ProfileEditScreen() {
     saveMutation.mutate(
       {
         displayName: values.displayName.trim(),
+        gender: values.gender === "female" ? "F" : "M",
+        bloodType: `${values.bloodType}${values.rhFactor === "negative" ? "-" : "+"}`,
         diseases: values.chronicConditions,
         allergies: profileAllergyLabelsToApiCodes(values.allergies),
       },
@@ -126,6 +161,32 @@ export default function ProfileEditScreen() {
           name="displayName"
           render={({ field: { value, onChange } }) => (
             <ProfileNicknameCard value={value} onChange={onChange} />
+          )}
+        />
+        <Controller
+          control={control}
+          name="gender"
+          render={({ field: { value: gender, onChange: onGenderChange } }) => (
+            <Controller
+              control={control}
+              name="bloodType"
+              render={({ field: { value: bloodType, onChange: onBloodTypeChange } }) => (
+                <Controller
+                  control={control}
+                  name="rhFactor"
+                  render={({ field: { value: rhFactor, onChange: onRhFactorChange } }) => (
+                    <ProfileBasicInfoCard
+                      gender={gender}
+                      bloodType={bloodType}
+                      rhFactor={rhFactor}
+                      onGenderChange={onGenderChange}
+                      onBloodTypeChange={onBloodTypeChange}
+                      onRhFactorChange={onRhFactorChange}
+                    />
+                  )}
+                />
+              )}
+            />
           )}
         />
         <Controller
