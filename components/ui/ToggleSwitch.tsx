@@ -23,13 +23,12 @@ export function ToggleSwitch({
       accessibilityLabel={accessibilityLabel}
       size="$2"
       backgroundColor={palette.dark_gray}
-      borderWidth={1.5}
       activeStyle={{
         backgroundColor: palette.blue,
       }}
       opacity={disabled ? 0.5 : 1}
     >
-      <Switch.Thumb transition="quicker" backgroundColor={palette.white} />
+      <Switch.Thumb transition="bouncy" backgroundColor={palette.white} />
     </Switch>
   );
 }
