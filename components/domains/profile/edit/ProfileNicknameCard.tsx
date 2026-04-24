@@ -2,6 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet, TextInput, View } from "react-native";
 import { Text } from "tamagui";
 
+import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
 
 export type ProfileNicknameCardProps = {
@@ -11,7 +12,7 @@ export type ProfileNicknameCardProps = {
 
 export function ProfileNicknameCard({ value, onChange }: ProfileNicknameCardProps) {
   return (
-    <View style={styles.card}>
+    <SurfaceCard style={styles.card}>
       <View style={styles.header}>
         <Ionicons name="person-outline" size={16} color={palette.green} />
         <Text style={styles.title}>사용자 닉네임</Text>
@@ -25,23 +26,14 @@ export function ProfileNicknameCard({ value, onChange }: ProfileNicknameCardProp
         returnKeyType="done"
       />
       <Text style={styles.helper}>프로필에 표시될 이름입니다</Text>
-    </View>
+    </SurfaceCard>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: palette.surface_card,
-    borderWidth: 1,
-    borderColor: palette.surface_card_border,
-    borderRadius: 18,
     padding: 16,
     gap: 12,
-    shadowColor: palette.shadow_base,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
   header: {
     flexDirection: "row",

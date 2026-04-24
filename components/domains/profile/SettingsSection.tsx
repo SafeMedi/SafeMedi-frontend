@@ -1,10 +1,11 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useMemo, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { Text, YStack } from "tamagui";
 
 import { useNotificationSettings, useUpdateNotificationSettings } from "@/api/queries/profile";
 import { ListLinkRow } from "@/components/ui/ListLinkRow";
+import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 import { palette } from "@/constants/design-tokens";
 import type { NotificationSettings } from "@/api/types";
@@ -64,7 +65,7 @@ export function SettingsSection({ onPrivacyPress }: SettingsSectionProps) {
   return (
     <YStack gap={10}>
       <Text style={styles.sectionTitle}>설정</Text>
-      <View style={styles.card}>
+      <SurfaceCard style={styles.card}>
         <ListLinkRow
           icon={<Ionicons name="notifications-outline" size={18} color={palette.purple} />}
           title="복약 알림"
@@ -99,7 +100,7 @@ export function SettingsSection({ onPrivacyPress }: SettingsSectionProps) {
           showChevron
           onPress={onPrivacyPress}
         />
-      </View>
+      </SurfaceCard>
     </YStack>
   );
 }
@@ -113,14 +114,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: palette.white,
-    borderRadius: 18,
-    borderWidth: 1,
     borderColor: palette.dark_gray,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
 });

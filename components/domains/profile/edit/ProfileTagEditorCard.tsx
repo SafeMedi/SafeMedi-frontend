@@ -3,6 +3,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { Text } from "tamagui";
 
+import { Badge } from "@/components/ui/Badge";
+import { SelectChip } from "@/components/ui/SelectChip";
+import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
 
 import {
@@ -36,17 +39,24 @@ export function ProfileTagEditorCard({
   const quickItems = PROFILE_EDIT_QUICK_ITEMS[variant];
 
   return (
-    <View style={styles.card}>
+    <SurfaceCard style={styles.card}>
       <Text style={styles.title}>{title}</Text>
 
       <View style={styles.tagsWrap}>
         {items.map((item) => (
-          <View key={item} style={[styles.tag, { backgroundColor: style.tagBackground }]}>
-            <Text style={styles.tagText}>{item}</Text>
-            <Pressable hitSlop={8} onPress={() => onRemoveItem(item)}>
-              <Ionicons name="close" size={12} color={palette.white} />
-            </Pressable>
-          </View>
+          <Badge
+            key={item}
+            label={item}
+            backgroundColor={style.tagBackground}
+            textColor={palette.white}
+            style={styles.tag}
+            textStyle={styles.tagText}
+            rightElement={
+              <Pressable hitSlop={8} onPress={() => onRemoveItem(item)}>
+                <Ionicons name="close" size={12} color={palette.white} />
+              </Pressable>
+            }
+          />
         ))}
       </View>
 
@@ -76,39 +86,31 @@ export function ProfileTagEditorCard({
         <Text style={styles.quickLabel}>빠른 추가:</Text>
         <View style={styles.quickItems}>
           {quickItems.map((item) => (
-            <Pressable
+            <SelectChip
               key={item}
+              label={`+ ${item}`}
+              selected={false}
               onPress={() => onAddItem(item)}
-              style={[
-                styles.quickTag,
-                {
-                  borderColor: style.quickTagBorder,
-                  backgroundColor: style.quickTagBackground,
-                },
-              ]}
-            >
-              <Text style={[styles.quickTagText, { color: style.quickTagText }]}>{`+ ${item}`}</Text>
-            </Pressable>
+              height={27}
+              px={10}
+              borderWidth={1}
+              unselectedBackground={style.quickTagBackground}
+              unselectedBorderColor={style.quickTagBorder}
+              unselectedTextColor={style.quickTagText}
+              textFontSize={11}
+              textFontWeight="400"
+            />
           ))}
         </View>
       </View>
-    </View>
+    </SurfaceCard>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: palette.surface_card,
-    borderWidth: 1,
-    borderColor: palette.surface_card_border,
-    borderRadius: 18,
     padding: 16,
     gap: 14,
-    shadowColor: palette.shadow_base,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
   title: {
     fontSize: 14,
@@ -124,11 +126,7 @@ const styles = StyleSheet.create({
   },
   tag: {
     height: 30,
-    borderRadius: 12,
     paddingHorizontal: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
   },
   tagText: {
     fontSize: 12,
@@ -169,15 +167,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 6,
-  },
-  quickTag: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  quickTagText: {
-    fontSize: 11,
-    lineHeight: 14,
   },
 });

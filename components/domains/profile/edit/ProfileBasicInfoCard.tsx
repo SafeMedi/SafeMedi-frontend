@@ -1,7 +1,8 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
 
 import { SelectChip } from "@/components/ui/SelectChip";
+import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
 import {
   type BloodTypeOptionValue,
@@ -30,7 +31,7 @@ export function ProfileBasicInfoCard({
   onRhFactorChange,
 }: ProfileBasicInfoCardProps) {
   return (
-    <View style={styles.card}>
+    <SurfaceCard style={styles.card}>
       <YStack gap={14}>
         <YStack gap={8}>
           <Text style={styles.title}>성별</Text>
@@ -72,22 +73,13 @@ export function ProfileBasicInfoCard({
           </XStack>
         </YStack>
       </YStack>
-    </View>
+    </SurfaceCard>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: palette.surface_card,
-    borderWidth: 1,
-    borderColor: palette.surface_card_border,
-    borderRadius: 18,
     padding: 16,
-    shadowColor: palette.shadow_base,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
   title: {
     fontSize: 14,
