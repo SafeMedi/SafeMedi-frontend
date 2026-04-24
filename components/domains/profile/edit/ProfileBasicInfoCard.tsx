@@ -39,7 +39,7 @@ export function ProfileBasicInfoCard({
             {genderOptions.map((option) => (
               <SelectChip
                 key={option.value}
-                label={option.label === "남성" ? "남자" : "여자"}
+                label={option.label}
                 selected={gender === option.value}
                 onPress={() => onGenderChange(option.value)}
                 flex={1}
