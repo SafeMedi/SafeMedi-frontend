@@ -11,7 +11,10 @@ type ProfileEditSectionStyle = {
   addButtonGradient: readonly [string, string];
 };
 
-export const PROFILE_EDIT_SECTION_STYLES: Record<ProfileEditSectionVariant, ProfileEditSectionStyle> = {
+export const PROFILE_EDIT_SECTION_STYLES: Record<
+  ProfileEditSectionVariant,
+  ProfileEditSectionStyle
+> = {
   allergy: {
     tagBackground: palette.red_medium,
     quickTagBackground: palette.bg_allergy_card[0],

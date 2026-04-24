@@ -63,8 +63,9 @@ export function profileToUser(profile: UserProfile): User {
 }
 
 export function userToTutorialRegistrationBody(user: User): TutorialRegistrationBody {
-  const baseBloodType =
-    user.bloodType?.replace("+", "").replace("-", "") as (typeof BLOOD_TYPES)[number] | undefined;
+  const baseBloodType = user.bloodType?.replace("+", "").replace("-", "") as
+    | (typeof BLOOD_TYPES)[number]
+    | undefined;
 
   return {
     birthDate: user.birthDate ?? "2000-01-01",

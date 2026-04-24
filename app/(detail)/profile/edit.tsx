@@ -60,7 +60,9 @@ export default function ProfileEditScreen() {
   const insets = useSafeAreaInsets();
   const user = useUserStore((s) => s.user);
   const saveMutation = useUpdateUserProfileMutation();
-  const initialGender: GenderOptionValue = GENDERS.includes((user?.gender ?? "male") as GenderOptionValue)
+  const initialGender: GenderOptionValue = GENDERS.includes(
+    (user?.gender ?? "male") as GenderOptionValue,
+  )
     ? ((user?.gender ?? "male") as GenderOptionValue)
     : "male";
   const { bloodType: initialBloodType, rhFactor: initialRhFactor } = parseBloodTypeValue(
@@ -68,7 +70,10 @@ export default function ProfileEditScreen() {
   );
 
   const initialName = user?.displayName ?? "";
-  const initialAllergies = useMemo(() => createUniqueItems(user?.allergies ?? []), [user?.allergies]);
+  const initialAllergies = useMemo(
+    () => createUniqueItems(user?.allergies ?? []),
+    [user?.allergies],
+  );
   const initialChronic = useMemo(
     () => createUniqueItems(user?.chronicConditions ?? []),
     [user?.chronicConditions],
@@ -99,9 +104,21 @@ export default function ProfileEditScreen() {
       allergyInput: "",
       chronicInput: "",
     });
-  }, [initialAllergies, initialBloodType, initialChronic, initialGender, initialName, initialRhFactor, reset]);
+  }, [
+    initialAllergies,
+    initialBloodType,
+    initialChronic,
+    initialGender,
+    initialName,
+    initialRhFactor,
+    reset,
+  ]);
 
-  const addItem = (value: string, listField: "allergies" | "chronicConditions", inputField?: "allergyInput" | "chronicInput") => {
+  const addItem = (
+    value: string,
+    listField: "allergies" | "chronicConditions",
+    inputField?: "allergyInput" | "chronicInput",
+  ) => {
     const normalized = value.trim();
     if (!normalized) return;
 
@@ -226,9 +243,7 @@ export default function ProfileEditScreen() {
                   inputValue={chronicInput}
                   inputPlaceholder="새 기저질환 입력"
                   onInputChange={onChronicInputChange}
-                  onAddItem={(value) =>
-                    addItem(value, "chronicConditions", "chronicInput")
-                  }
+                  onAddItem={(value) => addItem(value, "chronicConditions", "chronicInput")}
                   onRemoveItem={(value) => removeItem(value, "chronicConditions")}
                 />
               )}

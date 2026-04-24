@@ -42,11 +42,9 @@ export function SettingsSection({ onPrivacyPress }: SettingsSectionProps) {
   const medicationAlarm = optimistic?.isMyReminderOn ?? syncedSettings?.isMyReminderOn ?? true;
   const familyAlarm = optimistic?.isFamilyReminderOn ?? syncedSettings?.isFamilyReminderOn ?? true;
 
-  const handleToggleSetting = (
-    key: "isMyReminderOn" | "isFamilyReminderOn",
-    next: boolean,
-  ) => {
-    const previous = optimistic ?? syncedSettings ?? { isMyReminderOn: true, isFamilyReminderOn: true };
+  const handleToggleSetting = (key: "isMyReminderOn" | "isFamilyReminderOn", next: boolean) => {
+    const previous = optimistic ??
+      syncedSettings ?? { isMyReminderOn: true, isFamilyReminderOn: true };
     const patch: Partial<Pick<NotificationSettings, "isMyReminderOn" | "isFamilyReminderOn">> = {
       [key]: next,
     };

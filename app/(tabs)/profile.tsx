@@ -57,7 +57,11 @@ export default function ProfileScreen() {
     >
       <YStack gap={20}>
         <ProfilePageHeader />
-        <UserHeroCard name={profileUser.name} role={profileUser.role} onPress={handleOpenProfileEdit} />
+        <UserHeroCard
+          name={profileUser.name}
+          role={profileUser.role}
+          onPress={handleOpenProfileEdit}
+        />
         <FamilyProfileSection profiles={familyProfiles} />
         <HealthInfoSection
           allergies={allergies}
