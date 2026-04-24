@@ -1,4 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Text, YStack } from "tamagui";
 
@@ -6,6 +7,7 @@ import { useNotificationSettings, useUpdateNotificationSettings } from "@/api/qu
 import { ListLinkRow } from "@/components/ui/ListLinkRow";
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 import { palette } from "@/constants/design-tokens";
+import type { NotificationSettings } from "@/api/types";
 
 export type SettingsSectionProps = {
   onPrivacyPress?: () => void;
@@ -13,10 +15,51 @@ export type SettingsSectionProps = {
 
 export function SettingsSection({ onPrivacyPress }: SettingsSectionProps) {
   const { data: settings } = useNotificationSettings();
-  const { mutate: updateSettings } = useUpdateNotificationSettings();
+  const { mutate: updateSettings, isPending: isUpdatingSettings } = useUpdateNotificationSettings();
+  const [optimistic, setOptimistic] = useState<{
+    isMyReminderOn: boolean;
+    isFamilyReminderOn: boolean;
+  } | null>(null);
 
-  const medicationAlarm = settings?.isMyReminderOn ?? true;
-  const familyAlarm = settings?.isFamilyReminderOn ?? true;
+  const syncedSettings = useMemo(
+    () =>
+      settings
+        ? {
+            isMyReminderOn: settings.isMyReminderOn,
+            isFamilyReminderOn: settings.isFamilyReminderOn,
+          }
+        : null,
+    [settings],
+  );
+
+  useEffect(() => {
+    if (syncedSettings) {
+      setOptimistic(syncedSettings);
+    }
+  }, [syncedSettings]);
+
+  const medicationAlarm = optimistic?.isMyReminderOn ?? syncedSettings?.isMyReminderOn ?? true;
+  const familyAlarm = optimistic?.isFamilyReminderOn ?? syncedSettings?.isFamilyReminderOn ?? true;
+
+  const handleToggleSetting = (
+    key: "isMyReminderOn" | "isFamilyReminderOn",
+    next: boolean,
+  ) => {
+    const previous = optimistic ?? syncedSettings ?? { isMyReminderOn: true, isFamilyReminderOn: true };
+    const patch: Partial<Pick<NotificationSettings, "isMyReminderOn" | "isFamilyReminderOn">> = {
+      [key]: next,
+    };
+
+    setOptimistic({ ...previous, [key]: next });
+    updateSettings(patch, {
+      onError: () => setOptimistic(previous),
+      onSuccess: (updated) =>
+        setOptimistic({
+          isMyReminderOn: updated.isMyReminderOn,
+          isFamilyReminderOn: updated.isFamilyReminderOn,
+        }),
+    });
+  };
 
   return (
     <YStack gap={10}>
@@ -29,7 +72,8 @@ export function SettingsSection({ onPrivacyPress }: SettingsSectionProps) {
           trailing={
             <ToggleSwitch
               value={medicationAlarm}
-              onValueChange={(next) => updateSettings({ isMyReminderOn: next })}
+              onValueChange={(next) => handleToggleSetting("isMyReminderOn", next)}
+              disabled={isUpdatingSettings}
               accessibilityLabel="복약 알림 토글"
             />
           }
@@ -42,7 +86,8 @@ export function SettingsSection({ onPrivacyPress }: SettingsSectionProps) {
           trailing={
             <ToggleSwitch
               value={familyAlarm}
-              onValueChange={(next) => updateSettings({ isFamilyReminderOn: next })}
+              onValueChange={(next) => handleToggleSetting("isFamilyReminderOn", next)}
+              disabled={isUpdatingSettings}
               accessibilityLabel="가족 알림 토글"
             />
           }

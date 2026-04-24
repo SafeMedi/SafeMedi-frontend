@@ -14,11 +14,11 @@ const ALLERGY_LABEL_TO_ATC: Record<string, string> = {
   계란: "V01AA",
 };
 
-function mapAllergyLabelsToAtc(labels: string[]): string[] {
+export function profileAllergyLabelsToApiCodes(labels: string[]): string[] {
   const codes = new Set<string>();
   for (const label of labels) {
     const code = ALLERGY_LABEL_TO_ATC[label];
-    if (code) codes.add(code);
+    codes.add(code ?? label);
   }
   return [...codes];
 }
@@ -53,6 +53,6 @@ export function userToTutorialRegistrationBody(user: User): TutorialRegistration
     weight: user.weight ?? undefined,
     bloodType: user.bloodType ?? undefined,
     diseases: user.chronicConditions.length ? user.chronicConditions : undefined,
-    allergies: user.allergies.length ? mapAllergyLabelsToAtc(user.allergies) : undefined,
+    allergies: user.allergies.length ? profileAllergyLabelsToApiCodes(user.allergies) : undefined,
   };
 }
