@@ -1,7 +1,7 @@
 import { tutorialStep1Schema } from "@/components/domains/tutorial/schema";
 
-describe("tutorialStep1Schema", () => {
-  it("accepts valid step1 inputs", () => {
+describe("튜토리얼 Step1 스키마", () => {
+  it("유효한 Step1 입력값을 허용한다", () => {
     const result = tutorialStep1Schema.safeParse({
       height: "170",
       weight: "65",
@@ -13,7 +13,7 @@ describe("tutorialStep1Schema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts decimal strings within valid range", () => {
+  it("허용 범위 내 소수 입력 문자열을 허용한다", () => {
     const result = tutorialStep1Schema.safeParse({
       height: "170,4",
       weight: "65.7",
@@ -25,7 +25,7 @@ describe("tutorialStep1Schema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects out-of-range numeric values", () => {
+  it("범위를 벗어난 숫자 입력을 거부한다", () => {
     const result = tutorialStep1Schema.safeParse({
       height: "49",
       weight: "9",
@@ -41,7 +41,7 @@ describe("tutorialStep1Schema", () => {
     }
   });
 
-  it("rejects empty required fields", () => {
+  it("필수값이 비어 있으면 거부한다", () => {
     const result = tutorialStep1Schema.safeParse({
       height: "",
       weight: "",

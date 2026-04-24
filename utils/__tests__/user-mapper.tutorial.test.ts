@@ -14,8 +14,8 @@ const baseUser = {
   isTutorial: false,
 };
 
-describe("tutorial user mapping", () => {
-  it("maps profile allergy labels into deduplicated api codes", () => {
+describe("튜토리얼 사용자 매핑", () => {
+  it("프로필 알러지 라벨을 중복 제거된 API 코드로 변환한다", () => {
     const mapped = profileAllergyLabelsToApiCodes([
       "페니실린",
       "해산물",
@@ -27,7 +27,7 @@ describe("tutorial user mapping", () => {
     expect(mapped).toHaveLength(3);
   });
 
-  it("converts tutorial body fields expected by backend", () => {
+  it("백엔드가 기대하는 튜토리얼 요청 바디 형태로 변환한다", () => {
     const body = userToTutorialRegistrationBody(baseUser);
 
     expect(body).toEqual({
@@ -41,7 +41,7 @@ describe("tutorial user mapping", () => {
     });
   });
 
-  it("omits optional arrays when user has no disease/allergy", () => {
+  it("질환/알러지가 없으면 선택 필드 배열을 생략한다", () => {
     const body = userToTutorialRegistrationBody({
       ...baseUser,
       allergies: [],
