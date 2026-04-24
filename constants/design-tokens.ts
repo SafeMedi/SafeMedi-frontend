@@ -22,21 +22,40 @@ export const palette = {
   orange: "#FF4B22",
   purple: "#AD46FF",
   opal: "#00BBA7",
+  shadow_base: "#000000",
 
   // variant 톤 - red (알러지 / 위험)
   red_soft: "#FFC9C9",
   red_medium: "#FB2C36",
   red_strong: "#E7000B",
   red_deep: "#9F0712",
+  red_quick_text: "#C10007",
 
   // variant 톤 - blue (기저질환 / 정보)
   blue_soft: "#BEDBFF",
   blue_strong: "#155DFC",
   blue_deep: "#193CB8",
+  blue_quick_text: "#1447E6",
 
   // variant 톤 - green (활성 / 성공)
   green_soft: "#7BF1A8",
   green_deep: "#00A63E",
+
+  // neutral / input
+  input_placeholder: "#64748B",
+  border_muted: "#D1D5DC",
+
+  // common surface
+  surface_card: "rgba(255,255,255,0.85)",
+  surface_card_border: "rgba(255,255,255,0.3)",
+
+  // notice tone
+  notice_bg_start: "#FFF7ED",
+  notice_bg_end: "#FEFCE8",
+  notice_border: "#FFD6A8",
+  notice_title: "#9F2D00",
+  notice_description: "#CA3500",
+  pink: "#F6339A",
 
   // linearGradient 3중첩 설정
   bg_green_line: ["#00C950", "#00BC7D", "#00BBA7"],

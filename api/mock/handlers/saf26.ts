@@ -77,20 +77,38 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
 
   registry.register("PATCH", apiPaths.usersMe, async (ctx) => {
     const patch = ctx.jsonBody as Partial<{
+      displayName: string;
+      gender: "M" | "F";
+      bloodType: string;
+      diseases: string[];
       weight: number;
       allergies: string[];
       height: number;
     }>;
+    if (patch.displayName !== undefined) {
+      mockState.profile.displayName = patch.displayName;
+    }
+    if (patch.diseases) {
+      mockState.profile.diseases = [...patch.diseases];
+    }
+    if (patch.gender !== undefined) {
+      mockState.profile.gender = patch.gender;
+    }
+    if (patch.bloodType !== undefined) {
+      mockState.profile.bloodType = patch.bloodType;
+    }
     if (patch.weight !== undefined) mockState.profile.weight = patch.weight;
     if (patch.height !== undefined) mockState.profile.height = patch.height;
     if (patch.allergies) {
-      mockState.profile.allergies = patch.allergies.map((code) => ({
-        code,
-        name:
-          code === "M01AE01"
-            ? "이부프로펜"
-            : (mockState.profile.allergies.find((a) => a.code === code)?.name ?? code),
-      }));
+      mockState.profile.allergies = patch.allergies.map((value) => {
+        const existing = mockState.profile.allergies.find(
+          (a) => a.code === value || a.name === value,
+        );
+        return {
+          code: existing?.code ?? value,
+          name: existing?.name ?? value,
+        };
+      });
     }
     return { ...mockState.profile };
   });

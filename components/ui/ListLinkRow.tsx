@@ -4,8 +4,10 @@ import {
   type GestureResponderEvent,
   Pressable,
   type PressableStateCallbackType,
+  type StyleProp,
   StyleSheet,
   Text,
+  type ViewStyle,
   View,
 } from "react-native";
 
@@ -17,6 +19,10 @@ export type ListLinkRowProps = {
   subtitle?: string;
   trailing?: ReactNode;
   showChevron?: boolean;
+  trailingIconName?: React.ComponentProps<typeof Ionicons>["name"];
+  trailingIconSize?: number;
+  trailingIconColor?: string;
+  containerStyle?: StyleProp<ViewStyle>;
   onPress?: (event: GestureResponderEvent) => void;
   hasBorderBottom?: boolean;
 };
@@ -27,17 +33,22 @@ export function ListLinkRow({
   subtitle,
   trailing,
   showChevron,
+  trailingIconName = "chevron-forward",
+  trailingIconSize = 18,
+  trailingIconColor = palette.icon,
+  containerStyle,
   onPress,
   hasBorderBottom,
 }: ListLinkRowProps) {
-  const containerStyle = ({ pressed }: PressableStateCallbackType) => [
+  const pressableStyle = ({ pressed }: PressableStateCallbackType) => [
     styles.container,
     hasBorderBottom ? styles.border : null,
     pressed && onPress ? styles.pressed : null,
+    containerStyle,
   ];
 
   return (
-    <Pressable onPress={onPress} disabled={!onPress} style={containerStyle}>
+    <Pressable onPress={onPress} disabled={!onPress} style={pressableStyle}>
       <View style={styles.leading}>
         {icon ? <View style={styles.iconWrap}>{icon}</View> : null}
         <View style={styles.textWrap}>
@@ -47,7 +58,9 @@ export function ListLinkRow({
       </View>
       <View style={styles.trailing}>
         {trailing}
-        {showChevron ? <Ionicons name="chevron-forward" size={18} color={palette.icon} /> : null}
+        {showChevron ? (
+          <Ionicons name={trailingIconName} size={trailingIconSize} color={trailingIconColor} />
+        ) : null}
       </View>
     </Pressable>
   );

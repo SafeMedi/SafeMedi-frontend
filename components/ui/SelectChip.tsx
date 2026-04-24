@@ -14,6 +14,10 @@ type SelectChipProps = {
   selectedBorderColor?: string;
   unselectedBorderColor?: string;
   borderWidth?: number;
+  selectedTextColor?: string;
+  unselectedTextColor?: string;
+  textFontSize?: number;
+  textFontWeight?: "400" | "500" | "600" | "700";
 };
 
 export function SelectChip({
@@ -29,6 +33,10 @@ export function SelectChip({
   selectedBorderColor = palette.green,
   unselectedBorderColor = palette.dark_gray,
   borderWidth = 1,
+  selectedTextColor = palette.white,
+  unselectedTextColor = palette.black,
+  textFontSize = 14,
+  textFontWeight = "600",
 }: SelectChipProps) {
   return (
     <Button
@@ -52,7 +60,11 @@ export function SelectChip({
         overflow: "hidden",
       }}
     >
-      <Text fontSize={14} fontWeight="600" style={{ color: selected ? "#FFFFFF" : palette.black }}>
+      <Text
+        fontSize={textFontSize}
+        fontWeight={textFontWeight}
+        style={{ color: selected ? selectedTextColor : unselectedTextColor }}
+      >
         {label}
       </Text>
     </Button>

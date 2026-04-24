@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { router } from "expo-router";
 import { useMemo } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -44,17 +45,30 @@ export default function ProfileScreen() {
     [],
   );
 
+  const handleOpenProfileEdit = () => {
+    router.push("/profile/edit");
+  };
+
   return (
     <ScrollView
       style={styles.scroll}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: 120 }]}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: 32 }]}
       showsVerticalScrollIndicator={false}
     >
       <YStack gap={20}>
         <ProfilePageHeader />
-        <UserHeroCard name={profileUser.name} role={profileUser.role} />
+        <UserHeroCard
+          name={profileUser.name}
+          role={profileUser.role}
+          onPress={handleOpenProfileEdit}
+        />
         <FamilyProfileSection profiles={familyProfiles} />
-        <HealthInfoSection allergies={allergies} chronicConditions={chronicConditions} />
+        <HealthInfoSection
+          allergies={allergies}
+          chronicConditions={chronicConditions}
+          onEditAllergies={handleOpenProfileEdit}
+          onEditChronicConditions={handleOpenProfileEdit}
+        />
         <SettingsSection />
         <AppInfoSection items={appInfoItems} />
         <LogoutButton onPress={handleLogout} />
