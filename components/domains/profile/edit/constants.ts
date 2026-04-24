@@ -1,5 +1,5 @@
 import { palette } from "@/constants/design-tokens";
-import { mockProfileEditQuickItems } from "@/api/mock/data/profile-edit";
+import { profileEditQuickItems } from "@/constants/health-profile-options";
 
 export type ProfileEditSectionVariant = "allergy" | "chronic";
 
@@ -31,7 +31,7 @@ export const PROFILE_EDIT_SECTION_STYLES: Record<
   },
 };
 
-export const PROFILE_EDIT_QUICK_ITEMS = mockProfileEditQuickItems as Record<
+export const PROFILE_EDIT_QUICK_ITEMS = profileEditQuickItems as Record<
   ProfileEditSectionVariant,
   readonly string[]
 >;
