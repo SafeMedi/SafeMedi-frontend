@@ -1,7 +1,7 @@
 import type { TutorialRegistrationBody } from "@/api/types/tutorial";
 import type { UserProfile } from "@/api/types/user";
-import { BLOOD_TYPES } from "@/constants/health-profile-options";
 import type { User } from "@/stores/userStore";
+import { splitBloodTypeWithRh } from "@/utils/blood-type";
 
 /** UI 선택지·한글 라벨 → ATC 코드 (백엔드 연동 전 임시 매핑) */
 const ALLERGY_LABEL_TO_ATC: Record<string, string> = {
@@ -63,16 +63,14 @@ export function profileToUser(profile: UserProfile): User {
 }
 
 export function userToTutorialRegistrationBody(user: User): TutorialRegistrationBody {
-  const baseBloodType = user.bloodType?.replace("+", "").replace("-", "") as
-    | (typeof BLOOD_TYPES)[number]
-    | undefined;
+  const { bloodType: baseBloodType } = splitBloodTypeWithRh(user.bloodType);
 
   return {
     birthDate: user.birthDate ?? "2000-01-01",
     gender: user.gender === "female" ? "F" : "M",
     height: user.height ?? undefined,
     weight: user.weight ?? undefined,
-    bloodType: baseBloodType && BLOOD_TYPES.includes(baseBloodType) ? baseBloodType : undefined,
+    bloodType: baseBloodType,
     diseases: user.chronicConditions.length ? user.chronicConditions : undefined,
     allergies: user.allergies.length ? profileAllergyLabelsToApiCodes(user.allergies) : undefined,
   };

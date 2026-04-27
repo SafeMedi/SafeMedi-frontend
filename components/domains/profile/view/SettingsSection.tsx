@@ -2,12 +2,12 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet } from "react-native";
 import { Text, YStack } from "tamagui";
 
+import type { NotificationSettings } from "@/api/types";
 import { useNotificationSettings, useUpdateNotificationSettings } from "@/api/queries/profile";
 import { ListLinkRow } from "@/components/ui/ListLinkRow";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 import { palette } from "@/constants/design-tokens";
-import type { NotificationSettings } from "@/api/types";
 
 export type SettingsSectionProps = {
   onPrivacyPress?: () => void;

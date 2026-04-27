@@ -6,13 +6,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
 import { useFamilyProfiles, useHealthInfo, useProfileUser } from "@/api/queries/profile";
 import { queryKeys } from "@/api/query-keys";
-import { AppInfoSection } from "@/components/domains/profile/AppInfoSection";
-import { FamilyProfileSection } from "@/components/domains/profile/FamilyProfileSection";
-import { HealthInfoSection } from "@/components/domains/profile/HealthInfoSection";
-import { LogoutButton } from "@/components/domains/profile/LogoutButton";
-import { ProfilePageHeader } from "@/components/domains/profile/ProfilePageHeader";
-import { SettingsSection } from "@/components/domains/profile/SettingsSection";
-import { UserHeroCard } from "@/components/domains/profile/UserHeroCard";
+import {
+  AppInfoSection,
+  FamilyProfileSection,
+  HealthInfoSection,
+  LogoutButton,
+  ProfilePageHeader,
+  SettingsSection,
+  UserHeroCard,
+} from "@/components/domains/profile/view";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUserStore } from "@/stores/userStore";
 

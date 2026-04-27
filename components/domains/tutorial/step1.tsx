@@ -10,23 +10,24 @@ import {
 } from "@/components/domains/tutorial/schema";
 import { SelectChip } from "@/components/ui/SelectChip";
 import { palette } from "@/constants/design-tokens";
-import { BLOOD_TYPES, bloodOptions, genderOptions } from "@/constants/health-profile-options";
+import { bloodOptions, genderOptions, rhOptions } from "@/constants/health-profile-options";
 import { useUserStore } from "@/stores/userStore";
+import { combineBloodTypeWithRh, splitBloodTypeWithRh } from "@/utils/blood-type";
 
 const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
   const user = useUserStore((s) => s.user);
   const updateUser = useUserStore((s) => s.updateUser);
-  const defaultBloodType = user?.bloodType?.replace("+", "").replace("-", "");
+  const { bloodType: defaultBloodType, rhFactor: defaultRhFactor } = splitBloodTypeWithRh(
+    user?.bloodType,
+  );
 
   const { control, handleSubmit } = useForm<TutorialStep1FormValues>({
     resolver: zodResolver(tutorialStep1Schema),
     defaultValues: {
       height: user?.height != null ? String(user.height) : "",
       weight: user?.weight != null ? String(user.weight) : "",
-      bloodType:
-        defaultBloodType && BLOOD_TYPES.includes(defaultBloodType as (typeof BLOOD_TYPES)[number])
-          ? (defaultBloodType as (typeof BLOOD_TYPES)[number])
-          : undefined,
+      bloodType: defaultBloodType,
+      rhFactor: defaultRhFactor,
       gender: user?.gender ?? undefined,
     },
   });
@@ -39,9 +40,9 @@ const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
           void handleSubmit(
             (data) => {
               updateUser({
-                height: Math.round(Number(data.height.replace(",", "."))),
-                weight: Math.round(Number(data.weight.replace(",", "."))),
-                bloodType: data.bloodType,
+                height: Number(data.height.replace(",", ".")),
+                weight: Number(data.weight.replace(",", ".")),
+                bloodType: combineBloodTypeWithRh(data.bloodType, data.rhFactor),
                 gender: data.gender,
               });
               resolve(true);
@@ -151,6 +152,34 @@ const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
                 {error ? (
                   <Text fontSize={12} style={{ color: palette.red }}>
                     {error.message}
+                  </Text>
+                ) : null}
+              </>
+            )}
+          />
+          <Controller
+            control={control}
+            name="rhFactor"
+            render={({
+              field: { onChange: onRhFactorChange, value: rhValue },
+              fieldState: { error: rhError },
+            }) => (
+              <>
+                <XStack gap={10}>
+                  {rhOptions.map((opt) => (
+                    <SelectChip
+                      key={opt.value}
+                      onPress={() => onRhFactorChange(opt.value)}
+                      label={opt.label}
+                      selected={rhValue === opt.value}
+                      accessibilityLabel={opt.label}
+                      flex={1}
+                    />
+                  ))}
+                </XStack>
+                {rhError ? (
+                  <Text fontSize={12} style={{ color: palette.red }}>
+                    {rhError.message}
                   </Text>
                 ) : null}
               </>
