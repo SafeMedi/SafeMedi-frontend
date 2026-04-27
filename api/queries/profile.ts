@@ -3,7 +3,7 @@ import { fetchFamilies } from "@/api/endpoints/family";
 import { fetchNotificationSettings, patchNotificationSettings } from "@/api/endpoints/notification";
 import { queryKeys } from "@/api/query-keys";
 import type { NotificationSettings } from "@/api/types";
-import { FAMILY_AVATAR_GRADIENTS } from "@/components/domains/profile/constants";
+import { FAMILY_AVATAR_GRADIENTS } from "@/components/domains/profile/view/constants";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUserStore } from "@/stores/userStore";
 

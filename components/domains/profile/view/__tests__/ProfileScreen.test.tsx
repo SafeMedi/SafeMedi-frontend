@@ -51,13 +51,13 @@ jest.mock("tamagui", () => {
   };
 });
 
-jest.mock("@/components/domains/profile/ProfilePageHeader", () => {
+jest.mock("@/components/domains/profile/view/ProfilePageHeader", () => {
   const React = require("react");
   const { Text } = require("react-native");
   return { ProfilePageHeader: () => React.createElement(Text, null, "헤더") };
 });
 
-jest.mock("@/components/domains/profile/UserHeroCard", () => {
+jest.mock("@/components/domains/profile/view/UserHeroCard", () => {
   const React = require("react");
   const { Pressable, Text } = require("react-native");
   return {
@@ -70,31 +70,31 @@ jest.mock("@/components/domains/profile/UserHeroCard", () => {
   };
 });
 
-jest.mock("@/components/domains/profile/FamilyProfileSection", () => {
+jest.mock("@/components/domains/profile/view/FamilyProfileSection", () => {
   const React = require("react");
   const { Text } = require("react-native");
   return { FamilyProfileSection: () => React.createElement(Text, null, "가족 프로필") };
 });
 
-jest.mock("@/components/domains/profile/HealthInfoSection", () => {
+jest.mock("@/components/domains/profile/view/HealthInfoSection", () => {
   const React = require("react");
   const { Text } = require("react-native");
   return { HealthInfoSection: () => React.createElement(Text, null, "건강 정보") };
 });
 
-jest.mock("@/components/domains/profile/SettingsSection", () => {
+jest.mock("@/components/domains/profile/view/SettingsSection", () => {
   const React = require("react");
   const { Text } = require("react-native");
   return { SettingsSection: () => React.createElement(Text, null, "설정") };
 });
 
-jest.mock("@/components/domains/profile/AppInfoSection", () => {
+jest.mock("@/components/domains/profile/view/AppInfoSection", () => {
   const React = require("react");
   const { Text } = require("react-native");
   return { AppInfoSection: () => React.createElement(Text, null, "앱 정보") };
 });
 
-jest.mock("@/components/domains/profile/LogoutButton", () => {
+jest.mock("@/components/domains/profile/view/LogoutButton", () => {
   const React = require("react");
   const { Pressable, Text } = require("react-native");
   return {
