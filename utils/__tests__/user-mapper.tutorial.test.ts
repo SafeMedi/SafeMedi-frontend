@@ -1,4 +1,7 @@
-import { profileAllergyLabelsToApiCodes, userToTutorialRegistrationBody } from "@/utils/user-mapper";
+import {
+  profileAllergyLabelsToApiCodes,
+  userToTutorialRegistrationBody,
+} from "@/utils/user-mapper";
 
 const baseUser = {
   id: "me",

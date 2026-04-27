@@ -47,7 +47,8 @@ jest.mock("tamagui", () => {
   const React = require("react");
   const { View } = require("react-native");
   return {
-    YStack: ({ children }: { children: React.ReactNode }) => React.createElement(View, null, children),
+    YStack: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(View, null, children),
   };
 });
 

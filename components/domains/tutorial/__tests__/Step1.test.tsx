@@ -4,11 +4,7 @@ import "@/tests/test-utils/test-mocks";
 import type { StepHandle } from "@/app/(auth)/tutorial";
 import Step1 from "@/components/domains/tutorial/Step1";
 import type { User } from "@/stores/userStore";
-import {
-  mockUpdateUser,
-  resetMockStore,
-  setMockUser,
-} from "@/tests/test-utils/test-mocks";
+import { mockUpdateUser, resetMockStore, setMockUser } from "@/tests/test-utils/test-mocks";
 
 const baseUser: User = {
   id: "me",
@@ -34,8 +30,8 @@ describe("튜토리얼 Step1", () => {
     const ref = createRef<StepHandle>();
     const { getByPlaceholderText, getByLabelText } = render(<Step1 ref={ref} />);
 
-    fireEvent.changeText(getByPlaceholderText("예: 170"), "171");
-    fireEvent.changeText(getByPlaceholderText("예: 65"), "66");
+    fireEvent.changeText(getByPlaceholderText("예: 170"), "171.5");
+    fireEvent.changeText(getByPlaceholderText("예: 65"), "66.3");
     fireEvent.press(getByLabelText("AB형"));
     fireEvent.press(getByLabelText("Rh-"));
     fireEvent.press(getByLabelText("여성"));
@@ -47,8 +43,8 @@ describe("튜토리얼 Step1", () => {
 
     expect(submitted).toBe(true);
     expect(mockUpdateUser).toHaveBeenCalledWith({
-      height: 171,
-      weight: 66,
+      height: 171.5,
+      weight: 66.3,
       bloodType: "AB-",
       gender: "female",
     });

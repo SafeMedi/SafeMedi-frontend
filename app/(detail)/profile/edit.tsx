@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { Alert, ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
@@ -15,18 +15,13 @@ import {
   ProfileNicknameCard,
   ProfileTagEditorCard,
 } from "@/components/domains/profile/edit";
-import {
-  BLOOD_TYPES,
-  type BloodTypeOptionValue,
-  type GenderOptionValue,
-  type RhFactorOptionValue,
-  GENDERS,
-} from "@/constants/health-profile-options";
+import { type GenderOptionValue, GENDERS } from "@/constants/health-profile-options";
 import {
   type ProfileEditFormValues,
   profileEditSchema,
 } from "@/components/domains/profile/edit/schema";
 import { useUserStore } from "@/stores/userStore";
+import { combineBloodTypeWithRh, splitBloodTypeWithRhOrDefault } from "@/utils/blood-type";
 import { profileAllergyLabelsToApiCodes } from "@/utils/user-mapper";
 
 function createUniqueItems(items: readonly string[]): string[] {
@@ -43,19 +38,6 @@ function createUniqueItems(items: readonly string[]): string[] {
   return next;
 }
 
-function parseBloodTypeValue(value: string | null | undefined): {
-  bloodType: BloodTypeOptionValue;
-  rhFactor: RhFactorOptionValue;
-} {
-  const raw = (value ?? "").toUpperCase().trim();
-  const base = raw.replace("+", "").replace("-", "");
-  const bloodType = BLOOD_TYPES.includes(base as BloodTypeOptionValue)
-    ? (base as BloodTypeOptionValue)
-    : "O";
-  const rhFactor = raw.endsWith("-") ? "negative" : "positive";
-  return { bloodType, rhFactor };
-}
-
 export default function ProfileEditScreen() {
   const insets = useSafeAreaInsets();
   const user = useUserStore((s) => s.user);
@@ -65,7 +47,7 @@ export default function ProfileEditScreen() {
   )
     ? ((user?.gender ?? "male") as GenderOptionValue)
     : "male";
-  const { bloodType: initialBloodType, rhFactor: initialRhFactor } = parseBloodTypeValue(
+  const { bloodType: initialBloodType, rhFactor: initialRhFactor } = splitBloodTypeWithRhOrDefault(
     user?.bloodType,
   );
 
@@ -92,6 +74,13 @@ export default function ProfileEditScreen() {
       chronicInput: "",
     },
   });
+  const gender = useWatch({ control, name: "gender" });
+  const bloodType = useWatch({ control, name: "bloodType" });
+  const rhFactor = useWatch({ control, name: "rhFactor" });
+  const allergyInput = useWatch({ control, name: "allergyInput" });
+  const allergies = useWatch({ control, name: "allergies" });
+  const chronicInput = useWatch({ control, name: "chronicInput" });
+  const chronicConditions = useWatch({ control, name: "chronicConditions" });
 
   useEffect(() => {
     reset({
@@ -145,7 +134,7 @@ export default function ProfileEditScreen() {
       {
         displayName: values.displayName.trim(),
         gender: values.gender === "female" ? "F" : "M",
-        bloodType: `${values.bloodType}${values.rhFactor === "negative" ? "-" : "+"}`,
+        bloodType: combineBloodTypeWithRh(values.bloodType, values.rhFactor),
         diseases: values.chronicConditions,
         allergies: profileAllergyLabelsToApiCodes(values.allergies),
       },
@@ -180,75 +169,33 @@ export default function ProfileEditScreen() {
             <ProfileNicknameCard value={value} onChange={onChange} />
           )}
         />
-        <Controller
-          control={control}
-          name="gender"
-          render={({ field: { value: gender, onChange: onGenderChange } }) => (
-            <Controller
-              control={control}
-              name="bloodType"
-              render={({ field: { value: bloodType, onChange: onBloodTypeChange } }) => (
-                <Controller
-                  control={control}
-                  name="rhFactor"
-                  render={({ field: { value: rhFactor, onChange: onRhFactorChange } }) => (
-                    <ProfileBasicInfoCard
-                      gender={gender}
-                      bloodType={bloodType}
-                      rhFactor={rhFactor}
-                      onGenderChange={onGenderChange}
-                      onBloodTypeChange={onBloodTypeChange}
-                      onRhFactorChange={onRhFactorChange}
-                    />
-                  )}
-                />
-              )}
-            />
-          )}
+        <ProfileBasicInfoCard
+          gender={gender}
+          bloodType={bloodType}
+          rhFactor={rhFactor}
+          onGenderChange={(value) => setValue("gender", value, { shouldDirty: true })}
+          onBloodTypeChange={(value) => setValue("bloodType", value, { shouldDirty: true })}
+          onRhFactorChange={(value) => setValue("rhFactor", value, { shouldDirty: true })}
         />
-        <Controller
-          control={control}
-          name="allergyInput"
-          render={({ field: { value: allergyInput, onChange: onAllergyInputChange } }) => (
-            <Controller
-              control={control}
-              name="allergies"
-              render={({ field: { value: allergies } }) => (
-                <ProfileTagEditorCard
-                  variant="allergy"
-                  title="알러지"
-                  items={allergies}
-                  inputValue={allergyInput}
-                  inputPlaceholder="새 알러지 입력"
-                  onInputChange={onAllergyInputChange}
-                  onAddItem={(value) => addItem(value, "allergies", "allergyInput")}
-                  onRemoveItem={(value) => removeItem(value, "allergies")}
-                />
-              )}
-            />
-          )}
+        <ProfileTagEditorCard
+          variant="allergy"
+          title="알러지"
+          items={allergies}
+          inputValue={allergyInput}
+          inputPlaceholder="새 알러지 입력"
+          onInputChange={(value) => setValue("allergyInput", value, { shouldDirty: true })}
+          onAddItem={(value) => addItem(value, "allergies", "allergyInput")}
+          onRemoveItem={(value) => removeItem(value, "allergies")}
         />
-        <Controller
-          control={control}
-          name="chronicInput"
-          render={({ field: { value: chronicInput, onChange: onChronicInputChange } }) => (
-            <Controller
-              control={control}
-              name="chronicConditions"
-              render={({ field: { value: chronicConditions } }) => (
-                <ProfileTagEditorCard
-                  variant="chronic"
-                  title="기저질환"
-                  items={chronicConditions}
-                  inputValue={chronicInput}
-                  inputPlaceholder="새 기저질환 입력"
-                  onInputChange={onChronicInputChange}
-                  onAddItem={(value) => addItem(value, "chronicConditions", "chronicInput")}
-                  onRemoveItem={(value) => removeItem(value, "chronicConditions")}
-                />
-              )}
-            />
-          )}
+        <ProfileTagEditorCard
+          variant="chronic"
+          title="기저질환"
+          items={chronicConditions}
+          inputValue={chronicInput}
+          inputPlaceholder="새 기저질환 입력"
+          onInputChange={(value) => setValue("chronicInput", value, { shouldDirty: true })}
+          onAddItem={(value) => addItem(value, "chronicConditions", "chronicInput")}
+          onRemoveItem={(value) => removeItem(value, "chronicConditions")}
         />
         <ProfileEditNoticeCard />
         <ProfileEditActionBar

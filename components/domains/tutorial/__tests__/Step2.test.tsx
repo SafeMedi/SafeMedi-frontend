@@ -4,11 +4,7 @@ import "@/tests/test-utils/test-mocks";
 import type { StepHandle } from "@/app/(auth)/tutorial";
 import Step2 from "@/components/domains/tutorial/Step2";
 import type { User } from "@/stores/userStore";
-import {
-  mockUpdateUser,
-  resetMockStore,
-  setMockUser,
-} from "@/tests/test-utils/test-mocks";
+import { mockUpdateUser, resetMockStore, setMockUser } from "@/tests/test-utils/test-mocks";
 
 const baseUser: User = {
   id: "me",

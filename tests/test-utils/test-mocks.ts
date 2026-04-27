@@ -73,7 +73,8 @@ jest.mock("tamagui", () => {
         onSubmitEditing,
         accessibilityLabel,
       }),
-    Text: ({ children }: { children: React.ReactNode }) => React.createElement(Text, null, children),
+    Text: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(Text, null, children),
     XStack: ({ children }: { children: React.ReactNode }) =>
       React.createElement(View, null, children),
     YStack: ({ children }: { children: React.ReactNode }) =>
