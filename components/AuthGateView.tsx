@@ -1,0 +1,32 @@
+import { ActivityIndicator, Pressable, View } from "react-native";
+import { Text } from "tamagui";
+import { palette } from "@/constants/design-tokens";
+
+type AuthGateViewProps = {
+  kind: "loading" | "error";
+  onRetry?: () => void;
+};
+
+export function AuthGateView({ kind, onRetry }: AuthGateViewProps) {
+  if (kind === "loading") {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 12 }}>
+      <Text color={palette.text}>사용자 정보를 불러오지 못했습니다.</Text>
+      <Pressable
+        onPress={onRetry}
+        accessibilityRole="button"
+        accessibilityLabel="사용자 정보 다시 시도"
+        style={{ paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, borderWidth: 1 }}
+      >
+        <Text color={palette.text}>다시 시도</Text>
+      </Pressable>
+    </View>
+  );
+}

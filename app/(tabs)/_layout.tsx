@@ -6,30 +6,33 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { LinearGradient } from "expo-linear-gradient";
 import { Redirect, Tabs } from "expo-router";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { useUserProfile } from "@/api/queries/user";
+import { AuthGateView } from "@/components/AuthGateView";
 import { palette } from "@/constants/design-tokens";
-import { useSessionStore } from "@/stores/sessionStore";
+import { useAuthRouteState } from "@/hooks/use-auth-route-state";
 import { useUserStore } from "@/stores/userStore";
 
 const BG_PINK_LINE_STOPS = [0, 0.5, 1] as const;
 
 export default function TabLayout() {
-  const accessToken = useSessionStore((s) => s.accessToken);
+  const authState = useAuthRouteState();
   const user = useUserStore((s) => s.user);
-  const { isPending } = useUserProfile();
 
-  if (!accessToken) {
-    return <Redirect href="/(auth)/login" />;
+  if (authState.kind === "loading") {
+    return <AuthGateView kind="loading" />;
   }
 
-  if (isPending || !user) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+  if (authState.kind === "error") {
+    return <AuthGateView kind="error" onRetry={authState.retry} />;
+  }
+
+  if (authState.href !== "/(tabs)/dashboard") {
+    return <Redirect href={authState.href} />;
+  }
+
+  if (!user) {
+    return <AuthGateView kind="loading" />;
   }
 
   return (

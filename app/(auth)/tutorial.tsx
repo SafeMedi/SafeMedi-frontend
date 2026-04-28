@@ -2,12 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Redirect, useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { ActivityIndicator, Alert, View } from "react-native";
+import { Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, XStack, YStack } from "tamagui";
 
 import { parseApiError } from "@/api/error";
-import { useCompleteTutorialMutation, useUserProfile } from "@/api/queries/user";
+import { useCompleteTutorialMutation } from "@/api/queries/user";
+import { AuthGateView } from "@/components/AuthGateView";
 import Step1 from "@/components/domains/tutorial/Step1";
 import Step2 from "@/components/domains/tutorial/Step2";
 import Step3 from "@/components/domains/tutorial/Step3";
@@ -15,8 +16,7 @@ import Step4 from "@/components/domains/tutorial/Step4";
 import { PillButton } from "@/components/ui/PillButton";
 import { SegmentedStepProgress } from "@/components/ui/SegmentedStepProgress";
 import { palette } from "@/constants/design-tokens";
-import { useSessionHydrated } from "@/hooks/use-session-hydrated";
-import { useSessionStore } from "@/stores/sessionStore";
+import { useAuthRouteState } from "@/hooks/use-auth-route-state";
 import { useUserStore } from "@/stores/userStore";
 import { userToTutorialRegistrationBody } from "@/utils/user-mapper";
 
@@ -29,9 +29,7 @@ const TOTAL_STEPS = 4;
 export default function TutorialScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const hydrated = useSessionHydrated();
-  const accessToken = useSessionStore((s) => s.accessToken);
-  const { data: profile, isPending: profilePending } = useUserProfile();
+  const authState = useAuthRouteState();
   const user = useUserStore((s) => s.user);
   const completeTutorial = useCompleteTutorialMutation();
 
@@ -41,36 +39,20 @@ export default function TutorialScreen() {
   const step3Ref = useRef<StepHandle>(null);
   const step4Ref = useRef<StepHandle>(null);
 
-  if (!hydrated) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+  if (authState.kind === "loading") {
+    return <AuthGateView kind="loading" />;
   }
 
-  if (!accessToken) {
-    return <Redirect href="/(auth)/login" />;
+  if (authState.kind === "error") {
+    return <AuthGateView kind="error" onRetry={authState.retry} />;
   }
 
-  if (profilePending || !profile) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
-  if (profile.isTutorialCompleted) {
-    return <Redirect href="/(tabs)/dashboard" />;
+  if (authState.href !== "/(auth)/tutorial") {
+    return <Redirect href={authState.href} />;
   }
 
   if (!user) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+    return <AuthGateView kind="loading" />;
   }
 
   const handleComplete = async () => {

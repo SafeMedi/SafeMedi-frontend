@@ -36,10 +36,9 @@ export function useLoginMutation() {
     onSuccess: async (data) => {
       if (!data?.accessToken) return;
       setAccessToken(data.accessToken);
-      await queryClient.fetchQuery({
-        queryKey: queryKeys.user.me,
-        queryFn: () => fetchUserProfileWithAccessToken(data.accessToken),
-      });
+      const profile = await fetchUserProfileWithAccessToken(data.accessToken);
+      queryClient.setQueryData(queryKeys.user.me, profile);
+      useUserStore.getState().setUser(profileToUser(profile));
     },
   });
 }
