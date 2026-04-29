@@ -20,10 +20,13 @@ export { queryKeys } from "./query-keys";
 export type {
   AllergyItem,
   FamilyDetail,
+  FamilyManageMember,
+  FamilyManageOverview,
   FamilySummary,
   NotificationItem,
   NotificationListResponse,
   NotificationSettings,
+  PendingFamilyInviteItem,
   ReceivedFamilyRequest,
   SocialLoginResponse,
   TutorialRegistrationBody,

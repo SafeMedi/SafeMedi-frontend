@@ -1,5 +1,6 @@
 import type {
   FamilyDetail,
+  FamilyManageOverview,
   FamilySummary,
   NotificationListResponse,
   NotificationSettings,
@@ -22,6 +23,7 @@ export const mockState: MockOnlyState & {
   profile: UserProfile;
   receivedRequests: ReceivedFamilyRequest[];
   families: FamilySummary[];
+  familyManageOverview: FamilyManageOverview;
   familyDetail: FamilyDetail;
   notificationSettings: NotificationSettings;
   notifications: NotificationListResponse;
@@ -81,6 +83,27 @@ export const mockState: MockOnlyState & {
       gender: "M",
     },
   ],
+
+  familyManageOverview: {
+    inviteLink: "https://medisafe.app/invite/ABC123XYZ",
+    members: [
+      { id: "me", name: "홍길동", relation: "본인", emoji: "👨", isActive: true },
+      { id: "mother", name: "김영희", relation: "어머니", emoji: "👩", isActive: true },
+    ],
+    pendingInvites: [
+      {
+        id: "father",
+        relation: "아버지",
+        email: "father@email.com",
+        invitedAt: "2026.03.18",
+      },
+    ],
+    benefits: [
+      "가족의 복약 알림을 함께 받아보세요",
+      "복약을 놓친 가족에게 알림을 보낼 수 있어요",
+      "가족의 건강 정보를 응급 상황에서 확인할 수 있어요",
+    ],
+  },
 
   familyDetail: {
     familyId: 1,

@@ -1,7 +1,10 @@
 export type { SocialLoginResponse } from "./auth";
 export type {
   FamilyDetail,
+  FamilyManageMember,
+  FamilyManageOverview,
   FamilySummary,
+  PendingFamilyInviteItem,
   ReceivedFamilyRequest,
 } from "./family";
 export type {

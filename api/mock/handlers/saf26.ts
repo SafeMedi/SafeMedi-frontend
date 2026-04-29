@@ -180,6 +180,13 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
 
   registry.register("GET", apiPaths.families, () => mockState.families.map((f) => ({ ...f })));
 
+  registry.register("GET", apiPaths.familiesManage, () => ({
+    ...mockState.familyManageOverview,
+    members: mockState.familyManageOverview.members.map((member) => ({ ...member })),
+    pendingInvites: mockState.familyManageOverview.pendingInvites.map((invite) => ({ ...invite })),
+    benefits: [...mockState.familyManageOverview.benefits],
+  }));
+
   registry.registerMatch(
     "PATCH",
     (p) => RX.familySettings.test(p),
