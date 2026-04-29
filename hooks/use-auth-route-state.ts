@@ -6,6 +6,8 @@ import { useUserProfile } from "@/api/queries/user";
 import { queryKeys } from "@/api/query-keys";
 import { useSessionHydrated } from "@/hooks/use-session-hydrated";
 import { useSessionStore } from "@/stores/sessionStore";
+import { useUserStore } from "@/stores/userStore";
+import { profileToUser } from "@/utils/user-mapper";
 
 export type AuthRouteHref = "/(auth)/login" | "/(auth)/tutorial" | "/(tabs)/dashboard";
 
@@ -19,6 +21,8 @@ export function useAuthRouteState(): AuthRouteState {
   const hydrated = useSessionHydrated();
   const accessToken = useSessionStore((s) => s.accessToken);
   const clearSession = useSessionStore((s) => s.clearSession);
+  const user = useUserStore((s) => s.user);
+  const setUser = useUserStore((s) => s.setUser);
   const { data: profile, isPending, isError, error, refetch } = useUserProfile();
 
   useEffect(() => {
@@ -28,6 +32,13 @@ export function useAuthRouteState(): AuthRouteState {
     clearSession();
     queryClient.removeQueries({ queryKey: queryKeys.user.me });
   }, [hydrated, accessToken, isError, error, clearSession, queryClient]);
+
+  useEffect(() => {
+    if (!hydrated || !accessToken || isError || !profile || user) {
+      return;
+    }
+    setUser(profileToUser(profile));
+  }, [hydrated, accessToken, isError, profile, user, setUser]);
 
   if (!hydrated) {
     return { kind: "loading" };
