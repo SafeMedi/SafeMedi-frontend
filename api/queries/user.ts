@@ -31,15 +31,25 @@ export function useLoginMutation() {
   const setAccessToken = useSessionStore((s) => s.setAccessToken);
 
   return useMutation({
-    mutationFn: ({ provider, accessToken }: { provider: "kakao" | "naver"; accessToken: string }) =>
-      postSocialLogin(provider, accessToken),
-    onSuccess: async (data) => {
-      if (!data?.accessToken) return;
-      setAccessToken(data.accessToken);
-      await queryClient.fetchQuery({
-        queryKey: queryKeys.user.me,
-        queryFn: () => fetchUserProfileWithAccessToken(data.accessToken),
-      });
+    mutationFn: async ({
+      provider,
+      accessToken,
+    }: {
+      provider: "kakao" | "naver";
+      accessToken: string;
+    }) => {
+      const loginResponse = await postSocialLogin(provider, accessToken);
+      if (!loginResponse?.accessToken) {
+        throw new Error("로그인 응답에 accessToken이 없습니다.");
+      }
+
+      const profile = await fetchUserProfileWithAccessToken(loginResponse.accessToken);
+      return { accessToken: loginResponse.accessToken, profile };
+    },
+    onSuccess: ({ accessToken, profile }) => {
+      setAccessToken(accessToken);
+      queryClient.setQueryData(queryKeys.user.me, profile);
+      useUserStore.getState().setUser(profileToUser(profile));
     },
   });
 }
