@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Pressable } from "react-native";
 import { palette } from "@/constants/design-tokens";
 
-const BORDER_SUBTLE = "#E5E7EB";
+const BORDER_SUBTLE = palette.dark_gray;
 
 export type PillButtonProps = {
   variant: "outline" | "solid";
@@ -10,8 +10,11 @@ export type PillButtonProps = {
   children: ReactNode;
   disabled?: boolean;
   accessibilityLabel?: string;
+  leftElement?: ReactNode;
   rightElement?: ReactNode;
   flex?: number;
+  borderColor?: string;
+  backgroundColor?: string;
 };
 
 export function PillButton({
@@ -20,10 +23,15 @@ export function PillButton({
   children,
   disabled = false,
   accessibilityLabel,
+  leftElement,
   rightElement,
   flex: flexGrow = 1,
+  borderColor = BORDER_SUBTLE,
+  backgroundColor,
 }: PillButtonProps) {
   const isOutline = variant === "outline";
+  const resolvedBackgroundColor =
+    backgroundColor ?? (isOutline ? palette.surface_card : palette.green);
 
   return (
     <Pressable
@@ -47,19 +55,20 @@ export function PillButton({
           ...(isOutline
             ? {
                 borderWidth: 1,
-                borderColor: BORDER_SUBTLE,
-                backgroundColor: "rgba(255, 255, 255, 0.85)",
+                borderColor,
+                backgroundColor: resolvedBackgroundColor,
               }
             : {
-                backgroundColor: palette.green,
+                backgroundColor: resolvedBackgroundColor,
               }),
           alignItems: "center",
           justifyContent: "center",
-          flexDirection: rightElement ? "row" : undefined,
-          gap: rightElement ? 4 : undefined,
+          flexDirection: leftElement || rightElement ? "row" : undefined,
+          gap: leftElement || rightElement ? 6 : undefined,
         };
       }}
     >
+      {leftElement}
       {children}
       {rightElement}
     </Pressable>
