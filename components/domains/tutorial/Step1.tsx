@@ -27,7 +27,7 @@ const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
       height: user?.height != null ? String(user.height) : "",
       weight: user?.weight != null ? String(user.weight) : "",
       bloodType: defaultBloodType,
-      rhFactor: defaultRhFactor,
+      rhFactor: defaultRhFactor ?? "positive",
       gender: user?.gender ?? undefined,
     },
   });

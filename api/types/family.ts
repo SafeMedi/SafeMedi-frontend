@@ -33,3 +33,25 @@ export type FamilyDetail = {
   allergies: AllergyItem[];
   isAlertConsent: boolean;
 };
+
+/** GET /api/v1/families/manage 응답 */
+export type FamilyManageMember = {
+  id: string;
+  name: string;
+  relation: string;
+  emoji: string;
+  isActive: boolean;
+};
+
+export type PendingFamilyInviteItem = {
+  id: string;
+  relation: string;
+  email: string;
+  invitedAt: string;
+};
+
+export type FamilyManageOverview = {
+  inviteLink: string;
+  members: FamilyManageMember[];
+  pendingInvites: PendingFamilyInviteItem[];
+};

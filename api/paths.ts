@@ -12,6 +12,7 @@ export const apiPaths = {
   familyRequest: (requestId: number | string) => `/api/v1/families/requests/${requestId}`,
 
   families: "/api/v1/families",
+  familiesManage: "/api/v1/families/manage",
   family: (familyId: number | string) => `/api/v1/families/${familyId}`,
   familySettings: (familyId: number | string) => `/api/v1/families/${familyId}/settings`,
 

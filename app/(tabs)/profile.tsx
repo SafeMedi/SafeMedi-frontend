@@ -51,6 +51,10 @@ export default function ProfileScreen() {
     router.push("/profile/edit");
   };
 
+  const handleOpenFamilyManage = () => {
+    router.push("/family/manage");
+  };
+
   return (
     <ScrollView
       style={styles.scroll}
@@ -64,7 +68,7 @@ export default function ProfileScreen() {
           role={profileUser.role}
           onPress={handleOpenProfileEdit}
         />
-        <FamilyProfileSection profiles={familyProfiles} />
+        <FamilyProfileSection profiles={familyProfiles} onAddFamily={handleOpenFamilyManage} />
         <HealthInfoSection
           allergies={allergies}
           chronicConditions={chronicConditions}

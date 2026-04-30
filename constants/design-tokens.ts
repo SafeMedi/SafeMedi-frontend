@@ -44,6 +44,7 @@ export const palette = {
   // neutral / input
   input_placeholder: "#64748B",
   border_muted: "#D1D5DC",
+  surface_subtle: "#F9FAFB",
 
   // common surface
   surface_card: "rgba(255,255,255,0.85)",
@@ -55,6 +56,9 @@ export const palette = {
   notice_border: "#FFD6A8",
   notice_title: "#9F2D00",
   notice_description: "#CA3500",
+  pending_badge_bg: "#FFEDD4",
+  pending_badge_text: "#CA3500",
+  pending_status_bg: "#FF6900",
   pink: "#F6339A",
 
   // linearGradient 3중첩 설정
@@ -65,6 +69,9 @@ export const palette = {
   bg_allergy_card: ["#FEF2F2", "#FDF2F8"],
   bg_chronic_card: ["#EFF6FF", "#ECFEFF"],
   bg_family_active_card: ["#F0FDF4", "#ECFDF5"],
+  bg_family_manage: ["#F8FAFC", "#EFF6FF"],
+  bg_invite_icon: ["#00C950", "#00BC7D"],
+  bg_pending_avatar: ["#FF8904", "#F0B100"],
 } as const;
 
 type FontFaces = {
