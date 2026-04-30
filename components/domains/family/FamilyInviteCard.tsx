@@ -14,7 +14,11 @@ type FamilyInviteCardProps = {
   onShareLink?: () => void;
 };
 
+const NOOP = (): void => {};
+
 export function FamilyInviteCard({ inviteLink, onCopyLink, onShareLink }: FamilyInviteCardProps) {
+  const hasInviteLink = inviteLink.trim().length > 0;
+
   return (
     <YStack gap={10}>
       <SectionHeader
@@ -49,7 +53,8 @@ export function FamilyInviteCard({ inviteLink, onCopyLink, onShareLink }: Family
         <XStack gap={8}>
           <PillButton
             variant="outline"
-            onPress={onCopyLink ?? (() => {})}
+            disabled={!hasInviteLink}
+            onPress={hasInviteLink ? (onCopyLink ?? NOOP) : NOOP}
             borderColor={palette.green_soft}
             backgroundColor={palette.gray}
             leftElement={<Ionicons name="copy-outline" size={14} color={palette.green_deep} />}
@@ -58,7 +63,8 @@ export function FamilyInviteCard({ inviteLink, onCopyLink, onShareLink }: Family
           </PillButton>
           <PillButton
             variant="solid"
-            onPress={onShareLink ?? (() => {})}
+            disabled={!hasInviteLink}
+            onPress={hasInviteLink ? (onShareLink ?? NOOP) : NOOP}
             backgroundColor={palette.green}
             leftElement={<Ionicons name="share-social-outline" size={14} color={palette.white} />}
           >

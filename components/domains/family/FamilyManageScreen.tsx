@@ -2,9 +2,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import { useCallback } from "react";
-import { Alert, ScrollView, Share, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { YStack } from "tamagui";
+import { Text, YStack } from "tamagui";
 
 import { useFamilyManageOverview } from "@/api/queries/family";
 import { palette } from "@/constants/design-tokens";
@@ -16,7 +16,7 @@ import { PendingInvitesSection } from "./PendingInvitesSection";
 
 export function FamilyManageScreen() {
   const insets = useSafeAreaInsets();
-  const { data } = useFamilyManageOverview();
+  const { data, isLoading, isError, refetch } = useFamilyManageOverview();
   const inviteLink = data?.inviteLink ?? "";
   const members = data?.members ?? [];
   const pendingInvites = data?.pendingInvites ?? [];
@@ -58,14 +58,39 @@ export function FamilyManageScreen() {
       >
         <YStack gap={14}>
           <FamilyManageHeader onBack={() => router.back()} />
-          <FamilyFeatureBanner />
-          <FamilyInviteCard
-            inviteLink={inviteLink}
-            onCopyLink={handleCopyLink}
-            onShareLink={handleShareLink}
-          />
-          <FamilyMembersSection members={members} />
-          <PendingInvitesSection invites={pendingInvites} />
+          {isLoading ? (
+            <View style={styles.feedbackContainer}>
+              <ActivityIndicator size="large" color={palette.green} />
+              <Text style={styles.feedbackText}>가족 정보를 불러오는 중입니다.</Text>
+            </View>
+          ) : null}
+
+          {isError ? (
+            <YStack items="center" gap={12} style={styles.feedbackContainer}>
+              <Text style={styles.feedbackText}>가족 정보를 불러오지 못했습니다.</Text>
+              <Pressable
+                onPress={() => refetch()}
+                accessibilityRole="button"
+                accessibilityLabel="가족 정보 다시 시도"
+                style={styles.retryButton}
+              >
+                <Text style={styles.retryText}>다시 시도</Text>
+              </Pressable>
+            </YStack>
+          ) : null}
+
+          {!isLoading && !isError ? (
+            <>
+              <FamilyFeatureBanner />
+              <FamilyInviteCard
+                inviteLink={inviteLink}
+                onCopyLink={handleCopyLink}
+                onShareLink={handleShareLink}
+              />
+              <FamilyMembersSection members={members} />
+              <PendingInvitesSection invites={pendingInvites} />
+            </>
+          ) : null}
         </YStack>
       </ScrollView>
     </View>
@@ -81,5 +106,29 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
+  },
+  feedbackContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 48,
+    gap: 10,
+  },
+  feedbackText: {
+    color: palette.black,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  retryText: {
+    color: palette.green_deep,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  retryButton: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: palette.green_soft,
+    backgroundColor: palette.white,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
 });
