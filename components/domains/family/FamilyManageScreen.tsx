@@ -1,5 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import * as Clipboard from "expo-clipboard";
 import { useCallback } from "react";
 import { Alert, ScrollView, Share, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -20,9 +21,14 @@ export function FamilyManageScreen() {
   const members = data?.members ?? [];
   const pendingInvites = data?.pendingInvites ?? [];
 
-  const handleCopyLink = useCallback(() => {
+  const handleCopyLink = useCallback(async () => {
     if (!inviteLink) return;
-    Alert.alert("링크 준비 완료", "아직 클립보드 연동 전이라 공유하기 버튼을 이용해주세요.");
+    try {
+      await Clipboard.setStringAsync(inviteLink);
+      Alert.alert("복사 완료", "초대 링크를 클립보드에 복사했어요.");
+    } catch {
+      Alert.alert("복사 실패", "링크 복사에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
   }, [inviteLink]);
 
   const handleShareLink = useCallback(async () => {
