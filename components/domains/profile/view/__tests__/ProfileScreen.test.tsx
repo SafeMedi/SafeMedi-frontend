@@ -1,4 +1,5 @@
 import { fireEvent, render } from "@testing-library/react-native";
+import { router } from "expo-router";
 import { queryKeys } from "@/api/query-keys";
 import ProfileScreen from "@/app/(tabs)/profile";
 
@@ -79,8 +80,15 @@ jest.mock("@/components/domains/profile/view/FamilyProfileSection", () => {
 
 jest.mock("@/components/domains/profile/view/HealthInfoSection", () => {
   const React = require("react");
-  const { Text } = require("react-native");
-  return { HealthInfoSection: () => React.createElement(Text, null, "건강 정보") };
+  const { Pressable, Text } = require("react-native");
+  return {
+    HealthInfoSection: ({ onDetailPress }: { onDetailPress?: () => void }) =>
+      React.createElement(
+        Pressable,
+        { onPress: onDetailPress, accessibilityRole: "button", accessibilityLabel: "건강 정보 상세보기" },
+        React.createElement(Text, null, "건강 정보"),
+      ),
+  };
 });
 
 jest.mock("@/components/domains/profile/view/SettingsSection", () => {
@@ -109,6 +117,8 @@ jest.mock("@/components/domains/profile/view/LogoutButton", () => {
 });
 
 describe("프로필 기본 화면", () => {
+  const mockRouterPush = router.push as jest.MockedFunction<typeof router.push>;
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -134,5 +144,13 @@ describe("프로필 기본 화면", () => {
     expect(mockRemoveQueries).toHaveBeenCalledWith({
       queryKey: queryKeys.profile.notificationSettings,
     });
+  });
+
+  it("건강 정보 상세보기 클릭 시 건강정보 상세 페이지로 이동한다", () => {
+    const { getByLabelText } = render(<ProfileScreen />);
+
+    fireEvent.press(getByLabelText("건강 정보 상세보기"));
+
+    expect(mockRouterPush).toHaveBeenCalledWith("/profile/health-info");
   });
 });
