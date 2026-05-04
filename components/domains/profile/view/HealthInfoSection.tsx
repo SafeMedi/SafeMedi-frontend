@@ -28,7 +28,12 @@ export function HealthInfoSection({
         icon={<Ionicons name="shield-checkmark-outline" size={16} color={palette.black} />}
         title="건강 정보"
         action={
-          <Pressable onPress={onDetailPress} hitSlop={8}>
+          <Pressable
+            onPress={onDetailPress}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="건강 정보 상세보기"
+          >
             <Text style={styles.actionText}>상세보기</Text>
           </Pressable>
         }

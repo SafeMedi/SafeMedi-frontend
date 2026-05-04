@@ -55,6 +55,10 @@ export default function ProfileScreen() {
     router.push("/family/manage");
   };
 
+  const handleOpenHealthInfoDetail = () => {
+    router.push("/profile/health-info");
+  };
+
   return (
     <ScrollView
       style={styles.scroll}
@@ -72,6 +76,7 @@ export default function ProfileScreen() {
         <HealthInfoSection
           allergies={allergies}
           chronicConditions={chronicConditions}
+          onDetailPress={handleOpenHealthInfoDetail}
           onEditAllergies={handleOpenProfileEdit}
           onEditChronicConditions={handleOpenProfileEdit}
         />
