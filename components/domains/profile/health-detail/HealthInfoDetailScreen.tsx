@@ -20,12 +20,12 @@ import {
   CHRONIC_HEADER_ICON,
   CHRONIC_ITEM_DESCRIPTION,
   CLINICIAN_NOTE_ITEMS,
+  createIndexedAlertItems,
   EMPTY_BADGE_LABEL,
   EMPTY_ITEM_TEXT,
   MEDICAL_GUIDE_TEXT,
   PRINT_SUCCESS_MESSAGE,
   SHARE_SUCCESS_MESSAGE,
-  createIndexedAlertItems,
 } from "./constants";
 import { HealthInfoDetailHeader } from "./HealthInfoDetailHeader";
 import { MedicalGuideCard } from "./MedicalGuideCard";
@@ -108,7 +108,9 @@ function createAlertSection(
 export function HealthInfoDetailScreen() {
   const insets = useSafeAreaInsets();
   const user = useUserStore((state) => state.user);
-  const { allergies, chronicConditions } = useHealthInfo();
+  const data = useHealthInfo();
+  const allergies = data.allergies ?? [];
+  const chronicConditions = data.chronicConditions ?? [];
 
   const patientInfo = useMemo(
     () =>
@@ -178,7 +180,7 @@ export function HealthInfoDetailScreen() {
             variant="outline"
             onPress={handlePrint}
             borderColor={palette.green_soft}
-            backgroundColor={palette.gray}
+            backgroundColor="transparent"
             leftElement={<Ionicons name="print-outline" size={14} color={palette.green_deep} />}
             accessibilityLabel="건강 정보 인쇄하기"
           >
