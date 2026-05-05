@@ -7,10 +7,9 @@ import {
   type StyleProp,
   StyleSheet,
   Text,
-  type ViewStyle,
   View,
+  type ViewStyle,
 } from "react-native";
-
 import { palette } from "@/constants/design-tokens";
 
 export type ListLinkRowProps = {

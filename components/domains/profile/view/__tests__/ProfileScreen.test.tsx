@@ -85,7 +85,11 @@ jest.mock("@/components/domains/profile/view/HealthInfoSection", () => {
     HealthInfoSection: ({ onDetailPress }: { onDetailPress?: () => void }) =>
       React.createElement(
         Pressable,
-        { onPress: onDetailPress, accessibilityRole: "button", accessibilityLabel: "건강 정보 상세보기" },
+        {
+          onPress: onDetailPress,
+          accessibilityRole: "button",
+          accessibilityLabel: "건강 정보 상세보기",
+        },
         React.createElement(Text, null, "건강 정보"),
       ),
   };

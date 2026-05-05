@@ -1,9 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet } from "react-native";
 import { Text, YStack } from "tamagui";
-
-import type { NotificationSettings } from "@/api/types";
 import { useNotificationSettings, useUpdateNotificationSettings } from "@/api/queries/profile";
+import type { NotificationSettings } from "@/api/types";
 import { ListLinkRow } from "@/components/ui/ListLinkRow";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";

@@ -6,10 +6,10 @@ import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
 import {
   type BloodTypeOptionValue,
-  type GenderOptionValue,
-  type RhFactorOptionValue,
   bloodOptions,
+  type GenderOptionValue,
   genderOptions,
+  type RhFactorOptionValue,
   rhOptions,
 } from "@/constants/health-profile-options";
 

@@ -1,4 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useCallback, useMemo } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -34,6 +35,7 @@ import type { ClinicalAlertSection, PatientInfo } from "./types";
 
 const UNKNOWN_VALUE = "-";
 const EMPTY_SECTION_TEXT = "등록된 건강 정보가 없습니다";
+const BG_PINK_LINE_STOPS = [0, 0.5, 1] as const;
 
 function formatBirthDate(rawBirthDate: string | null): string {
   if (!rawBirthDate) return UNKNOWN_VALUE;
@@ -91,10 +93,8 @@ function createAlertSection(
   badgeLabel: string,
   tone: ClinicalAlertSection["tone"],
 ): ClinicalAlertSection {
-  const normalizedItems =
-    items.length > 0 ? items : [EMPTY_SECTION_TEXT];
-  const resolvedDescription =
-    items.length > 0 ? description : EMPTY_ITEM_TEXT;
+  const normalizedItems = items.length > 0 ? items : [EMPTY_SECTION_TEXT];
+  const resolvedDescription = items.length > 0 ? description : EMPTY_ITEM_TEXT;
   const resolvedBadgeLabel = items.length > 0 ? badgeLabel : EMPTY_BADGE_LABEL;
 
   return {
@@ -160,48 +160,60 @@ export function HealthInfoDetailScreen() {
   }, []);
 
   return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={[
-        styles.content,
-        { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 24 },
-      ]}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.container}>
-        <HealthInfoDetailHeader onBack={() => router.back()} />
-        <MedicalGuideCard description={MEDICAL_GUIDE_TEXT} />
-        <PatientInfoCard patient={patientInfo} />
-        <ClinicalAlertCard section={allergySection} iconName={ALLERGY_HEADER_ICON} />
-        <ClinicalAlertCard section={chronicSection} iconName={CHRONIC_HEADER_ICON} />
-        <ClinicianNotesCard notes={CLINICIAN_NOTE_ITEMS} />
-        <View style={styles.actionRow}>
-          <PillButton
-            variant="outline"
-            onPress={handlePrint}
-            borderColor={palette.green_soft}
-            backgroundColor="transparent"
-            leftElement={<Ionicons name="print-outline" size={14} color={palette.green_deep} />}
-            accessibilityLabel="건강 정보 인쇄하기"
-          >
-            <Text style={styles.outlineActionText}>인쇄하기</Text>
-          </PillButton>
-          <PillButton
-            variant="solid"
-            onPress={handleShare}
-            backgroundColor={palette.green}
-            leftElement={<Ionicons name="share-social-outline" size={14} color={palette.white} />}
-            accessibilityLabel="건강 정보 공유하기"
-          >
-            <Text style={styles.solidActionText}>공유하기</Text>
-          </PillButton>
+    <View style={styles.screen}>
+      <LinearGradient
+        colors={[...palette.bg_pink_line]}
+        locations={[...BG_PINK_LINE_STOPS]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 24 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.container}>
+          <HealthInfoDetailHeader onBack={() => router.back()} />
+          <MedicalGuideCard description={MEDICAL_GUIDE_TEXT} />
+          <PatientInfoCard patient={patientInfo} />
+          <ClinicalAlertCard section={allergySection} iconName={ALLERGY_HEADER_ICON} />
+          <ClinicalAlertCard section={chronicSection} iconName={CHRONIC_HEADER_ICON} />
+          <ClinicianNotesCard notes={CLINICIAN_NOTE_ITEMS} />
+          <View style={styles.actionRow}>
+            <PillButton
+              variant="outline"
+              onPress={handlePrint}
+              borderColor={palette.green_soft}
+              backgroundColor="transparent"
+              leftElement={<Ionicons name="print-outline" size={14} color={palette.green_deep} />}
+              accessibilityLabel="건강 정보 인쇄하기"
+            >
+              <Text style={styles.outlineActionText}>인쇄하기</Text>
+            </PillButton>
+            <PillButton
+              variant="solid"
+              onPress={handleShare}
+              backgroundColor={palette.green}
+              leftElement={<Ionicons name="share-social-outline" size={14} color={palette.white} />}
+              accessibilityLabel="건강 정보 공유하기"
+            >
+              <Text style={styles.solidActionText}>공유하기</Text>
+            </PillButton>
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
   scroll: {
     flex: 1,
   },

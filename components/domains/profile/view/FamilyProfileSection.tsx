@@ -1,11 +1,9 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, StyleSheet, Text } from "react-native";
 import { YStack } from "tamagui";
-
+import type { FamilyProfile } from "@/api/queries/profile";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { palette } from "@/constants/design-tokens";
-
-import type { FamilyProfile } from "@/api/queries/profile";
 import { FamilyProfileItem } from "./FamilyProfileItem";
 
 export type FamilyProfileSectionProps = {
@@ -32,12 +30,15 @@ export function FamilyProfileSection({
       />
       <YStack gap={7}>
         {profiles.map((profile) => (
+          // "본인" 카드는 상세 전환 대상이 아니므로 클릭을 비활성화합니다.
           <FamilyProfileItem
             key={profile.id}
             name={profile.name}
             isActive={profile.isActive}
             avatarGradient={profile.avatarGradient}
-            onPress={() => onSelectProfile?.(profile)}
+            onPress={
+              profile.id === "me" || !onSelectProfile ? undefined : () => onSelectProfile(profile)
+            }
           />
         ))}
       </YStack>
