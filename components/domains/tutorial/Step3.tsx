@@ -3,7 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from "react";
 import { ScrollView } from "react-native";
 import { Input, Text, XStack, YStack } from "tamagui";
-import type { StepHandle } from "@/app/(auth)/tutorial";
+import type { StepHandle } from "@/components/domains/tutorial/types";
 import { Button } from "@/components/ui/Button";
 import EmojiCard from "@/components/ui/EmojiCard";
 import { SelectChip } from "@/components/ui/SelectChip";
