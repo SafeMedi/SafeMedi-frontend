@@ -3,7 +3,10 @@ export type {
   FamilyDetail,
   FamilyManageMember,
   FamilyManageOverview,
+  FamilyMedicationScheduleItem,
+  FamilyMedicationScheduleStatus,
   FamilySummary,
+  FamilyTodayMedicationSummary,
   PendingFamilyInviteItem,
   ReceivedFamilyRequest,
 } from "./family";

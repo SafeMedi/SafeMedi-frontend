@@ -20,6 +20,22 @@ export type ReceivedFamilyRequest = {
 };
 
 /** GET /api/v1/families/{familyId} 응답 */
+export type FamilyMedicationScheduleStatus = "COMPLETED" | "PENDING";
+
+export type FamilyMedicationScheduleItem = {
+  id: string;
+  medicineName: string;
+  scheduledTime: string;
+  status: FamilyMedicationScheduleStatus;
+};
+
+export type FamilyTodayMedicationSummary = {
+  completedCount: number;
+  totalCount: number;
+  completionRate: number;
+  remainingCount: number;
+};
+
 export type FamilyDetail = {
   familyId: number;
   name: string;
@@ -32,6 +48,8 @@ export type FamilyDetail = {
   diseases: string[];
   allergies: AllergyItem[];
   isAlertConsent: boolean;
+  todayMedicationSummary: FamilyTodayMedicationSummary;
+  todayMedicationSchedules: FamilyMedicationScheduleItem[];
 };
 
 /** GET /api/v1/families/manage 응답 */
@@ -54,4 +72,5 @@ export type FamilyManageOverview = {
   inviteLink: string;
   members: FamilyManageMember[];
   pendingInvites: PendingFamilyInviteItem[];
+  benefits: string[];
 };

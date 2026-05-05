@@ -1,7 +1,6 @@
-import { animationsReanimated } from "@tamagui/config/v5-reanimated";
 import { defaultConfig } from "@tamagui/config/v5";
+import { animationsReanimated } from "@tamagui/config/v5-reanimated";
 import { createTamagui } from "tamagui";
-
 import { palette } from "./constants/design-tokens";
 
 function semanticTheme() {

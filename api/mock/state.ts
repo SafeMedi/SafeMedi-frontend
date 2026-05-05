@@ -24,7 +24,7 @@ export const mockState: MockOnlyState & {
   receivedRequests: ReceivedFamilyRequest[];
   families: FamilySummary[];
   familyManageOverview: FamilyManageOverview;
-  familyDetail: FamilyDetail;
+  familyDetails: Record<number, FamilyDetail>;
   notificationSettings: NotificationSettings;
   notifications: NotificationListResponse;
 } = {
@@ -105,18 +105,54 @@ export const mockState: MockOnlyState & {
     ],
   },
 
-  familyDetail: {
-    familyId: 1,
-    name: "김영희",
-    relation: "MOTHER",
-    birthDate: "1965-05-15",
-    gender: "F",
-    height: 160,
-    weight: 55,
-    bloodType: "A",
-    diseases: ["고혈압"],
-    allergies: [{ code: "J01CA", name: "페니실린계 항생제" }],
-    isAlertConsent: true,
+  familyDetails: {
+    1: {
+      familyId: 1,
+      name: "김영희",
+      relation: "MOTHER",
+      birthDate: "1965-05-15",
+      gender: "F",
+      height: 160,
+      weight: 55,
+      bloodType: "A",
+      diseases: ["고혈압"],
+      allergies: [{ code: "J01CA", name: "페니실린계 항생제" }],
+      isAlertConsent: true,
+      todayMedicationSummary: {
+        completedCount: 2,
+        totalCount: 3,
+        completionRate: 67,
+        remainingCount: 1,
+      },
+      todayMedicationSchedules: [
+        { id: "s-1", medicineName: "혈압약", scheduledTime: "08:00", status: "COMPLETED" },
+        { id: "s-2", medicineName: "당뇨약", scheduledTime: "08:00", status: "COMPLETED" },
+        { id: "s-3", medicineName: "혈압약", scheduledTime: "20:00", status: "PENDING" },
+      ],
+    },
+    2: {
+      familyId: 2,
+      name: "김민수",
+      relation: "FATHER",
+      birthDate: "1962-03-10",
+      gender: "M",
+      height: 171,
+      weight: 69,
+      bloodType: "O",
+      diseases: ["고지혈증"],
+      allergies: [{ code: "N02BE01", name: "아세트아미노펜" }],
+      isAlertConsent: false,
+      todayMedicationSummary: {
+        completedCount: 1,
+        totalCount: 2,
+        completionRate: 50,
+        remainingCount: 1,
+      },
+      todayMedicationSchedules: [
+        { id: "s-4", medicineName: "혈압약", scheduledTime: "09:00", status: "COMPLETED" },
+        { id: "s-5", medicineName: "고지혈증약", scheduledTime: "21:00", status: "PENDING" },
+      ],
+    },
   },
 
   familyAlertConsent: new Map<number, boolean>([[1, true]]),
