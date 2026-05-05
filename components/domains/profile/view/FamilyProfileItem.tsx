@@ -19,8 +19,11 @@ export function FamilyProfileItem({
   avatarGradient,
   onPress,
 }: FamilyProfileItemProps) {
+  const isClickable = typeof onPress === "function";
+
   return (
     <Pressable
+      disabled={!isClickable}
       onPress={onPress}
       style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
     >
@@ -31,11 +34,21 @@ export function FamilyProfileItem({
           end={{ x: 1, y: 0 }}
           style={[styles.card, { borderColor: FAMILY_ACTIVE_STYLE.borderColor }]}
         >
-          <ItemContent name={name} isActive avatarGradient={avatarGradient} />
+          <ItemContent
+            name={name}
+            isActive
+            avatarGradient={avatarGradient}
+            isClickable={isClickable}
+          />
         </LinearGradient>
       ) : (
         <View style={[styles.card, styles.inactiveCard]}>
-          <ItemContent name={name} isActive={false} avatarGradient={avatarGradient} />
+          <ItemContent
+            name={name}
+            isActive={false}
+            avatarGradient={avatarGradient}
+            isClickable={isClickable}
+          />
         </View>
       )}
     </Pressable>
@@ -46,10 +59,12 @@ function ItemContent({
   name,
   isActive,
   avatarGradient,
+  isClickable,
 }: {
   name: string;
   isActive: boolean;
   avatarGradient: readonly [string, string];
+  isClickable: boolean;
 }) {
   return (
     <View style={styles.row}>
@@ -71,7 +86,7 @@ function ItemContent({
           ) : null}
         </View>
       </View>
-      <Ionicons name="chevron-forward" size={18} color={palette.icon} />
+      {isClickable ? <Ionicons name="chevron-forward" size={18} color={palette.icon} /> : null}
     </View>
   );
 }

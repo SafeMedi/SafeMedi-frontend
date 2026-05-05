@@ -37,7 +37,9 @@ function AlertItemRow({ index, title, description, badgeLabel, tone }: AlertItem
         </View>
         <View style={styles.itemTextWrap}>
           <Text style={[styles.itemTitle, { color: toneColor.titleColor }]}>{title}</Text>
-          <Text style={[styles.itemDescription, { color: toneColor.subtitleColor }]}>{description}</Text>
+          <Text style={[styles.itemDescription, { color: toneColor.subtitleColor }]}>
+            {description}
+          </Text>
         </View>
         <Badge
           label={badgeLabel}
@@ -61,7 +63,9 @@ export function ClinicalAlertCard({ section, iconName }: ClinicalAlertCardProps)
         </View>
         <View style={styles.headerTextWrap}>
           <Text style={[styles.headerTitle, { color: toneColor.titleColor }]}>{section.title}</Text>
-          <Text style={[styles.headerSubtitle, { color: toneColor.subtitleColor }]}>{section.subtitle}</Text>
+          <Text style={[styles.headerSubtitle, { color: toneColor.subtitleColor }]}>
+            {section.subtitle}
+          </Text>
         </View>
       </View>
       <View style={styles.itemsWrap}>

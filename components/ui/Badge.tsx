@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View, type TextStyle, type ViewStyle } from "react-native";
-
+import { Pressable, StyleSheet, Text, type TextStyle, View, type ViewStyle } from "react-native";
 import { palette } from "@/constants/design-tokens";
 
 export type BadgeProps = {

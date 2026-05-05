@@ -205,7 +205,15 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
           { status: 400 },
         );
       }
+      const familyDetail = id !== undefined ? mockState.familyDetails[id] : undefined;
+      if (!familyDetail) {
+        return Response.json(
+          { code: "FAM_002", message: "존재하지 않는 가족 ID" },
+          { status: 404 },
+        );
+      }
       mockState.familyAlertConsent.set(id, body.isAlertConsent);
+      familyDetail.isAlertConsent = body.isAlertConsent;
       return {
         familyId: id,
         isAlertConsent: body.isAlertConsent,
@@ -220,17 +228,21 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
     (p) => RX.familyId.test(p) && !RX.familySettings.test(p),
     (ctx) => {
       const id = parsePathId(ctx.path, RX.familyId);
-      if (id === 999) {
+      if (!id) {
+        return Response.json(
+          { code: "FAM_002", message: "존재하지 않는 가족 ID" },
+          { status: 404 },
+        );
+      }
+      const familyDetail = mockState.familyDetails[id];
+      if (!familyDetail) {
         return Response.json(
           { code: "FAM_002", message: "존재하지 않거나 연동이 해제된 가족" },
           { status: 404 },
         );
       }
-      const consent =
-        id !== undefined
-          ? (mockState.familyAlertConsent.get(id) ?? mockState.familyDetail.isAlertConsent)
-          : mockState.familyDetail.isAlertConsent;
-      return { ...mockState.familyDetail, isAlertConsent: consent };
+      const consent = mockState.familyAlertConsent.get(id) ?? familyDetail.isAlertConsent;
+      return { ...familyDetail, isAlertConsent: consent };
     },
     { label: "GET /api/v1/families/:familyId" },
   );
@@ -240,7 +252,7 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
     (p) => RX.familyId.test(p) && !RX.familySettings.test(p),
     (ctx) => {
       const id = parsePathId(ctx.path, RX.familyId);
-      if (id === 999) {
+      if (!id || !mockState.familyDetails[id]) {
         return Response.json(
           { code: "FAM_002", message: "존재하지 않는 가족 프로필입니다." },
           { status: 404 },

@@ -37,8 +37,7 @@ jest.mock("@/api/queries/profile", () => ({
 }));
 
 jest.mock("@/stores/userStore", () => ({
-  useUserStore: (selector: (state: { user: unknown }) => unknown) =>
-    mockUseUserStore(selector),
+  useUserStore: (selector: (state: { user: unknown }) => unknown) => mockUseUserStore(selector),
 }));
 
 describe("HealthInfoDetailScreen", () => {

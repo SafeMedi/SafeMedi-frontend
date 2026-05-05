@@ -2,40 +2,39 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
-
+import type { PendingFamilyInviteItem } from "@/api/types";
 import { Badge } from "@/components/ui/Badge";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
-import type { FamilyMember } from "./types";
 
-type FamilyMemberCardProps = {
-  member: FamilyMember;
+type PendingInviteCardProps = {
+  invite: PendingFamilyInviteItem;
 };
 
-export function FamilyMemberCard({ member }: FamilyMemberCardProps) {
+export function PendingInviteCard({ invite }: PendingInviteCardProps) {
   return (
     <SurfaceCard style={styles.card}>
       <XStack items="center" justify="space-between" gap={12}>
         <XStack items="center" gap={10} flex={1}>
           <LinearGradient
-            colors={[...palette.bg_invite_icon]}
+            colors={[...palette.bg_pending_avatar]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.avatar}
           >
-            <Text style={styles.avatarEmoji}>{member.emoji}</Text>
+            <Ionicons name="person-add-outline" size={20} color={palette.white} />
           </LinearGradient>
           <YStack gap={2} flex={1}>
-            <XStack items="center" gap={4}>
-              <Text style={styles.name}>{member.name}</Text>
-              <Ionicons name="checkmark-circle-outline" size={14} color={palette.green} />
-            </XStack>
-            <Text style={styles.relation}>{member.relation}</Text>
+            <Text style={styles.name}>{invite.relation}</Text>
+            <Text style={styles.email}>{invite.email}</Text>
+            <Text style={styles.date}>초대 발송: {invite.invitedAt}</Text>
           </YStack>
         </XStack>
-        {member.isActive ? (
-          <Badge label="활성" backgroundColor={palette.green} textColor={palette.white} />
-        ) : null}
+        <Badge
+          label="대기중"
+          backgroundColor={palette.pending_status_bg}
+          textColor={palette.white}
+        />
       </XStack>
     </SurfaceCard>
   );
@@ -58,18 +57,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarEmoji: {
-    fontSize: 21,
-  },
   name: {
     fontSize: 14,
     fontWeight: "600",
     color: palette.black,
     letterSpacing: -0.15,
   },
-  relation: {
+  email: {
     fontSize: 12,
     color: palette.icon,
     lineHeight: 17,
+  },
+  date: {
+    fontSize: 11,
+    color: palette.input_placeholder,
+    lineHeight: 14,
   },
 });

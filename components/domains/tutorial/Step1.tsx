@@ -3,11 +3,11 @@ import { forwardRef, useImperativeHandle } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ScrollView } from "react-native";
 import { Input, Text, XStack, YStack } from "tamagui";
-import type { StepHandle } from "@/app/(auth)/tutorial";
 import {
   type TutorialStep1FormValues,
   tutorialStep1Schema,
 } from "@/components/domains/tutorial/schema";
+import type { StepHandle } from "@/components/domains/tutorial/types";
 import { SelectChip } from "@/components/ui/SelectChip";
 import { palette } from "@/constants/design-tokens";
 import { bloodOptions, genderOptions, rhOptions } from "@/constants/health-profile-options";

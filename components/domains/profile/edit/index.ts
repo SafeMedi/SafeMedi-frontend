@@ -1,5 +1,5 @@
-export { ProfileEditActionBar } from "./ProfileEditActionBar";
 export { ProfileBasicInfoCard } from "./ProfileBasicInfoCard";
+export { ProfileEditActionBar } from "./ProfileEditActionBar";
 export { ProfileEditHeader } from "./ProfileEditHeader";
 export { ProfileEditNoticeCard } from "./ProfileEditNoticeCard";
 export { ProfileNicknameCard } from "./ProfileNicknameCard";

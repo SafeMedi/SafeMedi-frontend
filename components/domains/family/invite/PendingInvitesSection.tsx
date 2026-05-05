@@ -1,15 +1,13 @@
 import { StyleSheet } from "react-native";
 import { YStack } from "tamagui";
-
+import type { PendingFamilyInviteItem } from "@/api/types";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { palette } from "@/constants/design-tokens";
-
 import { PendingInviteCard } from "./PendingInviteCard";
-import type { PendingFamilyInvite } from "./types";
 
 type PendingInvitesSectionProps = {
-  invites: readonly PendingFamilyInvite[];
+  invites: readonly PendingFamilyInviteItem[];
 };
 
 export function PendingInvitesSection({ invites }: PendingInvitesSectionProps) {

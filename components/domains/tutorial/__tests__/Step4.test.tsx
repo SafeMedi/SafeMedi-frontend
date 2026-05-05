@@ -1,8 +1,8 @@
 import { act, fireEvent, render } from "@testing-library/react-native";
 import { createRef } from "react";
 import "@/tests/test-utils/test-mocks";
-import type { StepHandle } from "@/app/(auth)/tutorial";
 import Step4 from "@/components/domains/tutorial/Step4";
+import type { StepHandle } from "@/components/domains/tutorial/types";
 
 describe("튜토리얼 Step4", () => {
   it("화면이 렌더링되고 submit이 성공한다", async () => {
