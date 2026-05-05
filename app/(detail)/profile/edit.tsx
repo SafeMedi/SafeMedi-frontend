@@ -1,25 +1,24 @@
-import { router } from "expo-router";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { router } from "expo-router";
 import { useEffect, useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { Alert, ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
-
 import { useUpdateUserProfileMutation } from "@/api/queries/user";
 import {
-  ProfileEditActionBar,
   ProfileBasicInfoCard,
+  ProfileEditActionBar,
   ProfileEditHeader,
   ProfileEditNoticeCard,
   ProfileNicknameCard,
   ProfileTagEditorCard,
 } from "@/components/domains/profile/edit";
-import { type GenderOptionValue, GENDERS } from "@/constants/health-profile-options";
 import {
   type ProfileEditFormValues,
   profileEditSchema,
 } from "@/components/domains/profile/edit/schema";
+import { GENDERS, type GenderOptionValue } from "@/constants/health-profile-options";
 import { useUserStore } from "@/stores/userStore";
 import { combineBloodTypeWithRh, splitBloodTypeWithRhOrDefault } from "@/utils/blood-type";
 import { profileAllergyLabelsToApiCodes } from "@/utils/user-mapper";

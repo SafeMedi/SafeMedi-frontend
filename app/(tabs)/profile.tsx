@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { router } from "expo-router";
+import { type Href, router } from "expo-router";
 import { useMemo } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -59,6 +59,18 @@ export default function ProfileScreen() {
     router.push("/profile/health-info");
   };
 
+  const handleSelectFamilyProfile = (profileId: string) => {
+    if (profileId === "me") {
+      return;
+    }
+    const familyId = Number(profileId);
+    if (!Number.isInteger(familyId)) {
+      return;
+    }
+    const familyDetailHref = `/(detail)/family/${familyId}` as Href;
+    router.push(familyDetailHref);
+  };
+
   return (
     <ScrollView
       style={styles.scroll}
@@ -72,7 +84,11 @@ export default function ProfileScreen() {
           role={profileUser.role}
           onPress={handleOpenProfileEdit}
         />
-        <FamilyProfileSection profiles={familyProfiles} onAddFamily={handleOpenFamilyManage} />
+        <FamilyProfileSection
+          profiles={familyProfiles}
+          onAddFamily={handleOpenFamilyManage}
+          onSelectProfile={(profile) => handleSelectFamilyProfile(profile.id)}
+        />
         <HealthInfoSection
           allergies={allergies}
           chronicConditions={chronicConditions}
