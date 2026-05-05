@@ -2,7 +2,7 @@ import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
 import { Alert, Share } from "react-native";
-import type { FamilyMember, PendingFamilyInvite } from "../../types";
+import type { FamilyManageMember, PendingFamilyInviteItem } from "@/api/types";
 import { FamilyManageScreen } from "../FamilyManageScreen";
 
 interface MockFamilyInviteCardProps {
@@ -16,17 +16,17 @@ interface MockFamilyManageHeaderProps {
 }
 
 interface MockFamilyMembersSectionProps {
-  readonly members: readonly FamilyMember[];
+  readonly members: readonly FamilyManageMember[];
 }
 
 interface MockPendingInvitesSectionProps {
-  readonly invites: readonly PendingFamilyInvite[];
+  readonly invites: readonly PendingFamilyInviteItem[];
 }
 
 type MockFamilyManageOverviewData = {
   readonly inviteLink: string;
-  readonly members: readonly FamilyMember[];
-  readonly pendingInvites: readonly PendingFamilyInvite[];
+  readonly members: readonly FamilyManageMember[];
+  readonly pendingInvites: readonly PendingFamilyInviteItem[];
 };
 
 const mockUseFamilyManageOverview = jest.fn<
