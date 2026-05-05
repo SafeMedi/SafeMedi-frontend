@@ -1,15 +1,14 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet } from "react-native";
 import { YStack } from "tamagui";
-
+import type { FamilyManageMember } from "@/api/types";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { palette } from "@/constants/design-tokens";
-import type { FamilyMember } from "../types";
 import { FamilyMemberCard } from "./FamilyMemberCard";
 
 type FamilyMembersSectionProps = {
-  members: readonly FamilyMember[];
+  members: readonly FamilyManageMember[];
 };
 
 export function FamilyMembersSection({ members }: FamilyMembersSectionProps) {

@@ -2,14 +2,13 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
-
+import type { FamilyManageMember } from "@/api/types";
 import { Badge } from "@/components/ui/Badge";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
-import type { FamilyMember } from "../types";
 
 type FamilyMemberCardProps = {
-  member: FamilyMember;
+  member: FamilyManageMember;
 };
 
 export function FamilyMemberCard({ member }: FamilyMemberCardProps) {
