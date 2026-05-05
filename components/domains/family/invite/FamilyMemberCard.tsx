@@ -6,7 +6,7 @@ import { Text, XStack, YStack } from "tamagui";
 import { Badge } from "@/components/ui/Badge";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
-import type { FamilyMember } from "./types";
+import type { FamilyMember } from "../types";
 
 type FamilyMemberCardProps = {
   member: FamilyMember;

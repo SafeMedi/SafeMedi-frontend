@@ -4,9 +4,8 @@ import { YStack } from "tamagui";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { palette } from "@/constants/design-tokens";
-
+import type { PendingFamilyInvite } from "../types";
 import { PendingInviteCard } from "./PendingInviteCard";
-import type { PendingFamilyInvite } from "./types";
 
 type PendingInvitesSectionProps = {
   invites: readonly PendingFamilyInvite[];

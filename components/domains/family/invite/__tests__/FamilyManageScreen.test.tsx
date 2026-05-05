@@ -2,9 +2,8 @@ import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
 import { Alert, Share } from "react-native";
-
+import type { FamilyMember, PendingFamilyInvite } from "../../types";
 import { FamilyManageScreen } from "../FamilyManageScreen";
-import type { FamilyMember, PendingFamilyInvite } from "../types";
 
 interface MockFamilyInviteCardProps {
   readonly inviteLink: string;
@@ -30,9 +29,12 @@ type MockFamilyManageOverviewData = {
   readonly pendingInvites: readonly PendingFamilyInvite[];
 };
 
-const mockUseFamilyManageOverview = jest.fn<{
-  readonly data?: MockFamilyManageOverviewData;
-}, []>();
+const mockUseFamilyManageOverview = jest.fn<
+  {
+    readonly data?: MockFamilyManageOverviewData;
+  },
+  []
+>();
 
 jest.mock("expo-linear-gradient", () => {
   const React = require("react");
