@@ -26,6 +26,8 @@ export const palette = {
 
   // variant 톤 - red (알러지 / 위험)
   red_soft: "#FFC9C9",
+  /** 삭제·위험 액션 아웃라인 등 (red_soft보다 대비 강함) */
+  red_outline: "#FFA2A2",
   red_medium: "#FB2C36",
   red_strong: "#E7000B",
   red_deep: "#9F0712",
@@ -45,6 +47,8 @@ export const palette = {
   input_placeholder: "#64748B",
   border_muted: "#D1D5DC",
   surface_subtle: "#F9FAFB",
+  /** 비활성 트랙·구분선 등 중립 표면 (≈ gray-100) */
+  surface_neutral: "#F3F4F6",
 
   // common surface
   surface_card: "rgba(255,255,255,0.85)",

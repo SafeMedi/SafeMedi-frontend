@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: palette.surface_neutral,
   },
   rowLabel: {
     fontSize: 12,

@@ -79,7 +79,6 @@ export function FamilyDetailScreen({ familyId }: FamilyDetailScreenProps) {
             title={`${relationLabel} 님`}
             subtitle="가족 구성원"
             onBack={() => router.back()}
-            rightAction={<Ionicons name="create-outline" size={16} color={palette.icon} />}
           />
 
           {isLoading ? (
@@ -156,9 +155,15 @@ export function FamilyDetailScreen({ familyId }: FamilyDetailScreenProps) {
                   }
                 />
                 <YStack gap={8}>
-                  {medicationSchedules.map((schedule) => (
-                    <FamilyMedicationScheduleCard key={schedule.id} schedule={schedule} />
-                  ))}
+                  {medicationSchedules.length > 0 ? (
+                    medicationSchedules.map((schedule) => (
+                      <FamilyMedicationScheduleCard key={schedule.id} schedule={schedule} />
+                    ))
+                  ) : (
+                    <SurfaceCard style={styles.adherenceCard}>
+                      <Text style={styles.feedbackText}>오늘 예정된 복약 스케줄이 없습니다.</Text>
+                    </SurfaceCard>
+                  )}
                 </YStack>
               </YStack>
 
@@ -261,7 +266,7 @@ const styles = StyleSheet.create({
   progressTrack: {
     height: 10,
     borderRadius: 999,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.surface_neutral,
     overflow: "hidden",
   },
   progressFill: {
@@ -297,7 +302,7 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#FFA2A2",
+    borderColor: palette.red_outline,
     backgroundColor: palette.gray,
     flexDirection: "row",
     alignItems: "center",
