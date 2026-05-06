@@ -51,7 +51,7 @@ export const palette = {
   surface_neutral: "#F3F4F6",
 
   // common surface
-  surface_card: "rgba(255,255,255,0.85)",
+  surface_card: "rgb(255,255,255)",
   surface_card_border: "rgba(255,255,255,0.3)",
 
   // notice tone

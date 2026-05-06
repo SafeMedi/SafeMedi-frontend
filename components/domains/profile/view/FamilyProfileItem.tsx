@@ -106,10 +106,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 0, 
   },
   inactiveCard: {
-    backgroundColor: "rgba(255,255,255,0.85)",
+    backgroundColor: palette.white,
     borderColor: "rgba(255,255,255,0.3)",
   },
   row: {
