@@ -53,6 +53,11 @@ export const palette = {
   // common surface
   surface_card: "rgb(255,255,255)",
   surface_card_border: "rgba(255,255,255,0.3)",
+  overlay_white_20: "rgba(255,255,255,0.2)",
+  overlay_white_25: "rgba(255,255,255,0.25)",
+  overlay_white_90: "rgba(255,255,255,0.9)",
+  overlay_white_92: "rgba(255,255,255,0.92)",
+  overlay_blue_20: "rgba(59,130,246,0.2)",
 
   // notice tone
   notice_bg_start: "#FFF7ED",
@@ -63,7 +68,13 @@ export const palette = {
   pending_badge_bg: "#FFEDD4",
   pending_badge_text: "#CA3500",
   pending_status_bg: "#FF6900",
+  pending_status_bg_end: "#FE9A00",
   pink: "#F6339A",
+  warning_badge_bg: "#FFE4E6",
+  schedule_required_border: "#8EC5FF",
+  schedule_upcoming_border: "#BFC7D5",
+  schedule_upcoming_start: "#9CA3AF",
+  schedule_upcoming_end: "#6B7280",
 
   // linearGradient 3중첩 설정
   bg_green_line: ["#00C950", "#00BC7D", "#00BBA7"],
