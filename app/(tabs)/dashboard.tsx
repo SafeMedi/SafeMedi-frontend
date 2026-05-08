@@ -1,5 +1,5 @@
-import { View } from "tamagui";
+import { DashboardScreen } from "@/components/domains/dashboard";
 
-export default function HomeScreen() {
-  return <View></View>;
+export default function DashboardTabRoute() {
+  return <DashboardScreen />;
 }
