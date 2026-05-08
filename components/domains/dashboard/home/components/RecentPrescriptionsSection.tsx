@@ -22,7 +22,7 @@ export function RecentPrescriptionsSection({ items }: RecentPrescriptionsSection
       {items.length > 0 ? (
         <YStack gap={8}>
           {items.map((item) => (
-            <SurfaceCard key={item.id} style={styles.itemCard}>
+            <SurfaceCard key={item.id}>
               <ListLinkRow
                 title={item.dateLabel}
                 subtitle={`${item.analysisCount}개 약물 분석`}
@@ -46,9 +46,6 @@ export function RecentPrescriptionsSection({ items }: RecentPrescriptionsSection
 }
 
 const styles = StyleSheet.create({
-  itemCard: {
-    overflow: "hidden",
-  },
   row: {
     paddingHorizontal: 14,
     paddingVertical: 12,

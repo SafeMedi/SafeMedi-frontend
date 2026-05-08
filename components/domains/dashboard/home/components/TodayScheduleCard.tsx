@@ -137,10 +137,11 @@ export function TodayScheduleCard({ item }: TodayScheduleCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    overflow: "hidden",
     padding: 0,
   },
   header: {
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },

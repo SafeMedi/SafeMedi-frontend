@@ -8,13 +8,13 @@ import { palette } from "@/constants/design-tokens";
 
 export function FamilyFeatureBanner() {
   return (
-    <LinearGradient
-      colors={[...palette.bg_green_line]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.gradient}
-    >
-      <SurfaceCard style={styles.overlay}>
+    <SurfaceCard style={styles.card}>
+      <LinearGradient
+        colors={[...palette.bg_green_line]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
+      >
         <XStack items="flex-start" gap={10}>
           <Ionicons name="people-outline" size={20} color={palette.white} />
           <YStack flex={1} gap={4}>
@@ -25,20 +25,19 @@ export function FamilyFeatureBanner() {
             </Text>
           </YStack>
         </XStack>
-      </SurfaceCard>
-    </LinearGradient>
+      </LinearGradient>
+    </SurfaceCard>
   );
 }
 
 const styles = StyleSheet.create({
-  gradient: {
-    borderRadius: 18,
-    overflow: "hidden",
-  },
-  overlay: {
+  card: {
     borderRadius: 18,
     borderWidth: 0,
     backgroundColor: "transparent",
+    overflow: "hidden",
+  },
+  gradient: {
     paddingHorizontal: 14,
     paddingVertical: 14,
   },
