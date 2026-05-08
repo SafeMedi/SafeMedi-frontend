@@ -1,44 +1,40 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { LinearGradient } from "expo-linear-gradient";
-import { Pressable, StyleSheet, View } from "react-native";
-import { Text, XStack, YStack } from "tamagui";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { GradientCard } from "@/components/ui/GradientCard";
 import { palette } from "@/constants/design-tokens";
 
 interface ScanPrescriptionCardProps {
   readonly onPress: () => void;
 }
 
+const SCAN_GRADIENT_COLORS = [palette.green, palette.opal] as const;
+
 export function ScanPrescriptionCard({ onPress }: ScanPrescriptionCardProps) {
   return (
-    <LinearGradient
-      colors={[palette.green, palette.opal]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.gradient}
+    <Pressable
+      style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel="처방전 스캔하기"
     >
-      <Pressable
-        style={styles.pressable}
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel="처방전 스캔하기"
-      >
-        <XStack items="center" gap={12}>
+      <GradientCard gradientColors={SCAN_GRADIENT_COLORS} style={styles.gradient}>
+        <View style={styles.content}>
           <View style={styles.iconWrap}>
             <Ionicons name="scan-outline" size={18} color={palette.white} />
           </View>
-          <YStack gap={2}>
+          <View style={styles.textWrap}>
             <Text style={styles.title}>처방전 스캔하기</Text>
             <Text style={styles.description}>약물 성분을 안전하게 분석해요</Text>
-          </YStack>
-        </XStack>
-      </Pressable>
-    </LinearGradient>
+          </View>
+        </View>
+      </GradientCard>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  gradient: {
+  pressable: {
     borderRadius: 14,
     overflow: "hidden",
     shadowColor: palette.shadow_base,
@@ -47,9 +43,22 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 5,
   },
-  pressable: {
+  pressed: {
+    opacity: 0.9,
+  },
+  gradient: {
+    borderRadius: 14,
+  },
+  content: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 18,
     paddingVertical: 14,
+    gap: 12,
+  },
+  textWrap: {
+    flex: 1,
+    gap: 2,
   },
   iconWrap: {
     width: 34,

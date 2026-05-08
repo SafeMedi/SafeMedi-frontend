@@ -1,7 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { GradientCard } from "@/components/ui/GradientCard";
 import { palette } from "@/constants/design-tokens";
 
 export type UserHeroCardProps = {
@@ -10,17 +10,17 @@ export type UserHeroCardProps = {
   onPress?: () => void;
 };
 
+const HERO_GRADIENT_LOCATIONS = [0, 0.5, 1] as const;
+
 export function UserHeroCard({ name, role, onPress }: UserHeroCardProps) {
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [styles.wrapper, pressed && styles.pressed]}
     >
-      <LinearGradient
-        colors={[...palette.bg_green_line]}
-        locations={[0, 0.5, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+      <GradientCard
+        gradientColors={palette.bg_green_line}
+        gradientLocations={HERO_GRADIENT_LOCATIONS}
         style={styles.gradient}
       >
         <View style={styles.content}>
@@ -35,7 +35,7 @@ export function UserHeroCard({ name, role, onPress }: UserHeroCardProps) {
             <Ionicons name="chevron-forward" size={18} color={palette.white} />
           </View>
         </View>
-      </LinearGradient>
+      </GradientCard>
     </Pressable>
   );
 }
@@ -61,6 +61,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 14,
   },
+  textWrap: {
+    flex: 1,
+    gap: 2,
+  },
   avatar: {
     width: 56,
     height: 56,
@@ -70,10 +74,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
-  },
-  textWrap: {
-    flex: 1,
-    gap: 2,
   },
   name: {
     fontSize: 16,
