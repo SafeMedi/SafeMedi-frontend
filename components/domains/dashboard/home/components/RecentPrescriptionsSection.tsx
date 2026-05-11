@@ -9,9 +9,13 @@ import { palette } from "@/constants/design-tokens";
 
 interface RecentPrescriptionsSectionProps {
   readonly items: readonly DashboardRecentPrescriptionItem[];
+  readonly onPressItem: (item: DashboardRecentPrescriptionItem) => void;
 }
 
-export function RecentPrescriptionsSection({ items }: RecentPrescriptionsSectionProps) {
+export function RecentPrescriptionsSection({
+  items,
+  onPressItem,
+}: RecentPrescriptionsSectionProps) {
   return (
     <YStack gap={10}>
       <SectionHeader
@@ -27,6 +31,7 @@ export function RecentPrescriptionsSection({ items }: RecentPrescriptionsSection
                 title={item.dateLabel}
                 subtitle={`${item.analysisCount}개 약물 분석`}
                 showChevron
+                onPress={() => onPressItem(item)}
                 trailing={
                   item.hasWarning ? <Text style={styles.warningBadge}>경고 있음</Text> : undefined
                 }
