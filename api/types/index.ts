@@ -1,5 +1,15 @@
 export type { SocialLoginResponse } from "./auth";
 export type {
+  DailyMedicationRecordItem,
+  DailyMedicationRecordsResponse,
+  DailyMedicationSummary,
+  MedicationRecordStatus,
+  MonthlyMedicationRecordGroup,
+  MonthlyMedicationRecordItem,
+  MonthlyMedicationRecordsResponse,
+  MonthlyMedicationSummary,
+} from "./dashboard";
+export type {
   FamilyDetail,
   FamilyManageMember,
   FamilyManageOverview,
