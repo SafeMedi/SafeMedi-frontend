@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import {
   fetchDailyMedicationRecords,
+  fetchMedicationHistoryRecords,
   fetchMonthlyMedicationRecords,
 } from "@/api/endpoints/dashboard";
 import { queryKeys } from "@/api/query-keys";
@@ -32,5 +33,16 @@ export function useDashboardMonthlyMedicationRecords(params: UseDashboardMedicat
     enabled: !!accessToken,
     staleTime: STALE_MS,
     queryFn: () => fetchMonthlyMedicationRecords({ date: params.date }),
+  });
+}
+
+export function useDashboardMedicationHistoryRecords(params: UseDashboardMedicationRecordsParams) {
+  const accessToken = useSessionStore((state) => state.accessToken);
+
+  return useQuery({
+    queryKey: queryKeys.dashboard.medicationHistoryRecords(params.date),
+    enabled: !!accessToken && params.date.length > 0,
+    staleTime: STALE_MS,
+    queryFn: () => fetchMedicationHistoryRecords({ date: params.date }),
   });
 }

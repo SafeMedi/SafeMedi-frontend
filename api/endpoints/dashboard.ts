@@ -2,6 +2,7 @@ import { api } from "@/api/client";
 import { apiPaths } from "@/api/paths";
 import type {
   DailyMedicationRecordsResponse,
+  MedicationHistoryRecordsResponse,
   MonthlyMedicationRecordsResponse,
 } from "@/api/types/dashboard";
 
@@ -27,4 +28,16 @@ export async function fetchMonthlyMedicationRecords(
       searchParams: { type: "MONTH", date: params.date },
     })
     .json<MonthlyMedicationRecordsResponse>();
+}
+
+export async function fetchMedicationHistoryRecords(
+  params: FetchMedicationRecordsParams,
+): Promise<MedicationHistoryRecordsResponse> {
+  const monthlyRecords = await fetchMonthlyMedicationRecords(params);
+  const selectedGroup = monthlyRecords.records.find((group) => group.date === params.date);
+
+  return {
+    date: params.date,
+    items: selectedGroup?.items ?? [],
+  };
 }

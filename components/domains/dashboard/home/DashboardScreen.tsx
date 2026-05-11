@@ -25,6 +25,13 @@ export function DashboardScreen() {
     router.push("/(tabs)/profile");
   };
 
+  const handlePressRecentPrescriptionItem = (itemId: string) => {
+    router.push({
+      pathname: "/(detail)/dashboard/medication-history",
+      params: { date: itemId },
+    });
+  };
+
   return (
     <ScrollView
       style={styles.scroll}
@@ -61,7 +68,10 @@ export function DashboardScreen() {
               remainingCount={viewModel.scheduleRemainingCount}
               items={viewModel.scheduleCards}
             />
-            <RecentPrescriptionsSection items={viewModel.recentPrescriptions} />
+            <RecentPrescriptionsSection
+              items={viewModel.recentPrescriptions}
+              onPressItem={(item) => handlePressRecentPrescriptionItem(item.id)}
+            />
             <HealthTipCard
               title={viewModel.healthTipTitle}
               description={viewModel.healthTipDescription}

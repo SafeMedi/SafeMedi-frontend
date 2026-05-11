@@ -37,6 +37,7 @@ export interface MonthlyMedicationRecordItem {
   readonly scheduledTime: string;
   readonly takenTime: string | null;
   readonly status: MedicationRecordStatus;
+  readonly warningMessages?: readonly string[];
 }
 
 export interface MonthlyMedicationRecordGroup {
@@ -48,4 +49,9 @@ export interface MonthlyMedicationRecordsResponse {
   readonly period: string;
   readonly summary: MonthlyMedicationSummary;
   readonly records: readonly MonthlyMedicationRecordGroup[];
+}
+
+export interface MedicationHistoryRecordsResponse {
+  readonly date: string;
+  readonly items: readonly MonthlyMedicationRecordItem[];
 }

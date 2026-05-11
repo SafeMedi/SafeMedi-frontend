@@ -51,9 +51,9 @@ export function TodayScheduleCard({ item }: TodayScheduleCardProps) {
       return {
         key: `${item.id}-${name}-${count}`,
         name,
-      }
-    })
-  }, [item.id, item.medicationNames])
+      };
+    });
+  }, [item.id, item.medicationNames]);
 
   const handleToggleMedicationList = () => {
     setIsExpanded((prev) => !prev);
