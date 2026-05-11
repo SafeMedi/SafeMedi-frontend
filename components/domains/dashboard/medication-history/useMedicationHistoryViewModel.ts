@@ -80,7 +80,7 @@ export function useMedicationHistoryViewModel(
 
   const warningSummary =
     warningCount > 0 ? "일부 약물에 경고 사항이 있습니다. 의사와 상담 후 복용하세요." : null;
-  const displayDate = query.data ? formatDateLabel(query.data.date) : EMPTY_DATE_LABEL;
+  const displayDate = date ? formatDateLabel(date) : EMPTY_DATE_LABEL;
 
   return {
     displayDate,
