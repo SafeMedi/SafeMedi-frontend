@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
 import type { DashboardScheduleCardItem } from "@/components/domains/dashboard/home/useDashboardViewModel";
@@ -43,16 +43,17 @@ interface TodayScheduleCardProps {
 export function TodayScheduleCard({ item }: TodayScheduleCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const toneStyle = TONE_STYLES[item.tone];
-  const medicationNameCountMap = new Map<string, number>();
-  const medicationRows: Array<{ readonly key: string; readonly name: string }> = [];
-  item.medicationNames.forEach((medicationName) => {
-    const duplicateCount = (medicationNameCountMap.get(medicationName) ?? 0) + 1;
-    medicationNameCountMap.set(medicationName, duplicateCount);
-    medicationRows.push({
-      key: `${item.id}-${medicationName}-${duplicateCount}`,
-      name: medicationName,
-    });
-  });
+  const medicationRows = useMemo(() => {
+    const countMap = new Map<string, number>();
+    return item.medicationNames.map((name) => {
+      const count = (countMap.get(name) ?? 0) + 1;
+      countMap.set(name, count);
+      return {
+        key: `${item.id}-${name}-${count}`,
+        name,
+      }
+    })
+  }, [item.id, item.medicationNames])
 
   const handleToggleMedicationList = () => {
     setIsExpanded((prev) => !prev);
