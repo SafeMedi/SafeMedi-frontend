@@ -73,7 +73,7 @@ function resolveStatusLabel(status: DailyMedicationRecordItem["status"]): string
 }
 
 export function useDashboardViewModel(): DashboardViewModel {
-  const today = useMemo(() => formatDateToApiParam(new Date()), []);
+  const today = formatDateToApiParam(new Date());
 
   const dailyQuery = useDashboardDailyMedicationRecords({ date: today });
   const monthlyQuery = useDashboardMonthlyMedicationRecords({ date: today });
@@ -116,7 +116,7 @@ export function useDashboardViewModel(): DashboardViewModel {
         id: group.date,
         dateLabel: formatDateLabel(group.date),
         analysisCount: medicationSet.size,
-        hasWarning: group.items.some((item) => item.status !== "SUCCESS"),
+        hasWarning: group.items.some((item) => item.status === "OVERDUE" || item.status === "DUE"),
       };
     });
   }, [monthlyQuery.data]);
