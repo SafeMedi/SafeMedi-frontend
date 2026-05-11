@@ -3,6 +3,7 @@ export type {
   DailyMedicationRecordItem,
   DailyMedicationRecordsResponse,
   DailyMedicationSummary,
+  MedicationHistoryRecordsResponse,
   MedicationRecordStatus,
   MonthlyMedicationRecordGroup,
   MonthlyMedicationRecordItem,
