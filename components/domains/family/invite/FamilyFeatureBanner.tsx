@@ -35,11 +35,11 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 0,
     backgroundColor: "transparent",
-    overflow: "hidden",
   },
   gradient: {
     paddingHorizontal: 14,
     paddingVertical: 14,
+    borderRadius: 18,
   },
   title: {
     fontSize: 13,
