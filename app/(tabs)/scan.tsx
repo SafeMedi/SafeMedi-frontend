@@ -1,5 +1,5 @@
-import { View } from "tamagui";
+import { PrescriptionScanScreen } from "@/components/domains/scan";
 
-export default function ScanScreen() {
-  return <View></View>;
+export default function ScanTabRoute() {
+  return <PrescriptionScanScreen />;
 }
