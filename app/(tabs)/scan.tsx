@@ -1,5 +1,5 @@
-import { PrescriptionScanScreen } from "@/components/domains/scan";
+import { Redirect } from "expo-router";
 
 export default function ScanTabRoute() {
-  return <PrescriptionScanScreen />;
+  return <Redirect href="/(detail)/scan" />;
 }

@@ -5,7 +5,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { LinearGradient } from "expo-linear-gradient";
-import { Redirect, Tabs } from "expo-router";
+import { Redirect, Tabs, router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
 import { AuthGateView } from "@/components/AuthGateView";
@@ -83,6 +83,12 @@ export default function TabLayout() {
               height: 48,
             },
             tabBarIcon: ({ color }) => <MaterialIcons name="camera" size={48} color={color} />,
+          }}
+          listeners={{
+            tabPress: (event) => {
+              event.preventDefault();
+              router.push("/(detail)/scan");
+            },
           }}
         />
         <Tabs.Screen

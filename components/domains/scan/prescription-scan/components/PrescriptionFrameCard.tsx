@@ -20,8 +20,6 @@ export function PrescriptionFrameCard({
       <View style={styles.overlay} />
       <View style={styles.cornerTopLeft} />
       <View style={styles.cornerTopRight} />
-      <View style={styles.cornerBottomLeft} />
-      <View style={styles.cornerBottomRight} />
       <View style={styles.guideWrap}>
         <Text style={styles.guideText}>처방전을 가이드 라인 안에 맞춰주세요</Text>
         <Pressable
@@ -33,6 +31,8 @@ export function PrescriptionFrameCard({
           <Text style={styles.manualButtonText}>📝 직접 입력하기</Text>
         </Pressable>
       </View>
+      <View style={styles.cornerBottomLeft} />
+      <View style={styles.cornerBottomRight} />
     </View>
   );
 }
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   },
   cornerBottomLeft: {
     position: "absolute",
-    bottom: 158,
+    bottom: 48,
     left: 26,
     width: CORNER_SIZE,
     height: CORNER_SIZE,
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   },
   cornerBottomRight: {
     position: "absolute",
-    bottom: 158,
+    bottom: 48,
     right: 26,
     width: CORNER_SIZE,
     height: CORNER_SIZE,
