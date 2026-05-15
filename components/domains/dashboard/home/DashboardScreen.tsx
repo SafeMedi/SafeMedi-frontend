@@ -18,7 +18,7 @@ export function DashboardScreen() {
   const viewModel = useDashboardViewModel();
 
   const handlePressScan = () => {
-    router.push("/(tabs)/scan");
+    router.push("/(detail)/scan");
   };
 
   const handlePressNotification = () => {

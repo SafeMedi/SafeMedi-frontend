@@ -309,6 +309,18 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
           { status: 400 },
         );
       }
+      if (!body?.takeTimes?.length) {
+        return Response.json(
+          { code: "MED_003", message: "복용 시간(takeTimes)을 최소 1개 이상 입력해 주세요." },
+          { status: 400 },
+        );
+      }
+      if (!body?.title || body.title.trim().length === 0) {
+        return Response.json(
+          { code: "MED_004", message: "처방전 제목(title)을 입력해 주세요." },
+          { status: 400 },
+        );
+      }
       if (body.startDate && body.endDate && body.endDate < body.startDate) {
         return Response.json(
           { code: "MED_001", message: "종료일은 시작일보다 빠를 수 없습니다." },

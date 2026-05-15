@@ -26,5 +26,11 @@ export type {
   NotificationListResponse,
   NotificationSettings,
 } from "./notification";
+export type {
+  CreatePrescriptionMedication,
+  CreatePrescriptionRequest,
+  CreatePrescriptionResponse,
+  PrescriptionAllergyWarning,
+} from "./prescription-scan";
 export type { TutorialRegistrationBody, TutorialRegistrationResponse } from "./tutorial";
 export type { AllergyItem, UpdateUserProfileBody, UserProfile } from "./user";

@@ -8,6 +8,7 @@ import {
 } from "@/api/endpoints/user";
 import { queryKeys } from "@/api/query-keys";
 import type { TutorialRegistrationBody } from "@/api/types/tutorial";
+import type { UserProfile } from "@/api/types/user";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUserStore } from "@/stores/userStore";
 import { profileToUser } from "@/utils/user-mapper";
@@ -29,6 +30,7 @@ export function useUserProfile() {
 export function useLoginMutation() {
   const queryClient = useQueryClient();
   const setAccessToken = useSessionStore((s) => s.setAccessToken);
+  const setTutorialCompleted = useSessionStore((s) => s.setTutorialCompleted);
 
   return useMutation({
     mutationFn: async ({
@@ -48,6 +50,7 @@ export function useLoginMutation() {
     },
     onSuccess: ({ accessToken, profile }) => {
       setAccessToken(accessToken);
+      setTutorialCompleted(profile.isTutorialCompleted);
       queryClient.setQueryData(queryKeys.user.me, profile);
       useUserStore.getState().setUser(profileToUser(profile));
     },
@@ -56,10 +59,19 @@ export function useLoginMutation() {
 
 export function useCompleteTutorialMutation() {
   const queryClient = useQueryClient();
+  const setTutorialCompleted = useSessionStore((s) => s.setTutorialCompleted);
 
   return useMutation({
     mutationFn: (body: TutorialRegistrationBody) => postTutorialRegistration(body),
     onSuccess: async () => {
+      setTutorialCompleted(true);
+      queryClient.setQueryData<UserProfile | undefined>(queryKeys.user.me, (prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          isTutorialCompleted: true,
+        };
+      });
       await queryClient.invalidateQueries({ queryKey: queryKeys.user.me });
     },
   });

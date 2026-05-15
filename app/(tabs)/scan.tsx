@@ -1,5 +1,5 @@
-import { View } from "tamagui";
+import { Redirect } from "expo-router";
 
-export default function ScanScreen() {
-  return <View></View>;
+export default function ScanTabRoute() {
+  return <Redirect href="/(detail)/scan" />;
 }

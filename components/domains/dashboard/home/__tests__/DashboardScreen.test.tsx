@@ -174,12 +174,12 @@ describe("DashboardScreen 통합 테스트", () => {
     expect(getByText("팁:건강 팁:충분한 물과 함께 복용하세요.")).toBeTruthy();
   });
 
-  it("처방전 스캔 카드 클릭 시 스캔 탭으로 이동한다", () => {
+  it("처방전 스캔 카드 클릭 시 스캔 상세 화면으로 이동한다", () => {
     const { getByLabelText } = render(<DashboardScreen />);
 
     fireEvent.press(getByLabelText("처방전 스캔하기"));
 
-    expect(mockRouterPush).toHaveBeenCalledWith("/(tabs)/scan");
+    expect(mockRouterPush).toHaveBeenCalledWith("/(detail)/scan");
   });
 
   it("알림 버튼 클릭 시 프로필 탭으로 이동한다", () => {
