@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { ActivityIndicator, Alert, ScrollView, StyleSheet } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
 import { PillButton } from "@/components/ui/PillButton";
@@ -55,12 +55,6 @@ export function PrescriptionScanScreen() {
             imageUri={viewModel.selectedImageUri}
             onPressManualInput={viewModel.openManualInput}
           />
-          {viewModel.isExtracting ? (
-            <YStack style={styles.feedbackBox} gap={10}>
-              <ActivityIndicator size="large" color={palette.green} />
-              <Text style={styles.feedbackText}>OCR로 텍스트를 추출하는 중입니다.</Text>
-            </YStack>
-          ) : null}
           {viewModel.draft ? (
             <ExtractedDraftCard
               draftJson={viewModel.draftJson}
@@ -93,6 +87,14 @@ export function PrescriptionScanScreen() {
         onPressGallery={viewModel.extractFromGallery}
         onPressCamera={viewModel.extractFromCamera}
       />
+      {viewModel.isExtracting ? (
+        <View style={styles.extractingOverlay}>
+          <YStack style={styles.extractingDialog} gap={10}>
+            <ActivityIndicator size="large" color={palette.green} />
+            <Text style={styles.feedbackText}>OCR로 텍스트를 추출하는 중입니다.</Text>
+          </YStack>
+        </View>
+      ) : null}
     </YStack>
   );
 }
@@ -108,10 +110,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 14,
   },
-  feedbackBox: {
+  extractingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: palette.overlay_white_90,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 24,
+    zIndex: 10,
+  },
+  extractingDialog: {
+    minWidth: 220,
+    paddingHorizontal: 18,
+    paddingVertical: 20,
+    borderRadius: 16,
+    backgroundColor: palette.surface_card,
+    borderWidth: 1,
+    borderColor: palette.border_muted,
+    alignItems: "center",
+    justifyContent: "center",
   },
   feedbackText: {
     color: palette.black,

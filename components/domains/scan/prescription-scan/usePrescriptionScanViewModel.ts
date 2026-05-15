@@ -1,10 +1,13 @@
+import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Alert } from "react-native";
 import { parseApiError } from "@/api/error";
 import { useCreatePrescriptionByScanMutation } from "@/api/queries/prescription-scan";
 import type { CreatePrescriptionRequest } from "@/api/types";
+import { extractDraftFromImageSource, extractDraftFromImageUri } from "./device-ocr";
 import { parsePrescriptionFromJson } from "./ocr-parser";
 import type { PrescriptionScanViewModel, ScanPrescriptionDraft } from "./types";
+import { usePrescriptionOcrResultStore } from "./usePrescriptionOcrResultStore";
 
 const DEFAULT_MANUAL_JSON = `{
   "title": "처방전 직접 입력",
@@ -16,8 +19,15 @@ const DEFAULT_MANUAL_JSON = `{
   ],
   "rawText": "manual"
 }`;
-const OCR_REFACTOR_IN_PROGRESS_MESSAGE =
-  "OCR 기능은 Google Vision API로 개편 중입니다. 현재는 직접 입력으로 처방전을 등록해 주세요.";
+const JSON_PRETTY_SPACE = 2;
+const NO_SELECTED_IMAGE_ERROR = "재시도할 이미지가 없습니다. 먼저 사진을 선택해 주세요.";
+const UNKNOWN_OCR_ERROR = "OCR 추출 중 알 수 없는 오류가 발생했습니다.";
+
+type OcrImageSource = "camera" | "gallery";
+
+function normalizeUnknownError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(UNKNOWN_OCR_ERROR);
+}
 
 function toCreatePrescriptionBody(draft: ScanPrescriptionDraft): CreatePrescriptionRequest {
   return {
@@ -34,23 +44,54 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
   const [draftJson, setDraftJson] = useState<string>(DEFAULT_MANUAL_JSON);
   const [error, setError] = useState<Error | null>(null);
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  const [isExtracting, setIsExtracting] = useState<boolean>(false);
   const [isManualInputVisible, setIsManualInputVisible] = useState<boolean>(false);
+  const setOcrResult = usePrescriptionOcrResultStore((state) => state.setResult);
   const createMutation = useCreatePrescriptionByScanMutation();
 
-  const openManualInputForTemporaryOcrFallback = useCallback(() => {
+  const applyExtractedDraft = useCallback((nextDraft: ScanPrescriptionDraft, imageUri: string) => {
+    setDraft(nextDraft);
+    setDraftJson(JSON.stringify(nextDraft, null, JSON_PRETTY_SPACE));
+    setSelectedImageUri(imageUri);
+    setIsManualInputVisible(false);
     setError(null);
-    setSelectedImageUri(null);
-    setIsManualInputVisible(true);
-    Alert.alert("OCR 일시 비활성화", OCR_REFACTOR_IN_PROGRESS_MESSAGE);
   }, []);
 
+  const navigateToResultScreen = useCallback(
+    (nextDraft: ScanPrescriptionDraft, imageUri: string) => {
+      setOcrResult({ draft: nextDraft, imageUri });
+      router.push("/(detail)/scan-result");
+    },
+    [setOcrResult],
+  );
+
+  const runExtractFromSource = useCallback(
+    async (source: OcrImageSource) => {
+      setIsExtracting(true);
+      setError(null);
+      try {
+        const result = await extractDraftFromImageSource(source);
+        if (!result) {
+          return;
+        }
+        applyExtractedDraft(result.draft, result.imageUri);
+        navigateToResultScreen(result.draft, result.imageUri);
+      } catch (extractError) {
+        setError(normalizeUnknownError(extractError));
+      } finally {
+        setIsExtracting(false);
+      }
+    },
+    [applyExtractedDraft, navigateToResultScreen],
+  );
+
   const extractFromGallery = useCallback(async () => {
-    openManualInputForTemporaryOcrFallback();
-  }, [openManualInputForTemporaryOcrFallback]);
+    await runExtractFromSource("gallery");
+  }, [runExtractFromSource]);
 
   const extractFromCamera = useCallback(async () => {
-    openManualInputForTemporaryOcrFallback();
-  }, [openManualInputForTemporaryOcrFallback]);
+    await runExtractFromSource("camera");
+  }, [runExtractFromSource]);
 
   const submitDraft = useCallback(async () => {
     if (!draft) {
@@ -75,8 +116,22 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
   }, [createMutation, draft]);
 
   const retryExtract = useCallback(async () => {
-    openManualInputForTemporaryOcrFallback();
-  }, [openManualInputForTemporaryOcrFallback]);
+    if (!selectedImageUri) {
+      setError(new Error(NO_SELECTED_IMAGE_ERROR));
+      return;
+    }
+    setIsExtracting(true);
+    setError(null);
+    try {
+      const nextDraft = await extractDraftFromImageUri(selectedImageUri);
+      applyExtractedDraft(nextDraft, selectedImageUri);
+      navigateToResultScreen(nextDraft, selectedImageUri);
+    } catch (extractError) {
+      setError(normalizeUnknownError(extractError));
+    } finally {
+      setIsExtracting(false);
+    }
+  }, [applyExtractedDraft, navigateToResultScreen, selectedImageUri]);
 
   const applyManualJson = useCallback(() => {
     try {
@@ -109,7 +164,7 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
     () => ({
       draft,
       draftJson,
-      isExtracting: false,
+      isExtracting,
       isSubmitting: createMutation.isPending,
       isManualInputVisible,
       error,
@@ -133,6 +188,7 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
       error,
       extractFromCamera,
       extractFromGallery,
+      isExtracting,
       isManualInputVisible,
       openManualInput,
       resetError,

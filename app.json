@@ -9,7 +9,12 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.safeMedi",
+      "infoPlist": {
+        "NSCameraUsageDescription": "처방전을 촬영하려면 카메라 접근 권한이 필요합니다.",
+        "NSPhotoLibraryUsageDescription": "처방전 이미지를 선택하려면 사진 접근 권한이 필요합니다."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +24,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["android.permission.RECORD_AUDIO"]
     },
     "web": {
       "output": "static",
@@ -27,6 +33,13 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "처방전 이미지를 선택하려면 사진 접근 권한이 필요합니다.",
+          "cameraPermission": "처방전을 촬영하려면 카메라 접근 권한이 필요합니다."
+        }
+      ],
       [
         "expo-splash-screen",
         {

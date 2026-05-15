@@ -20,7 +20,9 @@ export function useAuthRouteState(): AuthRouteState {
   const queryClient = useQueryClient();
   const hydrated = useSessionHydrated();
   const accessToken = useSessionStore((s) => s.accessToken);
+  const isTutorialCompleted = useSessionStore((s) => s.isTutorialCompleted);
   const clearSession = useSessionStore((s) => s.clearSession);
+  const setTutorialCompleted = useSessionStore((s) => s.setTutorialCompleted);
   const user = useUserStore((s) => s.user);
   const setUser = useUserStore((s) => s.setUser);
   const { data: profile, isPending, isError, error, refetch } = useUserProfile();
@@ -39,6 +41,15 @@ export function useAuthRouteState(): AuthRouteState {
     }
     setUser(profileToUser(profile));
   }, [hydrated, accessToken, isError, profile, user, setUser]);
+
+  useEffect(() => {
+    if (!hydrated || !accessToken || isError || !profile) {
+      return;
+    }
+    if (profile.isTutorialCompleted && !isTutorialCompleted) {
+      setTutorialCompleted(true);
+    }
+  }, [hydrated, accessToken, isError, profile, isTutorialCompleted, setTutorialCompleted]);
 
   if (!hydrated) {
     return { kind: "loading" };
@@ -59,7 +70,7 @@ export function useAuthRouteState(): AuthRouteState {
     return { kind: "error", retry: () => void refetch() };
   }
 
-  if (!profile.isTutorialCompleted) {
+  if (!(profile.isTutorialCompleted || isTutorialCompleted)) {
     return { kind: "redirect", href: "/(auth)/tutorial" };
   }
 
