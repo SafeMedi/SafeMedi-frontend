@@ -10,7 +10,13 @@ import { ManualJsonInputCard } from "./components/ManualJsonInputCard";
 import { PrescriptionFrameCard } from "./components/PrescriptionFrameCard";
 import { PrescriptionScanActions } from "./components/PrescriptionScanActions";
 import { PrescriptionScanHeader } from "./components/PrescriptionScanHeader";
+import type { PrescriptionSubmitFeedbackKind } from "./types";
 import { usePrescriptionScanViewModel } from "./usePrescriptionScanViewModel";
+
+const SUBMIT_FEEDBACK_TITLE_BY_KIND: Readonly<Record<PrescriptionSubmitFeedbackKind, string>> = {
+  success: "처방전 등록 완료",
+  warning: "알레르기 주의",
+};
 
 export function PrescriptionScanScreen() {
   const insets = useSafeAreaInsets();
@@ -37,6 +43,16 @@ export function PrescriptionScanScreen() {
       },
     ]);
   }, [viewModel.error, viewModel.resetError]);
+
+  useEffect(() => {
+    if (!viewModel.submitFeedback) return;
+    Alert.alert(SUBMIT_FEEDBACK_TITLE_BY_KIND[viewModel.submitFeedback.kind], viewModel.submitFeedback.message, [
+      {
+        text: "확인",
+        onPress: () => viewModel.resetSubmitFeedback(),
+      },
+    ]);
+  }, [viewModel.resetSubmitFeedback, viewModel.submitFeedback]);
 
   const isBusy = viewModel.isExtracting || viewModel.isSubmitting;
 

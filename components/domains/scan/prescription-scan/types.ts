@@ -12,6 +12,13 @@ export interface ScanPrescriptionDraft {
   readonly rawText: string;
 }
 
+export type PrescriptionSubmitFeedbackKind = "success" | "warning";
+
+export interface PrescriptionSubmitFeedback {
+  readonly kind: PrescriptionSubmitFeedbackKind;
+  readonly message: string;
+}
+
 export interface PrescriptionScanViewModel {
   readonly draft: ScanPrescriptionDraft | null;
   readonly draftJson: string;
@@ -19,6 +26,7 @@ export interface PrescriptionScanViewModel {
   readonly isSubmitting: boolean;
   readonly isManualInputVisible: boolean;
   readonly error: Error | null;
+  readonly submitFeedback: PrescriptionSubmitFeedback | null;
   readonly selectedImageUri: string | null;
   readonly extractFromGallery: () => Promise<void>;
   readonly extractFromCamera: () => Promise<void>;
@@ -29,4 +37,5 @@ export interface PrescriptionScanViewModel {
   readonly updateManualJson: (value: string) => void;
   readonly applyManualJson: () => void;
   readonly resetError: () => void;
+  readonly resetSubmitFeedback: () => void;
 }

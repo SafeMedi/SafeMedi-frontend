@@ -1,12 +1,15 @@
 import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { Alert } from "react-native";
 import { parseApiError } from "@/api/error";
 import { useCreatePrescriptionByScanMutation } from "@/api/queries/prescription-scan";
 import type { CreatePrescriptionRequest } from "@/api/types";
 import { extractDraftFromImageSource, extractDraftFromImageUri } from "./device-ocr";
 import { parsePrescriptionFromJson } from "./ocr-parser";
-import type { PrescriptionScanViewModel, ScanPrescriptionDraft } from "./types";
+import type {
+  PrescriptionScanViewModel,
+  PrescriptionSubmitFeedback,
+  ScanPrescriptionDraft,
+} from "./types";
 import { usePrescriptionOcrResultStore } from "./usePrescriptionOcrResultStore";
 
 const DEFAULT_MANUAL_JSON = `{
@@ -43,6 +46,7 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
   const [draft, setDraft] = useState<ScanPrescriptionDraft | null>(null);
   const [draftJson, setDraftJson] = useState<string>(DEFAULT_MANUAL_JSON);
   const [error, setError] = useState<Error | null>(null);
+  const [submitFeedback, setSubmitFeedback] = useState<PrescriptionSubmitFeedback | null>(null);
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
   const [isManualInputVisible, setIsManualInputVisible] = useState<boolean>(false);
@@ -99,16 +103,19 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
       return;
     }
     setError(null);
+    setSubmitFeedback(null);
     try {
       const response = await createMutation.mutateAsync(toCreatePrescriptionBody(draft));
-      if (response.hasAllergyConflict) {
-        const warningMessages = response.allergyWarnings
-          .map((item) => item.warningMessage)
-          .join("\n");
-        Alert.alert("처방전 등록 완료", `${response.message}\n${warningMessages}`);
-      } else {
-        Alert.alert("처방전 등록 완료", response.message);
-      }
+      const warningMessages = response.allergyWarnings
+        .map((item) => item.warningMessage)
+        .join("\n");
+      const message = response.hasAllergyConflict
+        ? `${response.message}\n${warningMessages}`
+        : response.message;
+      setSubmitFeedback({
+        kind: response.hasAllergyConflict ? "warning" : "success",
+        message,
+      });
     } catch (submitError) {
       const parsedError = await parseApiError(submitError);
       setError(new Error(parsedError.message));
@@ -160,6 +167,10 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
     setError(null);
   }, []);
 
+  const resetSubmitFeedback = useCallback(() => {
+    setSubmitFeedback(null);
+  }, []);
+
   return useMemo<PrescriptionScanViewModel>(
     () => ({
       draft,
@@ -168,6 +179,7 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
       isSubmitting: createMutation.isPending,
       isManualInputVisible,
       error,
+      submitFeedback,
       selectedImageUri,
       extractFromGallery,
       extractFromCamera,
@@ -178,6 +190,7 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
       updateManualJson: setDraftJson,
       applyManualJson,
       resetError,
+      resetSubmitFeedback,
     }),
     [
       applyManualJson,
@@ -192,8 +205,10 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
       isManualInputVisible,
       openManualInput,
       resetError,
+      resetSubmitFeedback,
       retryExtract,
       selectedImageUri,
+      submitFeedback,
       submitDraft,
     ],
   );

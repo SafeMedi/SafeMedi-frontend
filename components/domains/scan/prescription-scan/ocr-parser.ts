@@ -67,9 +67,7 @@ function extractMedications(rawText: string): readonly ScanMedicationItem[] {
   if (medicationCandidates.length === 0) {
     return [{ atcCode: DEFAULT_ATC_CODE, drugName: EMPTY_DRUG_FALLBACK }];
   }
-  return medicationCandidates
-    .slice(0, 6)
-    .map((drugName) => ({ atcCode: DEFAULT_ATC_CODE, drugName }));
+  return medicationCandidates.map((drugName) => ({ atcCode: DEFAULT_ATC_CODE, drugName }));
 }
 
 function extractTitle(rawText: string): string {

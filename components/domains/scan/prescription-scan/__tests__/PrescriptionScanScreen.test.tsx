@@ -14,6 +14,7 @@ const mockCloseManualInput = jest.fn();
 const mockUpdateManualJson = jest.fn();
 const mockApplyManualJson = jest.fn();
 const mockResetError = jest.fn();
+const mockResetSubmitFeedback = jest.fn();
 
 jest.mock("expo-router", () => ({
   __esModule: true,
@@ -170,6 +171,7 @@ function createViewModel(
     isSubmitting: false,
     isManualInputVisible: false,
     error: null,
+    submitFeedback: null,
     selectedImageUri: null,
     extractFromGallery: mockExtractFromGallery,
     extractFromCamera: mockExtractFromCamera,
@@ -180,6 +182,7 @@ function createViewModel(
     updateManualJson: mockUpdateManualJson,
     applyManualJson: mockApplyManualJson,
     resetError: mockResetError,
+    resetSubmitFeedback: mockResetSubmitFeedback,
     ...overrides,
   };
 }
@@ -237,6 +240,48 @@ describe("PrescriptionScanScreen", () => {
     expect(alertSpy).toHaveBeenCalledWith(
       "처방전 스캔 오류",
       "OCR 실패",
+      expect.arrayContaining([expect.objectContaining({ text: "확인" })]),
+    );
+    alertSpy.mockRestore();
+  });
+
+  it("submitFeedback 상태면 완료 Alert를 노출한다", () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    mockUsePrescriptionScanViewModel.mockReturnValue(
+      createViewModel({
+        submitFeedback: {
+          kind: "success",
+          message: "등록되었습니다.",
+        },
+      }),
+    );
+
+    render(<PrescriptionScanScreen />);
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      "처방전 등록 완료",
+      "등록되었습니다.",
+      expect.arrayContaining([expect.objectContaining({ text: "확인" })]),
+    );
+    alertSpy.mockRestore();
+  });
+
+  it("warning submitFeedback 상태면 경고 Alert를 노출한다", () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    mockUsePrescriptionScanViewModel.mockReturnValue(
+      createViewModel({
+        submitFeedback: {
+          kind: "warning",
+          message: "알레르기 주의 약물이 포함되어 있습니다.",
+        },
+      }),
+    );
+
+    render(<PrescriptionScanScreen />);
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      "알레르기 주의",
+      "알레르기 주의 약물이 포함되어 있습니다.",
       expect.arrayContaining([expect.objectContaining({ text: "확인" })]),
     );
     alertSpy.mockRestore();
