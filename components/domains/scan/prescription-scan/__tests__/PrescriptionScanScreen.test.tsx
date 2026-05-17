@@ -7,7 +7,6 @@ import type { PrescriptionScanViewModel } from "../types";
 const mockUsePrescriptionScanViewModel = jest.fn<PrescriptionScanViewModel, []>();
 const mockExtractFromGallery = jest.fn<Promise<void>, []>(async () => {});
 const mockExtractFromCamera = jest.fn<Promise<void>, []>(async () => {});
-const mockSubmitDraft = jest.fn<Promise<void>, []>(async () => {});
 const mockRetryExtract = jest.fn<Promise<void>, []>(async () => {});
 const mockOpenManualInput = jest.fn();
 const mockCloseManualInput = jest.fn();
@@ -77,57 +76,6 @@ jest.mock("../components/PrescriptionFrameCard", () => {
   };
 });
 
-jest.mock("../components/ExtractedDraftCard", () => {
-  const React = require("react");
-  const { Pressable, Text } = require("react-native");
-  return {
-    ExtractedDraftCard: ({ onPressSubmit }: { onPressSubmit: () => void }) =>
-      React.createElement(
-        Pressable,
-        { onPress: onPressSubmit, accessibilityRole: "button", accessibilityLabel: "등록 버튼" },
-        React.createElement(Text, null, "추출카드"),
-      ),
-  };
-});
-
-jest.mock("../components/ManualJsonInputCard", () => {
-  const React = require("react");
-  const { Pressable, Text } = require("react-native");
-  return {
-    ManualJsonInputCard: ({
-      onPressCancel,
-      onPressApply,
-    }: {
-      value: string;
-      onChangeText: (value: string) => void;
-      onPressApply: () => void;
-      onPressCancel: () => void;
-    }) =>
-      React.createElement(
-        React.Fragment,
-        null,
-        React.createElement(
-          Pressable,
-          {
-            onPress: onPressApply,
-            accessibilityRole: "button",
-            accessibilityLabel: "직접입력 적용",
-          },
-          React.createElement(Text, null, "적용"),
-        ),
-        React.createElement(
-          Pressable,
-          {
-            onPress: onPressCancel,
-            accessibilityRole: "button",
-            accessibilityLabel: "직접입력 취소",
-          },
-          React.createElement(Text, null, "취소"),
-        ),
-      ),
-  };
-});
-
 jest.mock("../components/PrescriptionScanActions", () => {
   const React = require("react");
   const { Pressable, Text } = require("react-native");
@@ -175,7 +123,7 @@ function createViewModel(
     selectedImageUri: null,
     extractFromGallery: mockExtractFromGallery,
     extractFromCamera: mockExtractFromCamera,
-    submitDraft: mockSubmitDraft,
+    submitDraft: jest.fn(async () => {}),
     retryExtract: mockRetryExtract,
     openManualInput: mockOpenManualInput,
     closeManualInput: mockCloseManualInput,
@@ -209,22 +157,10 @@ describe("PrescriptionScanScreen", () => {
     expect(mockExtractFromCamera).toHaveBeenCalledTimes(1);
   });
 
-  it("draft가 있으면 등록 버튼 클릭 시 submitDraft를 호출한다", () => {
-    mockUsePrescriptionScanViewModel.mockReturnValue(
-      createViewModel({
-        draft: {
-          title: "처방전",
-          startDate: "2026-05-13",
-          endDate: "2026-05-20",
-          takeTimes: ["09:00"],
-          medications: [{ atcCode: "UNKNOWN", drugName: "약물" }],
-          rawText: "raw",
-        },
-      }),
-    );
+  it("직접 입력 버튼 클릭 시 viewModel 핸들러를 호출한다", () => {
     const { getByLabelText } = render(<PrescriptionScanScreen />);
-    fireEvent.press(getByLabelText("등록 버튼"));
-    expect(mockSubmitDraft).toHaveBeenCalledTimes(1);
+    fireEvent.press(getByLabelText("직접 입력 열기"));
+    expect(mockOpenManualInput).toHaveBeenCalledTimes(1);
   });
 
   it("error 상태면 Alert를 노출한다", () => {
@@ -240,48 +176,6 @@ describe("PrescriptionScanScreen", () => {
     expect(alertSpy).toHaveBeenCalledWith(
       "처방전 스캔 오류",
       "OCR 실패",
-      expect.arrayContaining([expect.objectContaining({ text: "확인" })]),
-    );
-    alertSpy.mockRestore();
-  });
-
-  it("submitFeedback 상태면 완료 Alert를 노출한다", () => {
-    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
-    mockUsePrescriptionScanViewModel.mockReturnValue(
-      createViewModel({
-        submitFeedback: {
-          kind: "success",
-          message: "등록되었습니다.",
-        },
-      }),
-    );
-
-    render(<PrescriptionScanScreen />);
-
-    expect(alertSpy).toHaveBeenCalledWith(
-      "처방전 등록 완료",
-      "등록되었습니다.",
-      expect.arrayContaining([expect.objectContaining({ text: "확인" })]),
-    );
-    alertSpy.mockRestore();
-  });
-
-  it("warning submitFeedback 상태면 경고 Alert를 노출한다", () => {
-    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
-    mockUsePrescriptionScanViewModel.mockReturnValue(
-      createViewModel({
-        submitFeedback: {
-          kind: "warning",
-          message: "알레르기 주의 약물이 포함되어 있습니다.",
-        },
-      }),
-    );
-
-    render(<PrescriptionScanScreen />);
-
-    expect(alertSpy).toHaveBeenCalledWith(
-      "알레르기 주의",
-      "알레르기 주의 약물이 포함되어 있습니다.",
       expect.arrayContaining([expect.objectContaining({ text: "확인" })]),
     );
     alertSpy.mockRestore();

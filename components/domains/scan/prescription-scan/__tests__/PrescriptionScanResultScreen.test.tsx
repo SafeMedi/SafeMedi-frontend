@@ -1,5 +1,5 @@
-import { render } from "@testing-library/react-native";
-import { router } from "expo-router";
+import { fireEvent, render } from "@testing-library/react-native";
+import { Alert } from "react-native";
 import { PrescriptionScanResultScreen } from "../PrescriptionScanResultScreen";
 import { usePrescriptionOcrResultStore } from "../usePrescriptionOcrResultStore";
 
@@ -8,6 +8,7 @@ jest.mock("expo-router", () => ({
   router: {
     back: jest.fn(),
     replace: jest.fn(),
+    push: jest.fn(),
   },
 }));
 
@@ -26,20 +27,37 @@ jest.mock("tamagui", () => {
   };
 });
 
-describe("PrescriptionScanResultScreen", () => {
-  const mockRouterReplace = router.replace as jest.MockedFunction<typeof router.replace>;
+const mockMutateAsync = jest.fn();
 
+jest.mock("@/api/queries/prescription-scan", () => ({
+  useCreatePrescriptionByScanMutation: () => ({
+    isPending: false,
+    mutateAsync: mockMutateAsync,
+  }),
+}));
+
+jest.mock("@/api/error", () => ({
+  parseApiError: jest.fn(async () => ({ message: "error" })),
+}));
+
+describe("PrescriptionScanResultScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     usePrescriptionOcrResultStore.setState({ result: null });
   });
 
   it("OCR 결과가 없으면 스캔 화면으로 리다이렉트한다", () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     render(<PrescriptionScanResultScreen />);
-    expect(mockRouterReplace).toHaveBeenCalledWith("/(detail)/scan");
+    expect(alertSpy).toHaveBeenCalledWith(
+      "스캔 결과 없음",
+      "복약 등록 정보가 없습니다. 스캔 화면으로 이동합니다.",
+      expect.arrayContaining([expect.objectContaining({ text: "확인" })]),
+    );
+    alertSpy.mockRestore();
   });
 
-  it("OCR 결과가 있으면 추출 원문 텍스트를 노출한다", () => {
+  it("OCR 결과가 있으면 복약 등록 폼과 약물 목록을 노출한다", () => {
     usePrescriptionOcrResultStore.setState({
       result: {
         imageUri: "file://prescription.jpg",
@@ -55,7 +73,28 @@ describe("PrescriptionScanResultScreen", () => {
     });
 
     const { getByText } = render(<PrescriptionScanResultScreen />);
-    expect(getByText("OCR 추출 결과")).toBeTruthy();
-    expect(getByText("아세트아미노펜정 500mg")).toBeTruthy();
+    expect(getByText("복약 등록")).toBeTruthy();
+    expect(getByText("인식된 약물")).toBeTruthy();
+    expect(getByText("아세트아미노펜정")).toBeTruthy();
+  });
+
+  it("약물 추가 버튼 클릭 시 기본 약물 입력 필드를 추가한다", () => {
+    usePrescriptionOcrResultStore.setState({
+      result: {
+        imageUri: "file://prescription.jpg",
+        draft: {
+          title: "처방전",
+          startDate: "2026-05-14",
+          endDate: "2026-05-20",
+          takeTimes: ["09:00"],
+          medications: [{ atcCode: "UNKNOWN", drugName: "아세트아미노펜정" }],
+          rawText: "아세트아미노펜정 500mg",
+        },
+      },
+    });
+
+    const { getByLabelText, getByDisplayValue } = render(<PrescriptionScanResultScreen />);
+    fireEvent.press(getByLabelText("약물 추가"));
+    expect(getByDisplayValue("새 약물")).toBeTruthy();
   });
 });

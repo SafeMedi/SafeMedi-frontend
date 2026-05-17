@@ -85,7 +85,7 @@ export default function TabLayout() {
           listeners={{
             tabPress: (event) => {
               event.preventDefault();
-              router.push("/(detail)/scan");
+              router.push("/(detail)/scan/scan");
             },
           }}
         />
