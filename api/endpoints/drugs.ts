@@ -32,8 +32,10 @@ export async function searchDrugs(keyword: string): Promise<readonly DrugSearchI
     return await api
       .get(apiPaths.drugsSearch, { searchParams: { keyword: normalizedKeyword } })
       .json<DrugSearchItem[]>();
-  } catch {
-    // 실서버 연결이 안 되는 환경에서도 약물명 선택 플로우를 검증할 수 있도록 fallback mock 제공
-    return filterDrugSearchMocks(normalizedKeyword);
+  } catch (error) {
+    if (__DEV__) {
+      return filterDrugSearchMocks(normalizedKeyword);
+    }
+    throw error;
   }
 }
