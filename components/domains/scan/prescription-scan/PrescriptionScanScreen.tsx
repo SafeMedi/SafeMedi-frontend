@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
-import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
 import { PrescriptionFrameCard } from "./components/PrescriptionFrameCard";
 import { PrescriptionScanActions } from "./components/PrescriptionScanActions";
@@ -16,10 +15,6 @@ export function PrescriptionScanScreen() {
 
   const handlePressClose = () => {
     router.replace("/(tabs)/dashboard");
-  };
-
-  const handlePressRetry = async () => {
-    await viewModel.retryExtract();
   };
 
   useEffect(() => {

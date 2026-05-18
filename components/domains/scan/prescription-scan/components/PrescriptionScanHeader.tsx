@@ -10,7 +10,10 @@ interface PrescriptionScanHeaderProps {
 
 const DEFAULT_TITLE = "처방전 스캔";
 
-export function PrescriptionScanHeader({ onPressClose, title = DEFAULT_TITLE }: PrescriptionScanHeaderProps) {
+export function PrescriptionScanHeader({
+  onPressClose,
+  title = DEFAULT_TITLE,
+}: PrescriptionScanHeaderProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
