@@ -36,6 +36,13 @@ jest.mock("@/api/queries/prescription-scan", () => ({
   }),
 }));
 
+jest.mock("@/api/queries/drugs", () => ({
+  useSearchDrugsQuery: () => ({
+    data: [],
+    isFetching: false,
+  }),
+}));
+
 jest.mock("@/api/error", () => ({
   parseApiError: jest.fn(async () => ({ message: "error" })),
 }));
@@ -78,7 +85,7 @@ describe("PrescriptionScanResultScreen", () => {
     expect(getByText("아세트아미노펜정")).toBeTruthy();
   });
 
-  it("약물 추가 버튼 클릭 시 기본 약물 입력 필드를 추가한다", () => {
+  it("약물 추가 버튼 클릭 시 약물 입력 카드가 추가된다", () => {
     usePrescriptionOcrResultStore.setState({
       result: {
         imageUri: "file://prescription.jpg",
@@ -93,8 +100,8 @@ describe("PrescriptionScanResultScreen", () => {
       },
     });
 
-    const { getByLabelText, getByDisplayValue } = render(<PrescriptionScanResultScreen />);
+    const { getByLabelText, getByText } = render(<PrescriptionScanResultScreen />);
     fireEvent.press(getByLabelText("약물 추가"));
-    expect(getByDisplayValue("새 약물")).toBeTruthy();
+    expect(getByText("약물 2")).toBeTruthy();
   });
 });

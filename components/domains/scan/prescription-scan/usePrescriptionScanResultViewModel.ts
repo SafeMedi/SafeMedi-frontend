@@ -4,39 +4,109 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { Alert } from "react-native";
 import { parseApiError } from "@/api/error";
 import { useCreatePrescriptionByScanMutation } from "@/api/queries/prescription-scan";
-import type { CreatePrescriptionMedication, CreatePrescriptionRequest } from "@/api/types";
+import type {
+  CreatePrescriptionMedication,
+  CreatePrescriptionRequest,
+  DrugSearchItem,
+} from "@/api/types";
 import { usePrescriptionOcrResultStore } from "./usePrescriptionOcrResultStore";
 
-interface EditableMedicationItem {
-  readonly drugName: string;
-  readonly atcCode: string;
+export type MedicationTakeSlot = "MORNING" | "LUNCH" | "DINNER";
+
+interface MedicationTakeSlotOption {
+  readonly slot: MedicationTakeSlot;
+  readonly label: string;
+  readonly timeRange: string;
+  readonly defaultTime: string;
 }
 
-interface PrescriptionScanResultFormValues {
+export const MEDICATION_TAKE_SLOT_OPTIONS: readonly MedicationTakeSlotOption[] = [
+  { slot: "MORNING", label: "🌅 아침", timeRange: "07:00~09:00", defaultTime: "08:00" },
+  { slot: "LUNCH", label: "☀ 점심", timeRange: "12:00~14:00", defaultTime: "13:00" },
+  { slot: "DINNER", label: "🌙 저녁", timeRange: "18:00~20:00", defaultTime: "19:00" },
+] as const;
+
+const DEFAULT_SLOT_BY_HOUR: Record<MedicationTakeSlot, readonly [number, number]> = {
+  MORNING: [7, 9],
+  LUNCH: [12, 14],
+  DINNER: [18, 20],
+};
+
+export interface EditableMedicationItem {
+  readonly drugName: string;
+  readonly atcCode: string;
+  readonly dosage: string;
+  readonly takeSlots: MedicationTakeSlot[];
+}
+
+export interface PrescriptionScanResultFormValues {
   readonly title: string;
   readonly medications: EditableMedicationItem[];
 }
 
-const MANUAL_MEDICATION_NAME = "새 약물";
-const MANUAL_MEDICATION_ATC = "UNKNOWN";
+const EMPTY_MEDICATION_ATC_CODE = "";
 const MANUAL_INPUT_IMAGE_URI_PREFIX = "manual://";
 const EMPTY_RESULT_ERROR = "복약 등록 정보가 없습니다. 스캔 화면으로 이동합니다.";
+const DRUG_NAME_NOT_SELECTED_ERROR = "약물명은 검색 결과에서 선택해야 합니다.";
+
+function normalizeTakeTimesToSlots(takeTimes: readonly string[]): MedicationTakeSlot[] {
+  const slots = takeTimes.reduce<MedicationTakeSlot[]>((acc, takeTime) => {
+    const hour = Number(takeTime.split(":")[0]);
+    if (Number.isNaN(hour)) {
+      return acc;
+    }
+
+    MEDICATION_TAKE_SLOT_OPTIONS.forEach((option) => {
+      const [startHour, endHour] = DEFAULT_SLOT_BY_HOUR[option.slot];
+      if (hour >= startHour && hour <= endHour && !acc.includes(option.slot)) {
+        acc.push(option.slot);
+      }
+    });
+    return acc;
+  }, []);
+
+  if (slots.length > 0) {
+    return slots;
+  }
+  return ["MORNING"];
+}
+
+function convertTakeSlotsToTimes(takeSlots: readonly MedicationTakeSlot[]): string[] {
+  const selected = new Set(takeSlots);
+  return MEDICATION_TAKE_SLOT_OPTIONS.filter((option) => selected.has(option.slot)).map(
+    (option) => option.defaultTime,
+  );
+}
 
 function createRequestMedications(
   medications: readonly EditableMedicationItem[],
 ): CreatePrescriptionMedication[] {
   return medications.map((item) => ({
-    atcCode: item.atcCode.trim() || MANUAL_MEDICATION_ATC,
+    atcCode: item.atcCode.trim(),
     drugName: item.drugName.trim(),
+    dosage: item.dosage.trim(),
+    takeTimes: convertTakeSlotsToTimes(item.takeSlots),
   }));
+}
+
+function createRequestTakeTimes(medications: readonly CreatePrescriptionMedication[]): string[] {
+  const uniqueTakeTimes = new Set<string>();
+  medications.forEach((item) => {
+    (item.takeTimes ?? []).forEach((takeTime) => {
+      uniqueTakeTimes.add(takeTime);
+    });
+  });
+  return MEDICATION_TAKE_SLOT_OPTIONS.map((option) => option.defaultTime).filter((time) =>
+    uniqueTakeTimes.has(time),
+  );
 }
 
 export function usePrescriptionScanResultViewModel() {
   const result = usePrescriptionOcrResultStore((state) => state.result);
   const clearResult = usePrescriptionOcrResultStore((state) => state.clearResult);
   const createMutation = useCreatePrescriptionByScanMutation();
-  const [editingMedicationIndex, setEditingMedicationIndex] = useState<number | null>(null);
   const shouldSuppressEmptyResultAlertRef = useRef<boolean>(false);
+  const [editingMedicationIndex, setEditingMedicationIndex] = useState<number | null>(null);
 
   const initialValues = useMemo<PrescriptionScanResultFormValues | null>(() => {
     if (!result) return null;
@@ -45,6 +115,8 @@ export function usePrescriptionScanResultViewModel() {
       medications: result.draft.medications.map((item) => ({
         drugName: item.drugName,
         atcCode: item.atcCode,
+        dosage: "",
+        takeSlots: normalizeTakeTimesToSlots(result.draft.takeTimes),
       })),
     };
   }, [result]);
@@ -85,7 +157,12 @@ export function usePrescriptionScanResultViewModel() {
   }, [clearResult]);
 
   const handlePressAddMedication = useCallback(() => {
-    append({ drugName: MANUAL_MEDICATION_NAME, atcCode: MANUAL_MEDICATION_ATC });
+    append({
+      drugName: "",
+      atcCode: EMPTY_MEDICATION_ATC_CODE,
+      dosage: "",
+      takeSlots: ["MORNING"],
+    });
     setEditingMedicationIndex(fields.length);
   }, [append, fields.length]);
 
@@ -105,18 +182,58 @@ export function usePrescriptionScanResultViewModel() {
     setEditingMedicationIndex(index);
   }, []);
 
-  const handleFinishEditMedication = useCallback(
-    (index: number) => {
-      const nextValue = getValues(`medications.${index}.drugName`).trim();
-      if (!nextValue) {
-        setValue(`medications.${index}.drugName`, MANUAL_MEDICATION_NAME, {
-          shouldDirty: true,
-          shouldTouch: true,
-        });
-      }
-      setEditingMedicationIndex(null);
+  const handlePressCompleteMedicationEdit = useCallback(() => {
+    setEditingMedicationIndex(null);
+  }, []);
+
+  const handleChangeMedicationName = useCallback(
+    (index: number, drugName: string) => {
+      setValue(`medications.${index}.drugName`, drugName, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      setValue(`medications.${index}.atcCode`, EMPTY_MEDICATION_ATC_CODE, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+    },
+    [setValue],
+  );
+
+  const handleSelectMedicationDrug = useCallback(
+    (index: number, item: DrugSearchItem) => {
+      setValue(`medications.${index}.drugName`, item.drugName, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      setValue(`medications.${index}.atcCode`, item.atcCode, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+    },
+    [setValue],
+  );
+
+  const handleToggleMedicationTakeSlot = useCallback(
+    (index: number, slot: MedicationTakeSlot) => {
+      const fieldName = `medications.${index}.takeSlots` as const;
+      const currentSlots = getValues(fieldName);
+      const nextSlots = currentSlots.includes(slot)
+        ? currentSlots.filter((item) => item !== slot)
+        : [...currentSlots, slot];
+      setValue(fieldName, nextSlots, { shouldDirty: true, shouldTouch: true });
     },
     [getValues, setValue],
+  );
+
+  const handleChangeMedicationDosage = useCallback(
+    (index: number, dosage: string) => {
+      setValue(`medications.${index}.dosage`, dosage, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+    },
+    [setValue],
   );
 
   const handlePressAnalyze = useCallback(async () => {
@@ -125,6 +242,7 @@ export function usePrescriptionScanResultViewModel() {
     const values = getValues();
     const title = values.title.trim();
     const medications = createRequestMedications(values.medications);
+    const takeTimes = createRequestTakeTimes(medications);
 
     if (!title) {
       Alert.alert("입력 확인", "처방전 제목을 입력해주세요.");
@@ -138,12 +256,28 @@ export function usePrescriptionScanResultViewModel() {
       Alert.alert("입력 확인", "약물명을 모두 입력해주세요.");
       return;
     }
+    if (medications.some((item) => item.atcCode.length === 0)) {
+      Alert.alert("입력 확인", DRUG_NAME_NOT_SELECTED_ERROR);
+      return;
+    }
+    if (medications.some((item) => (item.dosage ?? "").length === 0)) {
+      Alert.alert("입력 확인", "복용량을 모두 입력해주세요.");
+      return;
+    }
+    if (medications.some((item) => (item.takeTimes?.length ?? 0) === 0)) {
+      Alert.alert("입력 확인", "각 약물마다 복약 시간을 최소 1개 선택해주세요.");
+      return;
+    }
+    if (!takeTimes.length) {
+      Alert.alert("입력 확인", "복약 시간을 최소 1개 이상 선택해주세요.");
+      return;
+    }
 
     const payload: CreatePrescriptionRequest = {
       title,
       startDate: result.draft.startDate,
       endDate: result.draft.endDate,
-      takeTimes: result.draft.takeTimes,
+      takeTimes,
       medications,
     };
 
@@ -191,7 +325,11 @@ export function usePrescriptionScanResultViewModel() {
     handlePressAddMedication,
     handlePressAnalyze,
     handlePressEditMedication,
-    handleFinishEditMedication,
+    handlePressCompleteMedicationEdit,
+    handleChangeMedicationName,
+    handleSelectMedicationDrug,
+    handleToggleMedicationTakeSlot,
+    handleChangeMedicationDosage,
     handlePressRemoveMedication,
   };
 }

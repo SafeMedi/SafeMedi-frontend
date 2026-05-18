@@ -8,12 +8,12 @@ import { PillButton } from "@/components/ui/PillButton";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
+import { MedicationEditorCard } from "./components/MedicationEditorCard";
 import { PrescriptionScanHeader } from "./components/PrescriptionScanHeader";
 import { usePrescriptionScanResultViewModel } from "./usePrescriptionScanResultViewModel";
 
 const POSITIVE_GRADIENT = [palette.green, palette.opal] as const;
 const ADD_GRADIENT = [palette.purple, palette.pink] as const;
-const INDEX_BADGE_GRADIENT = [palette.purple, palette.pink] as const;
 
 export function PrescriptionScanResultScreen() {
   const insets = useSafeAreaInsets();
@@ -80,7 +80,10 @@ export function PrescriptionScanResultScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="약물 추가"
                   onPress={viewModel.handlePressAddMedication}
-                  style={({ pressed }) => [styles.addButtonPressable, pressed ? styles.pressed : null]}
+                  style={({ pressed }) => [
+                    styles.addButtonPressable,
+                    pressed ? styles.pressed : null,
+                  ]}
                 >
                   <GradientCard gradientColors={ADD_GRADIENT} style={styles.addButton}>
                     <Ionicons name="add" size={12} color={palette.white} />
@@ -91,61 +94,21 @@ export function PrescriptionScanResultScreen() {
             />
 
             {viewModel.fields.map((field, index) => {
-              const isEditing = viewModel.editingMedicationIndex === index;
+              const isExpanded = viewModel.editingMedicationIndex === index;
               return (
-                <SurfaceCard key={field.id} style={styles.medicationCard}>
-                  <GradientCard gradientColors={INDEX_BADGE_GRADIENT} style={styles.indexBadge}>
-                    <Text style={styles.indexBadgeText}>{index + 1}</Text>
-                  </GradientCard>
-                  <YStack flex={1} gap={4}>
-                    <Controller
-                      control={viewModel.control}
-                      name={`medications.${index}.drugName`}
-                      render={({ field: { value, onChange } }) =>
-                        isEditing ? (
-                          <TextInput
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={() => viewModel.handleFinishEditMedication(index)}
-                            autoFocus
-                            style={styles.medicationInput}
-                            placeholder="약물명 입력"
-                            placeholderTextColor={palette.input_placeholder}
-                          />
-                        ) : (
-                          <Text style={styles.medicationName}>{value}</Text>
-                        )
-                      }
-                    />
-                    <Controller
-                      control={viewModel.control}
-                      name={`medications.${index}.atcCode`}
-                      render={({ field: { value } }) => (
-                        <Text style={styles.medicationMeta}>
-                          {value === "UNKNOWN" ? "ATC 코드 미상" : value}
-                        </Text>
-                      )}
-                    />
-                  </YStack>
-                  <View style={styles.medicationActions}>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={`약물 ${index + 1} 수정`}
-                      onPress={() => viewModel.handlePressEditMedication(index)}
-                      style={({ pressed }) => [styles.iconButton, pressed ? styles.pressed : null]}
-                    >
-                      <Ionicons name="pencil-outline" size={16} color={palette.purple} />
-                    </Pressable>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={`약물 ${index + 1} 삭제`}
-                      onPress={() => viewModel.handlePressRemoveMedication(index)}
-                      style={({ pressed }) => [styles.iconButton, pressed ? styles.pressed : null]}
-                    >
-                      <Ionicons name="trash-outline" size={16} color={palette.red_medium} />
-                    </Pressable>
-                  </View>
-                </SurfaceCard>
+                <MedicationEditorCard
+                  key={field.id}
+                  index={index}
+                  control={viewModel.control}
+                  isExpanded={isExpanded}
+                  onPressRemove={() => viewModel.handlePressRemoveMedication(index)}
+                  onPressEdit={() => viewModel.handlePressEditMedication(index)}
+                  onPressComplete={viewModel.handlePressCompleteMedicationEdit}
+                  onChangeMedicationName={viewModel.handleChangeMedicationName}
+                  onSelectMedicationDrug={viewModel.handleSelectMedicationDrug}
+                  onToggleMedicationTakeSlot={viewModel.handleToggleMedicationTakeSlot}
+                  onChangeMedicationDosage={viewModel.handleChangeMedicationDosage}
+                />
               );
             })}
           </YStack>
@@ -156,7 +119,7 @@ export function PrescriptionScanResultScreen() {
               <YStack gap={4} flex={1}>
                 <Text style={styles.noticeTitle}>약물 정보 수정 가능</Text>
                 <Text style={styles.noticeDescription}>
-                  인식 결과가 정확하지 않다면 수정 버튼을 눌러 변경하거나 새 약물을 추가하세요.
+                  약물명은 검색 결과에서 선택하고, 복용량과 복약 시간을 함께 입력해 주세요.
                 </Text>
               </YStack>
             </View>
@@ -264,61 +227,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "600",
-  },
-  medicationCard: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderColor: palette.purple,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  indexBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  indexBadgeText: {
-    color: palette.white,
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "700",
-  },
-  medicationName: {
-    color: palette.black,
-    fontSize: 17,
-    lineHeight: 24,
-    fontWeight: "600",
-  },
-  medicationInput: {
-    borderWidth: 1,
-    borderColor: palette.border_muted,
-    backgroundColor: palette.surface_subtle,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    color: palette.black,
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: "500",
-  },
-  medicationMeta: {
-    color: palette.icon,
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  medicationActions: {
-    flexDirection: "row",
-    gap: 4,
-  },
-  iconButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
   },
   noticeCard: {
     paddingHorizontal: 15,
