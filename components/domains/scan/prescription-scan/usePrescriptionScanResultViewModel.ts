@@ -161,7 +161,7 @@ export function usePrescriptionScanResultViewModel() {
       drugName: "",
       atcCode: EMPTY_MEDICATION_ATC_CODE,
       dosage: "",
-      takeSlots: ["MORNING"],
+      takeSlots: [],
     });
     setEditingMedicationIndex(fields.length);
   }, [append, fields.length]);
