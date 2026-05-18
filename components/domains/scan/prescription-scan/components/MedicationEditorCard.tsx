@@ -98,6 +98,13 @@ export function MedicationEditorCard({
     return hasMedicationName && hasMedicationCode && hasDosage && hasTakeSlot;
   }, [atcCode, dosage, medicationName, selectedTakeSlots]);
 
+  const handlePressSuggestion = (item: DrugSearchItem) => {
+    setKeyword(item.drugName);
+    setDebouncedKeyword(item.drugName);
+    onSelectMedicationDrug(index, item);
+    setIsInputFocused(false);
+  };
+
   return (
     <SurfaceCard style={styles.card}>
       <View style={styles.headerRow}>
@@ -184,7 +191,7 @@ export function MedicationEditorCard({
                     setIsInputFocused(true);
                   }}
                   onBlur={() => {
-                    setTimeout(() => setIsInputFocused(false), 120);
+                    setIsInputFocused(false);
                   }}
                   placeholder="약물명을 한글로 입력 후 목록에서 선택"
                   placeholderTextColor={palette.input_placeholder}
@@ -212,12 +219,7 @@ export function MedicationEditorCard({
                 {(searchResults ?? []).map((item) => (
                   <Pressable
                     key={`${item.atcCode}-${item.drugName}`}
-                    onPress={() => {
-                      setKeyword(item.drugName);
-                      setDebouncedKeyword(item.drugName);
-                      onSelectMedicationDrug(index, item);
-                      setIsInputFocused(false);
-                    }}
+                    onPressIn={() => handlePressSuggestion(item)}
                     style={({ pressed }) => [
                       styles.suggestionItem,
                       pressed ? styles.pressed : null,

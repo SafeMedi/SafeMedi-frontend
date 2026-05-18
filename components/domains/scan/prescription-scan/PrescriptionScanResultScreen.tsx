@@ -38,6 +38,7 @@ export function PrescriptionScanResultScreen() {
         style={styles.scroll}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 96 }]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <YStack gap={12}>
           {viewModel.isManualInputMode ? null : (
