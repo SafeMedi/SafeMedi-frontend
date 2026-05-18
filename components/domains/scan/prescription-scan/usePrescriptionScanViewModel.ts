@@ -12,16 +12,16 @@ import type {
 } from "./types";
 import { usePrescriptionOcrResultStore } from "./usePrescriptionOcrResultStore";
 
-const DEFAULT_MANUAL_JSON = `{
-  "title": "처방전 직접 입력",
-  "startDate": "2026-05-13",
-  "endDate": "2026-05-20",
-  "takeTimes": ["09:00", "21:00"],
-  "medications": [
-    { "atcCode": "UNKNOWN", "drugName": "약물명 입력" }
-  ],
-  "rawText": "manual"
-}`;
+const DEFAULT_MANUAL_DRAFT: ScanPrescriptionDraft = {
+  title: "처방전 직접 입력",
+  startDate: "2026-05-13",
+  endDate: "2026-05-20",
+  takeTimes: ["09:00", "21:00"],
+  medications: [],
+  rawText: "manual",
+};
+const DEFAULT_MANUAL_JSON = JSON.stringify(DEFAULT_MANUAL_DRAFT, null, 2);
+const MANUAL_INPUT_IMAGE_URI = "manual://input";
 const JSON_PRETTY_SPACE = 2;
 const NO_SELECTED_IMAGE_ERROR = "재시도할 이미지가 없습니다. 먼저 사진을 선택해 주세요.";
 const UNKNOWN_OCR_ERROR = "OCR 추출 중 알 수 없는 오류가 발생했습니다.";
@@ -64,7 +64,7 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
   const navigateToResultScreen = useCallback(
     (nextDraft: ScanPrescriptionDraft, imageUri: string) => {
       setOcrResult({ draft: nextDraft, imageUri });
-      router.push("/(detail)/scan-result");
+      router.push("/(detail)/scan/scan-result");
     },
     [setOcrResult],
   );
@@ -156,8 +156,9 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
   }, [draftJson]);
 
   const openManualInput = useCallback(() => {
-    setIsManualInputVisible(true);
-  }, []);
+    applyExtractedDraft(DEFAULT_MANUAL_DRAFT, MANUAL_INPUT_IMAGE_URI);
+    navigateToResultScreen(DEFAULT_MANUAL_DRAFT, MANUAL_INPUT_IMAGE_URI);
+  }, [applyExtractedDraft, navigateToResultScreen]);
 
   const closeManualInput = useCallback(() => {
     setIsManualInputVisible(false);

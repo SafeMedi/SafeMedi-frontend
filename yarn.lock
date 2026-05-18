@@ -2019,10 +2019,10 @@
   dependencies:
     merge-options "^3.0.4"
 
-"@react-native-menu/menu@1.2.2":
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/@react-native-menu/menu/-/menu-1.2.2.tgz#550d158f1496ae27cb68424d540d74ee08f6c181"
-  integrity sha512-Uk65PAhwNkCVBAqJu5t2H9biV+m0JLwJc7m3v2X2A/W8SFJmUqYabBsLH4fOWKI3a7kkR9QDT6HruliIKSfM8w==
+"@react-native-menu/menu@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@react-native-menu/menu/-/menu-2.0.0.tgz#21d3fcb15687df86386fee7815cc5ff79d26bc9e"
+  integrity sha512-hb8Mirw6aKPGONhgo52IiNpwHtISVrgCT3rMdFX1qS7eOFNzOcQh8d2UDnaH5zVpxN+QuvWtaaiRMGFpIjzdtA==
 
 "@react-native/assets-registry@0.81.5":
   version "0.81.5"

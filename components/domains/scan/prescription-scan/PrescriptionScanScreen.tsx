@@ -3,20 +3,11 @@ import { useEffect } from "react";
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
-import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
-import { ExtractedDraftCard } from "./components/ExtractedDraftCard";
-import { ManualJsonInputCard } from "./components/ManualJsonInputCard";
 import { PrescriptionFrameCard } from "./components/PrescriptionFrameCard";
 import { PrescriptionScanActions } from "./components/PrescriptionScanActions";
 import { PrescriptionScanHeader } from "./components/PrescriptionScanHeader";
-import type { PrescriptionSubmitFeedbackKind } from "./types";
 import { usePrescriptionScanViewModel } from "./usePrescriptionScanViewModel";
-
-const SUBMIT_FEEDBACK_TITLE_BY_KIND: Readonly<Record<PrescriptionSubmitFeedbackKind, string>> = {
-  success: "처방전 등록 완료",
-  warning: "알레르기 주의",
-};
 
 export function PrescriptionScanScreen() {
   const insets = useSafeAreaInsets();
@@ -24,14 +15,6 @@ export function PrescriptionScanScreen() {
 
   const handlePressClose = () => {
     router.replace("/(tabs)/dashboard");
-  };
-
-  const handlePressRetry = async () => {
-    await viewModel.retryExtract();
-  };
-
-  const handlePressSubmit = async () => {
-    await viewModel.submitDraft();
   };
 
   useEffect(() => {
@@ -43,16 +26,6 @@ export function PrescriptionScanScreen() {
       },
     ]);
   }, [viewModel.error, viewModel.resetError]);
-
-  useEffect(() => {
-    if (!viewModel.submitFeedback) return;
-    Alert.alert(SUBMIT_FEEDBACK_TITLE_BY_KIND[viewModel.submitFeedback.kind], viewModel.submitFeedback.message, [
-      {
-        text: "확인",
-        onPress: () => viewModel.resetSubmitFeedback(),
-      },
-    ]);
-  }, [viewModel.resetSubmitFeedback, viewModel.submitFeedback]);
 
   const isBusy = viewModel.isExtracting || viewModel.isSubmitting;
 
@@ -71,31 +44,6 @@ export function PrescriptionScanScreen() {
             imageUri={viewModel.selectedImageUri}
             onPressManualInput={viewModel.openManualInput}
           />
-          {viewModel.draft ? (
-            <ExtractedDraftCard
-              draftJson={viewModel.draftJson}
-              isSubmitting={viewModel.isSubmitting}
-              onPressSubmit={handlePressSubmit}
-            />
-          ) : null}
-          {viewModel.isManualInputVisible ? (
-            <ManualJsonInputCard
-              value={viewModel.draftJson}
-              onChangeText={viewModel.updateManualJson}
-              onPressApply={viewModel.applyManualJson}
-              onPressCancel={viewModel.closeManualInput}
-            />
-          ) : null}
-          {viewModel.selectedImageUri && !viewModel.isExtracting ? (
-            <PillButton
-              variant="outline"
-              onPress={handlePressRetry}
-              accessibilityLabel="OCR 재시도"
-              flex={0}
-            >
-              <Text style={styles.retryText}>같은 이미지로 다시 추출</Text>
-            </PillButton>
-          ) : null}
         </YStack>
       </ScrollView>
       <PrescriptionScanActions

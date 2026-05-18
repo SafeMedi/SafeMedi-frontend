@@ -5,12 +5,18 @@ import { palette } from "@/constants/design-tokens";
 
 interface PrescriptionScanHeaderProps {
   readonly onPressClose: () => void;
+  readonly title?: string;
 }
 
-export function PrescriptionScanHeader({ onPressClose }: PrescriptionScanHeaderProps) {
+const DEFAULT_TITLE = "처방전 스캔";
+
+export function PrescriptionScanHeader({
+  onPressClose,
+  title = DEFAULT_TITLE,
+}: PrescriptionScanHeaderProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>처방전 스캔</Text>
+      <Text style={styles.title}>{title}</Text>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="스캔 화면 닫기"

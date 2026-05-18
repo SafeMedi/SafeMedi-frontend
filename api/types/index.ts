@@ -30,6 +30,7 @@ export type {
   CreatePrescriptionMedication,
   CreatePrescriptionRequest,
   CreatePrescriptionResponse,
+  DrugSearchItem,
   PrescriptionAllergyWarning,
 } from "./prescription-scan";
 export type { TutorialRegistrationBody, TutorialRegistrationResponse } from "./tutorial";

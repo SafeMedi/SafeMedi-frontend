@@ -301,7 +301,12 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
         startDate?: string;
         endDate?: string;
         takeTimes?: string[];
-        medications?: { atcCode: string; drugName: string }[];
+        medications?: {
+          atcCode: string;
+          drugName: string;
+          dosage?: string;
+          takeTimes?: string[];
+        }[];
       };
       if (!body?.medications?.length) {
         return Response.json(
