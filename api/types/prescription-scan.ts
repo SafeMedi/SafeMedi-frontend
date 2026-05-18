@@ -1,6 +1,8 @@
 export interface CreatePrescriptionMedication {
   readonly atcCode: string;
   readonly drugName: string;
+  readonly dosage?: string;
+  readonly takeTimes?: readonly string[];
 }
 
 export interface CreatePrescriptionRequest {
@@ -24,4 +26,10 @@ export interface CreatePrescriptionResponse {
   readonly message: string;
   readonly hasAllergyConflict: boolean;
   readonly allergyWarnings: readonly PrescriptionAllergyWarning[];
+}
+
+export interface DrugSearchItem {
+  readonly atcCode: string;
+  readonly drugName: string;
+  readonly company: string;
 }
