@@ -68,7 +68,7 @@ function normalizeTakeTimesToSlots(takeTimes: readonly string[]): MedicationTake
   if (slots.length > 0) {
     return slots;
   }
-  return ["MORNING"];
+  return [];
 }
 
 function convertTakeSlotsToTimes(takeSlots: readonly MedicationTakeSlot[]): string[] {
