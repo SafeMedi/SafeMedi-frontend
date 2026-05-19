@@ -1,7 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import { requireOptionalNativeModule } from "expo-modules-core";
-import { parsePrescriptionFromOcrText } from "../ocr-parser";
 import { extractDraftFromImageSource, extractDraftFromImageUri } from "../device-ocr";
+import { parsePrescriptionFromOcrText } from "../ocr-parser";
 
 const mockRequestCameraPermissionsAsync = jest.fn();
 const mockRequestMediaLibraryPermissionsAsync = jest.fn();
@@ -37,7 +37,9 @@ jest.mock("../ocr-parser", () => ({
 describe("device-ocr", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockRequestCameraPermissionsAsync.mockResolvedValue({ status: ImagePicker.PermissionStatus.GRANTED });
+    mockRequestCameraPermissionsAsync.mockResolvedValue({
+      status: ImagePicker.PermissionStatus.GRANTED,
+    });
     mockRequestMediaLibraryPermissionsAsync.mockResolvedValue({
       status: ImagePicker.PermissionStatus.GRANTED,
     });
@@ -72,7 +74,9 @@ describe("device-ocr", () => {
   });
 
   it("카메라 권한이 없으면 의미 있는 에러를 던진다", async () => {
-    mockRequestCameraPermissionsAsync.mockResolvedValue({ status: ImagePicker.PermissionStatus.DENIED });
+    mockRequestCameraPermissionsAsync.mockResolvedValue({
+      status: ImagePicker.PermissionStatus.DENIED,
+    });
 
     await expect(extractDraftFromImageSource("camera")).rejects.toThrow(
       "카메라 권한이 필요합니다. 설정에서 카메라 접근을 허용해 주세요.",

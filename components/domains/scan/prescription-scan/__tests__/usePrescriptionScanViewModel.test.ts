@@ -57,9 +57,11 @@ describe("usePrescriptionScanViewModel", () => {
     (parseApiError as jest.MockedFunction<typeof parseApiError>).mockResolvedValue({
       message: "서버 오류",
     });
-    (useCreatePrescriptionByScanMutation as jest.MockedFunction<
-      typeof useCreatePrescriptionByScanMutation
-    >).mockReturnValue({
+    (
+      useCreatePrescriptionByScanMutation as jest.MockedFunction<
+        typeof useCreatePrescriptionByScanMutation
+      >
+    ).mockReturnValue({
       mutateAsync: mockMutateAsync,
       isPending: false,
     } as unknown as ReturnType<typeof useCreatePrescriptionByScanMutation>);
@@ -79,7 +81,10 @@ describe("usePrescriptionScanViewModel", () => {
 
     expect(result.current.draft).toEqual(BASE_DRAFT);
     expect(result.current.selectedImageUri).toBe("file://gallery.png");
-    expect(mockSetResult).toHaveBeenCalledWith({ draft: BASE_DRAFT, imageUri: "file://gallery.png" });
+    expect(mockSetResult).toHaveBeenCalledWith({
+      draft: BASE_DRAFT,
+      imageUri: "file://gallery.png",
+    });
     expect(mockRouterPush).toHaveBeenCalledWith("/(detail)/scan/scan-result");
   });
 

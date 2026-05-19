@@ -63,9 +63,11 @@ describe("usePrescriptionScanResultViewModel", () => {
         rawText: "타이레놀",
       },
     };
-    (useCreatePrescriptionByScanMutation as jest.MockedFunction<
-      typeof useCreatePrescriptionByScanMutation
-    >).mockReturnValue({
+    (
+      useCreatePrescriptionByScanMutation as jest.MockedFunction<
+        typeof useCreatePrescriptionByScanMutation
+      >
+    ).mockReturnValue({
       mutateAsync: mockMutateAsync,
       isPending: false,
     } as unknown as ReturnType<typeof useCreatePrescriptionByScanMutation>);

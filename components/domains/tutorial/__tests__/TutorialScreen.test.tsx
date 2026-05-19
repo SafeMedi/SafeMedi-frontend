@@ -63,9 +63,12 @@ jest.mock("tamagui", () => {
   const React = require("react");
   const { Text, View } = require("react-native");
   return {
-    Text: ({ children }: { children: React.ReactNode }) => React.createElement(Text, null, children),
-    XStack: ({ children }: { children: React.ReactNode }) => React.createElement(View, null, children),
-    YStack: ({ children }: { children: React.ReactNode }) => React.createElement(View, null, children),
+    Text: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(Text, null, children),
+    XStack: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(View, null, children),
+    YStack: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(View, null, children),
   };
 });
 
@@ -119,9 +122,8 @@ jest.mock("@/hooks/use-auth-route-state", () => ({
 }));
 
 jest.mock("@/stores/userStore", () => {
-  const useUserStore = (
-    selector: (state: { user: User | null }) => unknown,
-  ): unknown => selector({ user: mockUser });
+  const useUserStore = (selector: (state: { user: User | null }) => unknown): unknown =>
+    selector({ user: mockUser });
   useUserStore.getState = () => ({ user: mockUser });
   return { useUserStore };
 });
