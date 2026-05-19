@@ -179,7 +179,7 @@ describe("DashboardScreen 통합 테스트", () => {
 
     fireEvent.press(getByLabelText("처방전 스캔하기"));
 
-    expect(mockRouterPush).toHaveBeenCalledWith("/(detail)/scan");
+    expect(mockRouterPush).toHaveBeenCalledWith("/(detail)/scan/scan");
   });
 
   it("알림 버튼 클릭 시 프로필 탭으로 이동한다", () => {
