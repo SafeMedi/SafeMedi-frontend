@@ -1,0 +1,39 @@
+---
+description: Git·PR·브랜치 규칙
+alwaysApply: true
+---
+
+# Git & PR
+
+## 브랜치
+
+- 기본(base) 브랜치: **`main`**
+- `main`에서 직접 PR 생성하지 않는다. feature 브랜치에서 작업 후 PR.
+
+## PR 본문
+
+`.github/PULL_REQUEST_TEMPLATE.md` 섹션을 반드시 채운다:
+
+- 🔥 작업 개요
+- 🛠️ 작업 상세
+- 🧪 테스트 (체크리스트)
+- 💬 기타 논의 사항
+- ✅ 셀프 체크리스트
+
+## PR 생성 전 (수동·에이전트 공통)
+
+1. `git status` — uncommitted 변경 없을 것
+2. `yarn lint` 통과
+3. `yarn test` 통과
+
+테스트·린트 실패 시 PR 생성·머지 제안하지 않는다. `--no-verify` 등 훅 우회 금지.
+
+## PR 작성 시
+
+- 변경은 **기능 단위** 하나에 가깝게. 무관한 리팩터링 혼합 지양
+- Changes는 파일 나열이 아니라 **기능적 변경** 위주
+- `package.json` 의존성, env, API 스키마 변경 시 부수 효과를 PR 본문에 명시
+
+## CI
+
+- `pull_request` / `main` push 시 coverage 워크플로 실행 (`.github/workflows/coverage.yml`)
