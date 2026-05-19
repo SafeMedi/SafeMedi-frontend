@@ -2,10 +2,10 @@ import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import Foundation from "@expo/vector-icons/Foundation";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Redirect, router, Tabs } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
+import ScanIcon from "@/assets/images/scan_icon.png";
 import { AuthGateView } from "@/components/AuthGateView";
 import { palette } from "@/constants/design-tokens";
 import { useAuthRouteState } from "@/hooks/use-auth-route-state";
@@ -48,10 +48,13 @@ export default function TabLayout() {
           tabBarInactiveTintColor: palette.icon,
           headerShown: false,
           sceneStyle: { backgroundColor: "transparent" },
+          tabBarLabelStyle: {
+            fontSize: 14,
+          },
           tabBarStyle: {
-            height: 60,
+            height: 70,
             paddingTop: 6,
-            paddingBottom: 6,
+            paddingHorizontal: 18,
           },
         }}
       >
@@ -77,10 +80,10 @@ export default function TabLayout() {
             title: "",
             tabBarIconStyle: {
               marginTop: -25,
-              width: 48,
-              height: 48,
+              width: 56,
+              height: 56,
             },
-            tabBarIcon: ({ color }) => <MaterialIcons name="camera" size={48} color={color} />,
+            tabBarIcon: () => <Image source={ScanIcon} style={{ width: 56, height: 56 }} />,
           }}
           listeners={{
             tabPress: (event) => {
