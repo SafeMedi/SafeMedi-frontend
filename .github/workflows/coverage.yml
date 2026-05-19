@@ -27,16 +27,20 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Run test coverage
+        id: coverage_run
+        continue-on-error: true
         run: yarn test --coverage
 
       - name: Upload coverage artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage
+          if-no-files-found: ignore
 
       - name: Comment coverage report on PR
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
@@ -45,81 +49,61 @@ jobs:
 
             const MARKER = "<!-- safemedi-coverage-report -->";
             const summaryPath = path.join(process.cwd(), "coverage", "coverage-summary.json");
+            const THRESHOLDS = {
+              lines: 60,
+              statements: 60,
+              functions: 60,
+              branches: 60,
+            };
+            const ICON_PASS = "🟢";
+            const ICON_FAIL = "🔴";
+            const runOutcome = "${{ steps.coverage_run.outcome }}";
 
-            if (!fs.existsSync(summaryPath)) {
-              core.setFailed("coverage-summary.json not found.");
-              return;
-            }
-
-            const summary = JSON.parse(fs.readFileSync(summaryPath, "utf8"));
-            const total = summary.total ?? {};
+            const hasSummary = fs.existsSync(summaryPath);
+            const summary = hasSummary ? JSON.parse(fs.readFileSync(summaryPath, "utf8")) : null;
+            const total = summary?.total ?? {};
 
             const toPct = (value) =>
               typeof value === "number" ? `${value.toFixed(2)}%` : "-";
 
-            const pullNumber = context.payload.pull_request.number;
-            const filesResponse = await github.rest.pulls.listFiles({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pullNumber,
-              per_page: 100,
-            });
+            const metricRow = (label, key) => {
+              const pct = total?.[key]?.pct;
+              if (typeof pct !== "number") {
+                return `| ${label} | - | ${ICON_FAIL} | 기준 ${THRESHOLDS[key]}% |`;
+              }
+              const passed = pct >= THRESHOLDS[key];
+              const icon = passed ? ICON_PASS : ICON_FAIL;
+              return `| ${label} | ${toPct(pct)} | ${icon} | 기준 ${THRESHOLDS[key]}% |`;
+            };
 
-            const changedFiles = filesResponse.data
-              .filter((file) => file.status !== "removed")
-              .map((file) => file.filename);
-
-            const summaryEntries = Object.entries(summary).filter(([key]) => key !== "total");
-            const resolveCoverageEntry = (filename) =>
-              summaryEntries.find(([absolutePath]) =>
-                absolutePath.replace(/\\/g, "/").endsWith(`/${filename}`),
-              );
-
-            const changedCoverageRows = changedFiles
-              .map((filename) => {
-                const entry = resolveCoverageEntry(filename);
-                if (!entry) {
-                  return `| \`${filename}\` | - | - | - | - |`;
-                }
-                const [, metrics] = entry;
-                return [
-                  `| \`${filename}\``,
-                  toPct(metrics.lines?.pct),
-                  toPct(metrics.statements?.pct),
-                  toPct(metrics.functions?.pct),
-                  toPct(metrics.branches?.pct),
-                  "|",
-                ].join(" | ");
-              })
-              .slice(0, 30);
-
-            const changedCoverageBody =
-              changedCoverageRows.length > 0
-                ? changedCoverageRows.join("\n")
-                : "| (변경 파일 없음) | - | - | - | - |";
+            const overallStatusIcon = runOutcome === "success" ? ICON_PASS : ICON_FAIL;
+            const overallStatusText = runOutcome === "success" ? "통과" : "실패";
 
             const body = [
               MARKER,
               "## 테스트 커버리지 리포트",
               "",
+              `- 전체 워크플로우 상태: ${overallStatusIcon} **${overallStatusText}**`,
+              "",
               "### Overall",
               "",
-              "| Metric | Coverage |",
-              "| --- | ---: |",
-              `| Lines | ${toPct(total.lines?.pct)} |`,
-              `| Statements | ${toPct(total.statements?.pct)} |`,
-              `| Functions | ${toPct(total.functions?.pct)} |`,
-              `| Branches | ${toPct(total.branches?.pct)} |`,
+              "| Metric | Coverage | Status | Threshold |",
+              "| --- | ---: | :---: | ---: |",
+              metricRow("Lines", "lines"),
+              metricRow("Statements", "statements"),
+              metricRow("Functions", "functions"),
+              metricRow("Branches", "branches"),
               "",
-              "### Changed Files",
+              hasSummary
+                ? "> coverage artifact: `coverage-report`"
+                : "> coverage-summary.json을 찾지 못했습니다. 테스트 단계 로그를 확인해 주세요.",
               "",
-              "| File | Lines | Statements | Functions | Branches |",
-              "| --- | ---: | ---: | ---: | ---: |",
-              changedCoverageBody,
-              "",
-              "> coverage artifact: `coverage-report`",
+              runOutcome === "success"
+                ? "> 최소 커버리지 기준을 통과했습니다."
+                : "> 최소 커버리지 기준 미달 또는 테스트 실패로 워크플로우가 실패했습니다.",
             ].join("\n");
 
+            const pullNumber = context.payload.pull_request.number;
             const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -149,3 +133,7 @@ jobs:
                 body,
               });
             }
+
+      - name: Fail workflow when coverage step failed
+        if: steps.coverage_run.outcome == 'failure'
+        run: exit 1

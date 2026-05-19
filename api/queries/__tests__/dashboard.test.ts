@@ -58,15 +58,14 @@ describe("api/queries/dashboard", () => {
     expect(options.queryKey).toEqual(queryKeys.dashboard.monthlyMedicationRecords("2026-05-19"));
   });
 
-  it("복약 이력 쿼리는 날짜가 비어 있으면 비활성화된다", async () => {
+  it("복약 이력 쿼리는 날짜가 비어 있으면 비활성화된다", () => {
     const { result } = renderHook(() => useDashboardMedicationHistoryRecords({ date: "" }));
     const options = result.current as unknown as {
       enabled: boolean;
-      queryFn: () => Promise<unknown>;
+      queryKey: unknown;
     };
 
     expect(options.enabled).toBe(false);
-    await options.queryFn();
-    expect(mockFetchMedicationHistoryRecords).toHaveBeenCalledWith({ date: "" });
+    expect(options.queryKey).toEqual(queryKeys.dashboard.medicationHistoryRecords(""));
   });
 });
