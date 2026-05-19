@@ -50,10 +50,13 @@ export default function TabLayout() {
           tabBarInactiveTintColor: palette.icon,
           headerShown: false,
           sceneStyle: { backgroundColor: "transparent" },
+          tabBarLabelStyle: {
+            fontSize: 14,
+          },
           tabBarStyle: {
-            height: 35 +insets.bottom,
+            height: 35 + insets.bottom,
             paddingTop: 6,
-            paddingHorizontal: 12,
+            paddingHorizontal: 18,
           },
         }}
       >
@@ -78,16 +81,11 @@ export default function TabLayout() {
           options={{
             title: "",
             tabBarIconStyle: {
-              marginTop: -insets.bottom,
+              marginTop: -insets.bottom + 10,
               width: 56,
               height: 56,
             },
-            tabBarIcon: () => (
-              <Image
-                source={ScanIcon}
-                style={{ width: 56, height: 56 }}
-              />
-            ),
+            tabBarIcon: () => <Image source={ScanIcon} style={{ width: 56, height: 56 }} />,
           }}
           listeners={{
             tabPress: (event) => {
