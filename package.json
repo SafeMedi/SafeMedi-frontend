@@ -12,6 +12,7 @@
     "ios:dev": "expo run:ios --no-bundler",
     "android:dev": "expo run:android --no-bundler",
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write ."
