@@ -27,10 +27,10 @@ module.exports = {
   coverageReporters: ["text-summary", "lcov", "json-summary"],
   coverageThreshold: {
     global: {
-      lines: 35,
-      statements: 35,
-      functions: 35,
-      branches: 30,
+      lines: 50,
+      statements: 50,
+      functions: 50,
+      branches: 50,
     },
   },
   testPathIgnorePatterns: ["/node_modules/", "/.expo/"],
