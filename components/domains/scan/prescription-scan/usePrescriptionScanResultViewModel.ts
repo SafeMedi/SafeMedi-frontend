@@ -280,7 +280,7 @@ export function usePrescriptionScanResultViewModel() {
       medications,
     };
     setIngredientAnalysisRequest(payload);
-    router.replace("../scan/ingredient-analysis");
+    router.replace("/(detail)/scan/ingredient-analysis");
   }, [getValues, result, setIngredientAnalysisRequest]);
 
   const recognizedMedicationCount = result?.draft.medications.length ?? 0;

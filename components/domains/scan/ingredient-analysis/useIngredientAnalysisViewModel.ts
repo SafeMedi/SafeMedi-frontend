@@ -21,6 +21,21 @@ export function useIngredientAnalysisViewModel(): IngredientAnalysisViewModel {
   const [result, setResult] = useState<AnalyzeIngredientsResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const runIngredientAnalysis = useCallback(async () => {
+    if (!request || analyzeMutation.isPending) {
+      return;
+    }
+
+    try {
+      const response = await analyzeMutation.mutateAsync(request);
+      setResult(response);
+      setErrorMessage(null);
+    } catch (error) {
+      const parsedError = await parseApiError(error);
+      setErrorMessage(parsedError.message);
+    }
+  }, [analyzeMutation, request]);
+
   useEffect(() => {
     if (!request && !shouldIgnoreMissingRequestAlertRef.current) {
       Alert.alert("성분 분석 정보 없음", EMPTY_REQUEST_ERROR, [
@@ -30,32 +45,12 @@ export function useIngredientAnalysisViewModel(): IngredientAnalysisViewModel {
   }, [request]);
 
   useEffect(() => {
-    if (!request || result || analyzeMutation.isPending) {
+    if (!request || result || errorMessage || analyzeMutation.isPending) {
       return;
     }
 
-    let isActive = true;
-    analyzeMutation
-      .mutateAsync(request)
-      .then((response) => {
-        if (!isActive) {
-          return;
-        }
-        setResult(response);
-        setErrorMessage(null);
-      })
-      .catch(async (error) => {
-        if (!isActive) {
-          return;
-        }
-        const parsedError = await parseApiError(error);
-        setErrorMessage(parsedError.message);
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [analyzeMutation, request, result]);
+    void runIngredientAnalysis();
+  }, [analyzeMutation.isPending, errorMessage, request, result, runIngredientAnalysis]);
 
   const handlePressClose = useCallback(() => {
     shouldIgnoreMissingRequestAlertRef.current = true;
@@ -66,6 +61,16 @@ export function useIngredientAnalysisViewModel(): IngredientAnalysisViewModel {
   const handlePressCancel = useCallback(() => {
     router.back();
   }, []);
+
+  const handlePressRetryAnalysis = useCallback(async () => {
+    if (!request) {
+      return;
+    }
+
+    setErrorMessage(null);
+    setResult(null);
+    await runIngredientAnalysis();
+  }, [request, runIngredientAnalysis]);
 
   const handlePressConfirm = useCallback(async () => {
     if (!request) {
@@ -111,6 +116,7 @@ export function useIngredientAnalysisViewModel(): IngredientAnalysisViewModel {
       errorMessage,
       handlePressClose,
       handlePressCancel,
+      handlePressRetryAnalysis,
       handlePressConfirm,
     }),
     [
@@ -120,6 +126,7 @@ export function useIngredientAnalysisViewModel(): IngredientAnalysisViewModel {
       handlePressCancel,
       handlePressClose,
       handlePressConfirm,
+      handlePressRetryAnalysis,
       request,
       result,
     ],

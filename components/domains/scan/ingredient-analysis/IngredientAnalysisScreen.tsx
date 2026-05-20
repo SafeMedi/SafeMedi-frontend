@@ -47,9 +47,23 @@ export function IngredientAnalysisScreen() {
           ) : null}
 
           {viewModel.errorMessage ? (
-            <DoctorConsultationCard
-              message={`분석 결과를 불러오지 못했습니다. ${viewModel.errorMessage}`}
-            />
+            <YStack gap={10}>
+              <DoctorConsultationCard
+                message={`분석 결과를 불러오지 못했습니다. ${viewModel.errorMessage}`}
+              />
+              <PillButton
+                variant="outline"
+                onPress={viewModel.handlePressRetryAnalysis}
+                accessibilityLabel="성분 분석 다시 시도"
+                borderColor={palette.border_muted}
+                backgroundColor={palette.surface_subtle}
+                disabled={viewModel.isAnalyzing}
+              >
+                <Text style={styles.retryText}>
+                  {viewModel.isAnalyzing ? "재시도 중..." : "다시 시도"}
+                </Text>
+              </PillButton>
+            </YStack>
           ) : null}
 
           {summary ? (
@@ -149,6 +163,12 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   cancelText: {
+    color: palette.black,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "600",
+  },
+  retryText: {
     color: palette.black,
     fontSize: 14,
     lineHeight: 20,
