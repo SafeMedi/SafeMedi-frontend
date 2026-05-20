@@ -19,6 +19,7 @@ export const apiPaths = {
   drugsSearch: "/api/v1/drugs/search",
 
   prescriptions: "/api/v1/prescriptions",
+  prescriptionsAnalysis: "/api/v1/prescriptions/analysis",
   prescription: (prescriptionId: number | string) => `/api/v1/prescriptions/${prescriptionId}`,
 
   medicationRecords: "/api/v1/medication-records",

@@ -27,6 +27,12 @@ export type {
   NotificationSettings,
 } from "./notification";
 export type {
+  AnalysisRiskLevel,
+  AnalysisWarningType,
+  AnalyzeIngredientMedication,
+  AnalyzeIngredientsRequest,
+  AnalyzeIngredientsResponse,
+  AnalyzeIngredientWarning,
   CreatePrescriptionMedication,
   CreatePrescriptionRequest,
   CreatePrescriptionResponse,

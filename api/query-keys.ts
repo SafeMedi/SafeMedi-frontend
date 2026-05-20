@@ -20,6 +20,7 @@ export const queryKeys = {
   },
   scan: {
     createPrescription: ["scan", "prescription", "create"] as const,
+    analyzeIngredients: ["scan", "ingredients", "analyze"] as const,
     searchDrugs: (keyword: string) => ["scan", "drugs", "search", keyword] as const,
   },
 } as const;
