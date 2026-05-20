@@ -13,7 +13,6 @@ describe("ocr-parser", () => {
     expect(draft.title).toBe("서울가정의학과 처방전");
     expect(draft.startDate).toBe("2026-05-13");
     expect(draft.endDate).toBe("2026-05-20");
-    expect(draft.takeTimes).toEqual(["09:00", "21:00"]);
     expect(draft.medications.length).toBeGreaterThan(0);
   });
 
@@ -22,13 +21,24 @@ describe("ocr-parser", () => {
       "title": "직접 입력 처방전",
       "startDate": "2026-05-13",
       "endDate": "2026-05-20",
-      "takeTimes": ["09:00"],
       "medications": [{ "atcCode": "UNKNOWN", "drugName": "타이레놀정 500mg" }],
       "rawText": "manual"
     }`);
 
     expect(draft.title).toBe("직접 입력 처방전");
     expect(draft.medications[0]?.drugName).toBe("타이레놀정 500mg");
+  });
+
+  it("직접 입력 JSON에서 title은 빈 문자열을 허용한다", () => {
+    const draft = parsePrescriptionFromJson(`{
+      "title": "",
+      "startDate": "2026-05-13",
+      "endDate": "2026-05-20",
+      "medications": [{ "atcCode": "UNKNOWN", "drugName": "타이레놀정 500mg" }],
+      "rawText": "manual"
+    }`);
+
+    expect(draft.title).toBe("");
   });
 
   it("빈 OCR 텍스트면 에러를 발생시킨다", () => {

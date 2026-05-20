@@ -37,11 +37,11 @@ jobs:
           path: coverage
 
       - name: Upload coverage to Codecov
-        if: steps.coverage_run.outcome == 'success'
-        uses: codecov/codecov-action@v5
+        if: always()
+        uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe
         with:
           files: ./coverage/lcov.info
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 

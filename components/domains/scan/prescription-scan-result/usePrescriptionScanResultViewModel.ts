@@ -2,14 +2,13 @@ import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { Alert } from "react-native";
-import { parseApiError } from "@/api/error";
-import { useCreatePrescriptionByScanMutation } from "@/api/queries/prescription-scan";
 import type {
+  AnalyzeIngredientsRequest,
   CreatePrescriptionMedication,
-  CreatePrescriptionRequest,
   DrugSearchItem,
 } from "@/api/types";
-import { usePrescriptionOcrResultStore } from "./usePrescriptionOcrResultStore";
+import { useIngredientAnalysisStore } from "../ingredient-analysis/useIngredientAnalysisStore";
+import { usePrescriptionOcrResultStore } from "../prescription-scan/usePrescriptionOcrResultStore";
 
 export type MedicationTakeSlot = "MORNING" | "LUNCH" | "DINNER";
 
@@ -25,12 +24,6 @@ export const MEDICATION_TAKE_SLOT_OPTIONS: readonly MedicationTakeSlotOption[] =
   { slot: "LUNCH", label: "☀ 점심", timeRange: "12:00~14:00", defaultTime: "13:00" },
   { slot: "DINNER", label: "🌙 저녁", timeRange: "18:00~20:00", defaultTime: "19:00" },
 ] as const;
-
-const DEFAULT_SLOT_BY_HOUR: Record<MedicationTakeSlot, readonly [number, number]> = {
-  MORNING: [7, 9],
-  LUNCH: [12, 14],
-  DINNER: [18, 20],
-};
 
 export interface EditableMedicationItem {
   readonly drugName: string;
@@ -48,28 +41,6 @@ const EMPTY_MEDICATION_ATC_CODE = "";
 const MANUAL_INPUT_IMAGE_URI_PREFIX = "manual://";
 const EMPTY_RESULT_ERROR = "복약 등록 정보가 없습니다. 스캔 화면으로 이동합니다.";
 const DRUG_NAME_NOT_SELECTED_ERROR = "약물명은 검색 결과에서 선택해야 합니다.";
-
-function normalizeTakeTimesToSlots(takeTimes: readonly string[]): MedicationTakeSlot[] {
-  const slots = takeTimes.reduce<MedicationTakeSlot[]>((acc, takeTime) => {
-    const hour = Number(takeTime.split(":")[0]);
-    if (Number.isNaN(hour)) {
-      return acc;
-    }
-
-    MEDICATION_TAKE_SLOT_OPTIONS.forEach((option) => {
-      const [startHour, endHour] = DEFAULT_SLOT_BY_HOUR[option.slot];
-      if (hour >= startHour && hour <= endHour && !acc.includes(option.slot)) {
-        acc.push(option.slot);
-      }
-    });
-    return acc;
-  }, []);
-
-  if (slots.length > 0) {
-    return slots;
-  }
-  return [];
-}
 
 function convertTakeSlotsToTimes(takeSlots: readonly MedicationTakeSlot[]): string[] {
   const selected = new Set(takeSlots);
@@ -104,7 +75,7 @@ function createRequestTakeTimes(medications: readonly CreatePrescriptionMedicati
 export function usePrescriptionScanResultViewModel() {
   const result = usePrescriptionOcrResultStore((state) => state.result);
   const clearResult = usePrescriptionOcrResultStore((state) => state.clearResult);
-  const createMutation = useCreatePrescriptionByScanMutation();
+  const setIngredientAnalysisRequest = useIngredientAnalysisStore((state) => state.setRequest);
   const shouldSuppressEmptyResultAlertRef = useRef<boolean>(false);
   const [editingMedicationIndex, setEditingMedicationIndex] = useState<number | null>(null);
 
@@ -116,7 +87,7 @@ export function usePrescriptionScanResultViewModel() {
         drugName: item.drugName,
         atcCode: item.atcCode,
         dosage: "",
-        takeSlots: normalizeTakeTimesToSlots(result.draft.takeTimes),
+        takeSlots: [],
       })),
     };
   }, [result]);
@@ -273,42 +244,16 @@ export function usePrescriptionScanResultViewModel() {
       return;
     }
 
-    const payload: CreatePrescriptionRequest = {
+    const payload: AnalyzeIngredientsRequest = {
       title,
       startDate: result.draft.startDate,
       endDate: result.draft.endDate,
       takeTimes,
       medications,
     };
-
-    try {
-      const response = await createMutation.mutateAsync(payload);
-      const warningMessages = response.allergyWarnings
-        .map((item) => item.warningMessage)
-        .join("\n");
-      const feedbackMessage = response.hasAllergyConflict
-        ? `${response.message}\n${warningMessages}`
-        : response.message;
-
-      Alert.alert(
-        response.hasAllergyConflict ? "알레르기 주의" : "복약 등록 완료",
-        feedbackMessage,
-        [
-          {
-            text: "확인",
-            onPress: () => {
-              shouldSuppressEmptyResultAlertRef.current = true;
-              clearResult();
-              router.replace("/(tabs)/dashboard");
-            },
-          },
-        ],
-      );
-    } catch (error) {
-      const parsedError = await parseApiError(error);
-      Alert.alert("복약 등록 실패", parsedError.message);
-    }
-  }, [clearResult, createMutation, getValues, result]);
+    setIngredientAnalysisRequest(payload);
+    router.replace("/(detail)/scan/ingredient-analysis");
+  }, [getValues, result, setIngredientAnalysisRequest]);
 
   const recognizedMedicationCount = result?.draft.medications.length ?? 0;
   const isManualInputMode = result?.imageUri.startsWith(MANUAL_INPUT_IMAGE_URI_PREFIX) ?? false;
@@ -317,7 +262,7 @@ export function usePrescriptionScanResultViewModel() {
     control,
     fields,
     editingMedicationIndex,
-    isSubmitting: createMutation.isPending,
+    isSubmitting: false,
     recognizedMedicationCount,
     isManualInputMode,
     handlePressClose,

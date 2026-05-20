@@ -1,7 +1,7 @@
 import { fireEvent, render } from "@testing-library/react-native";
 import { Alert } from "react-native";
+import { usePrescriptionOcrResultStore } from "../../prescription-scan/usePrescriptionOcrResultStore";
 import { PrescriptionScanResultScreen } from "../PrescriptionScanResultScreen";
-import { usePrescriptionOcrResultStore } from "../usePrescriptionOcrResultStore";
 
 jest.mock("expo-router", () => ({
   __esModule: true,
@@ -72,7 +72,6 @@ describe("PrescriptionScanResultScreen", () => {
           title: "처방전",
           startDate: "2026-05-14",
           endDate: "2026-05-20",
-          takeTimes: ["09:00"],
           medications: [{ atcCode: "UNKNOWN", drugName: "아세트아미노펜정" }],
           rawText: "아세트아미노펜정 500mg",
         },
@@ -93,7 +92,6 @@ describe("PrescriptionScanResultScreen", () => {
           title: "처방전",
           startDate: "2026-05-14",
           endDate: "2026-05-20",
-          takeTimes: ["09:00"],
           medications: [{ atcCode: "UNKNOWN", drugName: "아세트아미노펜정" }],
           rawText: "아세트아미노펜정 500mg",
         },

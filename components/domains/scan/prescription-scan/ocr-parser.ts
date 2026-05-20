@@ -4,8 +4,6 @@ import type { ScanMedicationItem, ScanPrescriptionDraft } from "./types";
 const EMPTY_DRUG_FALLBACK = "미확인 약물";
 const EMPTY_TITLE_FALLBACK = "처방전 스캔 등록";
 const DEFAULT_ATC_CODE = "UNKNOWN";
-const DEFAULT_TAKE_TIMES = ["09:00", "20:00"] as const;
-const TIME_PATTERN = /([01]?\d|2[0-3]):([0-5]\d)/g;
 const DATE_PATTERN = /\b\d{4}[./-]\d{1,2}[./-]\d{1,2}\b/g;
 
 const medicationSchema = z.object({
@@ -14,10 +12,9 @@ const medicationSchema = z.object({
 });
 
 const draftSchema = z.object({
-  title: z.string().min(1),
+  title: z.string(),
   startDate: z.string().min(1),
   endDate: z.string().min(1),
-  takeTimes: z.array(z.string().min(1)).min(1),
   medications: z.array(medicationSchema).min(1),
   rawText: z.string().min(1),
 });
@@ -44,14 +41,6 @@ function extractDateRange(rawText: string): {
     return { startDate: normalized[0], endDate: normalized[0] };
   }
   return { startDate: normalized[0], endDate: normalized[1] };
-}
-
-function extractTakeTimes(rawText: string): readonly string[] {
-  const matchedTimes = rawText.match(TIME_PATTERN);
-  if (!matchedTimes || matchedTimes.length === 0) {
-    return DEFAULT_TAKE_TIMES;
-  }
-  return [...new Set(matchedTimes)];
 }
 
 function normalizeMedicationName(line: string): string {
@@ -88,7 +77,6 @@ export function parsePrescriptionFromOcrText(rawText: string): ScanPrescriptionD
     title: extractTitle(trimmedText),
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
-    takeTimes: extractTakeTimes(trimmedText),
     medications: extractMedications(trimmedText),
     rawText: trimmedText,
   };

@@ -59,7 +59,6 @@ describe("device-ocr", () => {
       title: "처방전",
       startDate: "2026-05-01",
       endDate: "2026-05-07",
-      takeTimes: ["09:00"],
       medications: [{ atcCode: "A01", drugName: "타이레놀" }],
       rawText: "처방전",
     });

@@ -15,7 +15,6 @@ const BASE_DRAFT: ScanPrescriptionDraft = {
   title: "아침 약",
   startDate: "2026-05-01",
   endDate: "2026-05-07",
-  takeTimes: ["09:00"],
   medications: [{ atcCode: "A01", drugName: "테스트 약" }],
   rawText: "raw",
 };

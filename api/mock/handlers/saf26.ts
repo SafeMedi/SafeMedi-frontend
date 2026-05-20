@@ -300,7 +300,6 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
         title?: string;
         startDate?: string;
         endDate?: string;
-        takeTimes?: string[];
         medications?: {
           atcCode: string;
           drugName: string;
@@ -311,12 +310,6 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
       if (!body?.medications?.length) {
         return Response.json(
           { code: "MED_002", message: "약물 목록(medications)이 비어있음" },
-          { status: 400 },
-        );
-      }
-      if (!body?.takeTimes?.length) {
-        return Response.json(
-          { code: "MED_003", message: "복용 시간(takeTimes)을 최소 1개 이상 입력해 주세요." },
           { status: 400 },
         );
       }

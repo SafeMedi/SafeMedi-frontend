@@ -13,10 +13,9 @@ import type {
 import { usePrescriptionOcrResultStore } from "./usePrescriptionOcrResultStore";
 
 const DEFAULT_MANUAL_DRAFT: ScanPrescriptionDraft = {
-  title: "처방전 직접 입력",
+  title: "",
   startDate: "2026-05-13",
   endDate: "2026-05-20",
-  takeTimes: ["09:00", "21:00"],
   medications: [],
   rawText: "manual",
 };
@@ -37,7 +36,6 @@ function toCreatePrescriptionBody(draft: ScanPrescriptionDraft): CreatePrescript
     title: draft.title,
     startDate: draft.startDate,
     endDate: draft.endDate,
-    takeTimes: draft.takeTimes,
     medications: draft.medications,
   };
 }

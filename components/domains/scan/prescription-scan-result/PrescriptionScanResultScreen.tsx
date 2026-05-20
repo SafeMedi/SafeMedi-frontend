@@ -8,8 +8,8 @@ import { PillButton } from "@/components/ui/PillButton";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
+import { PrescriptionScanHeader } from "../prescription-scan/components/PrescriptionScanHeader";
 import { MedicationEditorCard } from "./components/MedicationEditorCard";
-import { PrescriptionScanHeader } from "./components/PrescriptionScanHeader";
 import { usePrescriptionScanResultViewModel } from "./usePrescriptionScanResultViewModel";
 
 const POSITIVE_GRADIENT = [palette.green, palette.opal] as const;
