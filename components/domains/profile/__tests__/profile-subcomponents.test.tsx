@@ -1,4 +1,5 @@
 import { fireEvent, render } from "@testing-library/react-native";
+import type { FamilyProfile } from "@/api/queries/profile";
 import { ProfileEditActionBar } from "../edit/ProfileEditActionBar";
 import { AppInfoSection } from "../view/AppInfoSection";
 import { FamilyProfileItem } from "../view/FamilyProfileItem";
@@ -74,10 +75,10 @@ describe("profile subcomponents", () => {
     const profiles = [
       { id: "me", name: "본인", isActive: true, avatarGradient: ["#000", "#111"] },
       { id: "2", name: "가족", isActive: false, avatarGradient: ["#111", "#222"] },
-    ];
+    ] satisfies FamilyProfile[];
     const { getByText } = render(
       <FamilyProfileSection
-        profiles={profiles as never}
+        profiles={profiles}
         onAddFamily={onAddFamily}
         onSelectProfile={onSelectProfile}
       />,
