@@ -6,6 +6,10 @@ Expo Router · React Native · Tamagui · TanStack Query · Zustand.
 
 ---
 
+## Language
+- 모든 리뷰 코멘트, 요약, 수정 제안은 한국어로 작성한다.
+- 코드 식별자/경로/에러 메세지는 원문(영문) 유지, 설명만 한국어로 작성한다.
+
 ## 반드시 지적 (Blocking)
 
 ### 보안·비밀
