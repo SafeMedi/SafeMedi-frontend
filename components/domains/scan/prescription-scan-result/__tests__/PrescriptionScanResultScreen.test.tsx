@@ -1,7 +1,7 @@
 import { fireEvent, render } from "@testing-library/react-native";
 import { Alert } from "react-native";
+import { usePrescriptionOcrResultStore } from "../../prescription-scan/usePrescriptionOcrResultStore";
 import { PrescriptionScanResultScreen } from "../PrescriptionScanResultScreen";
-import { usePrescriptionOcrResultStore } from "../usePrescriptionOcrResultStore";
 
 jest.mock("expo-router", () => ({
   __esModule: true,

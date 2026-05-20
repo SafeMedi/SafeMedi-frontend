@@ -8,7 +8,7 @@ import type {
   DrugSearchItem,
 } from "@/api/types";
 import { useIngredientAnalysisStore } from "../ingredient-analysis/useIngredientAnalysisStore";
-import { usePrescriptionOcrResultStore } from "./usePrescriptionOcrResultStore";
+import { usePrescriptionOcrResultStore } from "../prescription-scan/usePrescriptionOcrResultStore";
 
 export type MedicationTakeSlot = "MORNING" | "LUNCH" | "DINNER";
 
