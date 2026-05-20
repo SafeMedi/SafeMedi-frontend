@@ -14,7 +14,6 @@ let mockResult: PrescriptionOcrResult | null = {
     title: "스캔 처방전",
     startDate: "2026-05-01",
     endDate: "2026-05-07",
-    takeTimes: ["08:00"],
     medications: [{ atcCode: "A01", drugName: "타이레놀" }],
     rawText: "타이레놀",
   },
@@ -63,7 +62,6 @@ describe("usePrescriptionScanResultViewModel", () => {
         title: "스캔 처방전",
         startDate: "2026-05-01",
         endDate: "2026-05-07",
-        takeTimes: ["08:00"],
         medications: [{ atcCode: "A01", drugName: "타이레놀" }],
         rawText: "타이레놀",
       },
@@ -128,6 +126,7 @@ describe("usePrescriptionScanResultViewModel", () => {
 
     await act(async () => {
       result.current.handleChangeMedicationDosage(0, "1정");
+      result.current.handleToggleMedicationTakeSlot(0, "MORNING");
       await result.current.handlePressAnalyze();
     });
 

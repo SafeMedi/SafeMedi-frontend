@@ -9,7 +9,6 @@ export interface CreatePrescriptionRequest {
   readonly title: string;
   readonly startDate: string;
   readonly endDate: string;
-  readonly takeTimes: readonly string[];
   readonly medications: readonly CreatePrescriptionMedication[];
 }
 

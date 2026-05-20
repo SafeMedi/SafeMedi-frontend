@@ -39,17 +39,21 @@ const BASE_RESULT: AnalyzeIngredientsResponse = {
   doctorConsultationMessage: null,
 };
 
-let mockViewModel: IngredientAnalysisViewModel = {
-  request: BASE_REQUEST,
-  result: BASE_RESULT,
-  isAnalyzing: false,
-  isSubmitting: false,
-  errorMessage: null,
-  handlePressClose: mockHandlePressClose,
-  handlePressCancel: mockHandlePressCancel,
-  handlePressRetryAnalysis: mockHandlePressRetryAnalysis,
-  handlePressConfirm: mockHandlePressConfirm,
-};
+function createBaseViewModel(): IngredientAnalysisViewModel {
+  return {
+    request: BASE_REQUEST,
+    result: BASE_RESULT,
+    isAnalyzing: false,
+    isSubmitting: false,
+    errorMessage: null,
+    handlePressClose: mockHandlePressClose,
+    handlePressCancel: mockHandlePressCancel,
+    handlePressRetryAnalysis: mockHandlePressRetryAnalysis,
+    handlePressConfirm: mockHandlePressConfirm,
+  };
+}
+
+let mockViewModel: IngredientAnalysisViewModel = createBaseViewModel();
 
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
@@ -93,6 +97,7 @@ jest.mock("../../prescription-scan/components/PrescriptionScanHeader", () => ({
 describe("IngredientAnalysisScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockViewModel = createBaseViewModel();
     (
       useIngredientAnalysisViewModel as jest.MockedFunction<typeof useIngredientAnalysisViewModel>
     ).mockImplementation(() => mockViewModel);

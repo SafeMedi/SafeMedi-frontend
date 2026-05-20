@@ -25,12 +25,6 @@ export const MEDICATION_TAKE_SLOT_OPTIONS: readonly MedicationTakeSlotOption[] =
   { slot: "DINNER", label: "🌙 저녁", timeRange: "18:00~20:00", defaultTime: "19:00" },
 ] as const;
 
-const DEFAULT_SLOT_BY_HOUR: Record<MedicationTakeSlot, readonly [number, number]> = {
-  MORNING: [7, 9],
-  LUNCH: [12, 14],
-  DINNER: [18, 20],
-};
-
 export interface EditableMedicationItem {
   readonly drugName: string;
   readonly atcCode: string;
@@ -47,28 +41,6 @@ const EMPTY_MEDICATION_ATC_CODE = "";
 const MANUAL_INPUT_IMAGE_URI_PREFIX = "manual://";
 const EMPTY_RESULT_ERROR = "복약 등록 정보가 없습니다. 스캔 화면으로 이동합니다.";
 const DRUG_NAME_NOT_SELECTED_ERROR = "약물명은 검색 결과에서 선택해야 합니다.";
-
-function normalizeTakeTimesToSlots(takeTimes: readonly string[]): MedicationTakeSlot[] {
-  const slots = takeTimes.reduce<MedicationTakeSlot[]>((acc, takeTime) => {
-    const hour = Number(takeTime.split(":")[0]);
-    if (Number.isNaN(hour)) {
-      return acc;
-    }
-
-    MEDICATION_TAKE_SLOT_OPTIONS.forEach((option) => {
-      const [startHour, endHour] = DEFAULT_SLOT_BY_HOUR[option.slot];
-      if (hour >= startHour && hour <= endHour && !acc.includes(option.slot)) {
-        acc.push(option.slot);
-      }
-    });
-    return acc;
-  }, []);
-
-  if (slots.length > 0) {
-    return slots;
-  }
-  return [];
-}
 
 function convertTakeSlotsToTimes(takeSlots: readonly MedicationTakeSlot[]): string[] {
   const selected = new Set(takeSlots);
@@ -115,7 +87,7 @@ export function usePrescriptionScanResultViewModel() {
         drugName: item.drugName,
         atcCode: item.atcCode,
         dosage: "",
-        takeSlots: normalizeTakeTimesToSlots(result.draft.takeTimes),
+        takeSlots: [],
       })),
     };
   }, [result]);

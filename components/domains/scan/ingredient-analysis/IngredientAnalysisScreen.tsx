@@ -17,6 +17,18 @@ export function IngredientAnalysisScreen() {
 
   const medicationCount = viewModel.result?.analyzedMedicationCount ?? 0;
   const summary = viewModel.result?.summary;
+  const isConfirmDisabled =
+    viewModel.isSubmitting ||
+    viewModel.isAnalyzing ||
+    !viewModel.result ||
+    Boolean(viewModel.errorMessage);
+  const confirmButtonLabel = viewModel.isSubmitting
+    ? "등록 중..."
+    : !viewModel.result || viewModel.errorMessage
+      ? "분석 결과 필요"
+      : viewModel.result.shouldConsultDoctor
+        ? "의사 확인 필요"
+        : "복약 등록 완료";
 
   return (
     <YStack style={styles.screen}>
@@ -107,15 +119,9 @@ export function IngredientAnalysisScreen() {
             onPress={viewModel.handlePressConfirm}
             accessibilityLabel="복약 등록 확정"
             backgroundColor={palette.green}
-            disabled={viewModel.isSubmitting}
+            disabled={isConfirmDisabled}
           >
-            <Text style={styles.confirmText}>
-              {viewModel.isSubmitting
-                ? "등록 중..."
-                : viewModel.result?.shouldConsultDoctor
-                  ? "의사 확인 필요"
-                  : "복약 등록 완료"}
-            </Text>
+            <Text style={styles.confirmText}>{confirmButtonLabel}</Text>
           </PillButton>
         </View>
       </View>

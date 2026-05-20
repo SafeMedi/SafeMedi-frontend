@@ -7,7 +7,6 @@ export interface ScanPrescriptionDraft {
   readonly title: string;
   readonly startDate: string;
   readonly endDate: string;
-  readonly takeTimes: readonly string[];
   readonly medications: readonly ScanMedicationItem[];
   readonly rawText: string;
 }
