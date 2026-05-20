@@ -128,4 +128,53 @@ describe("IngredientAnalysisScreen", () => {
 
     expect(getByText("등록 중...")).toBeTruthy();
   });
+
+  it("분석 중이면 로딩 상태 문구를 노출한다", () => {
+    mockViewModel = {
+      ...mockViewModel,
+      isAnalyzing: true,
+      result: null,
+    };
+
+    const { getByText } = render(<IngredientAnalysisScreen />);
+
+    expect(getByText("약물 성분을 분석하는 중입니다.")).toBeTruthy();
+  });
+
+  it("분석 결과가 없으면 확정 버튼 문구를 안내 상태로 노출한다", () => {
+    mockViewModel = {
+      ...mockViewModel,
+      result: null,
+    };
+
+    const { getByText } = render(<IngredientAnalysisScreen />);
+
+    expect(getByText("분석 결과 필요")).toBeTruthy();
+  });
+
+  it("의사 상담이 필요하면 상담 CTA 문구를 노출한다", () => {
+    mockViewModel = {
+      ...mockViewModel,
+      result: {
+        ...BASE_RESULT,
+        shouldConsultDoctor: true,
+        doctorConsultationMessage: "전문가 상담이 필요합니다.",
+      },
+    };
+
+    const { getByText } = render(<IngredientAnalysisScreen />);
+
+    expect(getByText("의사 확인 필요")).toBeTruthy();
+    expect(getByText("전문가 상담이 필요합니다.")).toBeTruthy();
+  });
+
+  it("하단 취소/확정 액션이 각 핸들러를 호출한다", () => {
+    const { getByText } = render(<IngredientAnalysisScreen />);
+
+    fireEvent.press(getByText("취소"));
+    fireEvent.press(getByText("복약 등록 완료"));
+
+    expect(mockHandlePressCancel).toHaveBeenCalledTimes(1);
+    expect(mockHandlePressConfirm).toHaveBeenCalledTimes(1);
+  });
 });

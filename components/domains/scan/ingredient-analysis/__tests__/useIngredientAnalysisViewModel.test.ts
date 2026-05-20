@@ -227,6 +227,95 @@ describe("useIngredientAnalysisViewModel", () => {
     expect(mockRouterReplace).toHaveBeenCalledWith("/(tabs)/dashboard");
   });
 
+  it("알레르기 충돌이 있으면 경고 타이틀과 상세 메시지로 알림을 노출한다", async () => {
+    mockAnalyzeMutateAsync.mockResolvedValueOnce(BASE_ANALYSIS_RESPONSE);
+    mockCreateMutateAsync.mockResolvedValue({
+      message: "알레르기 충돌 감지",
+      hasAllergyConflict: true,
+      allergyWarnings: [
+        {
+          atcCode: "A01",
+          drugName: "타이레놀",
+          conflictWith: "peanut",
+          warningMessage: "땅콩 알레르기 유발 가능성",
+        },
+      ],
+    });
+
+    const { result } = renderHook(() => useIngredientAnalysisViewModel());
+
+    await waitFor(() => {
+      expect(result.current.result).toEqual(BASE_ANALYSIS_RESPONSE);
+    });
+
+    await act(async () => {
+      await result.current.handlePressConfirm();
+    });
+
+    expect(mockAlert).toHaveBeenCalledWith(
+      "알레르기 주의",
+      "알레르기 충돌 감지\n땅콩 알레르기 유발 가능성",
+      expect.any(Array),
+    );
+  });
+
+  it("복약 등록 실패 시 오류 알림을 노출한다", async () => {
+    mockAnalyzeMutateAsync.mockResolvedValueOnce(BASE_ANALYSIS_RESPONSE);
+    mockCreateMutateAsync.mockRejectedValueOnce(new Error("submit failed"));
+    (parseApiError as jest.MockedFunction<typeof parseApiError>).mockResolvedValueOnce({
+      message: "등록 중 오류가 발생했습니다.",
+    });
+
+    const { result } = renderHook(() => useIngredientAnalysisViewModel());
+
+    await waitFor(() => {
+      expect(result.current.result).toEqual(BASE_ANALYSIS_RESPONSE);
+    });
+
+    await act(async () => {
+      await result.current.handlePressConfirm();
+    });
+
+    expect(mockAlert).toHaveBeenCalledWith("복약 등록 실패", "등록 중 오류가 발생했습니다.");
+  });
+
+  it("닫기 버튼 핸들러는 request를 비우고 대시보드로 이동한다", () => {
+    const { result } = renderHook(() => useIngredientAnalysisViewModel());
+
+    act(() => {
+      result.current.handlePressClose();
+    });
+
+    expect(mockClearRequest).toHaveBeenCalledTimes(1);
+    expect(mockRouterReplace).toHaveBeenCalledWith("/(tabs)/dashboard");
+  });
+
+  it("request가 없으면 재시도와 확정 핸들러는 mutation을 호출하지 않는다", async () => {
+    mockRequest = null;
+    const { result } = renderHook(() => useIngredientAnalysisViewModel());
+
+    await act(async () => {
+      await result.current.handlePressRetryAnalysis();
+      await result.current.handlePressConfirm();
+    });
+
+    expect(mockAnalyzeMutateAsync).not.toHaveBeenCalled();
+    expect(mockCreateMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("분석 mutation이 pending이면 초기 분석을 시작하지 않는다", () => {
+    (
+      useAnalyzeIngredientsMutation as jest.MockedFunction<typeof useAnalyzeIngredientsMutation>
+    ).mockReturnValue({
+      mutateAsync: mockAnalyzeMutateAsync,
+      isPending: true,
+    } as unknown as ReturnType<typeof useAnalyzeIngredientsMutation>);
+
+    renderHook(() => useIngredientAnalysisViewModel());
+
+    expect(mockAnalyzeMutateAsync).not.toHaveBeenCalled();
+  });
+
   it("취소 버튼 핸들러는 back 라우팅을 호출한다", () => {
     const { result } = renderHook(() => useIngredientAnalysisViewModel());
 
