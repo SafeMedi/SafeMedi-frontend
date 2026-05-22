@@ -1,3 +1,3 @@
-export { ProfileEditScreen } from "./edit/ProfileEditScreen";
+export { ProfileEditScreen } from "./edit";
 export { HealthInfoDetailScreen } from "./health-detail";
-export { ProfileScreen } from "./view/ProfileScreen";
+export { ProfileScreen } from "./view";
