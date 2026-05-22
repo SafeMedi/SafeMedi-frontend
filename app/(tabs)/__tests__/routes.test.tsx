@@ -26,7 +26,7 @@ jest.mock("@/components/domains/dashboard", () => ({
   DashboardScreen: () => mockDashboardScreen(),
 }));
 
-jest.mock("@/components/domains/profile/view/ProfileScreen", () => ({
+jest.mock("@/components/domains/profile/view/index", () => ({
   ProfileScreen: () => mockProfileScreen(),
 }));
 

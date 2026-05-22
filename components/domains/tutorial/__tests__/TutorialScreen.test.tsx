@@ -152,10 +152,10 @@ function mockCreateStep(label: "Step1" | "Step2" | "Step3" | "Step4") {
   });
 }
 
-jest.mock("../Step1", () => ({ __esModule: true, default: mockCreateStep("Step1") }));
-jest.mock("../Step2", () => ({ __esModule: true, default: mockCreateStep("Step2") }));
-jest.mock("../Step3", () => ({ __esModule: true, default: mockCreateStep("Step3") }));
-jest.mock("../Step4", () => ({ __esModule: true, default: mockCreateStep("Step4") }));
+jest.mock("../components/Step1", () => ({ Step1: mockCreateStep("Step1") }));
+jest.mock("../components/Step2", () => ({ Step2: mockCreateStep("Step2") }));
+jest.mock("../components/Step3", () => ({ Step3: mockCreateStep("Step3") }));
+jest.mock("../components/Step4", () => ({ Step4: mockCreateStep("Step4") }));
 
 describe("TutorialScreen", () => {
   beforeEach(() => {

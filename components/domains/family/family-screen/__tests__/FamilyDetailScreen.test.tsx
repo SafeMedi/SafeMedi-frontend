@@ -75,7 +75,7 @@ jest.mock("tamagui", () => {
   };
 });
 
-jest.mock("../FamilyScreenHeader", () => ({
+jest.mock("../components/FamilyScreenHeader", () => ({
   FamilyScreenHeader: ({ title }: { title: string }) => {
     const React = require("react");
     const { Text } = require("react-native");
@@ -83,7 +83,7 @@ jest.mock("../FamilyScreenHeader", () => ({
   },
 }));
 
-jest.mock("../FamilyMedicationScheduleCard", () => ({
+jest.mock("../components/FamilyMedicationScheduleCard", () => ({
   FamilyMedicationScheduleCard: ({
     schedule,
   }: {

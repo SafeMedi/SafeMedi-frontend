@@ -1,6 +1,6 @@
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
-import ProfileEditScreen from "@/app/(detail)/profile/edit";
 import type { User } from "@/stores/userStore";
+import { ProfileEditScreen } from "../ProfileEditScreen";
 
 const mockBack = jest.fn();
 const mockMutate = jest.fn();
