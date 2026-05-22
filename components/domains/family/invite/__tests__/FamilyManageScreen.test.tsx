@@ -71,7 +71,7 @@ jest.mock("@/api/queries/family", () => ({
   useFamilyManageOverview: () => mockUseFamilyManageOverview(),
 }));
 
-jest.mock("../FamilyFeatureBanner", () => ({
+jest.mock("../components/FamilyFeatureBanner", () => ({
   FamilyFeatureBanner: () => {
     const React = require("react");
     const { Text } = require("react-native");
@@ -79,7 +79,7 @@ jest.mock("../FamilyFeatureBanner", () => ({
   },
 }));
 
-jest.mock("../FamilyManageHeader", () => ({
+jest.mock("../components/FamilyManageHeader", () => ({
   FamilyManageHeader: ({ onBack }: MockFamilyManageHeaderProps) => {
     const React = require("react");
     const { Pressable, Text } = require("react-native");
@@ -91,7 +91,7 @@ jest.mock("../FamilyManageHeader", () => ({
   },
 }));
 
-jest.mock("../FamilyInviteCard", () => ({
+jest.mock("../components/FamilyInviteCard", () => ({
   FamilyInviteCard: ({ inviteLink, onCopyLink, onShareLink }: MockFamilyInviteCardProps) => {
     const React = require("react");
     const { Pressable, Text, View } = require("react-native");
@@ -113,7 +113,7 @@ jest.mock("../FamilyInviteCard", () => ({
   },
 }));
 
-jest.mock("../FamilyMembersSection", () => ({
+jest.mock("../components/FamilyMembersSection", () => ({
   FamilyMembersSection: ({ members }: MockFamilyMembersSectionProps) => {
     const React = require("react");
     const { Text } = require("react-native");
@@ -121,7 +121,7 @@ jest.mock("../FamilyMembersSection", () => ({
   },
 }));
 
-jest.mock("../PendingInvitesSection", () => ({
+jest.mock("../components/PendingInvitesSection", () => ({
   PendingInvitesSection: ({ invites }: MockPendingInvitesSectionProps) => {
     const React = require("react");
     const { Text } = require("react-native");

@@ -1,7 +1,7 @@
 import { fireEvent, render } from "@testing-library/react-native";
-import { FamilyMedicationScheduleCard } from "../family-screen/FamilyMedicationScheduleCard";
-import { FamilyInviteCard } from "../invite/FamilyInviteCard";
-import { FamilyMemberCard } from "../invite/FamilyMemberCard";
+import { FamilyMedicationScheduleCard } from "../../family-screen/components/FamilyMedicationScheduleCard";
+import { FamilyInviteCard } from "../components/FamilyInviteCard";
+import { FamilyMemberCard } from "../components/FamilyMemberCard";
 
 jest.mock("tamagui", () => {
   const React = require("react");
