@@ -4,10 +4,12 @@ import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from "react-na
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
 import { palette } from "@/constants/design-tokens";
-import { PrescriptionFrameCard } from "./components/PrescriptionFrameCard";
-import { PrescriptionScanActions } from "./components/PrescriptionScanActions";
-import { PrescriptionScanHeader } from "./components/PrescriptionScanHeader";
-import { usePrescriptionScanViewModel } from "./usePrescriptionScanViewModel";
+import {
+  PrescriptionFrameCard,
+  PrescriptionScanActions,
+  PrescriptionScanHeader,
+  usePrescriptionScanViewModel,
+} from "./index";
 
 export function PrescriptionScanScreen() {
   const insets = useSafeAreaInsets();

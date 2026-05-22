@@ -8,10 +8,12 @@ import { PillButton } from "@/components/ui/PillButton";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
-import { PrescriptionScanHeader } from "../prescription-scan/components/PrescriptionScanHeader";
-import { MedicationEditorCard } from "./components/MedicationEditorCard";
-import { PrescriptionPeriodCard } from "./components/PrescriptionPeriodCard";
-import { usePrescriptionScanResultViewModel } from "./usePrescriptionScanResultViewModel";
+import { PrescriptionScanHeader } from "../prescription-scan";
+import {
+  MedicationEditorCard,
+  PrescriptionPeriodCard,
+  usePrescriptionScanResultViewModel,
+} from "./index";
 
 const POSITIVE_GRADIENT = [palette.green, palette.opal] as const;
 const ADD_GRADIENT = [palette.purple, palette.pink] as const;
