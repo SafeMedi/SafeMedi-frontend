@@ -112,8 +112,11 @@ describe("usePrescriptionScanResultViewModel", () => {
     const { result } = renderHook(() => usePrescriptionScanResultViewModel());
 
     await act(async () => {
+      result.current.handleSelectPrescriptionDate("startDate", new Date(2026, 4, 1));
+      result.current.handleSelectPrescriptionDate("endDate", new Date(2026, 4, 7));
       result.current.handleChangeMedicationName(0, "직접입력약");
       result.current.handleChangeMedicationDosage(0, "1정");
+      result.current.handleToggleMedicationTakeSlot(0, "MORNING");
       await result.current.handlePressAnalyze();
     });
 
@@ -125,6 +128,8 @@ describe("usePrescriptionScanResultViewModel", () => {
     const { result } = renderHook(() => usePrescriptionScanResultViewModel());
 
     await act(async () => {
+      result.current.handleSelectPrescriptionDate("startDate", new Date(2026, 4, 3));
+      result.current.handleSelectPrescriptionDate("endDate", new Date(2026, 4, 10));
       result.current.handleChangeMedicationDosage(0, "1정");
       result.current.handleToggleMedicationTakeSlot(0, "MORNING");
       await result.current.handlePressAnalyze();
@@ -132,8 +137,8 @@ describe("usePrescriptionScanResultViewModel", () => {
 
     expect(mockSetIngredientAnalysisRequest).toHaveBeenCalledWith({
       title: "스캔 처방전",
-      startDate: "2026-05-01",
-      endDate: "2026-05-07",
+      startDate: "2026-05-03",
+      endDate: "2026-05-10",
       takeTimes: ["08:00"],
       medications: [
         {
@@ -145,6 +150,27 @@ describe("usePrescriptionScanResultViewModel", () => {
       ],
     });
     expect(mockRouterReplace).toHaveBeenCalledWith("/(detail)/scan/ingredient-analysis");
+  });
+
+  it("초기 복약 기간은 빈값이며 날짜 선택 전에는 분석 버튼이 비활성화 상태다", () => {
+    const { result } = renderHook(() => usePrescriptionScanResultViewModel());
+
+    expect(result.current.startDate).toBe("");
+    expect(result.current.endDate).toBe("");
+    expect(result.current.startDateLabel).toBe("날짜를 선택해주세요");
+    expect(result.current.endDateLabel).toBe("날짜를 선택해주세요");
+    expect(result.current.isAnalyzeDisabled).toBe(true);
+  });
+
+  it("복약 시작일/종료일을 선택하면 분석 버튼 비활성화가 해제된다", async () => {
+    const { result } = renderHook(() => usePrescriptionScanResultViewModel());
+
+    await act(async () => {
+      result.current.handleSelectPrescriptionDate("startDate", new Date(2026, 4, 1));
+      result.current.handleSelectPrescriptionDate("endDate", new Date(2026, 4, 7));
+    });
+
+    expect(result.current.isAnalyzeDisabled).toBe(false);
   });
 
   it("다시 스캔하기를 누르면 결과를 비우고 스캔 화면으로 이동한다", async () => {

@@ -7,6 +7,7 @@ import type {
   CreatePrescriptionMedication,
   DrugSearchItem,
 } from "@/api/types";
+import { formatDateLabel, formatDateToIso, parseIsoDate } from "@/utils/date";
 import { useIngredientAnalysisStore } from "../ingredient-analysis/useIngredientAnalysisStore";
 import { usePrescriptionOcrResultStore } from "../prescription-scan/usePrescriptionOcrResultStore";
 
@@ -34,6 +35,8 @@ export interface EditableMedicationItem {
 
 export interface PrescriptionScanResultFormValues {
   readonly title: string;
+  readonly startDate: string;
+  readonly endDate: string;
   readonly medications: EditableMedicationItem[];
 }
 
@@ -41,6 +44,9 @@ const EMPTY_MEDICATION_ATC_CODE = "";
 const MANUAL_INPUT_IMAGE_URI_PREFIX = "manual://";
 const EMPTY_RESULT_ERROR = "복약 등록 정보가 없습니다. 스캔 화면으로 이동합니다.";
 const DRUG_NAME_NOT_SELECTED_ERROR = "약물명은 검색 결과에서 선택해야 합니다.";
+const INVALID_DATE_RANGE_ERROR = "복약 종료일은 시작일보다 빠를 수 없습니다.";
+
+type PrescriptionDateField = "startDate" | "endDate";
 
 function convertTakeSlotsToTimes(takeSlots: readonly MedicationTakeSlot[]): string[] {
   const selected = new Set(takeSlots);
@@ -83,6 +89,8 @@ export function usePrescriptionScanResultViewModel() {
     if (!result) return null;
     return {
       title: result.draft.title,
+      startDate: "",
+      endDate: "",
       medications: result.draft.medications.map((item) => ({
         drugName: item.drugName,
         atcCode: item.atcCode,
@@ -93,7 +101,7 @@ export function usePrescriptionScanResultViewModel() {
   }, [result]);
 
   const form = useForm<PrescriptionScanResultFormValues>({
-    defaultValues: initialValues ?? { title: "", medications: [] },
+    defaultValues: initialValues ?? { title: "", startDate: "", endDate: "", medications: [] },
   });
   const { control, getValues, reset, setValue } = form;
   const { fields, append, remove } = useFieldArray({
@@ -207,16 +215,43 @@ export function usePrescriptionScanResultViewModel() {
     [setValue],
   );
 
+  const handleSelectPrescriptionDate = useCallback(
+    (field: PrescriptionDateField, date: Date) => {
+      setValue(field, formatDateToIso(date), { shouldDirty: true, shouldTouch: true });
+    },
+    [setValue],
+  );
+
   const handlePressAnalyze = useCallback(async () => {
-    if (!result) return;
+    if (!result) {
+      Alert.alert("스캔 결과 없음", EMPTY_RESULT_ERROR, [
+        {
+          text: "확인",
+          onPress: () => router.replace("/(detail)/scan/scan"),
+        },
+      ]);
+      return;
+    }
 
     const values = getValues();
     const title = values.title.trim();
+    const startDate = values.startDate.trim();
+    const endDate = values.endDate.trim();
     const medications = createRequestMedications(values.medications);
     const takeTimes = createRequestTakeTimes(medications);
+    const parsedStartDate = parseIsoDate(startDate);
+    const parsedEndDate = parseIsoDate(endDate);
 
     if (!title) {
       Alert.alert("입력 확인", "처방전 제목을 입력해주세요.");
+      return;
+    }
+    if (!parsedStartDate || !parsedEndDate) {
+      Alert.alert("입력 확인", "복약 시작일과 종료일을 모두 선택해주세요.");
+      return;
+    }
+    if (parsedStartDate.getTime() > parsedEndDate.getTime()) {
+      Alert.alert("입력 확인", INVALID_DATE_RANGE_ERROR);
       return;
     }
     if (!medications.length) {
@@ -246,8 +281,8 @@ export function usePrescriptionScanResultViewModel() {
 
     const payload: AnalyzeIngredientsRequest = {
       title,
-      startDate: result.draft.startDate,
-      endDate: result.draft.endDate,
+      startDate,
+      endDate,
       takeTimes,
       medications,
     };
@@ -257,6 +292,22 @@ export function usePrescriptionScanResultViewModel() {
 
   const recognizedMedicationCount = result?.draft.medications.length ?? 0;
   const isManualInputMode = result?.imageUri.startsWith(MANUAL_INPUT_IMAGE_URI_PREFIX) ?? false;
+  const startDate = form.watch("startDate");
+  const endDate = form.watch("endDate");
+
+  const startDateLabel = useMemo(() => formatDateLabel(startDate), [startDate]);
+  const endDateLabel = useMemo(() => formatDateLabel(endDate), [endDate]);
+
+  const startDateValue = useMemo(() => parseIsoDate(startDate) ?? new Date(), [startDate]);
+  const endDateValue = useMemo(() => parseIsoDate(endDate) ?? new Date(), [endDate]);
+  const isDateRangeReady = useMemo(() => {
+    const parsedStartDate = parseIsoDate(startDate);
+    const parsedEndDate = parseIsoDate(endDate);
+    if (!parsedStartDate || !parsedEndDate) return false;
+    return parsedStartDate.getTime() <= parsedEndDate.getTime();
+  }, [startDate, endDate]);
+
+  const isAnalyzeDisabled = !isDateRangeReady;
 
   return {
     control,
@@ -265,6 +316,13 @@ export function usePrescriptionScanResultViewModel() {
     isSubmitting: false,
     recognizedMedicationCount,
     isManualInputMode,
+    startDate,
+    endDate,
+    startDateLabel,
+    endDateLabel,
+    startDateValue,
+    endDateValue,
+    isAnalyzeDisabled,
     handlePressClose,
     handlePressRetryScan,
     handlePressAddMedication,
@@ -275,6 +333,7 @@ export function usePrescriptionScanResultViewModel() {
     handleSelectMedicationDrug,
     handleToggleMedicationTakeSlot,
     handleChangeMedicationDosage,
+    handleSelectPrescriptionDate,
     handlePressRemoveMedication,
   };
 }

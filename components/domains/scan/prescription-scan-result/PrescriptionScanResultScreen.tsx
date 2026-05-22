@@ -10,6 +10,7 @@ import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
 import { PrescriptionScanHeader } from "../prescription-scan/components/PrescriptionScanHeader";
 import { MedicationEditorCard } from "./components/MedicationEditorCard";
+import { PrescriptionPeriodCard } from "./components/PrescriptionPeriodCard";
 import { usePrescriptionScanResultViewModel } from "./usePrescriptionScanResultViewModel";
 
 const POSITIVE_GRADIENT = [palette.green, palette.opal] as const;
@@ -71,6 +72,14 @@ export function PrescriptionScanResultScreen() {
               )}
             />
           </SurfaceCard>
+
+          <PrescriptionPeriodCard
+            startDateLabel={viewModel.startDateLabel}
+            endDateLabel={viewModel.endDateLabel}
+            startDateValue={viewModel.startDateValue}
+            endDateValue={viewModel.endDateValue}
+            onSelectDate={viewModel.handleSelectPrescriptionDate}
+          />
 
           <YStack gap={10}>
             <SectionHeader
@@ -144,7 +153,7 @@ export function PrescriptionScanResultScreen() {
             onPress={viewModel.handlePressAnalyze}
             accessibilityLabel="성분 분석하기"
             backgroundColor={palette.green}
-            disabled={viewModel.isSubmitting}
+            disabled={viewModel.isSubmitting || viewModel.isAnalyzeDisabled}
           >
             <Text style={styles.submitText}>
               {viewModel.isSubmitting ? "분석 중..." : "성분 분석하기"}
