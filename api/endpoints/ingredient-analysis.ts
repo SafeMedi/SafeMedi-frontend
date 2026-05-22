@@ -29,12 +29,7 @@ function createStableScore(value: string): number {
 function resolveMockRiskLevel(
   item: AnalyzeIngredientsRequest["medications"][number],
 ): AnalysisRiskLevel {
-  const scoreSource = [
-    item.atcCode,
-    item.drugName,
-    item.dosage ?? "",
-    (item.takeTimes ?? []).join(","),
-  ].join("|");
+  const scoreSource = [item.atcCode, item.drugName, (item.takeTimes ?? []).join(",")].join("|");
   const score = createStableScore(scoreSource) % 100;
 
   if (score >= 70) {

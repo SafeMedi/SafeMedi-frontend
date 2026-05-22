@@ -29,7 +29,6 @@ export const MEDICATION_TAKE_SLOT_OPTIONS: readonly MedicationTakeSlotOption[] =
 export interface EditableMedicationItem {
   readonly drugName: string;
   readonly atcCode: string;
-  readonly dosage: string;
   readonly takeSlots: MedicationTakeSlot[];
 }
 
@@ -61,7 +60,6 @@ function createRequestMedications(
   return medications.map((item) => ({
     atcCode: item.atcCode.trim(),
     drugName: item.drugName.trim(),
-    dosage: item.dosage.trim(),
     takeTimes: convertTakeSlotsToTimes(item.takeSlots),
   }));
 }
@@ -94,7 +92,6 @@ export function usePrescriptionScanResultViewModel() {
       medications: result.draft.medications.map((item) => ({
         drugName: item.drugName,
         atcCode: item.atcCode,
-        dosage: "",
         takeSlots: [],
       })),
     };
@@ -139,7 +136,6 @@ export function usePrescriptionScanResultViewModel() {
     append({
       drugName: "",
       atcCode: EMPTY_MEDICATION_ATC_CODE,
-      dosage: "",
       takeSlots: [],
     });
     setEditingMedicationIndex(fields.length);
@@ -205,16 +201,6 @@ export function usePrescriptionScanResultViewModel() {
     [getValues, setValue],
   );
 
-  const handleChangeMedicationDosage = useCallback(
-    (index: number, dosage: string) => {
-      setValue(`medications.${index}.dosage`, dosage, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-    },
-    [setValue],
-  );
-
   const handleSelectPrescriptionDate = useCallback(
     (field: PrescriptionDateField, date: Date) => {
       setValue(field, formatDateToIso(date), { shouldDirty: true, shouldTouch: true });
@@ -264,10 +250,6 @@ export function usePrescriptionScanResultViewModel() {
     }
     if (medications.some((item) => item.atcCode.length === 0)) {
       Alert.alert("입력 확인", DRUG_NAME_NOT_SELECTED_ERROR);
-      return;
-    }
-    if (medications.some((item) => (item.dosage ?? "").length === 0)) {
-      Alert.alert("입력 확인", "복용량을 모두 입력해주세요.");
       return;
     }
     if (medications.some((item) => (item.takeTimes?.length ?? 0) === 0)) {
@@ -332,7 +314,6 @@ export function usePrescriptionScanResultViewModel() {
     handleChangeMedicationName,
     handleSelectMedicationDrug,
     handleToggleMedicationTakeSlot,
-    handleChangeMedicationDosage,
     handleSelectPrescriptionDate,
     handlePressRemoveMedication,
   };

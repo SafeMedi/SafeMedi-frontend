@@ -100,7 +100,6 @@ describe("usePrescriptionScanResultViewModel", () => {
     };
     await act(async () => {
       result.current.handleSelectMedicationDrug(1, selectedDrug);
-      result.current.handleChangeMedicationDosage(1, "1정");
       result.current.handleToggleMedicationTakeSlot(1, "DINNER");
       result.current.handlePressCompleteMedicationEdit();
     });
@@ -115,7 +114,6 @@ describe("usePrescriptionScanResultViewModel", () => {
       result.current.handleSelectPrescriptionDate("startDate", new Date(2026, 4, 1));
       result.current.handleSelectPrescriptionDate("endDate", new Date(2026, 4, 7));
       result.current.handleChangeMedicationName(0, "직접입력약");
-      result.current.handleChangeMedicationDosage(0, "1정");
       result.current.handleToggleMedicationTakeSlot(0, "MORNING");
       await result.current.handlePressAnalyze();
     });
@@ -130,7 +128,6 @@ describe("usePrescriptionScanResultViewModel", () => {
     await act(async () => {
       result.current.handleSelectPrescriptionDate("startDate", new Date(2026, 4, 3));
       result.current.handleSelectPrescriptionDate("endDate", new Date(2026, 4, 10));
-      result.current.handleChangeMedicationDosage(0, "1정");
       result.current.handleToggleMedicationTakeSlot(0, "MORNING");
       await result.current.handlePressAnalyze();
     });
@@ -144,7 +141,6 @@ describe("usePrescriptionScanResultViewModel", () => {
         {
           atcCode: "A01",
           drugName: "타이레놀",
-          dosage: "1정",
           takeTimes: ["08:00"],
         },
       ],

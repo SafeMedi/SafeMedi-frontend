@@ -117,7 +117,6 @@ export function PrescriptionScanResultScreen() {
                   onChangeMedicationName={viewModel.handleChangeMedicationName}
                   onSelectMedicationDrug={viewModel.handleSelectMedicationDrug}
                   onToggleMedicationTakeSlot={viewModel.handleToggleMedicationTakeSlot}
-                  onChangeMedicationDosage={viewModel.handleChangeMedicationDosage}
                 />
               );
             })}
@@ -129,7 +128,7 @@ export function PrescriptionScanResultScreen() {
               <YStack gap={4} flex={1}>
                 <Text style={styles.noticeTitle}>약물 정보 수정 가능</Text>
                 <Text style={styles.noticeDescription}>
-                  약물명은 검색 결과에서 선택하고, 복용량과 복약 시간을 함께 입력해 주세요.
+                  약물명은 검색 결과에서 선택하고, 복약 시간을 입력해 주세요.
                 </Text>
               </YStack>
             </View>
