@@ -169,6 +169,98 @@ describe("usePrescriptionScanResultViewModel", () => {
     expect(result.current.isAnalyzeDisabled).toBe(false);
   });
 
+  it("복약 종료일이 시작일보다 빠르면 분석 시 안내 알림을 노출한다", async () => {
+    const { result } = renderHook(() => usePrescriptionScanResultViewModel());
+
+    await act(async () => {
+      result.current.handleSelectPrescriptionDate("startDate", new Date(2026, 4, 10));
+      result.current.handleSelectPrescriptionDate("endDate", new Date(2026, 4, 3));
+      result.current.handleToggleMedicationTakeSlot(0, "MORNING");
+      await result.current.handlePressAnalyze();
+    });
+
+    expect(mockAlert).toHaveBeenCalledWith(
+      "입력 확인",
+      "복약 종료일은 시작일보다 빠를 수 없습니다.",
+    );
+    expect(mockSetIngredientAnalysisRequest).not.toHaveBeenCalled();
+  });
+
+  it("복약 시간을 선택하지 않으면 약물별 선택 안내 알림을 노출한다", async () => {
+    const { result } = renderHook(() => usePrescriptionScanResultViewModel());
+
+    await act(async () => {
+      result.current.handleSelectPrescriptionDate("startDate", new Date(2026, 4, 3));
+      result.current.handleSelectPrescriptionDate("endDate", new Date(2026, 4, 10));
+      await result.current.handlePressAnalyze();
+    });
+
+    expect(mockAlert).toHaveBeenCalledWith(
+      "입력 확인",
+      "각 약물마다 복약 시간을 최소 1개 선택해주세요.",
+    );
+    expect(mockSetIngredientAnalysisRequest).not.toHaveBeenCalled();
+  });
+
+  it("처방전 제목이 비어 있으면 분석 시 제목 입력 안내 알림을 노출한다", async () => {
+    mockResult = {
+      imageUri: "file://image.png",
+      draft: {
+        title: "   ",
+        startDate: "2026-05-01",
+        endDate: "2026-05-07",
+        medications: [{ atcCode: "A01", drugName: "타이레놀" }],
+        rawText: "타이레놀",
+      },
+    };
+    const { result } = renderHook(() => usePrescriptionScanResultViewModel());
+
+    await act(async () => {
+      result.current.handleSelectPrescriptionDate("startDate", new Date(2026, 4, 3));
+      result.current.handleSelectPrescriptionDate("endDate", new Date(2026, 4, 10));
+      result.current.handleToggleMedicationTakeSlot(0, "MORNING");
+      await result.current.handlePressAnalyze();
+    });
+
+    expect(mockAlert).toHaveBeenCalledWith("입력 확인", "처방전 제목을 입력해주세요.");
+    expect(mockSetIngredientAnalysisRequest).not.toHaveBeenCalled();
+  });
+
+  it("편집 중인 뒤쪽 약물을 삭제하면 편집 인덱스를 앞으로 보정한다", async () => {
+    const { result } = renderHook(() => usePrescriptionScanResultViewModel());
+
+    await act(async () => {
+      result.current.handlePressAddMedication();
+      result.current.handlePressAddMedication();
+      result.current.handlePressEditMedication(2);
+    });
+    expect(result.current.editingMedicationIndex).toBe(2);
+
+    await act(async () => {
+      result.current.handlePressRemoveMedication(0);
+    });
+
+    expect(result.current.fields).toHaveLength(2);
+    expect(result.current.editingMedicationIndex).toBe(1);
+  });
+
+  it("수동 입력 모드 이미지면 isManualInputMode를 true로 반환한다", () => {
+    mockResult = {
+      imageUri: "manual://capture.png",
+      draft: {
+        title: "수기 입력",
+        startDate: "",
+        endDate: "",
+        medications: [{ atcCode: "A01", drugName: "타이레놀" }],
+        rawText: "",
+      },
+    };
+
+    const { result } = renderHook(() => usePrescriptionScanResultViewModel());
+
+    expect(result.current.isManualInputMode).toBe(true);
+  });
+
   it("다시 스캔하기를 누르면 결과를 비우고 스캔 화면으로 이동한다", async () => {
     const { result } = renderHook(() => usePrescriptionScanResultViewModel());
 

@@ -122,6 +122,42 @@ describe("PrescriptionPeriodCard", () => {
     expect(onSelectDate).toHaveBeenCalledWith("endDate", selectedDate);
   });
 
+  it("android에서 dismissed 이벤트면 onSelectDate를 호출하지 않는다", () => {
+    setPlatformOs("android");
+    const onSelectDate = jest.fn();
+    const props = createProps({ onSelectDate });
+
+    const { getByLabelText } = render(<PrescriptionPeriodCard {...props} />);
+    fireEvent.press(getByLabelText("복약 시작일 선택"));
+
+    const lastCall = mockDateTimePickerAndroidOpen.mock.calls.at(-1);
+    const pickerOptions = lastCall?.[0] as {
+      readonly onChange: (event: DateTimePickerEvent, date?: Date) => void;
+    };
+
+    pickerOptions.onChange({ type: "dismissed" } as DateTimePickerEvent);
+
+    expect(onSelectDate).not.toHaveBeenCalled();
+  });
+
+  it("android에서 set 이벤트라도 날짜가 없으면 onSelectDate를 호출하지 않는다", () => {
+    setPlatformOs("android");
+    const onSelectDate = jest.fn();
+    const props = createProps({ onSelectDate });
+
+    const { getByLabelText } = render(<PrescriptionPeriodCard {...props} />);
+    fireEvent.press(getByLabelText("복약 시작일 선택"));
+
+    const lastCall = mockDateTimePickerAndroidOpen.mock.calls.at(-1);
+    const pickerOptions = lastCall?.[0] as {
+      readonly onChange: (event: DateTimePickerEvent, date?: Date) => void;
+    };
+
+    pickerOptions.onChange({ type: "set" } as DateTimePickerEvent);
+
+    expect(onSelectDate).not.toHaveBeenCalled();
+  });
+
   it("ios에서 날짜 선택 후 완료 버튼 클릭 시 onSelectDate를 호출한다", () => {
     setPlatformOs("ios");
     const onSelectDate = jest.fn();
@@ -141,5 +177,23 @@ describe("PrescriptionPeriodCard", () => {
     fireEvent.press(getByLabelText("날짜 선택 완료"));
 
     expect(onSelectDate).toHaveBeenCalledWith("endDate", selectedDate);
+  });
+
+  it("ios에서 picker dismissed면 선택 UI를 닫고 onSelectDate를 호출하지 않는다", () => {
+    setPlatformOs("ios");
+    const onSelectDate = jest.fn();
+    const props = createProps({ onSelectDate });
+
+    const { getByLabelText, getByTestId, queryByLabelText } = render(
+      <PrescriptionPeriodCard {...props} />,
+    );
+
+    fireEvent.press(getByLabelText("복약 시작일 선택"));
+    fireEvent(getByTestId("mock-date-picker"), "onChange", {
+      type: "dismissed",
+    } as DateTimePickerEvent);
+
+    expect(queryByLabelText("날짜 선택 완료")).toBeNull();
+    expect(onSelectDate).not.toHaveBeenCalled();
   });
 });

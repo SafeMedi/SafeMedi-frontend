@@ -72,6 +72,52 @@ describe("api/endpoints/ingredient-analysis", () => {
     expect(result.medications[0]?.drugName).toBe("타이레놀");
   });
 
+  it("__DEV__ mock 응답은 takeTimes가 없어도 분석 결과를 생성한다", async () => {
+    mockApiPost.mockImplementation(() => {
+      throw new Error("network");
+    });
+    const requestWithoutTakeTimes: AnalyzeIngredientsRequest = {
+      ...BASE_REQUEST,
+      medications: [{ atcCode: "A01", drugName: "타이레놀" }],
+    };
+
+    const result = await analyzePrescriptionIngredients(requestWithoutTakeTimes);
+
+    expect(result.analyzedMedicationCount).toBe(1);
+    expect(result.medications[0]?.atcCode).toBe("A01");
+  });
+
+  it("__DEV__ mock 분석은 SAFE/CAUTION/DANGER 모든 위험도를 반환할 수 있다", async () => {
+    mockApiPost.mockImplementation(() => {
+      throw new Error("network");
+    });
+    const observedRiskLevels = new Set<string>();
+
+    for (let index = 0; index < 300; index += 1) {
+      const dynamicRequest: AnalyzeIngredientsRequest = {
+        ...BASE_REQUEST,
+        medications: [
+          {
+            atcCode: "A01",
+            drugName: `drug-${index}`,
+            takeTimes: index % 2 === 0 ? ["08:00"] : undefined,
+          },
+        ],
+      };
+      const result = await analyzePrescriptionIngredients(dynamicRequest);
+      const riskLevel = result.medications[0]?.riskLevel;
+
+      if (riskLevel) {
+        observedRiskLevels.add(riskLevel);
+      }
+      if (observedRiskLevels.size === 3) {
+        break;
+      }
+    }
+
+    expect(observedRiskLevels).toEqual(new Set(["SAFE", "CAUTION", "DANGER"]));
+  });
+
   it("__DEV__가 false면 API 실패를 그대로 throw 한다", async () => {
     globalRef.__DEV__ = false;
     const expectedError = new Error("network down");
