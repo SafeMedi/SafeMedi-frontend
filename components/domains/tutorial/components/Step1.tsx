@@ -14,7 +14,7 @@ import { bloodOptions, genderOptions, rhOptions } from "@/constants/health-profi
 import { useUserStore } from "@/stores/userStore";
 import { combineBloodTypeWithRh, splitBloodTypeWithRh } from "@/utils/blood-type";
 
-const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
+export const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
   const user = useUserStore((s) => s.user);
   const updateUser = useUserStore((s) => s.updateUser);
   const { bloodType: defaultBloodType, rhFactor: defaultRhFactor } = splitBloodTypeWithRh(
@@ -230,5 +230,3 @@ function FieldLabel({ children }: { children: string }) {
     </Text>
   );
 }
-
-export default Step1;

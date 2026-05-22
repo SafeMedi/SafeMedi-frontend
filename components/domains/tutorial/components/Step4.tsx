@@ -7,7 +7,7 @@ import type { StepHandle } from "@/components/domains/tutorial/types";
 import { Button } from "@/components/ui/Button";
 import { palette } from "@/constants/design-tokens";
 
-const Step4 = forwardRef<StepHandle>(function Step4(_props, ref) {
+export const Step4 = forwardRef<StepHandle>(function Step4(_props, ref) {
   const handleAddFamilyMember = () => {
     // 가족 구성원 등록 플로우 연결 예정
   };
@@ -105,5 +105,3 @@ const Step4 = forwardRef<StepHandle>(function Step4(_props, ref) {
     </ScrollView>
   );
 });
-
-export default Step4;

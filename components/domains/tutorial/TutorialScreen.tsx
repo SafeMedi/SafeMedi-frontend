@@ -5,7 +5,6 @@ import { useRef, useState } from "react";
 import { Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, XStack, YStack } from "tamagui";
-
 import { parseApiError } from "@/api/error";
 import { useCompleteTutorialMutation } from "@/api/queries/user";
 import { AuthGateView } from "@/components/AuthGateView";
@@ -15,10 +14,7 @@ import { palette } from "@/constants/design-tokens";
 import { useAuthRouteState } from "@/hooks/use-auth-route-state";
 import { useUserStore } from "@/stores/userStore";
 import { userToTutorialRegistrationBody } from "@/utils/user-mapper";
-import Step1 from "./Step1";
-import Step2 from "./Step2";
-import Step3 from "./Step3";
-import Step4 from "./Step4";
+import { Step1, Step2, Step3, Step4 } from "./index";
 import type { StepHandle } from "./types";
 
 const TOTAL_STEPS = 4;
