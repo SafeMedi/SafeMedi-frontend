@@ -22,7 +22,6 @@ interface MedicationEditorCardProps {
   readonly onChangeMedicationName: (index: number, drugName: string) => void;
   readonly onSelectMedicationDrug: (index: number, item: DrugSearchItem) => void;
   readonly onToggleMedicationTakeSlot: (index: number, slot: MedicationTakeSlot) => void;
-  readonly onChangeMedicationDosage: (index: number, dosage: string) => void;
 }
 
 const MIN_KEYWORD_LENGTH = 2;
@@ -38,7 +37,6 @@ export function MedicationEditorCard({
   onChangeMedicationName,
   onSelectMedicationDrug,
   onToggleMedicationTakeSlot,
-  onChangeMedicationDosage,
 }: MedicationEditorCardProps) {
   const [keyword, setKeyword] = useState<string>("");
   const [debouncedKeyword, setDebouncedKeyword] = useState<string>("");
@@ -59,11 +57,6 @@ export function MedicationEditorCard({
   const atcCode = useWatch({
     control,
     name: `medications.${index}.atcCode`,
-    defaultValue: "",
-  });
-  const dosage = useWatch({
-    control,
-    name: `medications.${index}.dosage`,
     defaultValue: "",
   });
   const selectedTakeSlots = useWatch({
@@ -93,10 +86,9 @@ export function MedicationEditorCard({
   const isCompleteEnabled = useMemo(() => {
     const hasMedicationName = medicationName.trim().length > 0;
     const hasMedicationCode = atcCode.trim().length > 0;
-    const hasDosage = dosage.trim().length > 0;
     const hasTakeSlot = selectedTakeSlots.length > 0;
-    return hasMedicationName && hasMedicationCode && hasDosage && hasTakeSlot;
-  }, [atcCode, dosage, medicationName, selectedTakeSlots]);
+    return hasMedicationName && hasMedicationCode && hasTakeSlot;
+  }, [atcCode, medicationName, selectedTakeSlots]);
 
   const handlePressSuggestion = (item: DrugSearchItem) => {
     setKeyword(item.drugName);
@@ -157,10 +149,6 @@ export function MedicationEditorCard({
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>약물이름</Text>
             <Text style={styles.summaryValue}>{medicationName || "미입력"}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>복용량</Text>
-            <Text style={styles.summaryValue}>{dosage || "미입력"}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>복약 시간</Text>
@@ -233,23 +221,6 @@ export function MedicationEditorCard({
                 ))}
               </View>
             ) : null}
-          </YStack>
-
-          <YStack gap={8}>
-            <Text style={styles.label}>복용량</Text>
-            <Controller
-              control={control}
-              name={`medications.${index}.dosage`}
-              render={({ field: { value } }) => (
-                <TextInput
-                  value={value}
-                  onChangeText={(nextValue) => onChangeMedicationDosage(index, nextValue)}
-                  placeholder="예: 1정 / 5ml / 반 알"
-                  placeholderTextColor={palette.input_placeholder}
-                  style={styles.input}
-                />
-              )}
-            />
           </YStack>
 
           <YStack gap={8}>

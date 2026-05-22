@@ -1,7 +1,6 @@
 export interface CreatePrescriptionMedication {
   readonly atcCode: string;
   readonly drugName: string;
-  readonly dosage?: string;
   readonly takeTimes?: readonly string[];
 }
 

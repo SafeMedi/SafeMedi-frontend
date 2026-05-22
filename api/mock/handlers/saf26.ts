@@ -303,7 +303,6 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
         medications?: {
           atcCode: string;
           drugName: string;
-          dosage?: string;
           takeTimes?: string[];
         }[];
       };

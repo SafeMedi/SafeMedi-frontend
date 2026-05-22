@@ -10,6 +10,7 @@ import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
 import { PrescriptionScanHeader } from "../prescription-scan/components/PrescriptionScanHeader";
 import { MedicationEditorCard } from "./components/MedicationEditorCard";
+import { PrescriptionPeriodCard } from "./components/PrescriptionPeriodCard";
 import { usePrescriptionScanResultViewModel } from "./usePrescriptionScanResultViewModel";
 
 const POSITIVE_GRADIENT = [palette.green, palette.opal] as const;
@@ -72,6 +73,14 @@ export function PrescriptionScanResultScreen() {
             />
           </SurfaceCard>
 
+          <PrescriptionPeriodCard
+            startDateLabel={viewModel.startDateLabel}
+            endDateLabel={viewModel.endDateLabel}
+            startDateValue={viewModel.startDateValue}
+            endDateValue={viewModel.endDateValue}
+            onSelectDate={viewModel.handleSelectPrescriptionDate}
+          />
+
           <YStack gap={10}>
             <SectionHeader
               icon={<Ionicons name="sparkles-outline" size={14} color={palette.purple} />}
@@ -108,7 +117,6 @@ export function PrescriptionScanResultScreen() {
                   onChangeMedicationName={viewModel.handleChangeMedicationName}
                   onSelectMedicationDrug={viewModel.handleSelectMedicationDrug}
                   onToggleMedicationTakeSlot={viewModel.handleToggleMedicationTakeSlot}
-                  onChangeMedicationDosage={viewModel.handleChangeMedicationDosage}
                 />
               );
             })}
@@ -120,7 +128,7 @@ export function PrescriptionScanResultScreen() {
               <YStack gap={4} flex={1}>
                 <Text style={styles.noticeTitle}>약물 정보 수정 가능</Text>
                 <Text style={styles.noticeDescription}>
-                  약물명은 검색 결과에서 선택하고, 복용량과 복약 시간을 함께 입력해 주세요.
+                  약물명은 검색 결과에서 선택하고, 복약 시간을 입력해 주세요.
                 </Text>
               </YStack>
             </View>
@@ -144,7 +152,7 @@ export function PrescriptionScanResultScreen() {
             onPress={viewModel.handlePressAnalyze}
             accessibilityLabel="성분 분석하기"
             backgroundColor={palette.green}
-            disabled={viewModel.isSubmitting}
+            disabled={viewModel.isSubmitting || viewModel.isAnalyzeDisabled}
           >
             <Text style={styles.submitText}>
               {viewModel.isSubmitting ? "분석 중..." : "성분 분석하기"}

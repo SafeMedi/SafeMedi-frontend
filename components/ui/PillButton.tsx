@@ -41,8 +41,8 @@ export function PillButton({
       onPress={onPress}
       style={({ pressed }) => {
         let opacity = 1;
-        if (disabled && isOutline) {
-          opacity = 0.35;
+        if (disabled) {
+          opacity = isOutline ? 0.35 : 0.45;
         } else if (pressed) {
           opacity = isOutline ? 0.85 : 0.9;
         }

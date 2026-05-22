@@ -16,6 +16,20 @@ jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
+jest.mock("@react-native-community/datetimepicker", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  const MockPicker = ({ children }: { readonly children?: React.ReactNode }) =>
+    React.createElement(View, null, children);
+  return {
+    __esModule: true,
+    default: MockPicker,
+    DateTimePickerAndroid: {
+      open: jest.fn(),
+    },
+  };
+});
+
 jest.mock("tamagui", () => {
   const React = require("react");
   const { Text, View } = require("react-native");
