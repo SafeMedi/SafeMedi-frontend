@@ -7,10 +7,12 @@ import { PillButton } from "@/components/ui/PillButton";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
-import { MedicationHistoryCard } from "./components/MedicationHistoryCard";
-import { MedicationHistoryHeader } from "./components/MedicationHistoryHeader";
-import { MedicationWarningBanner } from "./components/MedicationWarningBanner";
-import { useMedicationHistoryViewModel } from "./useMedicationHistoryViewModel";
+import {
+  MedicationHistoryCard,
+  MedicationHistoryHeader,
+  MedicationWarningBanner,
+  useMedicationHistoryViewModel,
+} from "./index";
 
 const SCREEN_TITLE = "스캔 기록 상세";
 

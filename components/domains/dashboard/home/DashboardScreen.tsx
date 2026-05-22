@@ -5,13 +5,15 @@ import { Text, YStack } from "tamagui";
 
 import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
-import { AdherenceSummaryCard } from "./components/AdherenceSummaryCard";
-import { DashboardTopHeader } from "./components/DashboardTopHeader";
-import { HealthTipCard } from "./components/HealthTipCard";
-import { RecentPrescriptionsSection } from "./components/RecentPrescriptionsSection";
-import { ScanPrescriptionCard } from "./components/ScanPrescriptionCard";
-import { TodayScheduleSection } from "./components/TodayScheduleSection";
-import { useDashboardViewModel } from "./useDashboardViewModel";
+import {
+  AdherenceSummaryCard,
+  DashboardTopHeader,
+  HealthTipCard,
+  RecentPrescriptionsSection,
+  ScanPrescriptionCard,
+  TodayScheduleSection,
+  useDashboardViewModel,
+} from "./index";
 
 export function DashboardScreen() {
   const insets = useSafeAreaInsets();

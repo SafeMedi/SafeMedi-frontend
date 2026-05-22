@@ -1,4 +1,4 @@
-import { MedicationHistoryScreen } from "@/components/domains/dashboard/medication-history";
+import { MedicationHistoryScreen } from "@/components/domains/dashboard";
 
 export default function MedicationHistoryRoute() {
   return <MedicationHistoryScreen />;
