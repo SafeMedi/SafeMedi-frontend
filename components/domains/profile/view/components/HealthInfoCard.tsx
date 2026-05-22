@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Badge } from "@/components/ui/Badge";
 import { palette } from "@/constants/design-tokens";
 
-import { HEALTH_INFO_STYLES, type HealthInfoVariant } from "./constants";
+import { HEALTH_INFO_STYLES, type HealthInfoVariant } from "../constants";
 
 export type HealthInfoCardProps = {
   variant: HealthInfoVariant;

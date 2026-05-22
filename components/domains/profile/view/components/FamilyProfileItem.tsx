@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { palette } from "@/constants/design-tokens";
 
-import { FAMILY_ACTIVE_STYLE } from "./constants";
+import { FAMILY_ACTIVE_STYLE } from "../constants";
 
 export type FamilyProfileItemProps = {
   name: string;

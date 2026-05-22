@@ -9,13 +9,13 @@ import { useFamilyProfiles, useHealthInfo, useProfileUser } from "@/api/queries/
 import { queryKeys } from "@/api/query-keys";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUserStore } from "@/stores/userStore";
-import { AppInfoSection } from "./AppInfoSection";
-import { FamilyProfileSection } from "./FamilyProfileSection";
-import { HealthInfoSection } from "./HealthInfoSection";
-import { LogoutButton } from "./LogoutButton";
-import { ProfilePageHeader } from "./ProfilePageHeader";
-import { SettingsSection } from "./SettingsSection";
-import { UserHeroCard } from "./UserHeroCard";
+import { AppInfoSection } from "./components/AppInfoSection";
+import { FamilyProfileSection } from "./components/FamilyProfileSection";
+import { HealthInfoSection } from "./components/HealthInfoSection";
+import { LogoutButton } from "./components/LogoutButton";
+import { ProfilePageHeader } from "./components/ProfilePageHeader";
+import { SettingsSection } from "./components/SettingsSection";
+import { UserHeroCard } from "./components/UserHeroCard";
 
 const APP_VERSION = "v1.0.0";
 

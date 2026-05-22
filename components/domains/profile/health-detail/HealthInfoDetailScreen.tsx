@@ -10,9 +10,6 @@ import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
 import { useUserStore } from "@/stores/userStore";
 import { splitBloodTypeWithRh } from "@/utils/blood-type";
-
-import { ClinicalAlertCard } from "./ClinicalAlertCard";
-import { ClinicianNotesCard } from "./ClinicianNotesCard";
 import {
   ALLERGY_BADGE_LABEL,
   ALLERGY_HEADER_ICON,
@@ -28,9 +25,13 @@ import {
   PRINT_SUCCESS_MESSAGE,
   SHARE_SUCCESS_MESSAGE,
 } from "./constants";
-import { HealthInfoDetailHeader } from "./HealthInfoDetailHeader";
-import { MedicalGuideCard } from "./MedicalGuideCard";
-import { PatientInfoCard } from "./PatientInfoCard";
+import {
+  ClinicalAlertCard,
+  ClinicianNotesCard,
+  HealthInfoDetailHeader,
+  MedicalGuideCard,
+  PatientInfoCard,
+} from "./index";
 import type { ClinicalAlertSection, PatientInfo } from "./types";
 
 const UNKNOWN_VALUE = "-";

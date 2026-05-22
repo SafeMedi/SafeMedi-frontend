@@ -5,8 +5,8 @@ import { StyleSheet, Text, View } from "react-native";
 import { Badge } from "@/components/ui/Badge";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 
-import { ALERT_TONE_COLORS } from "./constants";
-import type { ClinicalAlertSection } from "./types";
+import { ALERT_TONE_COLORS } from "../constants";
+import type { ClinicalAlertSection } from "../types";
 
 export interface ClinicalAlertCardProps {
   readonly section: ClinicalAlertSection;

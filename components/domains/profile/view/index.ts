@@ -1,7 +1,10 @@
-export { AppInfoSection } from "./AppInfoSection";
-export { FamilyProfileSection } from "./FamilyProfileSection";
-export { HealthInfoSection } from "./HealthInfoSection";
-export { LogoutButton } from "./LogoutButton";
-export { ProfilePageHeader } from "./ProfilePageHeader";
-export { SettingsSection } from "./SettingsSection";
-export { UserHeroCard } from "./UserHeroCard";
+export { AppInfoSection } from "./components/AppInfoSection";
+export { FamilyProfileItem } from "./components/FamilyProfileItem";
+export { FamilyProfileSection } from "./components/FamilyProfileSection";
+export { HealthInfoCard } from "./components/HealthInfoCard";
+export { HealthInfoSection } from "./components/HealthInfoSection";
+export { LogoutButton } from "./components/LogoutButton";
+export { ProfilePageHeader } from "./components/ProfilePageHeader";
+export { SettingsSection } from "./components/SettingsSection";
+export { UserHeroCard } from "./components/UserHeroCard";
+export { ProfileScreen } from "./ProfileScreen";

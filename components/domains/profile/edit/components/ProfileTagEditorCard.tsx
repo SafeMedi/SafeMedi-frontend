@@ -12,7 +12,7 @@ import {
   PROFILE_EDIT_QUICK_ITEMS,
   PROFILE_EDIT_SECTION_STYLES,
   type ProfileEditSectionVariant,
-} from "./constants";
+} from "../constants";
 
 export type ProfileTagEditorCardProps = {
   variant: ProfileEditSectionVariant;

@@ -1,9 +1,9 @@
 import { fireEvent, render } from "@testing-library/react-native";
 import type { FamilyProfile } from "@/api/queries/profile";
-import { ProfileEditActionBar } from "../edit/ProfileEditActionBar";
-import { AppInfoSection } from "../view/AppInfoSection";
-import { FamilyProfileItem } from "../view/FamilyProfileItem";
-import { FamilyProfileSection } from "../view/FamilyProfileSection";
+import { ProfileEditActionBar } from "../edit/components/ProfileEditActionBar";
+import { AppInfoSection } from "../view/components/AppInfoSection";
+import { FamilyProfileItem } from "../view/components/FamilyProfileItem";
+import { FamilyProfileSection } from "../view/components/FamilyProfileSection";
 import { LogoutButton } from "../view/LogoutButton";
 import { UserHeroCard } from "../view/UserHeroCard";
 

@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
 
-import type { PatientInfo } from "./types";
+import type { PatientInfo } from "../types";
 
 export interface PatientInfoCardProps {
   readonly patient: PatientInfo;

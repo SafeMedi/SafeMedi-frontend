@@ -1,12 +1,12 @@
 import { fireEvent, render } from "@testing-library/react-native";
-import { ProfileBasicInfoCard } from "../edit/ProfileBasicInfoCard";
-import { ProfileEditHeader } from "../edit/ProfileEditHeader";
-import { ProfileEditNoticeCard } from "../edit/ProfileEditNoticeCard";
-import { ProfileNicknameCard } from "../edit/ProfileNicknameCard";
-import { ProfileTagEditorCard } from "../edit/ProfileTagEditorCard";
-import { HealthInfoCard } from "../view/HealthInfoCard";
-import { HealthInfoSection } from "../view/HealthInfoSection";
-import { ProfilePageHeader } from "../view/ProfilePageHeader";
+import {
+  ProfileBasicInfoCard,
+  ProfileEditHeader,
+  ProfileEditNoticeCard,
+  ProfileNicknameCard,
+  ProfileTagEditorCard,
+} from "../edit/index";
+import { HealthInfoCard, HealthInfoSection, ProfilePageHeader } from "../view/index";
 
 jest.mock("tamagui", () => {
   const React = require("react");
@@ -63,7 +63,7 @@ describe("profile more components", () => {
       <ProfileBasicInfoCard
         gender="female"
         bloodType="A"
-        rhFactor="+"
+        rhFactor="positive"
         onGenderChange={onGenderChange}
         onBloodTypeChange={onBloodTypeChange}
         onRhFactorChange={onRhFactorChange}
