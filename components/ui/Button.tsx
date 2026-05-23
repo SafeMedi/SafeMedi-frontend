@@ -6,6 +6,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from "react-native";
+import { palette } from "@/constants/design-tokens";
 
 export type ButtonProps = {
   onPress?: (event: GestureResponderEvent) => void;
@@ -34,7 +35,7 @@ export function Button({
   borderRadius = 12,
   backgroundColor = "transparent",
   pressedOpacity = 0.85,
-  androidRipple = { color: "rgba(0, 0, 0, 0.1)", borderless: false },
+  androidRipple = { color: palette.overlay_black_10, borderless: false },
 }: ButtonProps) {
   return (
     <Pressable

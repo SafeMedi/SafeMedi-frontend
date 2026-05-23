@@ -5,7 +5,7 @@ import { ScrollView } from "react-native";
 import { Input, Text, XStack, YStack } from "tamagui";
 import type { StepHandle } from "@/components/domains/tutorial/types";
 import { Button } from "@/components/ui/Button";
-import EmojiCard from "@/components/ui/EmojiCard";
+import { EmojiCard } from "@/components/ui/EmojiCard";
 import { SelectChip } from "@/components/ui/SelectChip";
 import { palette } from "@/constants/design-tokens";
 import { useUserStore } from "@/stores/userStore";

@@ -121,9 +121,9 @@ export function TutorialScreen() {
               accessibilityLabel={step === TOTAL_STEPS - 1 ? "튜토리얼 완료" : "다음 단계"}
               onPress={() => void goNext()}
               disabled={completeTutorial.isPending}
-              rightElement={<Ionicons name="chevron-forward" size={16} color="#FFFFFF" />}
+              rightElement={<Ionicons name="chevron-forward" size={16} color={palette.white} />}
             >
-              <Text fontSize={14} fontWeight="600" color="#FFFFFF">
+              <Text fontSize={14} fontWeight="600" color={palette.white}>
                 {completeTutorial.isPending
                   ? "저장 중…"
                   : step === TOTAL_STEPS - 1

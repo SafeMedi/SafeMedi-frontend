@@ -98,7 +98,7 @@ export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
               justifyContent: "center",
             }}
           >
-            <Ionicons name="warning-outline" size={42} color="#FFFFFF" />
+            <Ionicons name="warning-outline" size={42} color={palette.white} />
           </LinearGradient>
           <Text fontSize={18} fontWeight="700" color={palette.black}>
             알러지 정보

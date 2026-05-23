@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { Badge } from "@/components/ui/Badge";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
+import { palette } from "@/constants/design-tokens";
 
 import { ALERT_TONE_COLORS } from "../constants";
 import type { ClinicalAlertSection } from "../types";
@@ -59,7 +60,7 @@ export function ClinicalAlertCard({ section, iconName }: ClinicalAlertCardProps)
     <SurfaceCard style={styles.card}>
       <View style={styles.headerRow}>
         <View style={[styles.headerIconWrap, { backgroundColor: toneColor.badgeBackgroundColor }]}>
-          <Ionicons name={iconName} size={16} color="#FFFFFF" />
+          <Ionicons name={iconName} size={16} color={palette.white} />
         </View>
         <View style={styles.headerTextWrap}>
           <Text style={[styles.headerTitle, { color: toneColor.titleColor }]}>{section.title}</Text>
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: palette.white,
   },
   itemTextWrap: {
     flex: 1,

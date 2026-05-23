@@ -3,27 +3,29 @@ import { searchDrugs } from "../drugs";
 
 const mockApiGet = jest.fn();
 
-interface DevGlobal {
-  __DEV__?: boolean;
-}
-
 jest.mock("@/api/client", () => ({
   api: {
     get: (...args: unknown[]) => mockApiGet(...args),
   },
 }));
 
-describe("api/endpoints/drugs", () => {
-  const globalRef = global as DevGlobal;
-  const originalDev = globalRef.__DEV__;
+jest.mock("@/constants/api-config", () => ({
+  apiConfig: { useMock: false },
+}));
 
+type MockApiConfig = {
+  useMock: boolean;
+};
+
+function setMockMode(useMock: boolean) {
+  const { apiConfig } = require("@/constants/api-config") as { apiConfig: MockApiConfig };
+  apiConfig.useMock = useMock;
+}
+
+describe("api/endpoints/drugs", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    globalRef.__DEV__ = true;
-  });
-
-  afterAll(() => {
-    globalRef.__DEV__ = originalDev;
+    setMockMode(false);
   });
 
   it("검색어가 2글자 미만이면 API 호출 없이 빈 배열을 반환한다", async () => {
@@ -47,7 +49,8 @@ describe("api/endpoints/drugs", () => {
     expect(result).toEqual(expected);
   });
 
-  it("__DEV__에서 API 실패 시 fallback mock 목록을 필터링해 반환한다", async () => {
+  it("mock 모드에서 API 실패 시 fallback mock 목록을 필터링해 반환한다", async () => {
+    setMockMode(true);
     mockApiGet.mockImplementationOnce(() => {
       throw new Error("network");
     });
@@ -58,8 +61,7 @@ describe("api/endpoints/drugs", () => {
     expect(result.every((item) => item.drugName.includes("아목"))).toBe(true);
   });
 
-  it("__DEV__가 false면 API 실패를 throw 한다", async () => {
-    globalRef.__DEV__ = false;
+  it("mock 모드가 아니면 API 실패를 throw 한다", async () => {
     mockApiGet.mockImplementationOnce(() => {
       throw new Error("network down");
     });

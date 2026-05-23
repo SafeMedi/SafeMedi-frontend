@@ -9,7 +9,7 @@ type EmojiCardProps = {
   onPress: () => void;
 };
 
-function EmojiCard({ emoji, label, selected, onPress }: EmojiCardProps) {
+export function EmojiCard({ emoji, label, selected, onPress }: EmojiCardProps) {
   return (
     <Pressable
       onPress={onPress}
@@ -21,12 +21,12 @@ function EmojiCard({ emoji, label, selected, onPress }: EmojiCardProps) {
       <YStack
         p={15}
         borderWidth={1.5}
-        borderColor={selected ? palette.blue : "rgba(255,255,255,0.3)"}
+        borderColor={selected ? palette.blue : palette.surface_card_border}
         bg={palette.background}
         style={{
           minHeight: 107,
           borderRadius: 18,
-          shadowColor: "#000",
+          shadowColor: palette.shadow_base,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.08,
           shadowRadius: 16,
@@ -42,5 +42,3 @@ function EmojiCard({ emoji, label, selected, onPress }: EmojiCardProps) {
     </Pressable>
   );
 }
-
-export default EmojiCard;

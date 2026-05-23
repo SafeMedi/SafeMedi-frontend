@@ -45,15 +45,19 @@ export function AnalysisSummaryCard({
       <View style={styles.badgeRow}>
         <SummaryBadge
           label={`위험 ${dangerCount}`}
-          backgroundColor="#FFE2E2"
+          backgroundColor={palette.risk_danger_badge_bg}
           textColor={palette.red_quick_text}
         />
         <SummaryBadge
           label={`주의 ${cautionCount}`}
-          backgroundColor="#FEF9C2"
-          textColor="#A65F00"
+          backgroundColor={palette.risk_caution_badge_bg}
+          textColor={palette.warning_interaction_message}
         />
-        <SummaryBadge label={`안전 ${safeCount}`} backgroundColor="#DCFCE7" textColor="#008236" />
+        <SummaryBadge
+          label={`안전 ${safeCount}`}
+          backgroundColor={palette.risk_safe_badge_bg}
+          textColor={palette.risk_safe_badge_text}
+        />
       </View>
     </View>
   );
@@ -82,7 +86,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   title: {
-    color: "#1E2939",
+    color: palette.title_emphasis,
     fontSize: 15,
     lineHeight: 20,
     fontWeight: "700",

@@ -41,14 +41,11 @@ jest.mock("@/components/domains/profile/health-detail", () => ({
   HealthInfoDetailScreen: () => mockHealthInfoDetailScreen(),
 }));
 
-jest.mock(
-  "@/components/domains/scan/prescription-scan-result/PrescriptionScanResultScreen",
-  () => ({
-    PrescriptionScanResultScreen: () => mockPrescriptionScanResultScreen(),
-  }),
-);
+jest.mock("@/components/domains/scan/prescription-scan-result", () => ({
+  PrescriptionScanResultScreen: () => mockPrescriptionScanResultScreen(),
+}));
 
-jest.mock("@/components/domains/scan/prescription-scan/PrescriptionScanScreen", () => ({
+jest.mock("@/components/domains/scan/prescription-scan", () => ({
   PrescriptionScanScreen: () => mockPrescriptionScanScreen(),
 }));
 

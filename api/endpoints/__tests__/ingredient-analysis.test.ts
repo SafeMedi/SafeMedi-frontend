@@ -13,27 +13,29 @@ const BASE_REQUEST: AnalyzeIngredientsRequest = {
   medications: [{ atcCode: "A01", drugName: "타이레놀", takeTimes: ["08:00"] }],
 };
 
-interface DevGlobal {
-  __DEV__?: boolean;
-}
-
 jest.mock("@/api/client", () => ({
   api: {
     post: (...args: unknown[]) => mockApiPost(...args),
   },
 }));
 
-describe("api/endpoints/ingredient-analysis", () => {
-  const globalRef = global as DevGlobal;
-  const originalDev = globalRef.__DEV__;
+jest.mock("@/constants/api-config", () => ({
+  apiConfig: { useMock: false },
+}));
 
+type MockApiConfig = {
+  useMock: boolean;
+};
+
+function setMockMode(useMock: boolean) {
+  const { apiConfig } = require("@/constants/api-config") as { apiConfig: MockApiConfig };
+  apiConfig.useMock = useMock;
+}
+
+describe("api/endpoints/ingredient-analysis", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    globalRef.__DEV__ = true;
-  });
-
-  afterAll(() => {
-    globalRef.__DEV__ = originalDev;
+    setMockMode(false);
   });
 
   it("API 성공 시 서버 응답을 반환한다", async () => {
@@ -57,7 +59,8 @@ describe("api/endpoints/ingredient-analysis", () => {
     expect(result).toEqual(expected);
   });
 
-  it("__DEV__에서 API 실패 시 mock 응답을 생성한다", async () => {
+  it("mock 모드에서 API 실패 시 mock 응답을 생성한다", async () => {
+    setMockMode(true);
     mockApiPost.mockImplementation(() => {
       throw new Error("network");
     });
@@ -72,7 +75,8 @@ describe("api/endpoints/ingredient-analysis", () => {
     expect(result.medications[0]?.drugName).toBe("타이레놀");
   });
 
-  it("__DEV__ mock 응답은 takeTimes가 없어도 분석 결과를 생성한다", async () => {
+  it("mock 응답은 takeTimes가 없어도 분석 결과를 생성한다", async () => {
+    setMockMode(true);
     mockApiPost.mockImplementation(() => {
       throw new Error("network");
     });
@@ -87,7 +91,8 @@ describe("api/endpoints/ingredient-analysis", () => {
     expect(result.medications[0]?.atcCode).toBe("A01");
   });
 
-  it("__DEV__ mock 분석은 SAFE/CAUTION/DANGER 모든 위험도를 반환할 수 있다", async () => {
+  it("mock 분석은 SAFE/CAUTION/DANGER 모든 위험도를 반환할 수 있다", async () => {
+    setMockMode(true);
     mockApiPost.mockImplementation(() => {
       throw new Error("network");
     });
@@ -118,8 +123,7 @@ describe("api/endpoints/ingredient-analysis", () => {
     expect(observedRiskLevels).toEqual(new Set(["SAFE", "CAUTION", "DANGER"]));
   });
 
-  it("__DEV__가 false면 API 실패를 그대로 throw 한다", async () => {
-    globalRef.__DEV__ = false;
+  it("mock 모드가 아니면 API 실패를 그대로 throw 한다", async () => {
     const expectedError = new Error("network down");
     mockApiPost.mockImplementation(() => {
       throw expectedError;

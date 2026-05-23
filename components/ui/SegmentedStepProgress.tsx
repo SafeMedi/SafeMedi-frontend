@@ -2,8 +2,8 @@ import { View } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
 import { palette } from "@/constants/design-tokens";
 
-const DEFAULT_INACTIVE = "#E5E7EB";
-const DEFAULT_LABEL = "#9CA3AF";
+const DEFAULT_INACTIVE = palette.dark_gray;
+const DEFAULT_LABEL = palette.schedule_upcoming_start;
 
 export type SegmentedStepProgressProps = {
   currentIndex: number;
