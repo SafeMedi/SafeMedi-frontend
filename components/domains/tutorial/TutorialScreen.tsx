@@ -5,7 +5,6 @@ import { useRef, useState } from "react";
 import { Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, XStack, YStack } from "tamagui";
-
 import { parseApiError } from "@/api/error";
 import { useCompleteTutorialMutation } from "@/api/queries/user";
 import { AuthGateView } from "@/components/AuthGateView";
@@ -15,10 +14,10 @@ import { palette } from "@/constants/design-tokens";
 import { useAuthRouteState } from "@/hooks/use-auth-route-state";
 import { useUserStore } from "@/stores/userStore";
 import { userToTutorialRegistrationBody } from "@/utils/user-mapper";
-import Step1 from "./Step1";
-import Step2 from "./Step2";
-import Step3 from "./Step3";
-import Step4 from "./Step4";
+import { Step1 } from "./components/Step1";
+import { Step2 } from "./components/Step2";
+import { Step3 } from "./components/Step3";
+import { Step4 } from "./components/Step4";
 import type { StepHandle } from "./types";
 
 const TOTAL_STEPS = 4;
@@ -125,9 +124,9 @@ export function TutorialScreen() {
               accessibilityLabel={step === TOTAL_STEPS - 1 ? "튜토리얼 완료" : "다음 단계"}
               onPress={() => void goNext()}
               disabled={completeTutorial.isPending}
-              rightElement={<Ionicons name="chevron-forward" size={16} color="#FFFFFF" />}
+              rightElement={<Ionicons name="chevron-forward" size={16} color={palette.white} />}
             >
-              <Text fontSize={14} fontWeight="600" color="#FFFFFF">
+              <Text fontSize={14} fontWeight="600" color={palette.white}>
                 {completeTutorial.isPending
                   ? "저장 중…"
                   : step === TOTAL_STEPS - 1

@@ -14,7 +14,7 @@ function parseBool(value: string | undefined, defaultValue: boolean): boolean {
 
 export const apiConfig = {
   /** mock 모드일 때 네트워크 대신 등록된 mock 핸들러로 응답 */
-  useMock: parseBool(env.EXPO_PUBLIC_USE_MOCK_API, __DEV__),
+  useMock: parseBool(env.EXPO_PUBLIC_USE_MOCK_API, false),
 
   /** API 베이스 URL (끝 슬래시 없이 권장) */
   baseUrl: env.EXPO_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "https://api.safemedi.local",

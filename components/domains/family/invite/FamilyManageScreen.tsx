@@ -16,11 +16,11 @@ import { Text, YStack } from "tamagui";
 
 import { useFamilyManageOverview } from "@/api/queries/family";
 import { palette } from "@/constants/design-tokens";
-import { FamilyFeatureBanner } from "./FamilyFeatureBanner";
-import { FamilyInviteCard } from "./FamilyInviteCard";
-import { FamilyManageHeader } from "./FamilyManageHeader";
-import { FamilyMembersSection } from "./FamilyMembersSection";
-import { PendingInvitesSection } from "./PendingInvitesSection";
+import { FamilyFeatureBanner } from "./components/FamilyFeatureBanner";
+import { FamilyInviteCard } from "./components/FamilyInviteCard";
+import { FamilyManageHeader } from "./components/FamilyManageHeader";
+import { FamilyMembersSection } from "./components/FamilyMembersSection";
+import { PendingInvitesSection } from "./components/PendingInvitesSection";
 
 export function FamilyManageScreen() {
   const insets = useSafeAreaInsets();

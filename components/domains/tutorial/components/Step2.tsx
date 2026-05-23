@@ -13,7 +13,7 @@ import { toggleSelection } from "@/utils/array";
 const medicineAllergyOptions = ["페니실린", "아스피린", "소염진통제", "설파제"] as const;
 const foodAllergyOptions = ["땅콩", "해산물", "유제품", "계란"] as const;
 
-const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
+export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
   const user = useUserStore((s) => s.user);
   const updateUser = useUserStore((s) => s.updateUser);
 
@@ -98,7 +98,7 @@ const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
               justifyContent: "center",
             }}
           >
-            <Ionicons name="warning-outline" size={42} color="#FFFFFF" />
+            <Ionicons name="warning-outline" size={42} color={palette.white} />
           </LinearGradient>
           <Text fontSize={18} fontWeight="700" color={palette.black}>
             알러지 정보
@@ -219,5 +219,3 @@ function AllergySection({ title, options, selectedItems, onToggle }: AllergySect
     </YStack>
   );
 }
-
-export default Step2;

@@ -26,14 +26,15 @@ jest.mock("@expo/vector-icons", () => ({
 jest.mock("@/components/ui/EmojiCard", () => {
   const React = require("react");
   const { Pressable, Text } = require("react-native");
+  const MockEmojiCard = ({ label, onPress }: { label: string; onPress: () => void }) =>
+    React.createElement(
+      Pressable,
+      { onPress, accessibilityRole: "button", accessibilityLabel: label },
+      React.createElement(Text, null, label),
+    );
   return {
     __esModule: true,
-    default: ({ label, onPress }: { label: string; onPress: () => void }) =>
-      React.createElement(
-        Pressable,
-        { onPress, accessibilityRole: "button", accessibilityLabel: label },
-        React.createElement(Text, null, label),
-      ),
+    EmojiCard: MockEmojiCard,
   };
 });
 

@@ -1,6 +1,7 @@
 import { api } from "@/api/client";
 import { apiPaths } from "@/api/paths";
 import type { DrugSearchItem } from "@/api/types";
+import { apiConfig } from "@/constants/api-config";
 
 const MIN_SEARCH_KEYWORD_LENGTH = 2;
 
@@ -33,7 +34,7 @@ export async function searchDrugs(keyword: string): Promise<readonly DrugSearchI
       .get(apiPaths.drugsSearch, { searchParams: { keyword: normalizedKeyword } })
       .json<DrugSearchItem[]>();
   } catch (error) {
-    if (__DEV__) {
+    if (apiConfig.useMock) {
       return filterDrugSearchMocks(normalizedKeyword);
     }
     throw error;

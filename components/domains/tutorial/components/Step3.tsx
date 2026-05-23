@@ -5,7 +5,7 @@ import { ScrollView } from "react-native";
 import { Input, Text, XStack, YStack } from "tamagui";
 import type { StepHandle } from "@/components/domains/tutorial/types";
 import { Button } from "@/components/ui/Button";
-import EmojiCard from "@/components/ui/EmojiCard";
+import { EmojiCard } from "@/components/ui/EmojiCard";
 import { SelectChip } from "@/components/ui/SelectChip";
 import { palette } from "@/constants/design-tokens";
 import { useUserStore } from "@/stores/userStore";
@@ -20,7 +20,7 @@ const chronicConditionOptions = [
   { emoji: "💓", label: "심장질환" },
 ] as const;
 
-const Step3 = forwardRef<StepHandle>(function Step3(_props, ref) {
+export const Step3 = forwardRef<StepHandle>(function Step3(_props, ref) {
   const user = useUserStore((s) => s.user);
   const updateUser = useUserStore((s) => s.updateUser);
 
@@ -185,5 +185,3 @@ const Step3 = forwardRef<StepHandle>(function Step3(_props, ref) {
     </ScrollView>
   );
 });
-
-export default Step3;

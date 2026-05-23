@@ -1,2 +1,2 @@
-export { FamilyDetailScreen } from "./family-screen/FamilyDetailScreen";
-export { FamilyManageScreen } from "./invite/FamilyManageScreen";
+export { FamilyDetailScreen } from "./family-screen";
+export { FamilyManageScreen } from "./invite";

@@ -58,6 +58,7 @@ export const palette = {
   overlay_white_90: "rgba(255,255,255,0.9)",
   overlay_white_92: "rgba(255,255,255,0.92)",
   overlay_blue_20: "rgba(59,130,246,0.2)",
+  overlay_black_10: "rgba(0,0,0,0.1)",
 
   // notice tone
   notice_bg_start: "#FFF7ED",
@@ -76,6 +77,12 @@ export const palette = {
   pending_status_bg_end: "#FE9A00",
   pink: "#F6339A",
   warning_badge_bg: "#FFE4E6",
+  risk_safe_badge_bg: "#DCFCE7",
+  risk_safe_badge_text: "#008236",
+  risk_caution_start: "#F0B100",
+  risk_caution_badge_bg: "#FEF9C2",
+  risk_danger_badge_bg: "#FFE2E2",
+  title_emphasis: "#1E2939",
   schedule_required_border: "#8EC5FF",
   schedule_upcoming_border: "#BFC7D5",
   schedule_upcoming_start: "#9CA3AF",

@@ -1,5 +1,5 @@
 import { fireEvent, render } from "@testing-library/react-native";
-import { SettingsSection } from "../SettingsSection";
+import { SettingsSection } from "..";
 
 const mockMutate = jest.fn();
 const mockPrivacyPress = jest.fn();

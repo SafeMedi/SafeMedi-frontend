@@ -1,4 +1,4 @@
-import { FamilyScreenHeader } from "../family-screen/FamilyScreenHeader";
+import { FamilyScreenHeader } from "../../family-screen/components/FamilyScreenHeader";
 
 type FamilyManageHeaderProps = {
   onBack?: () => void;

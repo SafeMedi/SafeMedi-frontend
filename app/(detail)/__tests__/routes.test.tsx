@@ -7,7 +7,7 @@ import HealthInfoDetailRoute from "../profile/health-info";
 import ScanDetailRoute from "../scan/scan";
 import ScanResultDetailRoute from "../scan/scan-result";
 
-const mockStack = jest.fn(() => null);
+const mockStack = jest.fn((_props: unknown) => null);
 const mockMedicationHistoryScreen = jest.fn(() => null);
 const mockFamilyManageScreen = jest.fn(() => null);
 const mockProfileEditScreen = jest.fn(() => null);
@@ -25,7 +25,7 @@ jest.mock("expo-router", () => {
   };
 });
 
-jest.mock("@/components/domains/dashboard/medication-history", () => ({
+jest.mock("@/components/domains/dashboard", () => ({
   MedicationHistoryScreen: () => mockMedicationHistoryScreen(),
 }));
 
@@ -33,7 +33,7 @@ jest.mock("@/components/domains/family", () => ({
   FamilyManageScreen: () => mockFamilyManageScreen(),
 }));
 
-jest.mock("@/components/domains/profile/edit/ProfileEditScreen", () => ({
+jest.mock("@/components/domains/profile/edit", () => ({
   ProfileEditScreen: () => mockProfileEditScreen(),
 }));
 
@@ -41,14 +41,11 @@ jest.mock("@/components/domains/profile/health-detail", () => ({
   HealthInfoDetailScreen: () => mockHealthInfoDetailScreen(),
 }));
 
-jest.mock(
-  "@/components/domains/scan/prescription-scan-result/PrescriptionScanResultScreen",
-  () => ({
-    PrescriptionScanResultScreen: () => mockPrescriptionScanResultScreen(),
-  }),
-);
+jest.mock("@/components/domains/scan/prescription-scan-result", () => ({
+  PrescriptionScanResultScreen: () => mockPrescriptionScanResultScreen(),
+}));
 
-jest.mock("@/components/domains/scan/prescription-scan/PrescriptionScanScreen", () => ({
+jest.mock("@/components/domains/scan/prescription-scan", () => ({
   PrescriptionScanScreen: () => mockPrescriptionScanScreen(),
 }));
 

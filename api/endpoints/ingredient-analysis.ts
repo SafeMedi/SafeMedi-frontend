@@ -7,6 +7,7 @@ import type {
   AnalyzeIngredientsRequest,
   AnalyzeIngredientsResponse,
 } from "@/api/types";
+import { apiConfig } from "@/constants/api-config";
 
 interface RiskPreset {
   readonly riskLevel: AnalysisRiskLevel;
@@ -139,7 +140,7 @@ export async function analyzePrescriptionIngredients(
       .post(apiPaths.prescriptionsAnalysis, { json: body })
       .json<AnalyzeIngredientsResponse>();
   } catch (error) {
-    if (__DEV__) {
+    if (apiConfig.useMock) {
       return createMockResponse(body);
     }
     throw error;

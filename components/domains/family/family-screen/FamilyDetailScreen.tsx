@@ -20,8 +20,8 @@ import { PillButton } from "@/components/ui/PillButton";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
-import { FamilyMedicationScheduleCard } from "./FamilyMedicationScheduleCard";
-import { FamilyScreenHeader } from "./FamilyScreenHeader";
+import { FamilyMedicationScheduleCard } from "./components/FamilyMedicationScheduleCard";
+import { FamilyScreenHeader } from "./components/FamilyScreenHeader";
 
 interface FamilyDetailScreenProps {
   readonly familyId: number | null;

@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Badge } from "@/components/ui/Badge";
 import { palette } from "@/constants/design-tokens";
 
-import { HEALTH_INFO_STYLES, type HealthInfoVariant } from "./constants";
+import { HEALTH_INFO_STYLES, type HealthInfoVariant } from "../constants";
 
 export type HealthInfoCardProps = {
   variant: HealthInfoVariant;
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 14,
     gap: 8,
-    shadowColor: "#000",
+    shadowColor: palette.shadow_base,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,

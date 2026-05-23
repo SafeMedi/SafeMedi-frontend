@@ -2,9 +2,10 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
 
-import { FAMILY_ACTIVE_STYLE } from "./constants";
+import { FAMILY_ACTIVE_STYLE } from "../constants";
 
 export type FamilyProfileItemProps = {
   name: string;
@@ -32,7 +33,7 @@ export function FamilyProfileItem({
           colors={[...FAMILY_ACTIVE_STYLE.gradientColors]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={[styles.card, { borderColor: FAMILY_ACTIVE_STYLE.borderColor }]}
+          style={[styles.card, styles.activeCard, { borderColor: FAMILY_ACTIVE_STYLE.borderColor }]}
         >
           <ItemContent
             name={name}
@@ -42,14 +43,14 @@ export function FamilyProfileItem({
           />
         </LinearGradient>
       ) : (
-        <View style={[styles.card, styles.inactiveCard]}>
+        <SurfaceCard style={[styles.card, styles.inactiveCard]}>
           <ItemContent
             name={name}
             isActive={false}
             avatarGradient={avatarGradient}
             isClickable={isClickable}
           />
-        </View>
+        </SurfaceCard>
       )}
     </Pressable>
   );
@@ -99,18 +100,19 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   card: {
-    borderRadius: 18,
-    borderWidth: 1,
     padding: 14,
-    shadowColor: "#000",
+    shadowColor: palette.shadow_base,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
   },
+  activeCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+  },
   inactiveCard: {
-    backgroundColor: palette.white,
-    borderColor: "rgba(255,255,255,0.3)",
+    borderColor: palette.surface_card_border,
   },
   row: {
     flexDirection: "row",

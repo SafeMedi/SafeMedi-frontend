@@ -1,1 +1,2 @@
-export { DashboardScreen } from "./home/DashboardScreen";
+export { DashboardScreen } from "./home";
+export { MedicationHistoryScreen } from "./medication-history";

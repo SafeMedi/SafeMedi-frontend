@@ -1,10 +1,10 @@
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
+import { PrescriptionScanHeader } from "@/components/domains/scan/prescription-scan";
 import { GradientCard } from "@/components/ui/GradientCard";
 import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
-import { PrescriptionScanHeader } from "../prescription-scan/components/PrescriptionScanHeader";
 import { AnalysisSummaryCard } from "./components/AnalysisSummaryCard";
 import { DoctorConsultationCard } from "./components/DoctorConsultationCard";
 import { MedicationAnalysisCard } from "./components/MedicationAnalysisCard";

@@ -29,7 +29,7 @@ export function SelectChip({
   height = 38,
   px = 16,
   selectedBackground = palette.green,
-  unselectedBackground = "rgba(255,255,255,0.9)",
+  unselectedBackground = palette.overlay_white_90,
   selectedBorderColor = palette.green,
   unselectedBorderColor = palette.dark_gray,
   borderWidth = 1,

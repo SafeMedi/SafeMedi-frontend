@@ -53,13 +53,13 @@ jest.mock("tamagui", () => {
   };
 });
 
-jest.mock("@/components/domains/profile/view/ProfilePageHeader", () => {
+jest.mock("@/components/domains/profile/view/components/ProfilePageHeader", () => {
   const React = require("react");
   const { Text } = require("react-native");
   return { ProfilePageHeader: () => React.createElement(Text, null, "헤더") };
 });
 
-jest.mock("@/components/domains/profile/view/UserHeroCard", () => {
+jest.mock("@/components/domains/profile/view/components/UserHeroCard", () => {
   const React = require("react");
   const { Pressable, Text } = require("react-native");
   return {
@@ -72,13 +72,13 @@ jest.mock("@/components/domains/profile/view/UserHeroCard", () => {
   };
 });
 
-jest.mock("@/components/domains/profile/view/FamilyProfileSection", () => {
+jest.mock("@/components/domains/profile/view/components/FamilyProfileSection", () => {
   const React = require("react");
   const { Text } = require("react-native");
   return { FamilyProfileSection: () => React.createElement(Text, null, "가족 프로필") };
 });
 
-jest.mock("@/components/domains/profile/view/HealthInfoSection", () => {
+jest.mock("@/components/domains/profile/view/components/HealthInfoSection", () => {
   const React = require("react");
   const { Pressable, Text } = require("react-native");
   return {
@@ -95,19 +95,19 @@ jest.mock("@/components/domains/profile/view/HealthInfoSection", () => {
   };
 });
 
-jest.mock("@/components/domains/profile/view/SettingsSection", () => {
+jest.mock("@/components/domains/profile/view/components/SettingsSection", () => {
   const React = require("react");
   const { Text } = require("react-native");
   return { SettingsSection: () => React.createElement(Text, null, "설정") };
 });
 
-jest.mock("@/components/domains/profile/view/AppInfoSection", () => {
+jest.mock("@/components/domains/profile/view/components/AppInfoSection", () => {
   const React = require("react");
   const { Text } = require("react-native");
   return { AppInfoSection: () => React.createElement(Text, null, "앱 정보") };
 });
 
-jest.mock("@/components/domains/profile/view/LogoutButton", () => {
+jest.mock("@/components/domains/profile/view/components/LogoutButton", () => {
   const React = require("react");
   const { Pressable, Text } = require("react-native");
   return {
