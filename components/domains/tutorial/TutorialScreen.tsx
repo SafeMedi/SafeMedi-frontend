@@ -14,7 +14,10 @@ import { palette } from "@/constants/design-tokens";
 import { useAuthRouteState } from "@/hooks/use-auth-route-state";
 import { useUserStore } from "@/stores/userStore";
 import { userToTutorialRegistrationBody } from "@/utils/user-mapper";
-import { Step1, Step2, Step3, Step4 } from "./index";
+import { Step1 } from "./components/Step1";
+import { Step2 } from "./components/Step2";
+import { Step3 } from "./components/Step3";
+import { Step4 } from "./components/Step4";
 import type { StepHandle } from "./types";
 
 const TOTAL_STEPS = 4;

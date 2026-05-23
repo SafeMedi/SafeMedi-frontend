@@ -5,8 +5,12 @@ import {
   ProfileEditNoticeCard,
   ProfileNicknameCard,
   ProfileTagEditorCard,
-} from "../edit/index";
-import { HealthInfoCard, HealthInfoSection, ProfilePageHeader } from "../view/index";
+} from "@/components/domains/profile/edit";
+import {
+  HealthInfoCard,
+  HealthInfoSection,
+  ProfilePageHeader,
+} from "@/components/domains/profile/view";
 
 jest.mock("tamagui", () => {
   const React = require("react");

@@ -3,17 +3,15 @@ import { Controller } from "react-hook-form";
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
+import { PrescriptionScanHeader } from "@/components/domains/scan/prescription-scan";
 import { GradientCard } from "@/components/ui/GradientCard";
 import { PillButton } from "@/components/ui/PillButton";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
-import { PrescriptionScanHeader } from "../prescription-scan";
-import {
-  MedicationEditorCard,
-  PrescriptionPeriodCard,
-  usePrescriptionScanResultViewModel,
-} from "./index";
+import { MedicationEditorCard } from "./components/MedicationEditorCard";
+import { PrescriptionPeriodCard } from "./components/PrescriptionPeriodCard";
+import { usePrescriptionScanResultViewModel } from "./usePrescriptionScanResultViewModel";
 
 const POSITIVE_GRADIENT = [palette.green, palette.opal] as const;
 const ADD_GRADIENT = [palette.purple, palette.pink] as const;

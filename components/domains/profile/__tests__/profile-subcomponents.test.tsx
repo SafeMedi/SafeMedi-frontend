@@ -1,13 +1,13 @@
 import { fireEvent, render } from "@testing-library/react-native";
 import type { FamilyProfile } from "@/api/queries/profile";
-import { ProfileEditActionBar } from "../edit";
+import { ProfileEditActionBar } from "@/components/domains/profile/edit";
 import {
   AppInfoSection,
   FamilyProfileItem,
   FamilyProfileSection,
   LogoutButton,
   UserHeroCard,
-} from "../view";
+} from "@/components/domains/profile/view";
 
 jest.mock("tamagui", () => {
   const React = require("react");
