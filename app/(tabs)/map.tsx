@@ -1,5 +1,5 @@
-import { View } from "tamagui";
+import { MapScreen } from "@/components/domains/map";
 
-export default function MapScreen() {
-  return <View flex={1} />;
+export default function MapTabRoute() {
+  return <MapScreen />;
 }
