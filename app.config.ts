@@ -8,6 +8,7 @@ const DEFAULT_APP_NAME = "safeMedi";
 const DEFAULT_APP_SLUG = "safeMedi";
 const LOCATION_USAGE_DESCRIPTION =
   "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.";
+const NAVER_MAP_CLIENT_ID = process.env.EXPO_PUBLIC_NAVER_MAP_CLIENT_ID ?? "";
 
 type PluginEntry = NonNullable<ExpoConfig["plugins"]>[number];
 
@@ -38,6 +39,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ...config.ios,
       infoPlist: {
         ...existingInfoPlist,
+        NMFClientId: existingInfoPlist.NMFClientId ?? NAVER_MAP_CLIENT_ID,
+        NMFNcpKeyId: existingInfoPlist.NMFNcpKeyId ?? NAVER_MAP_CLIENT_ID,
         NSLocationWhenInUseUsageDescription:
           existingInfoPlist.NSLocationWhenInUseUsageDescription ?? LOCATION_USAGE_DESCRIPTION,
         NSLocationAlwaysAndWhenInUseUsageDescription:
@@ -50,7 +53,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       [
         NAVER_MAP_PLUGIN_NAME,
         {
-          client_id: process.env.EXPO_PUBLIC_NAVER_MAP_CLIENT_ID ?? "",
+          client_id: NAVER_MAP_CLIENT_ID,
         },
       ],
       [

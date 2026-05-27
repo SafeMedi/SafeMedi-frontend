@@ -54,6 +54,7 @@ export function useMapViewModel(): MapViewModel {
     const loadCurrentLocation = async () => {
       try {
         const permission = await Location.requestForegroundPermissionsAsync();
+        console.log("[map] location permission status:", permission.status);
         if (permission.status !== "granted") {
           throw new Error("위치 권한이 허용되지 않았습니다.");
         }
@@ -66,9 +67,10 @@ export function useMapViewModel(): MapViewModel {
           latitude: currentPosition.coords.latitude,
           longitude: currentPosition.coords.longitude,
         };
-
+        console.log("[map] current coordinate:", markerCoordinate);
         const reverseGeocodedAddresses = await Location.reverseGeocodeAsync(markerCoordinate);
         const currentAddress = formatAddress(reverseGeocodedAddresses[0]);
+        console.log("[map] reverse geocoded address:", reverseGeocodedAddresses[0] ?? null);
 
         if (!isMounted) {
           return;
@@ -85,6 +87,7 @@ export function useMapViewModel(): MapViewModel {
           },
         });
       } catch (error: unknown) {
+        console.log("[map] location load error:", error);
         if (!isMounted) {
           return;
         }
