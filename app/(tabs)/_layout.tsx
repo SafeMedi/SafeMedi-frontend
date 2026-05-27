@@ -93,7 +93,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="nearby"
+          name="map"
           options={{
             title: "주변 약국",
             tabBarIcon: ({ color }) => (

@@ -1,16 +1,20 @@
 import { render } from "@testing-library/react-native";
 import DashboardTabRoute from "../dashboard";
 import TabTwoScreen from "../manage";
-import NearbyScreen from "../nearby";
+import MapScreen from "../map";
 import ProfileTabRoute from "../profile";
 import ScanTabRoute from "../scan";
 
 const mockDashboardScreen = jest.fn(() => null);
 const mockProfileScreen = jest.fn(() => null);
-const mockRedirect = jest.fn(() => null);
+interface RedirectProps {
+  readonly href: string;
+}
+
+const mockRedirect = jest.fn<null, [RedirectProps]>(() => null);
 
 jest.mock("expo-router", () => ({
-  Redirect: (props: { href: string }) => mockRedirect(props),
+  Redirect: (props: RedirectProps) => mockRedirect(props),
 }));
 
 jest.mock("tamagui", () => {
@@ -45,10 +49,10 @@ describe("app/(tabs) routes", () => {
 
   it("manage/nearby route는 View를 렌더링한다", () => {
     const { toJSON: manageTree } = render(<TabTwoScreen />);
-    const { toJSON: nearbyTree } = render(<NearbyScreen />);
+    const { toJSON: mapTree } = render(<MapScreen />);
 
     expect(manageTree()).toBeTruthy();
-    expect(nearbyTree()).toBeTruthy();
+    expect(mapTree()).toBeTruthy();
   });
 
   it("scan route는 detail scan으로 Redirect한다", () => {
