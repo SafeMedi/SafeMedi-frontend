@@ -23,4 +23,12 @@ export const queryKeys = {
     analyzeIngredients: ["scan", "ingredients", "analyze"] as const,
     searchDrugs: (keyword: string) => ["scan", "drugs", "search", keyword] as const,
   },
+  map: {
+    nearbyFacilities: (
+      latitude: number,
+      longitude: number,
+      category: "all" | "pharmacy" | "emergency",
+      keyword: string,
+    ) => ["map", "nearby-facilities", latitude, longitude, category, keyword] as const,
+  },
 } as const;
