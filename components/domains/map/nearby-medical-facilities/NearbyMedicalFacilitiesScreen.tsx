@@ -24,7 +24,8 @@ const CATEGORY_OPTIONS = [
 ] as const;
 
 function toMapSearchUrl(facility: MedicalFacility): string {
-  const keyword = encodeURIComponent(`${facility.name} ${facility.roadAddress}`);
+  const addressKeyword = facility.roadAddress || facility.address || "";
+  const keyword = encodeURIComponent(`${facility.name} ${addressKeyword}`.trim());
   return `https://map.naver.com/v5/search/${keyword}`;
 }
 
