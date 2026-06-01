@@ -1,16 +1,21 @@
 import { render } from "@testing-library/react-native";
 import DashboardTabRoute from "../dashboard";
 import TabTwoScreen from "../manage";
-import NearbyScreen from "../nearby";
+import MapScreen from "../map";
 import ProfileTabRoute from "../profile";
 import ScanTabRoute from "../scan";
 
 const mockDashboardScreen = jest.fn(() => null);
+const mockMapDomainScreen = jest.fn(() => null);
 const mockProfileScreen = jest.fn(() => null);
-const mockRedirect = jest.fn(() => null);
+interface RedirectProps {
+  readonly href: string;
+}
+
+const mockRedirect = jest.fn<null, [RedirectProps]>(() => null);
 
 jest.mock("expo-router", () => ({
-  Redirect: (props: { href: string }) => mockRedirect(props),
+  Redirect: (props: RedirectProps) => mockRedirect(props),
 }));
 
 jest.mock("tamagui", () => {
@@ -21,6 +26,10 @@ jest.mock("tamagui", () => {
       React.createElement(View, props, children),
   };
 });
+
+jest.mock("@/components/domains/map", () => ({
+  MapScreen: () => mockMapDomainScreen(),
+}));
 
 jest.mock("@/components/domains/dashboard", () => ({
   DashboardScreen: () => mockDashboardScreen(),
@@ -43,12 +52,12 @@ describe("app/(tabs) routes", () => {
     expect(mockProfileScreen).toHaveBeenCalledTimes(1);
   });
 
-  it("manage/nearby route는 View를 렌더링한다", () => {
+  it("manage/map route는 각 라우트 컴포넌트를 연결한다", () => {
     const { toJSON: manageTree } = render(<TabTwoScreen />);
-    const { toJSON: nearbyTree } = render(<NearbyScreen />);
+    render(<MapScreen />);
 
     expect(manageTree()).toBeTruthy();
-    expect(nearbyTree()).toBeTruthy();
+    expect(mockMapDomainScreen).toHaveBeenCalledTimes(1);
   });
 
   it("scan route는 detail scan으로 Redirect한다", () => {

@@ -2,6 +2,10 @@ name: Test Coverage
 
 on:
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
   push:
     branches:
       - main
@@ -11,10 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -31,19 +38,137 @@ jobs:
         run: yarn test --coverage
 
       - name: Upload coverage artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage
+          if-no-files-found: ignore
 
-      - name: Upload coverage to Codecov
-        if: always()
-        uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe
+      - name: Build coverage comment body
+        if: always() && github.event_name == 'pull_request'
+        id: coverage_comment
+        env:
+          COVERAGE_OUTCOME: ${{ steps.coverage_run.outcome }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+          const { execSync } = require("node:child_process");
+
+          const outputPath = process.env.GITHUB_OUTPUT;
+          const coverageOutcome = process.env.COVERAGE_OUTCOME;
+          const baseRef = process.env.BASE_REF;
+          const summaryPath = path.join(process.cwd(), "coverage", "coverage-summary.json");
+
+          const formatPct = (value) => `${value.toFixed(2)}%`;
+          const toNormalizedPath = (targetPath) => targetPath.replaceAll("\\", "/").replace(/^\.\//, "");
+
+          const scoreEmoji = (value) => {
+            if (value >= 80) {
+              return "🍏";
+            }
+
+            if (value >= 60) {
+              return "🟡";
+            }
+
+            return "🔴";
+          };
+
+          const buildFailureComment = () => {
+            return [
+              "### 📊 테스트 커버리지 리포트",
+              "",
+              "> 커버리지 측정이 실패했습니다. 워크플로 로그에서 `Run test coverage` 단계를 확인해주세요.",
+            ].join("\n");
+          };
+
+          const buildSuccessComment = (isCoverageFailed) => {
+            const rawSummary = fs.readFileSync(summaryPath, "utf8");
+            const coverageSummary = JSON.parse(rawSummary);
+            const overallPct = Number(coverageSummary.total?.lines?.pct ?? 0);
+
+            let changedFiles = [];
+            if (baseRef) {
+              execSync(`git fetch --no-tags --depth=1 origin ${baseRef}`, { encoding: "utf8" });
+              const changedOutput = execSync(`git diff --name-only origin/${baseRef}...HEAD`, {
+                encoding: "utf8",
+              });
+              changedFiles = changedOutput
+                .split("\n")
+                .map((line) => line.trim())
+                .filter(Boolean)
+                .map(toNormalizedPath);
+            }
+
+            const changedFileSet = new Set(changedFiles);
+            const fileEntries = Object.entries(coverageSummary).filter(([filePath]) => filePath !== "total");
+
+            let changedCovered = 0;
+            let changedTotal = 0;
+
+            for (const [rawFilePath, metrics] of fileEntries) {
+              const normalizedFilePath = toNormalizedPath(rawFilePath);
+              const isChangedFile =
+                changedFileSet.has(normalizedFilePath) ||
+                changedFiles.some(
+                  (changedFile) =>
+                    normalizedFilePath.endsWith(changedFile) || changedFile.endsWith(normalizedFilePath),
+                );
+
+              if (!isChangedFile) {
+                continue;
+              }
+
+              const covered = Number(metrics?.lines?.covered ?? 0);
+              const total = Number(metrics?.lines?.total ?? 0);
+
+              changedCovered += covered;
+              changedTotal += total;
+            }
+
+            const hasChangedCoverage = changedTotal > 0;
+            const changedPct = hasChangedCoverage ? (changedCovered / changedTotal) * 100 : null;
+
+            const overallScore = scoreEmoji(overallPct);
+            const changedScore = hasChangedCoverage ? scoreEmoji(changedPct) : "➖";
+            const thresholdWarning = isCoverageFailed
+              ? [
+                  "",
+                  "> 최소 커버리지 기준 미달로 체크는 실패했습니다. 수치를 확인하고 테스트를 보강해주세요.",
+                ]
+              : [];
+
+            return [
+              "### 📊 테스트 커버리지 리포트",
+              "",
+              "| 항목 | 수치 | 상태 |",
+              "| --- | ---: | :--: |",
+              `| Overall Project | ${formatPct(overallPct)} | ${overallScore} |`,
+              `| Files changed | ${
+                hasChangedCoverage ? formatPct(changedPct) : "N/A (커버리지 대상 파일 없음)"
+              } | ${changedScore} |`,
+              ...thresholdWarning,
+            ].join("\n");
+          };
+
+          let body = buildFailureComment();
+
+          if (fs.existsSync(summaryPath)) {
+            body = buildSuccessComment(coverageOutcome === "failure");
+          }
+
+          fs.appendFileSync(outputPath, `body<<EOF\n${body}\nEOF\n`);
+          NODE
+
+      - name: Comment coverage report on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
         with:
-          files: ./coverage/lcov.info
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
-          verbose: true
+          header: coverage-report
+          message: ${{ steps.coverage_comment.outputs.body }}
 
       - name: Fail workflow when coverage step failed
         if: steps.coverage_run.outcome == 'failure'

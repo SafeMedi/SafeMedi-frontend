@@ -87,6 +87,15 @@ export const palette = {
   schedule_upcoming_border: "#BFC7D5",
   schedule_upcoming_start: "#9CA3AF",
   schedule_upcoming_end: "#6B7280",
+  map_header_bg: "rgba(255,255,255,0.9)",
+  map_list_bg: "#EFF6FF",
+  map_search_bg: "#F9FAFB",
+  map_search_border: "#E5E7EB",
+  map_facility_border: "#E5E7EB",
+  map_marker_current: "#155DFC",
+  map_marker_pharmacy: "#00A63E",
+  map_marker_emergency: "#FB2C36",
+  map_data_source_text: "#9810FA",
 
   // linearGradient 3중첩 설정
   bg_green_line: ["#00C950", "#00BC7D", "#00BBA7"],

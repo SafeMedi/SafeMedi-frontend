@@ -22,6 +22,13 @@ export type {
   ReceivedFamilyRequest,
 } from "./family";
 export type {
+  FetchNearbyMedicalFacilitiesParams,
+  MedicalFacility,
+  MedicalFacilityCategory,
+  MedicalFacilityStatus,
+  NearbyMedicalFacilitiesResponse,
+} from "./map";
+export type {
   NotificationItem,
   NotificationListResponse,
   NotificationSettings,
