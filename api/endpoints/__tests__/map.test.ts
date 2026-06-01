@@ -138,6 +138,40 @@ describe("api/endpoints/map", () => {
     expect(result.facilities.every((facility) => facility.category === "pharmacy")).toBe(true);
   });
 
+  it("emergency 단일 검색에서는 fallback 카테고리를 emergency로 유지한다", async () => {
+    process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_ID = "id";
+    process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_SECRET = "secret";
+
+    const mockFetch = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            title: "야간진료센터",
+            category: "생활,편의",
+            address: "서울시 강남구 역삼동",
+            roadAddress: "서울시 강남구 테헤란로 10",
+            mapx: "127.02",
+            mapy: "37.52",
+            telephone: "02-0000-0000",
+          },
+        ],
+      }),
+    }));
+    global.fetch = mockFetch as unknown as typeof fetch;
+
+    const result = await fetchNearbyMedicalFacilities({
+      latitude: 37.5,
+      longitude: 127.01,
+      category: "emergency",
+      keyword: "야간",
+    });
+
+    expect(result.source).toBe("naver");
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(result.facilities[0]?.category).toBe("emergency");
+  });
+
   it("네이버 결과가 비어있으면 mock 데이터를 반환한다", async () => {
     process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_ID = "id";
     process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_SECRET = "secret";

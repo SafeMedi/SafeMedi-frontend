@@ -210,10 +210,7 @@ function createMockFacilities(
   ];
 
   return baseFacilities.filter((facility) => {
-    if (params.category === "all") {
-      return true;
-    }
-    if (facility.category !== params.category) {
+    if (params.category !== "all" && facility.category !== params.category) {
       return false;
     }
     const keyword = params.keyword.trim();
@@ -295,7 +292,8 @@ export async function fetchNearbyMedicalFacilities(
     const results = await Promise.all(
       keywords.map(async (keyword, index) => {
         const items = await fetchNaverLocalItems(keyword, params);
-        const fallbackCategory = index === 0 ? "pharmacy" : "emergency";
+        const fallbackCategory =
+          params.category === "all" ? (index === 0 ? "pharmacy" : "emergency") : params.category;
         return items.map((item, itemIndex) =>
           toMedicalFacility(
             item,
