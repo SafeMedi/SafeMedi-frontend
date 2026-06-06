@@ -1,9 +1,66 @@
-import ky, { type KyInstance } from "ky";
+import ky, { HTTPError, type KyInstance, TimeoutError } from "ky";
 import { mockRegistry, resolveFetchImplementation } from "@/api/mock";
 import { apiConfig } from "@/constants/api-config";
 import { useSessionStore } from "@/stores/sessionStore";
 
 const fetchImpl = resolveFetchImplementation(mockRegistry);
+
+type KyRequestError = {
+  request?: Request;
+};
+
+async function readResponseBodyForLog(response: Response): Promise<unknown> {
+  try {
+    const text = await response.clone().text();
+    if (!text) {
+      return "(empty)";
+    }
+
+    try {
+      return JSON.parse(text) as unknown;
+    } catch {
+      return text;
+    }
+  } catch {
+    return "(unreadable)";
+  }
+}
+
+function getErrorRequest(error: unknown): Request | undefined {
+  if (!error || typeof error !== "object") {
+    return undefined;
+  }
+
+  const request = (error as KyRequestError).request;
+  return request instanceof Request ? request : undefined;
+}
+
+function formatApiErrorForLog(error: unknown): string {
+  const request = getErrorRequest(error);
+  const requestLabel = request ? `${request.method} ${request.url}` : "unknown request";
+
+  if (error instanceof HTTPError) {
+    return `${error.response.status} ${requestLabel}`;
+  }
+
+  if (error instanceof TimeoutError) {
+    return `timeout · ${requestLabel}`;
+  }
+
+  if (error instanceof Error) {
+    const detail = error.message || error.name || "Unknown error";
+    return `${detail} · ${requestLabel}`;
+  }
+
+  return `${String(error)} · ${requestLabel}`;
+}
+
+function logApiDev(message: string, ...details: unknown[]): void {
+  if (!__DEV__) {
+    return;
+  }
+  console.log(message, ...details);
+}
 
 /**
  * 앱 전역에서 사용하는 ky 인스턴스.
@@ -24,9 +81,32 @@ export const api: KyInstance = ky.create({
             request.headers.set("Authorization", `Bearer ${token}`);
           }
         }
-        if (__DEV__ && apiConfig.useMock) {
-          console.debug("[api mock]", request.method, request.url);
+        logApiDev(`[api] → ${request.method} ${request.url}`);
+      },
+    ],
+    afterResponse: [
+      async ({ request, response }) => {
+        if (!response.ok) {
+          return response;
         }
+
+        const body = await readResponseBodyForLog(response);
+        logApiDev(`[api] ← ${response.status} ${request.method} ${request.url}`, body);
+        return response;
+      },
+    ],
+    beforeError: [
+      async ({ error }) => {
+        const label = formatApiErrorForLog(error);
+
+        if (error instanceof HTTPError) {
+          const body = await readResponseBodyForLog(error.response);
+          logApiDev(`[api] ✕ ${label}`, body);
+        } else {
+          logApiDev(`[api] ✕ ${label}`);
+        }
+
+        return error;
       },
     ],
   },
