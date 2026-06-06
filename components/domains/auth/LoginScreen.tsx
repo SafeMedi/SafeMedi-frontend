@@ -3,20 +3,18 @@ import { Redirect } from "expo-router";
 import { Image, ImageBackground, Pressable, useWindowDimensions, View } from "react-native";
 import { YStack } from "tamagui";
 
-import { useLoginMutation } from "@/api/queries/user";
 import IntroContentImage from "@/assets/images/intro_content.png";
 import KakaoButtonImage from "@/assets/images/kakaoLoginButton.png";
 import { AuthGateView } from "@/components/AuthGateView";
 import { palette } from "@/constants/design-tokens";
 import { useAuthRouteState } from "@/hooks/use-auth-route-state";
 
-const DEV_KAKAO_ACCESS_TOKEN =
-  process.env.EXPO_PUBLIC_DEV_KAKAO_ACCESS_TOKEN ?? "kakao-dev-access-token";
+import { useLoginViewModel } from "./useLoginViewModel";
 
 export function LoginScreen() {
   const { height: windowHeight } = useWindowDimensions();
   const authState = useAuthRouteState();
-  const loginMutation = useLoginMutation();
+  const { isLoggingIn, handleKakaoLogin } = useLoginViewModel();
 
   const imageSize = 280;
   const imageHalf = imageSize / 2;
@@ -35,7 +33,7 @@ export function LoginScreen() {
   }
 
   const handleLogin = () => {
-    loginMutation.mutate({ provider: "kakao", accessToken: DEV_KAKAO_ACCESS_TOKEN });
+    void handleKakaoLogin();
   };
 
   return (
@@ -53,7 +51,7 @@ export function LoginScreen() {
           />
           <Pressable
             onPress={handleLogin}
-            disabled={loginMutation.isPending}
+            disabled={isLoggingIn}
             accessibilityLabel="카카오 소셜로그인"
             style={{ marginTop: 20 }}
           >
