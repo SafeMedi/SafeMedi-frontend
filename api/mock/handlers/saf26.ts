@@ -2,8 +2,10 @@ import type { MockRegistry } from "@/api/mock/registry";
 import { mockState } from "@/api/mock/state";
 import { apiPaths } from "@/api/paths";
 
+const SUPPORTED_PROVIDERS = new Set(["kakao", "naver"]);
+
 const RX = {
-  authLogin: /^\/api\/v1\/auth\/login\/(kakao|naver)$/,
+  authLogin: /^\/api\/v1\/auth\/login\/([^/]+)$/,
   familyRequestId: /^\/api\/v1\/families\/requests\/(\d+)$/,
   familyId: /^\/api\/v1\/families\/(\d+)$/,
   familySettings: /^\/api\/v1\/families\/(\d+)\/settings$/,
@@ -22,13 +24,30 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
     "POST",
     (p) => RX.authLogin.test(p),
     async (ctx) => {
+      const provider = ctx.path.match(RX.authLogin)?.[1];
+      if (!provider || !SUPPORTED_PROVIDERS.has(provider)) {
+        return Response.json(
+          { code: "AUTH_002", message: "지원하지 않는 소셜 로그인 제공자입니다." },
+          { status: 400 },
+        );
+      }
+
       const body = ctx.jsonBody as { accessToken?: string } | undefined;
+
+      if (body?.accessToken === "server_error") {
+        return Response.json(
+          { code: "SYS_500", message: "소셜 인증 서버와의 통신에 실패했습니다." },
+          { status: 500 },
+        );
+      }
+
       if (mockState.userDeleted || body?.accessToken === "invalid") {
         return Response.json(
           { code: "AUTH_001", message: "유효하지 않거나 만료된 소셜 토큰입니다." },
           { status: 401 },
         );
       }
+
       return {
         accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock",
         isTutorialCompleted: mockState.profile.isTutorialCompleted,
