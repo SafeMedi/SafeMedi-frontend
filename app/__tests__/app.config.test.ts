@@ -18,7 +18,7 @@ function loadAppConfigModule(): AppConfigModule {
   let loadedModule: AppConfigModule | null = null;
 
   jest.isolateModules(() => {
-    loadedModule = require("../app.config") as AppConfigModule;
+    loadedModule = require("../../app.config") as AppConfigModule;
   });
 
   if (!loadedModule) {
