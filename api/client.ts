@@ -86,7 +86,7 @@ export const api: KyInstance = ky.create({
     ],
     afterResponse: [
       async ({ request, response }) => {
-        if (!response.ok) {
+        if (!__DEV__ || !response.ok) {
           return response;
         }
 
@@ -97,6 +97,10 @@ export const api: KyInstance = ky.create({
     ],
     beforeError: [
       async ({ error }) => {
+        if (!__DEV__) {
+          return error;
+        }
+
         const label = formatApiErrorForLog(error);
 
         if (error instanceof HTTPError) {
