@@ -1,4 +1,4 @@
-import { login } from "@react-native-seoul/kakao-login";
+import { type KakaoOAuthToken, login } from "@react-native-seoul/kakao-login";
 import { act, renderHook } from "@testing-library/react-native";
 import { Alert } from "react-native";
 
@@ -19,7 +19,16 @@ jest.mock("@/api/queries/user", () => ({
   useLoginMutation: jest.fn(),
 }));
 
-const mockLogin = login as jest.MockedFunction<typeof login>;
+const mockLogin = login as unknown as jest.MockedFunction<() => Promise<KakaoOAuthToken>>;
+
+const mockKakaoOAuthToken: KakaoOAuthToken = {
+  accessToken: "kakao-access-token",
+  refreshToken: "refresh",
+  idToken: "id",
+  accessTokenExpiresAt: new Date(),
+  refreshTokenExpiresAt: new Date(),
+  scopes: [],
+};
 const mockParseApiError = parseApiError as jest.MockedFunction<typeof parseApiError>;
 const mockUseLoginMutation = useLoginMutation as jest.MockedFunction<typeof useLoginMutation>;
 
@@ -32,7 +41,7 @@ describe("useLoginViewModel", () => {
     mockUseLoginMutation.mockReturnValue({
       mutateAsync: mockMutateAsync,
       isPending: false,
-    } as ReturnType<typeof useLoginMutation>);
+    } as unknown as ReturnType<typeof useLoginMutation>);
   });
 
   afterAll(() => {
@@ -40,14 +49,7 @@ describe("useLoginViewModel", () => {
   });
 
   it("카카오 SDK accessToken으로 백엔드 로그인을 호출한다", async () => {
-    mockLogin.mockResolvedValue({
-      accessToken: "kakao-access-token",
-      refreshToken: "refresh",
-      idToken: "id",
-      accessTokenExpiresAt: new Date(),
-      refreshTokenExpiresAt: new Date(),
-      scopes: [],
-    });
+    mockLogin.mockResolvedValue(mockKakaoOAuthToken);
     mockMutateAsync.mockResolvedValue({
       accessToken: "app-access-token",
       profile: { isTutorialCompleted: false },
@@ -81,14 +83,7 @@ describe("useLoginViewModel", () => {
   });
 
   it("백엔드 로그인 실패 시 Alert를 표시한다", async () => {
-    mockLogin.mockResolvedValue({
-      accessToken: "kakao-access-token",
-      refreshToken: "refresh",
-      idToken: "id",
-      accessTokenExpiresAt: new Date(),
-      refreshTokenExpiresAt: new Date(),
-      scopes: [],
-    });
+    mockLogin.mockResolvedValue(mockKakaoOAuthToken);
     mockMutateAsync.mockRejectedValue(new Error("network error"));
     mockParseApiError.mockResolvedValue({ message: "서버 오류" });
 
