@@ -80,7 +80,7 @@ describe("api/queries/user", () => {
       setQueryData: mockSetQueryData,
       invalidateQueries: mockInvalidateQueries,
     } as unknown as ReturnType<typeof useQueryClient>);
-    mockPostSocialLogin.mockResolvedValue({ accessToken: "new-token" });
+    mockPostSocialLogin.mockResolvedValue({ accessToken: "new-token", isTutorialCompleted: true });
     mockFetchUserProfileWithAccessToken.mockResolvedValue({ isTutorialCompleted: true });
     mockPostTutorialRegistration.mockResolvedValue({});
     mockPatchUserProfile.mockResolvedValue({ id: "me", isTutorialCompleted: true });
@@ -107,21 +107,25 @@ describe("api/queries/user", () => {
     const mutation = result.current as unknown as {
       mutationFn: (args: { provider: "kakao" | "naver"; accessToken: string }) => Promise<{
         accessToken: string;
+        isTutorialCompleted: boolean;
         profile: { isTutorialCompleted: boolean };
       }>;
       onSuccess: (value: {
         accessToken: string;
+        isTutorialCompleted: boolean;
         profile: { isTutorialCompleted: boolean };
       }) => void;
     };
 
     const payload = await mutation.mutationFn({ provider: "kakao", accessToken: "kakao-token" });
     expect(payload.accessToken).toBe("new-token");
+    expect(payload.isTutorialCompleted).toBe(true);
     expect(mockPostSocialLogin).toHaveBeenCalledWith("kakao", "kakao-token");
     expect(mockFetchUserProfileWithAccessToken).toHaveBeenCalledWith("new-token");
 
     mutation.onSuccess(payload);
     expect(mockSetAccessToken).toHaveBeenCalledWith("new-token");
+    // 명세서 기준: 로그인 응답의 isTutorialCompleted를 사용해 튜토리얼 라우팅을 결정합니다.
     expect(mockSetTutorialCompleted).toHaveBeenCalledWith(true);
     expect(mockSetQueryData).toHaveBeenCalledWith(queryKeys.user.me, payload.profile);
     expect(mockSetUser).toHaveBeenCalledWith({ id: "me" });

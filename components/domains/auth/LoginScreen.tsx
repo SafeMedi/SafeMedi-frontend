@@ -1,26 +1,41 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { Redirect } from "expo-router";
-import { Image, ImageBackground, Pressable, useWindowDimensions, View } from "react-native";
+import { Image, Pressable, useWindowDimensions, View } from "react-native";
 import { YStack } from "tamagui";
 
-import { useLoginMutation } from "@/api/queries/user";
-import IntroContentImage from "@/assets/images/intro_content.png";
+import IntroContentImage from "@/assets/images/introContent.png";
 import KakaoButtonImage from "@/assets/images/kakaoLoginButton.png";
 import { AuthGateView } from "@/components/AuthGateView";
 import { palette } from "@/constants/design-tokens";
 import { useAuthRouteState } from "@/hooks/use-auth-route-state";
 
-const DEV_KAKAO_ACCESS_TOKEN =
-  process.env.EXPO_PUBLIC_DEV_KAKAO_ACCESS_TOKEN ?? "kakao-dev-access-token";
+import { useLoginViewModel } from "./useLoginViewModel";
+
+const introImageSource = Image.resolveAssetSource(IntroContentImage);
+
+function getIntroImageLayout(windowWidth: number) {
+  const scale =
+    introImageSource.scale && introImageSource.scale > 1
+      ? introImageSource.scale
+      : introImageSource.width > 400
+        ? 2
+        : 1;
+  const logicalWidth = introImageSource.width / scale;
+  const aspectRatio = introImageSource.width / introImageSource.height;
+  const displayWidth = Math.min(windowWidth - 32, logicalWidth);
+  const displayHeight = displayWidth / aspectRatio;
+
+  return { displayWidth, displayHeight };
+}
 
 export function LoginScreen() {
-  const { height: windowHeight } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const authState = useAuthRouteState();
-  const loginMutation = useLoginMutation();
+  const { isLoggingIn, handleKakaoLogin } = useLoginViewModel();
 
-  const imageSize = 280;
-  const imageHalf = imageSize / 2;
-  const introImageMarginTop = Math.max(16, windowHeight * 0.44 - imageHalf);
+  const { displayWidth: introDisplayWidth, displayHeight: introDisplayHeight } =
+    getIntroImageLayout(windowWidth);
+  const introImageMarginTop = Math.max(16, windowHeight * 0.44 - introDisplayHeight / 2);
 
   if (authState.kind === "loading") {
     return <AuthGateView kind="loading" />;
@@ -35,27 +50,27 @@ export function LoginScreen() {
   }
 
   const handleLogin = () => {
-    loginMutation.mutate({ provider: "kakao", accessToken: DEV_KAKAO_ACCESS_TOKEN });
+    void handleKakaoLogin();
   };
 
   return (
     <YStack bg="$backgroundGreen" flex={1} style={{ position: "relative" }}>
       <LinearGradient colors={palette.bg_green_line} style={{ flex: 1 }}>
         <View style={{ flex: 1, alignItems: "center", width: "100%" }}>
-          <ImageBackground
+          <Image
             source={IntroContentImage}
+            resizeMode="contain"
             style={{
-              width: imageSize,
-              height: imageSize,
+              width: introDisplayWidth,
+              height: introDisplayHeight,
               marginTop: introImageMarginTop,
-              zIndex: 0,
             }}
           />
           <Pressable
             onPress={handleLogin}
-            disabled={loginMutation.isPending}
+            disabled={isLoggingIn}
             accessibilityLabel="카카오 소셜로그인"
-            style={{ marginTop: 20 }}
+            style={{ marginTop: -20 }}
           >
             <Image source={KakaoButtonImage} style={{ width: 183, height: 45 }} />
           </Pressable>

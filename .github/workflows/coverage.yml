@@ -146,8 +146,8 @@ jobs:
               "",
               "| 항목 | 수치 | 상태 |",
               "| --- | ---: | :--: |",
-              `| Overall Project | ${formatPct(overallPct)} | ${overallScore} |`,
-              `| Files changed | ${
+              `| Over All Project | ${formatPct(overallPct)} | ${overallScore} |`,
+              `| Files Changed | ${
                 hasChangedCoverage ? formatPct(changedPct) : "N/A (커버리지 대상 파일 없음)"
               } | ${changedScore} |`,
               ...thresholdWarning,
