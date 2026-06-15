@@ -5,7 +5,7 @@ import {
   type Region,
 } from "@mj-studio/react-native-naver-map";
 import { StyleSheet } from "react-native";
-import type { MapFacilityMarker } from "../nearby-medical-facilities/types";
+import type { MapFacilityMarker } from "../types";
 
 export interface BaseNaverMapProps {
   readonly initialRegion: Region;
