@@ -14,6 +14,7 @@ export interface MedicalFacility {
   readonly phoneNumber: string | null;
   readonly is24Hours: boolean;
   readonly status: MedicalFacilityStatus;
+  readonly placeUrl: string | null;
 }
 
 export interface FetchNearbyMedicalFacilitiesParams {
@@ -24,6 +25,6 @@ export interface FetchNearbyMedicalFacilitiesParams {
 }
 
 export interface NearbyMedicalFacilitiesResponse {
-  readonly source: "naver" | "mock";
+  readonly source: "kakao" | "mock";
   readonly facilities: readonly MedicalFacility[];
 }

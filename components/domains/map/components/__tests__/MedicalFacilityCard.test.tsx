@@ -14,6 +14,7 @@ const BASE_FACILITY: MedicalFacility = {
   phoneNumber: "02-1234-5678",
   is24Hours: false,
   status: "unknown",
+  placeUrl: null,
 };
 
 describe("MedicalFacilityCard", () => {

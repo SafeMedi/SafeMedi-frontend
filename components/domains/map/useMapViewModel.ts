@@ -1,8 +1,7 @@
-import type { Coord, Region } from "@mj-studio/react-native-naver-map";
 import * as Location from "expo-location";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNearbyMedicalFacilitiesQuery } from "@/api/queries/map";
-import type { MedicalFacility, MedicalFacilityCategory } from "./types";
+import type { MapCoordinate, MapRegion, MedicalFacility, MedicalFacilityCategory } from "./types";
 
 const DEFAULT_REGION_DELTA = {
   latitudeDelta: 0.01,
@@ -13,8 +12,8 @@ interface MapLocationState {
   readonly isLoadingLocation: boolean;
   readonly locationError: string | null;
   readonly currentAddress: string | null;
-  readonly currentCoordinate: Coord | null;
-  readonly initialRegion: Region | null;
+  readonly currentCoordinate: MapCoordinate | null;
+  readonly initialRegion: MapRegion | null;
 }
 
 export interface MapViewModel {
@@ -23,10 +22,10 @@ export interface MapViewModel {
   readonly isRefreshingFacilities: boolean;
   readonly locationError: string | null;
   readonly facilitiesError: string | null;
-  readonly source: "naver" | "mock";
+  readonly source: "kakao" | "mock";
   readonly currentAddress: string | null;
-  readonly currentCoordinate: Coord | null;
-  readonly initialRegion: Region | null;
+  readonly currentCoordinate: MapCoordinate | null;
+  readonly initialRegion: MapRegion | null;
   readonly category: MedicalFacilityCategory;
   readonly searchKeyword: string;
   readonly selectedFacilityId: string | null;
@@ -74,7 +73,7 @@ export function useMapViewModel(): MapViewModel {
         const currentPosition = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
         });
-        const currentCoordinate: Coord = {
+        const currentCoordinate: MapCoordinate = {
           latitude: currentPosition.coords.latitude,
           longitude: currentPosition.coords.longitude,
         };

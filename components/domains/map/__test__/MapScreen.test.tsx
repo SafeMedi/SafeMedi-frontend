@@ -4,7 +4,7 @@ import { MapScreen } from "../MapScreen";
 import type { MedicalFacility } from "../types";
 import type { MapViewModel } from "../useMapViewModel";
 
-interface MockBaseNaverMapProps {
+interface MockBaseKakaoMapProps {
   readonly initialRegion: MapViewModel["initialRegion"];
   readonly currentCoordinate: MapViewModel["currentCoordinate"];
   readonly facilities: readonly {
@@ -23,7 +23,7 @@ interface MockMedicalFacilityCardProps {
   readonly onPressDirections: (facility: MedicalFacility) => Promise<void>;
 }
 
-const mockBaseNaverMap = jest.fn((_props: MockBaseNaverMapProps) => <Text>map</Text>);
+const mockBaseKakaoMap = jest.fn((_props: MockBaseKakaoMapProps) => <Text>map</Text>);
 const mockMedicalFacilityCard = jest.fn((props: MockMedicalFacilityCardProps) => {
   return (
     <>
@@ -45,8 +45,8 @@ jest.mock("../useMapViewModel", () => ({
   useMapViewModel: () => mockUseMapViewModel(),
 }));
 
-jest.mock("../components/BaseNaverMap", () => ({
-  BaseNaverMap: (props: MockBaseNaverMapProps) => mockBaseNaverMap(props),
+jest.mock("../components/BaseKakaoMap", () => ({
+  BaseKakaoMap: (props: MockBaseKakaoMapProps) => mockBaseKakaoMap(props),
 }));
 
 jest.mock("../components/MedicalFacilityCard", () => ({
@@ -81,6 +81,7 @@ const BASE_FACILITY: MedicalFacility = {
   phoneNumber: "02-1234-5678",
   is24Hours: true,
   status: "open",
+  placeUrl: "https://place.map.kakao.com/mock",
 };
 
 const BASE_VIEW_MODEL: MapViewModel = {
@@ -150,7 +151,7 @@ describe("MapScreen", () => {
     fireEvent.press(screen.getByText("응급실"));
     expect(BASE_VIEW_MODEL.setCategory).toHaveBeenCalledWith("emergency");
 
-    const mapProps = mockBaseNaverMap.mock.calls[0][0] as MockBaseNaverMapProps;
+    const mapProps = mockBaseKakaoMap.mock.calls[0][0] as MockBaseKakaoMapProps;
     expect(mapProps.facilities[0]).toEqual(
       expect.objectContaining({
         id: "facility-1",
@@ -163,9 +164,7 @@ describe("MapScreen", () => {
     expect(mockOpenUrl).toHaveBeenCalledWith("tel:02-1234-5678");
 
     fireEvent.press(screen.getByText("facility-1-directions"));
-    expect(mockOpenUrl).toHaveBeenCalledWith(
-      "https://map.naver.com/v5/search/%EC%84%9C%EC%9A%B8%EC%95%BD%EA%B5%AD%20%EC%84%9C%EC%9A%B8%EC%8B%9C%20%EA%B0%95%EB%82%A8%EA%B5%AC%20%ED%85%8C%ED%97%A4%EB%9E%80%EB%A1%9C",
-    );
+    expect(mockOpenUrl).toHaveBeenCalledWith("https://place.map.kakao.com/mock");
   });
 
   it("전화번호가 없으면 전화 링크를 열지 않는다", () => {

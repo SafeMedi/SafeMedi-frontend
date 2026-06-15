@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SelectChip } from "@/components/ui/SelectChip";
 import { palette } from "@/constants/design-tokens";
-import { BaseNaverMap } from "./components/BaseNaverMap";
+import { BaseKakaoMap } from "./components/BaseKakaoMap";
 import { MedicalFacilityCard } from "./components/MedicalFacilityCard";
 import type { MedicalFacility } from "./types";
 import { useMapViewModel } from "./useMapViewModel";
@@ -24,9 +24,10 @@ const CATEGORY_OPTIONS = [
 ] as const;
 
 function toMapSearchUrl(facility: MedicalFacility): string {
-  const addressKeyword = facility.roadAddress || facility.address || "";
-  const keyword = encodeURIComponent(`${facility.name} ${addressKeyword}`.trim());
-  return `https://map.naver.com/v5/search/${keyword}`;
+  if (facility.placeUrl) {
+    return facility.placeUrl;
+  }
+  return `https://map.kakao.com/link/map/${facility.latitude},${facility.longitude}`;
 }
 
 export function MapScreen() {
@@ -100,7 +101,7 @@ export function MapScreen() {
       </View>
 
       <View style={styles.mapSection}>
-        <BaseNaverMap
+        <BaseKakaoMap
           initialRegion={viewModel.initialRegion}
           currentCoordinate={viewModel.currentCoordinate}
           facilities={markers}

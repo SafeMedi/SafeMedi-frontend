@@ -5,55 +5,98 @@ import type {
   NearbyMedicalFacilitiesResponse,
 } from "@/api/types/map";
 
-const NAVER_LOCAL_SEARCH_URL = "https://openapi.naver.com/v1/search/local.json";
-const NAVER_DEFAULT_DISPLAY = 10;
-const NAVER_REQUEST_TIMEOUT_MS = 7_000;
-const COORDINATE_SCALE = 10_000_000;
+const KAKAO_CATEGORY_SEARCH_URL = "https://dapi.kakao.com/v2/local/search/category.json";
+const KAKAO_KEYWORD_SEARCH_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
+const KAKAO_DEFAULT_SIZE = 15;
+const KAKAO_SEARCH_RADIUS_METERS = 5_000;
+const KAKAO_REQUEST_TIMEOUT_MS = 7_000;
 
-interface NaverLocalSearchItem {
-  readonly title: string;
-  readonly category: string;
-  readonly address: string;
-  readonly roadAddress: string;
-  readonly mapx: string;
-  readonly mapy: string;
-  readonly telephone: string;
+interface KakaoLocalSearchDocument {
+  readonly place_name: string;
+  readonly category_name: string;
+  readonly address_name: string;
+  readonly road_address_name: string;
+  readonly x: string;
+  readonly y: string;
+  readonly phone: string;
+  readonly distance: string;
+  readonly place_url: string;
 }
 
-interface NaverLocalSearchResponse {
-  readonly items: readonly NaverLocalSearchItem[];
+interface KakaoLocalSearchResponse {
+  readonly documents: readonly KakaoLocalSearchDocument[];
 }
 
-function getNaverSearchClientId(): string {
-  return process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_ID ?? "";
+type KakaoCategoryGroupCode = "PM9" | "HP8";
+
+interface KakaoSearchRequest {
+  readonly kind: "category" | "keyword";
+  readonly categoryGroupCode?: KakaoCategoryGroupCode;
+  readonly query?: string;
+  readonly fallbackCategory: Exclude<MedicalFacilityCategory, "all">;
 }
 
-function getNaverSearchClientSecret(): string {
-  return process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_SECRET ?? "";
+function getKakaoRestApiKey(): string {
+  return process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY ?? "";
 }
 
-function sanitizeTitle(title: string): string {
-  return title.replace(/<[^>]*>/g, "").trim();
-}
-
-function resolveSearchKeywords(
+function resolveSearchRequests(
   category: MedicalFacilityCategory,
   keyword: string,
-): readonly [string, ...string[]] {
+): readonly KakaoSearchRequest[] {
   const normalizedKeyword = keyword.trim();
+
   if (category === "pharmacy") {
-    return [normalizedKeyword.length > 0 ? `${normalizedKeyword} 약국` : "약국"];
+    if (normalizedKeyword.length > 0) {
+      return [
+        {
+          kind: "keyword",
+          query: `${normalizedKeyword} 약국`,
+          categoryGroupCode: "PM9",
+          fallbackCategory: "pharmacy",
+        },
+      ];
+    }
+    return [{ kind: "category", categoryGroupCode: "PM9", fallbackCategory: "pharmacy" }];
   }
 
   if (category === "emergency") {
-    return [normalizedKeyword.length > 0 ? `${normalizedKeyword} 응급실` : "응급실"];
+    return [
+      {
+        kind: "keyword",
+        query: normalizedKeyword.length > 0 ? `${normalizedKeyword} 응급실` : "응급실",
+        categoryGroupCode: "HP8",
+        fallbackCategory: "emergency",
+      },
+    ];
   }
 
   if (normalizedKeyword.length > 0) {
-    return [`${normalizedKeyword} 약국`, `${normalizedKeyword} 응급실`];
+    return [
+      {
+        kind: "keyword",
+        query: `${normalizedKeyword} 약국`,
+        categoryGroupCode: "PM9",
+        fallbackCategory: "pharmacy",
+      },
+      {
+        kind: "keyword",
+        query: `${normalizedKeyword} 응급실`,
+        categoryGroupCode: "HP8",
+        fallbackCategory: "emergency",
+      },
+    ];
   }
 
-  return ["약국", "응급실"];
+  return [
+    { kind: "category", categoryGroupCode: "PM9", fallbackCategory: "pharmacy" },
+    {
+      kind: "keyword",
+      query: "응급실",
+      categoryGroupCode: "HP8",
+      fallbackCategory: "emergency",
+    },
+  ];
 }
 
 function resolveFacilityCategory(
@@ -78,33 +121,15 @@ function toCoordinate(value: string, fallbackValue: number): number {
   if (Number.isNaN(parsed)) {
     return fallbackValue;
   }
-  if (Math.abs(parsed) > 1_000) {
-    return parsed / COORDINATE_SCALE;
-  }
   return parsed;
 }
 
-function toRadians(value: number): number {
-  return (value * Math.PI) / 180;
-}
-
-function getDistanceMeters(
-  fromLatitude: number,
-  fromLongitude: number,
-  toLatitude: number,
-  toLongitude: number,
-): number {
-  const EARTH_RADIUS_METERS = 6_371_000;
-  const latitudeDelta = toRadians(toLatitude - fromLatitude);
-  const longitudeDelta = toRadians(toLongitude - fromLongitude);
-  const latitude1 = toRadians(fromLatitude);
-  const latitude2 = toRadians(toLatitude);
-
-  const haversine =
-    Math.sin(latitudeDelta / 2) ** 2 +
-    Math.cos(latitude1) * Math.cos(latitude2) * Math.sin(longitudeDelta / 2) ** 2;
-  const centralAngle = 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
-  return Math.round(EARTH_RADIUS_METERS * centralAngle);
+function toDistanceMeters(value: string): number {
+  const parsed = Number(value);
+  if (!Number.isNaN(parsed) && parsed >= 0) {
+    return Math.round(parsed);
+  }
+  return 0;
 }
 
 function resolveFallbackStatus(is24Hours: boolean): "open" | "unknown" {
@@ -112,29 +137,30 @@ function resolveFallbackStatus(is24Hours: boolean): "open" | "unknown" {
 }
 
 function toMedicalFacility(
-  item: NaverLocalSearchItem,
+  item: KakaoLocalSearchDocument,
   index: number,
   params: FetchNearbyMedicalFacilitiesParams,
   fallbackCategory: Exclude<MedicalFacilityCategory, "all">,
 ): MedicalFacility {
-  const latitude = toCoordinate(item.mapy, params.latitude);
-  const longitude = toCoordinate(item.mapx, params.longitude);
-  const name = sanitizeTitle(item.title);
-  const category = resolveFacilityCategory(item.category, fallbackCategory);
-  const is24Hours = is24HoursFacility(name, item.category);
+  const latitude = toCoordinate(item.y, params.latitude);
+  const longitude = toCoordinate(item.x, params.longitude);
+  const name = item.place_name.trim();
+  const category = resolveFacilityCategory(item.category_name, fallbackCategory);
+  const is24Hours = is24HoursFacility(name, item.category_name);
 
   return {
     id: `${category}-${name}-${index}-${latitude}-${longitude}`,
     name,
     category,
-    address: item.address,
-    roadAddress: item.roadAddress,
+    address: item.address_name,
+    roadAddress: item.road_address_name,
     latitude,
     longitude,
-    distanceMeters: getDistanceMeters(params.latitude, params.longitude, latitude, longitude),
-    phoneNumber: item.telephone.trim().length > 0 ? item.telephone : null,
+    distanceMeters: toDistanceMeters(item.distance),
+    phoneNumber: item.phone.trim().length > 0 ? item.phone : null,
     is24Hours,
     status: resolveFallbackStatus(is24Hours),
+    placeUrl: item.place_url.trim().length > 0 ? item.place_url : null,
   };
 }
 
@@ -154,6 +180,7 @@ function createMockFacilities(
       phoneNumber: "02-1234-5678",
       is24Hours: true,
       status: "open",
+      placeUrl: null,
     },
     {
       id: "mock-emergency-1",
@@ -167,6 +194,7 @@ function createMockFacilities(
       phoneNumber: "02-2019-2114",
       is24Hours: true,
       status: "open",
+      placeUrl: null,
     },
     {
       id: "mock-pharmacy-2",
@@ -180,6 +208,7 @@ function createMockFacilities(
       phoneNumber: "02-6789-1000",
       is24Hours: false,
       status: "open",
+      placeUrl: null,
     },
     {
       id: "mock-emergency-2",
@@ -193,6 +222,7 @@ function createMockFacilities(
       phoneNumber: "02-3410-2114",
       is24Hours: true,
       status: "open",
+      placeUrl: null,
     },
     {
       id: "mock-pharmacy-3",
@@ -206,6 +236,7 @@ function createMockFacilities(
       phoneNumber: null,
       is24Hours: false,
       status: "closed",
+      placeUrl: null,
     },
   ];
 
@@ -221,40 +252,52 @@ function createMockFacilities(
   });
 }
 
-async function fetchNaverLocalItems(
-  keyword: string,
+async function fetchKakaoLocalDocuments(
+  request: KakaoSearchRequest,
   params: FetchNearbyMedicalFacilitiesParams,
-): Promise<readonly NaverLocalSearchItem[]> {
-  const clientId = getNaverSearchClientId();
-  const clientSecret = getNaverSearchClientSecret();
+): Promise<readonly KakaoLocalSearchDocument[]> {
+  const restApiKey = getKakaoRestApiKey();
   const searchParams = new URLSearchParams({
-    query: keyword,
-    display: String(NAVER_DEFAULT_DISPLAY),
-    start: "1",
-    coordinate: `${params.longitude},${params.latitude}`,
+    x: String(params.longitude),
+    y: String(params.latitude),
+    radius: String(KAKAO_SEARCH_RADIUS_METERS),
+    sort: "distance",
+    size: String(KAKAO_DEFAULT_SIZE),
+    page: "1",
   });
+
+  const baseUrl =
+    request.kind === "category" ? KAKAO_CATEGORY_SEARCH_URL : KAKAO_KEYWORD_SEARCH_URL;
+
+  if (request.kind === "category" && request.categoryGroupCode) {
+    searchParams.set("category_group_code", request.categoryGroupCode);
+  } else if (request.kind === "keyword" && request.query) {
+    searchParams.set("query", request.query);
+    if (request.categoryGroupCode) {
+      searchParams.set("category_group_code", request.categoryGroupCode);
+    }
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => {
     controller.abort();
-  }, NAVER_REQUEST_TIMEOUT_MS);
+  }, KAKAO_REQUEST_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`${NAVER_LOCAL_SEARCH_URL}?${searchParams.toString()}`, {
+    const response = await fetch(`${baseUrl}?${searchParams.toString()}`, {
       method: "GET",
       headers: {
-        "X-Naver-Client-Id": clientId,
-        "X-Naver-Client-Secret": clientSecret,
+        Authorization: `KakaoAK ${restApiKey}`,
       },
       signal: controller.signal,
     });
 
     if (!response.ok) {
-      throw new Error(`Naver local search failed with status ${response.status}`);
+      throw new Error(`Kakao local search failed with status ${response.status}`);
     }
 
-    const body = (await response.json()) as NaverLocalSearchResponse;
-    return body.items;
+    const body = (await response.json()) as KakaoLocalSearchResponse;
+    return body.documents;
   } finally {
     clearTimeout(timeout);
   }
@@ -277,29 +320,26 @@ function deduplicateFacilities(facilities: readonly MedicalFacility[]): readonly
 export async function fetchNearbyMedicalFacilities(
   params: FetchNearbyMedicalFacilitiesParams,
 ): Promise<NearbyMedicalFacilitiesResponse> {
-  const clientId = getNaverSearchClientId();
-  const clientSecret = getNaverSearchClientSecret();
-  if (clientId.length === 0 || clientSecret.length === 0) {
+  const restApiKey = getKakaoRestApiKey();
+  if (restApiKey.length === 0) {
     return {
       source: "mock",
       facilities: createMockFacilities(params),
     };
   }
 
-  const keywords = resolveSearchKeywords(params.category, params.keyword);
+  const requests = resolveSearchRequests(params.category, params.keyword);
 
   try {
     const results = await Promise.all(
-      keywords.map(async (keyword, index) => {
-        const items = await fetchNaverLocalItems(keyword, params);
-        const fallbackCategory =
-          params.category === "all" ? (index === 0 ? "pharmacy" : "emergency") : params.category;
-        return items.map((item, itemIndex) =>
+      requests.map(async (request, index) => {
+        const documents = await fetchKakaoLocalDocuments(request, params);
+        return documents.map((document, documentIndex) =>
           toMedicalFacility(
-            item,
-            index * NAVER_DEFAULT_DISPLAY + itemIndex,
+            document,
+            index * KAKAO_DEFAULT_SIZE + documentIndex,
             params,
-            fallbackCategory,
+            request.fallbackCategory,
           ),
         );
       }),
@@ -314,7 +354,7 @@ export async function fetchNearbyMedicalFacilities(
     }
 
     return {
-      source: "naver",
+      source: "kakao",
       facilities,
     };
   } catch {
