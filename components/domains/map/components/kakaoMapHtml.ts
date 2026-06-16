@@ -2,7 +2,7 @@ interface KakaoMapMarkerInput {
   readonly id: string;
   readonly latitude: number;
   readonly longitude: number;
-  readonly caption: string;
+  readonly category: "pharmacy" | "emergency";
 }
 
 interface BuildKakaoMapHtmlParams {
@@ -10,9 +10,14 @@ interface BuildKakaoMapHtmlParams {
   readonly latitude: number;
   readonly longitude: number;
   readonly level: number;
-  readonly currentMarkerCaption: string;
   readonly facilities: readonly KakaoMapMarkerInput[];
 }
+
+export const MAP_MARKER_COLORS = {
+  current: "#2B7FFF",
+  pharmacy: "#00A63E",
+  emergency: "#DC2626",
+} as const;
 
 function escapeHtml(value: string): string {
   return value
@@ -32,12 +37,11 @@ export function buildKakaoMapHtml({
   latitude,
   longitude,
   level,
-  currentMarkerCaption,
   facilities,
 }: BuildKakaoMapHtmlParams): string {
   const safeMapJsKey = escapeHtml(mapJsKey);
-  const safeCurrentCaption = escapeHtml(currentMarkerCaption);
   const serializedFacilities = serializeMarkers(facilities);
+  const markerColorsJson = JSON.stringify(MAP_MARKER_COLORS);
 
   return `<!DOCTYPE html>
 <html>
@@ -53,27 +57,6 @@ export function buildKakaoMapHtml({
         overflow: hidden;
         background: #f5f5f5;
       }
-      .marker-label {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 22px;
-        height: 22px;
-        padding: 0 6px;
-        border-radius: 11px;
-        background: #ffffff;
-        border: 1px solid rgba(0, 0, 0, 0.12);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-        font-size: 12px;
-        font-weight: 700;
-        color: #111111;
-        white-space: nowrap;
-      }
-      .marker-label.current {
-        background: #2f9e44;
-        border-color: #2f9e44;
-        color: #ffffff;
-      }
     </style>
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${safeMapJsKey}&autoload=false"></script>
   </head>
@@ -82,11 +65,15 @@ export function buildKakaoMapHtml({
     <script>
       const INITIAL_CENTER = { lat: ${latitude}, lng: ${longitude} };
       const INITIAL_LEVEL = ${level};
-      const CURRENT_MARKER_CAPTION = "${safeCurrentCaption}";
       const FACILITY_MARKERS = ${serializedFacilities};
+      const MARKER_COLORS = ${markerColorsJson};
+      const MARKER_SIZE = { width: 24, height: 35 };
+      const MARKER_ANCHOR = { x: 12, y: 35 };
 
       let map = null;
+      let currentMarker = null;
       const markerRegistry = new Map();
+      const markerImageRegistry = new Map();
 
       function postMessage(payload) {
         if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
@@ -94,31 +81,48 @@ export function buildKakaoMapHtml({
         }
       }
 
-      function createMarkerContent(caption, isCurrent) {
-        const element = document.createElement("div");
-        element.className = isCurrent ? "marker-label current" : "marker-label";
-        element.textContent = caption;
-        return element;
+      function createMarkerImage(color) {
+        const svg = [
+          '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="35" viewBox="0 0 24 35">',
+          '<path d="M12 0C5.373 0 0 5.373 0 12c0 8.25 12 23 12 23s12-14.75 12-23C24 5.373 18.627 0 12 0z" fill="' + color + '"/>',
+          '<circle cx="12" cy="12" r="4.5" fill="#ffffff"/>',
+          "</svg>",
+        ].join("");
+        const src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+        return new kakao.maps.MarkerImage(
+          src,
+          new kakao.maps.Size(MARKER_SIZE.width, MARKER_SIZE.height),
+          { offset: new kakao.maps.Point(MARKER_ANCHOR.x, MARKER_ANCHOR.y) },
+        );
+      }
+
+      function getMarkerImage(type) {
+        if (!markerImageRegistry.has(type)) {
+          markerImageRegistry.set(type, createMarkerImage(MARKER_COLORS[type]));
+        }
+        return markerImageRegistry.get(type);
+      }
+
+      function createColoredMarker(position, type) {
+        return new kakao.maps.Marker({
+          position,
+          map,
+          image: getMarkerImage(type),
+        });
       }
 
       function addMarker(marker) {
         const position = new kakao.maps.LatLng(marker.latitude, marker.longitude);
-        const content = createMarkerContent(marker.caption, false);
-        content.style.cursor = "pointer";
-        content.addEventListener("click", () => {
+        const markerType = marker.category === "pharmacy" ? "pharmacy" : "emergency";
+        const kakaoMarker = createColoredMarker(position, markerType);
+        kakao.maps.event.addListener(kakaoMarker, "click", () => {
           postMessage({ type: "selectFacility", facilityId: marker.id });
         });
-        const overlay = new kakao.maps.CustomOverlay({
-          position,
-          content,
-          yAnchor: 1.2,
-        });
-        overlay.setMap(map);
-        markerRegistry.set(marker.id, overlay);
+        markerRegistry.set(marker.id, kakaoMarker);
       }
 
       function clearFacilityMarkers() {
-        markerRegistry.forEach((overlay) => overlay.setMap(null));
+        markerRegistry.forEach((marker) => marker.setMap(null));
         markerRegistry.clear();
       }
 
@@ -131,12 +135,14 @@ export function buildKakaoMapHtml({
 
       function renderCurrentMarker() {
         const position = new kakao.maps.LatLng(INITIAL_CENTER.lat, INITIAL_CENTER.lng);
-        const overlay = new kakao.maps.CustomOverlay({
-          position,
-          content: createMarkerContent(CURRENT_MARKER_CAPTION, true),
-          yAnchor: 1.2,
-        });
-        overlay.setMap(map);
+        currentMarker = createColoredMarker(position, "current");
+      }
+
+      function updateCurrentMarkerPosition(latitude, longitude) {
+        if (!currentMarker) {
+          return;
+        }
+        currentMarker.setPosition(new kakao.maps.LatLng(latitude, longitude));
       }
 
       function initializeMap() {
@@ -159,6 +165,7 @@ export function buildKakaoMapHtml({
         if (command.type === "setCamera") {
           const nextPosition = new kakao.maps.LatLng(command.latitude, command.longitude);
           map.setCenter(nextPosition);
+          updateCurrentMarkerPosition(command.latitude, command.longitude);
           if (typeof command.level === "number") {
             map.setLevel(command.level);
           }

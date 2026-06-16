@@ -11,7 +11,6 @@ interface MockBaseKakaoMapProps {
     readonly id: string;
     readonly latitude: number;
     readonly longitude: number;
-    readonly caption: string;
     readonly category: "pharmacy" | "emergency";
   }[];
   readonly onSelectFacility: (facilityId: string | null) => void;
@@ -99,6 +98,7 @@ const BASE_VIEW_MODEL: MapViewModel = {
     latitudeDelta: 0.01,
     longitudeDelta: 0.01,
   },
+  isUsingDevFallbackLocation: false,
   category: "all",
   searchKeyword: "",
   selectedFacilityId: "facility-1",
@@ -106,6 +106,7 @@ const BASE_VIEW_MODEL: MapViewModel = {
   setCategory: jest.fn(),
   setSearchKeyword: jest.fn(),
   setSelectedFacilityId: jest.fn(),
+  retryLocation: jest.fn(),
   refetchFacilities: jest.fn(async () => {}),
 };
 
@@ -137,6 +138,7 @@ describe("MapScreen", () => {
     render(<MapScreen />);
 
     expect(screen.getByText("위치 확인 실패")).toBeTruthy();
+    expect(screen.getByText("위치 다시 시도")).toBeTruthy();
   });
 
   it("정상 상태에서 목록을 렌더링하고 검색/카테고리/액션을 처리한다", async () => {
@@ -155,7 +157,6 @@ describe("MapScreen", () => {
     expect(mapProps.facilities[0]).toEqual(
       expect.objectContaining({
         id: "facility-1",
-        caption: "약",
         category: "pharmacy",
       }),
     );

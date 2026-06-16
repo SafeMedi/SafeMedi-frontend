@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react-native";
 import { Text } from "react-native";
 import { BaseKakaoMap } from "../components/BaseKakaoMap";
+import { MAP_MARKER_COLORS } from "../components/kakaoMapHtml";
 
 interface MockWebViewProps {
   readonly source?: { readonly html?: string };
@@ -41,14 +42,12 @@ describe("BaseKakaoMap", () => {
         id: "f-1",
         latitude: 37.5672,
         longitude: 126.9775,
-        caption: "약",
         category: "pharmacy" as const,
       },
       {
         id: "f-2",
         latitude: 37.5681,
         longitude: 126.9792,
-        caption: "응",
         category: "emergency" as const,
       },
     ];
@@ -67,7 +66,11 @@ describe("BaseKakaoMap", () => {
     const html = mockWebView.mock.calls[0][0].source?.html ?? "";
     expect(html).toContain("test-map-js-key");
     expect(html).toContain('"id":"f-1"');
-    expect(html).toContain('"caption":"약"');
+    expect(html).toContain('"category":"pharmacy"');
+    expect(html).toContain(MAP_MARKER_COLORS.current);
+    expect(html).toContain(MAP_MARKER_COLORS.pharmacy);
+    expect(html).toContain(MAP_MARKER_COLORS.emergency);
+    expect(html).toContain("kakao.maps.MarkerImage");
     expect(html).toContain("selectFacility");
   });
 

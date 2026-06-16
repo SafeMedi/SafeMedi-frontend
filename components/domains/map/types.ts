@@ -14,7 +14,6 @@ export interface MapFacilityMarker {
   readonly id: string;
   readonly latitude: number;
   readonly longitude: number;
-  readonly caption: string;
   readonly category: Exclude<MedicalFacilityCategory, "all">;
 }
 

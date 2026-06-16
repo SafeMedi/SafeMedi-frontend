@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import {
   ActivityIndicator,
   Linking,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -37,7 +38,6 @@ export function MapScreen() {
     id: facility.id,
     latitude: facility.latitude,
     longitude: facility.longitude,
-    caption: facility.category === "pharmacy" ? "약" : "응",
     category: facility.category,
   }));
 
@@ -68,6 +68,9 @@ export function MapScreen() {
           {viewModel.locationError ??
             "현재 위치를 확인할 수 없어 주변 의료기관을 표시할 수 없습니다."}
         </Text>
+        <Pressable onPress={viewModel.retryLocation} style={styles.retryButton}>
+          <Text style={styles.retryButtonText}>위치 다시 시도</Text>
+        </Pressable>
       </View>
     );
   }
@@ -76,6 +79,11 @@ export function MapScreen() {
     <SafeAreaView style={styles.screen} edges={["top"]}>
       <View style={styles.topSection}>
         <Text style={styles.title}>주변 의료기관</Text>
+        {viewModel.isUsingDevFallbackLocation ? (
+          <Text style={styles.devFallbackText}>
+            실제 GPS를 받지 못해 개발용 기본 위치를 사용 중입니다.
+          </Text>
+        ) : null}
         <View style={styles.searchWrapper}>
           <Ionicons name="search" size={18} color={palette.input_placeholder} />
           <TextInput
@@ -148,6 +156,15 @@ const styles = StyleSheet.create({
   },
   loadingText: { marginTop: 8, color: palette.icon },
   errorText: { color: palette.red_strong, fontSize: 14, textAlign: "center" },
+  retryButton: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: palette.green,
+  },
+  retryButtonText: { color: palette.white, fontSize: 14, fontWeight: "600" },
+  devFallbackText: { fontSize: 12, color: palette.icon, lineHeight: 18 },
   topSection: {
     backgroundColor: "transparent",
     borderBottomWidth: 1,

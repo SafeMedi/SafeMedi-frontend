@@ -4,8 +4,6 @@ import { WebView } from "react-native-webview";
 import type { MapCoordinate, MapFacilityMarker, MapRegion } from "../types";
 import { buildKakaoMapHtml, regionToKakaoMapLevel } from "./kakaoMapHtml";
 
-const CURRENT_MARKER_CAPTION = "현";
-
 function getKakaoMapJsKey(): string {
   return process.env.EXPO_PUBLIC_KAKAO_MAP_JS_KEY ?? "";
 }
@@ -28,7 +26,7 @@ function serializeMarkers(markers: readonly MapFacilityMarker[]): string {
       id: marker.id,
       latitude: marker.latitude,
       longitude: marker.longitude,
-      caption: marker.caption,
+      category: marker.category,
     })),
   );
 }
@@ -51,7 +49,6 @@ export function BaseKakaoMap({
         latitude: initialRegion.latitude,
         longitude: initialRegion.longitude,
         level: mapLevel,
-        currentMarkerCaption: CURRENT_MARKER_CAPTION,
         facilities,
       }),
     [facilities, initialRegion.latitude, initialRegion.longitude, mapJsKey, mapLevel],
