@@ -11,6 +11,8 @@ interface BuildKakaoMapHtmlParams {
   readonly longitude: number;
   readonly level: number;
   readonly facilities: readonly KakaoMapMarkerInput[];
+  readonly mapWidth?: number;
+  readonly mapHeight?: number;
 }
 
 export const MAP_MARKER_COLORS = {
@@ -32,16 +34,26 @@ function serializeMarkers(markers: readonly KakaoMapMarkerInput[]): string {
   return JSON.stringify(markers);
 }
 
+function resolveMapSizeCss(width?: number, height?: number): string {
+  if (typeof width === "number" && width > 0 && typeof height === "number" && height > 0) {
+    return `width: ${Math.round(width)}px; height: ${Math.round(height)}px;`;
+  }
+  return "width: 100%; height: 100%;";
+}
+
 export function buildKakaoMapHtml({
   mapJsKey,
   latitude,
   longitude,
   level,
   facilities,
+  mapWidth,
+  mapHeight,
 }: BuildKakaoMapHtmlParams): string {
   const safeMapJsKey = escapeHtml(mapJsKey);
   const serializedFacilities = serializeMarkers(facilities);
   const markerColorsJson = JSON.stringify(MAP_MARKER_COLORS);
+  const mapSizeCss = resolveMapSizeCss(mapWidth, mapHeight);
 
   return `<!DOCTYPE html>
 <html>
@@ -49,16 +61,21 @@ export function buildKakaoMapHtml({
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <style>
-      html, body, #map {
+      html, body {
         margin: 0;
         padding: 0;
-        width: 100%;
-        height: 100%;
         overflow: hidden;
         background: #f5f5f5;
+        ${mapSizeCss}
+      }
+      #map {
+        ${mapSizeCss}
       }
     </style>
-    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${safeMapJsKey}&autoload=false"></script>
+    <script
+      src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${safeMapJsKey}&autoload=false"
+      onerror="window.__kakaoSdkScriptError = true;"
+    ></script>
   </head>
   <body>
     <div id="map"></div>
@@ -79,6 +96,47 @@ export function buildKakaoMapHtml({
         if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
           window.ReactNativeWebView.postMessage(JSON.stringify(payload));
         }
+      }
+
+      function getMapContainerMetrics() {
+        const container = document.getElementById("map");
+        if (!container) {
+          return { width: 0, height: 0, childCount: 0 };
+        }
+        return {
+          width: container.clientWidth,
+          height: container.clientHeight,
+          childCount: container.childElementCount,
+        };
+      }
+
+      function postDebug(message, extra) {
+        postMessage({
+          type: "debug",
+          message,
+          origin: window.location.origin,
+          href: window.location.href,
+          metrics: getMapContainerMetrics(),
+          ...extra,
+        });
+      }
+
+      function applyMapSize(width, height) {
+        const container = document.getElementById("map");
+        if (!container || typeof width !== "number" || typeof height !== "number") {
+          return;
+        }
+        if (width <= 0 || height <= 0) {
+          return;
+        }
+        const nextWidth = Math.round(width) + "px";
+        const nextHeight = Math.round(height) + "px";
+        document.documentElement.style.width = nextWidth;
+        document.documentElement.style.height = nextHeight;
+        document.body.style.width = nextWidth;
+        document.body.style.height = nextHeight;
+        container.style.width = nextWidth;
+        container.style.height = nextHeight;
       }
 
       function createMarkerImage(color) {
@@ -145,8 +203,38 @@ export function buildKakaoMapHtml({
         currentMarker.setPosition(new kakao.maps.LatLng(latitude, longitude));
       }
 
+      function relayoutMap() {
+        if (!map) {
+          return;
+        }
+        map.relayout();
+        map.setCenter(new kakao.maps.LatLng(INITIAL_CENTER.lat, INITIAL_CENTER.lng));
+      }
+
+      function scheduleRelayout() {
+        [0, 100, 300, 800].forEach((delayMs) => {
+          window.setTimeout(() => {
+            relayoutMap();
+            if (delayMs === 800) {
+              const metrics = getMapContainerMetrics();
+              if (metrics.childCount === 0) {
+                postMessage({ type: "error", message: "map_tiles_missing", metrics });
+              } else {
+                postDebug("map_tiles_rendered", { metrics });
+              }
+            }
+          }, delayMs);
+        });
+      }
+
       function initializeMap() {
         const container = document.getElementById("map");
+        const metrics = getMapContainerMetrics();
+        if (!container || metrics.width <= 0 || metrics.height <= 0) {
+          postMessage({ type: "error", message: "map_container_zero_size", metrics });
+          return;
+        }
+
         map = new kakao.maps.Map(container, {
           center: new kakao.maps.LatLng(INITIAL_CENTER.lat, INITIAL_CENTER.lng),
           level: INITIAL_LEVEL,
@@ -154,11 +242,31 @@ export function buildKakaoMapHtml({
 
         renderCurrentMarker();
         renderFacilityMarkers(FACILITY_MARKERS);
+        scheduleRelayout();
+        postDebug("map_initialized", { metrics });
         postMessage({ type: "ready" });
       }
 
       function handleCommand(command) {
-        if (!map || !command || !command.type) {
+        if (!command || !command.type) {
+          return;
+        }
+
+        if (command.type === "setSize") {
+          applyMapSize(command.width, command.height);
+          relayoutMap();
+          return;
+        }
+
+        if (command.type === "relayout") {
+          if (!map) {
+            return;
+          }
+          relayoutMap();
+          return;
+        }
+
+        if (!map) {
           return;
         }
 
@@ -174,8 +282,14 @@ export function buildKakaoMapHtml({
 
         if (command.type === "setMarkers") {
           renderFacilityMarkers(command.markers ?? []);
+          postMessage({
+            type: "markersApplied",
+            count: (command.markers ?? []).length,
+          });
         }
       }
+
+      window.handleMapCommand = handleCommand;
 
       window.addEventListener("message", (event) => {
         try {
@@ -195,7 +309,34 @@ export function buildKakaoMapHtml({
         }
       });
 
-      kakao.maps.load(initializeMap);
+      function bootMap() {
+        if (window.__kakaoSdkScriptError) {
+          postMessage({ type: "error", message: "kakao_sdk_script_error" });
+          return;
+        }
+        if (typeof kakao === "undefined" || !kakao.maps) {
+          postMessage({ type: "error", message: "kakao_sdk_unavailable" });
+          return;
+        }
+        kakao.maps.load(initializeMap);
+      }
+
+      window.setTimeout(() => {
+        if (!map) {
+          postMessage({
+            type: "error",
+            message: "map_init_timeout",
+            origin: window.location.origin,
+            href: window.location.href,
+            metrics: getMapContainerMetrics(),
+          });
+        }
+      }, 4000);
+
+      bootMap();
+      window.addEventListener("resize", () => {
+        relayoutMap();
+      });
     </script>
   </body>
 </html>`;

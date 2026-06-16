@@ -1,8 +1,20 @@
-import { useEffect, useMemo, useRef } from "react";
-import { StyleSheet } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type LayoutChangeEvent, Platform, StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
 import type { MapCoordinate, MapFacilityMarker, MapRegion } from "../types";
 import { buildKakaoMapHtml, regionToKakaoMapLevel } from "./kakaoMapHtml";
+
+const MAP_WEBVIEW_BASE_URL = Platform.OS === "ios" ? "http://127.0.0.1" : "http://localhost";
+
+const RELAYOUT_INJECT_SCRIPT = `
+  (function () {
+    if (typeof map !== "undefined" && map && typeof map.relayout === "function") {
+      map.relayout();
+    }
+  })();
+  true;
+`;
 
 function getKakaoMapJsKey(): string {
   return process.env.EXPO_PUBLIC_KAKAO_MAP_JS_KEY ?? "";
@@ -18,17 +30,50 @@ export interface BaseKakaoMapProps {
 interface KakaoMapWebMessage {
   readonly type: string;
   readonly facilityId?: string;
+  readonly message?: string;
+  readonly count?: number;
+  readonly origin?: string;
+  readonly href?: string;
+  readonly metrics?: {
+    readonly width: number;
+    readonly height: number;
+    readonly childCount: number;
+  };
 }
 
-function serializeMarkers(markers: readonly MapFacilityMarker[]): string {
-  return JSON.stringify(
-    markers.map((marker) => ({
-      id: marker.id,
-      latitude: marker.latitude,
-      longitude: marker.longitude,
-      category: marker.category,
-    })),
-  );
+interface MapWebViewCommand {
+  readonly type: string;
+  readonly latitude?: number;
+  readonly longitude?: number;
+  readonly level?: number;
+  readonly width?: number;
+  readonly height?: number;
+  readonly markers?: readonly MapFacilityMarker[];
+}
+
+interface MapLayout {
+  readonly width: number;
+  readonly height: number;
+}
+
+interface MapCameraState {
+  readonly latitude: number;
+  readonly longitude: number;
+  readonly level: number;
+}
+
+function serializeMarkers(markers: readonly MapFacilityMarker[]): readonly MapFacilityMarker[] {
+  return markers.map((marker) => ({
+    id: marker.id,
+    latitude: marker.latitude,
+    longitude: marker.longitude,
+    category: marker.category,
+  }));
+}
+
+function buildInjectMapCommandScript(command: MapWebViewCommand): string {
+  const serializedCommand = JSON.stringify(command);
+  return `(function(){if(window.handleMapCommand){window.handleMapCommand(${serializedCommand});}})();true;`;
 }
 
 export function BaseKakaoMap({
@@ -38,9 +83,19 @@ export function BaseKakaoMap({
   onSelectFacility,
 }: BaseKakaoMapProps) {
   const webViewRef = useRef<WebView>(null);
+  const isMapReadyRef = useRef(false);
+  const latestMarkersRef = useRef<readonly MapFacilityMarker[]>([]);
+  const latestCameraRef = useRef<MapCameraState>({
+    latitude: currentCoordinate.latitude,
+    longitude: currentCoordinate.longitude,
+    level: regionToKakaoMapLevel(initialRegion.latitudeDelta),
+  });
+  const latestLayoutRef = useRef<MapLayout>({ width: 0, height: 0 });
+  const [mapLayout, setMapLayout] = useState<MapLayout>({ width: 0, height: 0 });
   const mapJsKey = getKakaoMapJsKey();
   const mapLevel = regionToKakaoMapLevel(initialRegion.latitudeDelta);
   const serializedFacilities = useMemo(() => serializeMarkers(facilities), [facilities]);
+  const hasMapLayout = mapLayout.width > 0 && mapLayout.height > 0;
 
   const html = useMemo(
     () =>
@@ -49,32 +104,114 @@ export function BaseKakaoMap({
         latitude: initialRegion.latitude,
         longitude: initialRegion.longitude,
         level: mapLevel,
-        facilities,
+        facilities: [],
+        mapWidth: hasMapLayout ? mapLayout.width : undefined,
+        mapHeight: hasMapLayout ? mapLayout.height : undefined,
       }),
-    [facilities, initialRegion.latitude, initialRegion.longitude, mapJsKey, mapLevel],
+    [
+      hasMapLayout,
+      initialRegion.latitude,
+      initialRegion.longitude,
+      mapJsKey,
+      mapLayout.height,
+      mapLayout.width,
+      mapLevel,
+    ],
   );
 
-  useEffect(() => {
-    const command = {
+  const dispatchCommand = useCallback((command: MapWebViewCommand) => {
+    webViewRef.current?.postMessage(JSON.stringify(command));
+    if (Platform.OS === "ios") {
+      webViewRef.current?.injectJavaScript(buildInjectMapCommandScript(command));
+    }
+  }, []);
+
+  const syncMapState = useCallback(() => {
+    if (!isMapReadyRef.current) {
+      return;
+    }
+
+    const layout = latestLayoutRef.current;
+    if (layout.width > 0 && layout.height > 0) {
+      dispatchCommand({
+        type: "setSize",
+        width: layout.width,
+        height: layout.height,
+      });
+    }
+
+    const camera = latestCameraRef.current;
+    dispatchCommand({
       type: "setCamera",
+      latitude: camera.latitude,
+      longitude: camera.longitude,
+      level: camera.level,
+    });
+
+    dispatchCommand({
+      type: "setMarkers",
+      markers: latestMarkersRef.current,
+    });
+
+    webViewRef.current?.injectJavaScript(RELAYOUT_INJECT_SCRIPT);
+  }, [dispatchCommand]);
+
+  const requestRelayout = useCallback(() => {
+    dispatchCommand({ type: "relayout" });
+    webViewRef.current?.injectJavaScript(RELAYOUT_INJECT_SCRIPT);
+  }, [dispatchCommand]);
+
+  const handleLayout = useCallback((event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    latestLayoutRef.current = { width, height };
+    setMapLayout((previousLayout) => {
+      if (previousLayout.width === width && previousLayout.height === height) {
+        return previousLayout;
+      }
+      return { width, height };
+    });
+  }, []);
+
+  useEffect(() => {
+    latestMarkersRef.current = serializedFacilities;
+    syncMapState();
+  }, [serializedFacilities, syncMapState]);
+
+  useEffect(() => {
+    latestCameraRef.current = {
       latitude: currentCoordinate.latitude,
       longitude: currentCoordinate.longitude,
       level: mapLevel,
     };
-    webViewRef.current?.postMessage(JSON.stringify(command));
-  }, [currentCoordinate.latitude, currentCoordinate.longitude, mapLevel]);
+    syncMapState();
+  }, [currentCoordinate.latitude, currentCoordinate.longitude, mapLevel, syncMapState]);
 
   useEffect(() => {
-    const command = {
-      type: "setMarkers",
-      markers: JSON.parse(serializedFacilities) as readonly MapFacilityMarker[],
-    };
-    webViewRef.current?.postMessage(JSON.stringify(command));
-  }, [serializedFacilities]);
+    if (!hasMapLayout) {
+      return;
+    }
+    latestLayoutRef.current = mapLayout;
+    syncMapState();
+  }, [hasMapLayout, mapLayout, syncMapState]);
+
+  useFocusEffect(
+    useCallback(() => {
+      syncMapState();
+      requestRelayout();
+    }, [requestRelayout, syncMapState]),
+  );
 
   const handleMessage = (rawMessage: string) => {
     try {
       const message = JSON.parse(rawMessage) as KakaoMapWebMessage;
+      if (__DEV__ && (message.type === "debug" || message.type === "error")) {
+        console.warn("[BaseKakaoMap]", message);
+      }
+      if (message.type === "ready") {
+        isMapReadyRef.current = true;
+        syncMapState();
+        return;
+      }
       if (message.type === "selectFacility" && message.facilityId) {
         onSelectFacility(message.facilityId);
       }
@@ -88,21 +225,46 @@ export function BaseKakaoMap({
   }
 
   return (
-    <WebView
-      ref={webViewRef}
-      originWhitelist={["*"]}
-      source={{ html, baseUrl: "http://localhost" }}
-      style={styles.map}
-      javaScriptEnabled
-      domStorageEnabled
-      scrollEnabled={false}
-      onMessage={(event) => handleMessage(event.nativeEvent.data)}
-    />
+    <View
+      testID="kakao-map-container"
+      style={styles.container}
+      onLayout={handleLayout}
+      collapsable={false}
+    >
+      {hasMapLayout ? (
+        <WebView
+          ref={webViewRef}
+          originWhitelist={["*"]}
+          source={{ html, baseUrl: MAP_WEBVIEW_BASE_URL }}
+          style={styles.map}
+          javaScriptEnabled
+          domStorageEnabled
+          scrollEnabled={false}
+          bounces={false}
+          overScrollMode="never"
+          allowsInlineMediaPlayback
+          mediaPlaybackRequiresUserAction={false}
+          contentInsetAdjustmentBehavior="never"
+          mixedContentMode="always"
+          sharedCookiesEnabled
+          thirdPartyCookiesEnabled
+          onLoadStart={() => {
+            isMapReadyRef.current = false;
+          }}
+          onLoadEnd={syncMapState}
+          onMessage={(event) => handleMessage(event.nativeEvent.data)}
+        />
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   map: {
     flex: 1,
+    backgroundColor: "#f5f5f5",
   },
 });

@@ -108,7 +108,7 @@ export function MapScreen() {
         </View>
       </View>
 
-      <View style={styles.mapSection}>
+      <View style={styles.mapSection} collapsable={false}>
         <BaseKakaoMap
           initialRegion={viewModel.initialRegion}
           currentCoordinate={viewModel.currentCoordinate}

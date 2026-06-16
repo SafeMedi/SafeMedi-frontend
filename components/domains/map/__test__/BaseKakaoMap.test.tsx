@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react-native";
+import { fireEvent, render } from "@testing-library/react-native";
 import { Text } from "react-native";
 import { BaseKakaoMap } from "../components/BaseKakaoMap";
 import { MAP_MARKER_COLORS } from "../components/kakaoMapHtml";
@@ -12,6 +12,12 @@ const mockWebView = jest.fn((_props: MockWebViewProps) => <Text>webview-map</Tex
 
 jest.mock("react-native-webview", () => ({
   WebView: (props: MockWebViewProps) => mockWebView(props),
+}));
+
+jest.mock("@react-navigation/native", () => ({
+  useFocusEffect: (callback: () => void | (() => void)) => {
+    callback();
+  },
 }));
 
 describe("BaseKakaoMap", () => {
@@ -53,7 +59,7 @@ describe("BaseKakaoMap", () => {
     ];
     const onSelectFacility = jest.fn();
 
-    render(
+    const { getByTestId } = render(
       <BaseKakaoMap
         initialRegion={initialRegion}
         currentCoordinate={currentCoordinate}
@@ -62,11 +68,15 @@ describe("BaseKakaoMap", () => {
       />,
     );
 
+    fireEvent(getByTestId("kakao-map-container"), "layout", {
+      nativeEvent: { layout: { width: 320, height: 210, x: 0, y: 0 } },
+    });
+
     expect(mockWebView).toHaveBeenCalledTimes(1);
     const html = mockWebView.mock.calls[0][0].source?.html ?? "";
     expect(html).toContain("test-map-js-key");
-    expect(html).toContain('"id":"f-1"');
-    expect(html).toContain('"category":"pharmacy"');
+    expect(html).toContain("map_container_zero_size");
+    expect(html).toContain("handleMapCommand");
     expect(html).toContain(MAP_MARKER_COLORS.current);
     expect(html).toContain(MAP_MARKER_COLORS.pharmacy);
     expect(html).toContain(MAP_MARKER_COLORS.emergency);

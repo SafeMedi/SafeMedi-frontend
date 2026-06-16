@@ -58,11 +58,15 @@ describe("app.config", () => {
       } as ExpoConfig),
     );
 
+    expect(result.plugins?.[0]).toBe("./plugins/withIosKakaoAppDelegateFix.js");
     expect(result.plugins).toEqual(
       expect.arrayContaining([
         "expo-font",
         "expo-build-properties",
-        ["@react-native-seoul/kakao-login", { kakaoAppKey: "test-kakao-app-key" }],
+        [
+          "@react-native-seoul/kakao-login",
+          { kakaoAppKey: "test-kakao-app-key", kotlinVersion: "2.1.20" },
+        ],
         [
           "expo-location",
           {
@@ -78,6 +82,14 @@ describe("app.config", () => {
     expect(result.ios?.infoPlist).toEqual(
       expect.objectContaining({
         ExistingFlag: "keep",
+        NSAppTransportSecurity: {
+          NSAllowsArbitraryLoads: true,
+          NSAllowsLocalNetworking: true,
+          NSAllowsArbitraryLoadsInWebContent: true,
+          NSExceptionDomains: expect.objectContaining({
+            "t1.daumcdn.net": expect.any(Object),
+          }),
+        },
         NSLocationWhenInUseUsageDescription:
           "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
       }),
