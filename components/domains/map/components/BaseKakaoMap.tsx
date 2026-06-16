@@ -94,7 +94,7 @@ export function BaseKakaoMap({
     <WebView
       ref={webViewRef}
       originWhitelist={["*"]}
-      source={{ html }}
+      source={{ html, baseUrl: "http://localhost" }}
       style={styles.map}
       javaScriptEnabled
       domStorageEnabled
