@@ -46,6 +46,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         KAKAO_LOGIN_PLUGIN_NAME,
         {
           kakaoAppKey: KAKAO_NATIVE_APP_KEY,
+          kotlinVersion: "2.1.20",
         },
       ],
       [
