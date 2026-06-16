@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { useEffect } from "react";
 import { Linking, Pressable, Text } from "react-native";
 import { MapScreen } from "../MapScreen";
 import type { MedicalFacility } from "../types";
@@ -14,6 +15,8 @@ interface MockBaseKakaoMapProps {
     readonly category: "pharmacy" | "emergency";
   }[];
   readonly onSelectFacility: (facilityId: string | null) => void;
+  readonly onMapReady?: () => void;
+  readonly onMapError?: (errorCode: string) => void;
 }
 
 interface MockMedicalFacilityCardProps {
@@ -22,7 +25,17 @@ interface MockMedicalFacilityCardProps {
   readonly onPressDirections: (facility: MedicalFacility) => Promise<void>;
 }
 
-const mockBaseKakaoMap = jest.fn((_props: MockBaseKakaoMapProps) => <Text>map</Text>);
+function MockBaseKakaoMapComponent(props: MockBaseKakaoMapProps) {
+  useEffect(() => {
+    props.onMapReady?.();
+  }, [props.onMapReady]);
+
+  return <Text>map</Text>;
+}
+
+const mockBaseKakaoMap = jest.fn((props: MockBaseKakaoMapProps) => {
+  return <MockBaseKakaoMapComponent {...props} />;
+});
 const mockMedicalFacilityCard = jest.fn((props: MockMedicalFacilityCardProps) => {
   return (
     <>
@@ -114,6 +127,9 @@ describe("MapScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseMapViewModel.mockReturnValue(BASE_VIEW_MODEL);
+    mockBaseKakaoMap.mockImplementation((props: MockBaseKakaoMapProps) => {
+      return <MockBaseKakaoMapComponent {...props} />;
+    });
   });
 
   it("위치 로딩 중 상태를 렌더링한다", () => {
@@ -141,10 +157,46 @@ describe("MapScreen", () => {
     expect(screen.getByText("위치 다시 시도")).toBeTruthy();
   });
 
+  it("지도 로딩 중에는 본문을 표시하지 않는다", () => {
+    mockBaseKakaoMap.mockImplementation(() => {
+      return <Text>map</Text>;
+    });
+    mockUseMapViewModel.mockReturnValue({
+      ...BASE_VIEW_MODEL,
+      isLoadingFacilities: true,
+      facilities: [],
+    });
+
+    render(<MapScreen />);
+
+    expect(screen.getByText("주변 의료기관 지도를 불러오는 중이에요.")).toBeTruthy();
+    expect(screen.queryByText("주변 의료기관")).toBeNull();
+    expect(screen.queryByText("0개 의료기관")).toBeNull();
+  });
+
+  it("지도 로딩에 실패하면 에러 메시지를 렌더링한다", () => {
+    mockBaseKakaoMap.mockImplementation((_props: MockBaseKakaoMapProps) => {
+      return <Text>map</Text>;
+    });
+
+    render(<MapScreen />);
+
+    const mapProps = mockBaseKakaoMap.mock.calls[0][0] as MockBaseKakaoMapProps;
+    act(() => {
+      mapProps.onMapError?.("map_init_timeout");
+    });
+
+    expect(screen.getByText("지도 로딩 시간이 초과되었습니다.")).toBeTruthy();
+    expect(screen.getByText("지도 다시 시도")).toBeTruthy();
+    expect(screen.queryByText("주변 의료기관")).toBeNull();
+  });
+
   it("정상 상태에서 목록을 렌더링하고 검색/카테고리/액션을 처리한다", async () => {
     render(<MapScreen />);
 
-    expect(screen.getByText("주변 의료기관")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("주변 의료기관")).toBeTruthy();
+    });
     expect(screen.getByText("1개 의료기관")).toBeTruthy();
 
     fireEvent.changeText(screen.getByPlaceholderText("약국, 병원 검색..."), "강남");
@@ -168,13 +220,17 @@ describe("MapScreen", () => {
     expect(mockOpenUrl).toHaveBeenCalledWith("https://place.map.kakao.com/mock");
   });
 
-  it("전화번호가 없으면 전화 링크를 열지 않는다", () => {
+  it("전화번호가 없으면 전화 링크를 열지 않는다", async () => {
     mockUseMapViewModel.mockReturnValue({
       ...BASE_VIEW_MODEL,
       facilities: [{ ...BASE_FACILITY, id: "facility-2", phoneNumber: null }],
     });
 
     render(<MapScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("facility-2-call")).toBeTruthy();
+    });
 
     fireEvent.press(screen.getByText("facility-2-call"));
     expect(mockOpenUrl).not.toHaveBeenCalled();

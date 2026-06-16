@@ -32,6 +32,59 @@ describe("BaseKakaoMap", () => {
     process.env.EXPO_PUBLIC_KAKAO_MAP_JS_KEY = originalMapJsKey;
   });
 
+  it("지도 JS 키가 없으면 onMapError를 호출한다", () => {
+    process.env.EXPO_PUBLIC_KAKAO_MAP_JS_KEY = "";
+    const onMapError = jest.fn();
+
+    render(
+      <BaseKakaoMap
+        initialRegion={{
+          latitude: 37.5665,
+          longitude: 126.978,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }}
+        currentCoordinate={{ latitude: 37.5665, longitude: 126.978 }}
+        facilities={[]}
+        onSelectFacility={jest.fn()}
+        onMapError={onMapError}
+      />,
+    );
+
+    expect(onMapError).toHaveBeenCalledWith("missing_map_key");
+  });
+
+  it("WebView ready 메시지를 onMapReady로 전달한다", () => {
+    const onMapReady = jest.fn();
+    const onSelectFacility = jest.fn();
+
+    const { getByTestId } = render(
+      <BaseKakaoMap
+        initialRegion={{
+          latitude: 37.5665,
+          longitude: 126.978,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }}
+        currentCoordinate={{ latitude: 37.5665, longitude: 126.978 }}
+        facilities={[]}
+        onSelectFacility={onSelectFacility}
+        onMapReady={onMapReady}
+      />,
+    );
+
+    fireEvent(getByTestId("kakao-map-container"), "layout", {
+      nativeEvent: { layout: { width: 320, height: 210, x: 0, y: 0 } },
+    });
+
+    const webViewProps = mockWebView.mock.calls[0][0] as MockWebViewProps;
+    webViewProps.onMessage?.({
+      nativeEvent: { data: JSON.stringify({ type: "ready" }) },
+    });
+
+    expect(onMapReady).toHaveBeenCalledTimes(1);
+  });
+
   it("카카오 지도 WebView를 렌더링하고 마커 정보를 HTML에 포함한다", () => {
     const initialRegion = {
       latitude: 37.5665,

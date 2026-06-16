@@ -25,6 +25,8 @@ export interface BaseKakaoMapProps {
   readonly currentCoordinate: MapCoordinate;
   readonly facilities: readonly MapFacilityMarker[];
   readonly onSelectFacility: (facilityId: string) => void;
+  readonly onMapReady?: () => void;
+  readonly onMapError?: (errorCode: string) => void;
 }
 
 interface KakaoMapWebMessage {
@@ -81,6 +83,8 @@ export function BaseKakaoMap({
   currentCoordinate,
   facilities,
   onSelectFacility,
+  onMapReady,
+  onMapError,
 }: BaseKakaoMapProps) {
   const webViewRef = useRef<WebView>(null);
   const isMapReadyRef = useRef(false);
@@ -210,6 +214,11 @@ export function BaseKakaoMap({
       if (message.type === "ready") {
         isMapReadyRef.current = true;
         syncMapState();
+        onMapReady?.();
+        return;
+      }
+      if (message.type === "error" && message.message) {
+        onMapError?.(message.message);
         return;
       }
       if (message.type === "selectFacility" && message.facilityId) {
@@ -219,6 +228,12 @@ export function BaseKakaoMap({
       // WebView에서 전달된 비정상 메시지는 무시한다.
     }
   };
+
+  useEffect(() => {
+    if (mapJsKey.length === 0) {
+      onMapError?.("missing_map_key");
+    }
+  }, [mapJsKey, onMapError]);
 
   if (mapJsKey.length === 0) {
     return null;
