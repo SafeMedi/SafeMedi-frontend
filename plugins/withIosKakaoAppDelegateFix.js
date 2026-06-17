@@ -7,6 +7,8 @@ const CORRECT_KAKAO_LINKING = `if RNKakaoLogins.isKakaoTalkLoginUrl(url) {
       return RNKakaoLogins.handleOpen(url)
     }`;
 
+const SUPER_OPEN_URL_ANCHOR = "return super.application(app, open: url, options: options)";
+
 function withIosKakaoAppDelegateFix(config) {
   return withAppDelegate(config, (config) => {
     if (config.modResults.language !== "swift") {
@@ -21,11 +23,17 @@ function withIosKakaoAppDelegateFix(config) {
     );
 
     if (!contents.includes("RNKakaoLogins.isKakaoTalkLoginUrl(url)")) {
-      contents = contents.replace(
-        "return super.application(app, open: url, options: options)",
+      const nextContents = contents.replace(
+        SUPER_OPEN_URL_ANCHOR,
         `${CORRECT_KAKAO_LINKING}
-    return super.application(app, open: url, options: options)`,
+        ${SUPER_OPEN_URL_ANCHOR}`,
       );
+      if (nextContents === contents) {
+        throw new Error(
+          "[withIosKakaoAppDelegateFix] Failed to inject Kakao URL handling block into AppDelegate.swift",
+        );
+      }
+      contents = nextContents;
     }
 
     config.modResults.contents = contents;
