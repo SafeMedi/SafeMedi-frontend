@@ -114,6 +114,10 @@ async function watchForPosition(timeoutMs: number): Promise<Location.LocationObj
       },
     )
       .then((nextSubscription) => {
+        if (settled) {
+          nextSubscription?.remove();
+          return;
+        }
         subscription = nextSubscription;
       })
       .catch((error: unknown) => {
