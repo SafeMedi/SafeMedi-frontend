@@ -1,14 +1,14 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
-const NAVER_MAP_PLUGIN_NAME = "@mj-studio/react-native-naver-map";
+const KAKAO_LOGIN_PLUGIN_NAME = "@react-native-seoul/kakao-login";
 const EXPO_BUILD_PROPERTIES_PLUGIN_NAME = "expo-build-properties";
 const EXPO_LOCATION_PLUGIN_NAME = "expo-location";
-const NAVER_MAP_MAVEN_REPOSITORY = "https://repository.map.naver.com/archive/maven";
+const KAKAO_MAVEN_REPOSITORY = "https://devrepo.kakao.com/nexus/content/groups/public/";
 const DEFAULT_APP_NAME = "safeMedi";
 const DEFAULT_APP_SLUG = "safeMedi";
 const LOCATION_USAGE_DESCRIPTION =
   "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.";
-const NAVER_MAP_CLIENT_ID = process.env.EXPO_PUBLIC_NAVER_MAP_CLIENT_ID ?? "";
+const KAKAO_NATIVE_APP_KEY = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY ?? "";
 
 type PluginEntry = NonNullable<ExpoConfig["plugins"]>[number];
 
@@ -20,12 +20,27 @@ function stripManagedPlugins(plugins: readonly PluginEntry[]): PluginEntry[] {
   return plugins.filter((plugin) => {
     const pluginName = getPluginName(plugin);
     return (
-      pluginName !== NAVER_MAP_PLUGIN_NAME &&
+      pluginName !== KAKAO_LOGIN_PLUGIN_NAME &&
       pluginName !== EXPO_BUILD_PROPERTIES_PLUGIN_NAME &&
       pluginName !== EXPO_LOCATION_PLUGIN_NAME
     );
   });
 }
+
+const KAKAO_MAP_ATS_EXCEPTION_DOMAINS = {
+  "t1.daumcdn.net": {
+    NSIncludesSubdomains: true,
+    NSExceptionAllowsInsecureHTTPLoads: true,
+  },
+  "map.daumcdn.net": {
+    NSIncludesSubdomains: true,
+    NSExceptionAllowsInsecureHTTPLoads: true,
+  },
+  "mts.daumcdn.net": {
+    NSIncludesSubdomains: true,
+    NSExceptionAllowsInsecureHTTPLoads: true,
+  },
+} as const;
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const existingPlugins = stripManagedPlugins((config.plugins ?? []) as PluginEntry[]);
@@ -39,8 +54,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ...config.ios,
       infoPlist: {
         ...existingInfoPlist,
-        NMFClientId: existingInfoPlist.NMFClientId ?? NAVER_MAP_CLIENT_ID,
-        NMFNcpKeyId: existingInfoPlist.NMFNcpKeyId ?? NAVER_MAP_CLIENT_ID,
+        NSAppTransportSecurity: {
+          NSAllowsLocalNetworking: true,
+          NSExceptionDomains: KAKAO_MAP_ATS_EXCEPTION_DOMAINS,
+        },
         NSLocationWhenInUseUsageDescription:
           existingInfoPlist.NSLocationWhenInUseUsageDescription ?? LOCATION_USAGE_DESCRIPTION,
         NSLocationAlwaysAndWhenInUseUsageDescription:
@@ -49,18 +66,20 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       },
     },
     plugins: [
+      "./plugins/withIosKakaoAppDelegateFix.js",
       ...existingPlugins,
       [
-        NAVER_MAP_PLUGIN_NAME,
+        KAKAO_LOGIN_PLUGIN_NAME,
         {
-          client_id: NAVER_MAP_CLIENT_ID,
+          kakaoAppKey: KAKAO_NATIVE_APP_KEY,
+          kotlinVersion: "2.1.20",
         },
       ],
       [
         EXPO_BUILD_PROPERTIES_PLUGIN_NAME,
         {
           android: {
-            extraMavenRepos: [NAVER_MAP_MAVEN_REPOSITORY],
+            extraMavenRepos: [KAKAO_MAVEN_REPOSITORY],
           },
         },
       ],

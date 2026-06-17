@@ -1,7 +1,7 @@
 import { fetchNearbyMedicalFacilities } from "../map";
 
-const originalClientId = process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_ID;
-const originalClientSecret = process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_SECRET;
+const originalRestApiKey = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY;
+const globalFetch = global.fetch;
 
 describe("api/endpoints/map", () => {
   beforeEach(() => {
@@ -9,13 +9,16 @@ describe("api/endpoints/map", () => {
   });
 
   afterEach(() => {
-    process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_ID = originalClientId;
-    process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_SECRET = originalClientSecret;
+    if (originalRestApiKey === undefined) {
+      delete process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY;
+    } else {
+      process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY = originalRestApiKey;
+    }
+    global.fetch = globalFetch;
   });
 
-  it("네이버 키가 없으면 mock 데이터를 반환한다", async () => {
-    process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_ID = "";
-    process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_SECRET = "";
+  it("카카오 REST API 키가 없으면 mock 데이터를 반환한다", async () => {
+    process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY = "";
 
     const result = await fetchNearbyMedicalFacilities({
       latitude: 37.5665,
@@ -28,33 +31,36 @@ describe("api/endpoints/map", () => {
     expect(result.facilities.length).toBeGreaterThan(0);
   });
 
-  it("네이버 응답이 정상이면 시설 목록을 가공해 반환한다", async () => {
-    process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_ID = "id";
-    process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_SECRET = "secret";
+  it("카카오 응답이 정상이면 시설 목록을 가공해 반환한다", async () => {
+    process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY = "rest-api-key";
 
     const mockFetch = jest
       .fn()
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          items: [
+          documents: [
             {
-              title: "<b>강남약국</b>",
-              category: "의료,약국",
-              address: "서울시 강남구 역삼동",
-              roadAddress: "서울시 강남구 테헤란로 1",
-              mapx: "1270100000",
-              mapy: "375000000",
-              telephone: "02-1111-1111",
+              place_name: "강남약국",
+              category_name: "의료,건강 > 약국",
+              address_name: "서울시 강남구 역삼동",
+              road_address_name: "서울시 강남구 테헤란로 1",
+              x: "127.01",
+              y: "37.5",
+              phone: "02-1111-1111",
+              distance: "120",
+              place_url: "https://place.map.kakao.com/1",
             },
             {
-              title: "중복시설",
-              category: "의료,약국",
-              address: "서울시 강남구 역삼동",
-              roadAddress: "서울시 강남구 테헤란로 2",
-              mapx: "127.02",
-              mapy: "37.52",
-              telephone: "",
+              place_name: "중복시설",
+              category_name: "의료,건강 > 약국",
+              address_name: "서울시 강남구 역삼동",
+              road_address_name: "서울시 강남구 테헤란로 2",
+              x: "127.02",
+              y: "37.52",
+              phone: "",
+              distance: "80",
+              place_url: "",
             },
           ],
         }),
@@ -62,24 +68,28 @@ describe("api/endpoints/map", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          items: [
+          documents: [
             {
-              title: "중복시설",
-              category: "의료,응급실",
-              address: "서울시 강남구 역삼동",
-              roadAddress: "서울시 강남구 테헤란로 2",
-              mapx: "127.03",
-              mapy: "37.53",
-              telephone: "02-2222-2222",
+              place_name: "중복시설",
+              category_name: "의료,건강 > 병원",
+              address_name: "서울시 강남구 역삼동",
+              road_address_name: "서울시 강남구 테헤란로 2",
+              x: "127.03",
+              y: "37.53",
+              phone: "02-2222-2222",
+              distance: "200",
+              place_url: "https://place.map.kakao.com/2",
             },
             {
-              title: "강남응급센터",
-              category: "종합병원",
-              address: "서울시 강남구 삼성동",
-              roadAddress: "서울시 강남구 봉은사로 3",
-              mapx: "invalid",
-              mapy: "invalid",
-              telephone: "02-3333-3333",
+              place_name: "강남응급센터",
+              category_name: "의료,건강 > 병원",
+              address_name: "서울시 강남구 삼성동",
+              road_address_name: "서울시 강남구 봉은사로 3",
+              x: "invalid",
+              y: "invalid",
+              phone: "02-3333-3333",
+              distance: "900",
+              place_url: "https://place.map.kakao.com/3",
             },
           ],
         }),
@@ -94,8 +104,9 @@ describe("api/endpoints/map", () => {
       keyword: "강남",
     });
 
-    expect(result.source).toBe("naver");
+    expect(result.source).toBe("kakao");
     expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockFetch.mock.calls[0][0]).toContain("search/keyword.json");
     expect(mockFetch.mock.calls[0][0]).toContain("query=%EA%B0%95%EB%82%A8+%EC%95%BD%EA%B5%AD");
     expect(mockFetch.mock.calls[1][0]).toContain(
       "query=%EA%B0%95%EB%82%A8+%EC%9D%91%EA%B8%89%EC%8B%A4",
@@ -114,6 +125,7 @@ describe("api/endpoints/map", () => {
         category: "emergency",
         latitude: 37.5,
         longitude: 127.01,
+        placeUrl: "https://place.map.kakao.com/3",
       }),
     );
 
@@ -121,9 +133,8 @@ describe("api/endpoints/map", () => {
     expect(duplicatedFacility?.phoneNumber).toBe(null);
   });
 
-  it("네이버 응답이 비정상이면 mock 데이터로 fallback 한다", async () => {
-    process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_ID = "id";
-    process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_SECRET = "secret";
+  it("카카오 응답이 비정상이면 mock 데이터로 fallback 한다", async () => {
+    process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY = "rest-api-key";
     const mockFetch = jest.fn(async () => ({ ok: false, status: 500 }));
     global.fetch = mockFetch as unknown as typeof fetch;
 
@@ -139,21 +150,22 @@ describe("api/endpoints/map", () => {
   });
 
   it("emergency 단일 검색에서는 fallback 카테고리를 emergency로 유지한다", async () => {
-    process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_ID = "id";
-    process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_SECRET = "secret";
+    process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY = "rest-api-key";
 
     const mockFetch = jest.fn(async () => ({
       ok: true,
       json: async () => ({
-        items: [
+        documents: [
           {
-            title: "야간진료센터",
-            category: "생활,편의",
-            address: "서울시 강남구 역삼동",
-            roadAddress: "서울시 강남구 테헤란로 10",
-            mapx: "127.02",
-            mapy: "37.52",
-            telephone: "02-0000-0000",
+            place_name: "야간진료센터",
+            category_name: "생활,편의",
+            address_name: "서울시 강남구 역삼동",
+            road_address_name: "서울시 강남구 테헤란로 10",
+            x: "127.02",
+            y: "37.52",
+            phone: "02-0000-0000",
+            distance: "300",
+            place_url: "",
           },
         ],
       }),
@@ -167,17 +179,16 @@ describe("api/endpoints/map", () => {
       keyword: "야간",
     });
 
-    expect(result.source).toBe("naver");
+    expect(result.source).toBe("kakao");
     expect(mockFetch).toHaveBeenCalledTimes(1);
     expect(result.facilities[0]?.category).toBe("emergency");
   });
 
-  it("네이버 결과가 비어있으면 mock 데이터를 반환한다", async () => {
-    process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_ID = "id";
-    process.env.EXPO_PUBLIC_NAVER_SEARCH_CLIENT_SECRET = "secret";
+  it("카카오 결과가 비어있으면 mock 데이터를 반환한다", async () => {
+    process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY = "rest-api-key";
     const mockFetch = jest.fn(async () => ({
       ok: true,
-      json: async () => ({ items: [] }),
+      json: async () => ({ documents: [] }),
     }));
     global.fetch = mockFetch as unknown as typeof fetch;
 
