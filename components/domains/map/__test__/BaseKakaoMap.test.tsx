@@ -15,7 +15,7 @@ jest.mock("react-native-webview", () => ({
 }));
 
 jest.mock("@react-navigation/native", () => ({
-  useFocusEffect: (callback: () => void | (() => void)) => {
+  useFocusEffect: (callback: () => undefined | (() => void)) => {
     callback();
   },
 }));

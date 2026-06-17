@@ -96,7 +96,7 @@ export function MapScreen() {
   }));
 
   const openExternalUrl = useCallback(async (url: string) => {
-    const canOpen = Linking.canOpenURL(url);
+    const canOpen = await Linking.canOpenURL(url);
     if (!canOpen) {
       return;
     }

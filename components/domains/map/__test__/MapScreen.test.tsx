@@ -76,6 +76,7 @@ jest.mock("@/components/ui/SelectChip", () => ({
   },
 }));
 
+jest.spyOn(Linking, "canOpenURL").mockResolvedValue(true);
 jest.spyOn(Linking, "openURL").mockImplementation((url: string) => {
   mockOpenUrl(url);
   return Promise.resolve(true);
@@ -214,10 +215,14 @@ describe("MapScreen", () => {
     );
 
     fireEvent.press(screen.getByText("facility-1-call"));
-    expect(mockOpenUrl).toHaveBeenCalledWith("tel:02-1234-5678");
+    await waitFor(() => {
+      expect(mockOpenUrl).toHaveBeenCalledWith("tel:02-1234-5678");
+    });
 
     fireEvent.press(screen.getByText("facility-1-directions"));
-    expect(mockOpenUrl).toHaveBeenCalledWith("https://place.map.kakao.com/mock");
+    await waitFor(() => {
+      expect(mockOpenUrl).toHaveBeenCalledWith("https://place.map.kakao.com/mock");
+    });
   });
 
   it("전화번호가 없으면 전화 링크를 열지 않는다", async () => {
