@@ -268,6 +268,12 @@ export function BaseKakaoMap({
           }}
           onLoadEnd={syncMapState}
           onMessage={(event) => handleMessage(event.nativeEvent.data)}
+          onError={() => {
+            onMapError?.("map_load_error");
+          }}
+          onHttpError={() => {
+            onMapError?.("webview_http_error");
+          }}
         />
       ) : null}
     </View>

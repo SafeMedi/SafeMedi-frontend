@@ -30,8 +30,21 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#39;");
 }
 
+function serializeJsonForInlineScript(value: unknown): string {
+  const json = JSON.stringify(value);
+  if (typeof json !== "string") {
+    return "null";
+  }
+  return json
+    .replaceAll("<", "\\u003C")
+    .replaceAll(">", "\\u003E")
+    .replaceAll("&", "\\u0026")
+    .replaceAll("\u2028", "\\u2028")
+    .replaceAll("\u2029", "\\u2029");
+}
+
 function serializeMarkers(markers: readonly KakaoMapMarkerInput[]): string {
-  return JSON.stringify(markers);
+  return serializeJsonForInlineScript(markers);
 }
 
 function resolveMapSizeCss(width?: number, height?: number): string {
@@ -52,7 +65,7 @@ export function buildKakaoMapHtml({
 }: BuildKakaoMapHtmlParams): string {
   const safeMapJsKey = escapeHtml(mapJsKey);
   const serializedFacilities = serializeMarkers(facilities);
-  const markerColorsJson = JSON.stringify(MAP_MARKER_COLORS);
+  const markerColorsJson = serializeJsonForInlineScript(MAP_MARKER_COLORS);
   const mapSizeCss = resolveMapSizeCss(mapWidth, mapHeight);
 
   return `<!DOCTYPE html>
@@ -207,8 +220,9 @@ export function buildKakaoMapHtml({
         if (!map) {
           return;
         }
+        const currentCenter = map.getCenter();
         map.relayout();
-        map.setCenter(new kakao.maps.LatLng(INITIAL_CENTER.lat, INITIAL_CENTER.lng));
+        map.setCenter(currentCenter);
       }
 
       function scheduleRelayout() {
