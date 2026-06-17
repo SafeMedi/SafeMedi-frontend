@@ -95,16 +95,34 @@ export function MapScreen() {
     category: facility.category,
   }));
 
-  const handlePressCall = useCallback(async (facility: MedicalFacility) => {
-    if (!facility.phoneNumber) {
+  const openExternalUrl = useCallback(async (url: string) => {
+    const canOpen = Linking.canOpenURL(url);
+    if (!canOpen) {
       return;
     }
-    await Linking.openURL(`tel:${facility.phoneNumber}`);
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      console.error("Failed to open external URL:", url, error);
+    }
   }, []);
 
-  const handlePressDirections = useCallback(async (facility: MedicalFacility) => {
-    await Linking.openURL(toMapSearchUrl(facility));
-  }, []);
+  const handlePressCall = useCallback(
+    async (facility: MedicalFacility) => {
+      if (!facility.phoneNumber) {
+        return;
+      }
+      await openExternalUrl(`tel:${facility.phoneNumber}`);
+    },
+    [openExternalUrl],
+  );
+
+  const handlePressDirections = useCallback(
+    async (facility: MedicalFacility) => {
+      await openExternalUrl(toMapSearchUrl(facility));
+    },
+    [openExternalUrl],
+  );
 
   if (viewModel.isLoadingLocation) {
     return (
