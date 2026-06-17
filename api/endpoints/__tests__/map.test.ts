@@ -1,6 +1,7 @@
 import { fetchNearbyMedicalFacilities } from "../map";
 
 const originalRestApiKey = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY;
+const globalFetch = global.fetch;
 
 describe("api/endpoints/map", () => {
   beforeEach(() => {
@@ -8,7 +9,12 @@ describe("api/endpoints/map", () => {
   });
 
   afterEach(() => {
-    process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY = originalRestApiKey;
+    if (originalRestApiKey === undefined) {
+      delete process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY;
+    } else {
+      process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY = originalRestApiKey;
+    }
+    global.fetch = globalFetch;
   });
 
   it("카카오 REST API 키가 없으면 mock 데이터를 반환한다", async () => {

@@ -32,11 +32,19 @@ function getPluginName(plugin: NonNullable<ExpoConfig["plugins"]>[number]): stri
   return Array.isArray(plugin) ? String(plugin[0]) : String(plugin);
 }
 
+function restoreEnvValue(key: string, Value: string | undefined): void {
+  if (Value === undefined) {
+    delete process.env[key];
+    return;
+  }
+  process.env[key] = Value;
+}
+
 describe("app.config", () => {
   const originalKakaoAppKey = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY;
 
   afterEach(() => {
-    process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY = originalKakaoAppKey;
+    restoreEnvValue("EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY", originalKakaoAppKey);
     jest.resetModules();
   });
 

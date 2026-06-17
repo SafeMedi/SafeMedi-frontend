@@ -20,6 +20,14 @@ jest.mock("@react-navigation/native", () => ({
   },
 }));
 
+function restoreEnvValue(key: string, Value: string | undefined): void {
+  if (Value === undefined) {
+    delete process.env[key];
+    return;
+  }
+  process.env[key] = Value;
+}
+
 describe("BaseKakaoMap", () => {
   const originalMapJsKey = process.env.EXPO_PUBLIC_KAKAO_MAP_JS_KEY;
 
@@ -29,7 +37,7 @@ describe("BaseKakaoMap", () => {
   });
 
   afterEach(() => {
-    process.env.EXPO_PUBLIC_KAKAO_MAP_JS_KEY = originalMapJsKey;
+    restoreEnvValue("EXPO_PUBLIC_KAKAO_MAP_JS_KEY", originalMapJsKey);
   });
 
   it("지도 JS 키가 없으면 onMapError를 호출한다", () => {
