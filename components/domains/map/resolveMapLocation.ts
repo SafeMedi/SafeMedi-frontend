@@ -34,6 +34,19 @@ const WATCH_POSITION_OPTIONS: Location.LocationOptions = {
 };
 
 const WATCH_POSITION_TIMEOUT_MS = 30_000;
+const CURRENT_POSITION_ATTEMPT_TIMEOUT_MS = 10_000;
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error(LOCATION_UNAVAILABLE_ERROR));
+    }, timeoutMs);
+    promise
+      .then(resolve)
+      .catch(reject)
+      .finally(() => clearTimeout(timeoutId));
+  });
+}
 
 export const DEV_FALLBACK_COORDINATE: MapCoordinate = {
   latitude: 37.5665,
@@ -148,16 +161,31 @@ async function resolveCurrentPosition(): Promise<Location.LocationObject> {
     }
   }
 
-  const lastKnownPosition = await Location.getLastKnownPositionAsync({});
+  const lastKnownPosition = await Location.getLastKnownPositionAsync({
+    maxAge: 60_000,
+    requiredAccuracy: 1_000,
+  });
   if (lastKnownPosition) {
     return lastKnownPosition;
   }
 
   const positionAttempts = [
-    () => Location.getCurrentPositionAsync(HIGH_ACCURACY_POSITION_OPTIONS),
-    () => Location.getCurrentPositionAsync(CURRENT_POSITION_OPTIONS),
-    () => Location.getCurrentPositionAsync(LOW_ACCURACY_POSITION_OPTIONS),
-    () => watchForPosition(WATCH_POSITION_TIMEOUT_MS),
+    () =>
+      withTimeout(
+        Location.getCurrentPositionAsync(HIGH_ACCURACY_POSITION_OPTIONS),
+        CURRENT_POSITION_ATTEMPT_TIMEOUT_MS,
+      ),
+    () =>
+      withTimeout(
+        Location.getCurrentPositionAsync(CURRENT_POSITION_OPTIONS),
+        CURRENT_POSITION_ATTEMPT_TIMEOUT_MS,
+      ),
+    () =>
+      withTimeout(
+        Location.getCurrentPositionAsync(LOW_ACCURACY_POSITION_OPTIONS),
+        CURRENT_POSITION_ATTEMPT_TIMEOUT_MS,
+      ),
+    () => withTimeout(watchForPosition(WATCH_POSITION_TIMEOUT_MS), WATCH_POSITION_TIMEOUT_MS),
   ];
 
   for (const attempt of positionAttempts) {
