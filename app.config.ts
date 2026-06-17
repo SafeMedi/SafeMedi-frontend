@@ -55,9 +55,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       infoPlist: {
         ...existingInfoPlist,
         NSAppTransportSecurity: {
-          NSAllowsArbitraryLoads: true,
           NSAllowsLocalNetworking: true,
-          NSAllowsArbitraryLoadsInWebContent: true,
           NSExceptionDomains: KAKAO_MAP_ATS_EXCEPTION_DOMAINS,
         },
         NSLocationWhenInUseUsageDescription:
