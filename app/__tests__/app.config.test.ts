@@ -28,6 +28,10 @@ function loadAppConfigModule(): AppConfigModule {
   return loadedModule;
 }
 
+function getPluginName(plugin: NonNullable<ExpoConfig["plugins"]>[number]): string {
+  return Array.isArray(plugin) ? String(plugin[0]) : String(plugin);
+}
+
 describe("app.config", () => {
   const originalKakaoAppKey = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY;
 
@@ -62,10 +66,17 @@ describe("app.config", () => {
     expect(result.plugins).toEqual(
       expect.arrayContaining([
         "expo-font",
-        "expo-build-properties",
         [
           "@react-native-seoul/kakao-login",
           { kakaoAppKey: "test-kakao-app-key", kotlinVersion: "2.1.20" },
+        ],
+        [
+          "expo-build-properties",
+          {
+            android: {
+              extraMavenRepos: ["https://devrepo.kakao.com/nexus/content/groups/public/"],
+            },
+          },
         ],
         [
           "expo-location",
@@ -78,6 +89,10 @@ describe("app.config", () => {
         ],
       ]),
     );
+
+    const buildPropertiesEntries =
+      result.plugins?.filter((plugin) => getPluginName(plugin) === "expo-build-properties") ?? [];
+    expect(buildPropertiesEntries).toHaveLength(1);
 
     expect(result.ios?.infoPlist).toEqual(
       expect.objectContaining({

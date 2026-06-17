@@ -1,7 +1,9 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
 const KAKAO_LOGIN_PLUGIN_NAME = "@react-native-seoul/kakao-login";
+const EXPO_BUILD_PROPERTIES_PLUGIN_NAME = "expo-build-properties";
 const EXPO_LOCATION_PLUGIN_NAME = "expo-location";
+const KAKAO_MAVEN_REPOSITORY = "https://devrepo.kakao.com/nexus/content/groups/public/";
 const DEFAULT_APP_NAME = "safeMedi";
 const DEFAULT_APP_SLUG = "safeMedi";
 const LOCATION_USAGE_DESCRIPTION =
@@ -17,7 +19,11 @@ function getPluginName(plugin: PluginEntry): string {
 function stripManagedPlugins(plugins: readonly PluginEntry[]): PluginEntry[] {
   return plugins.filter((plugin) => {
     const pluginName = getPluginName(plugin);
-    return pluginName !== KAKAO_LOGIN_PLUGIN_NAME && pluginName !== EXPO_LOCATION_PLUGIN_NAME;
+    return (
+      pluginName !== KAKAO_LOGIN_PLUGIN_NAME &&
+      pluginName !== EXPO_BUILD_PROPERTIES_PLUGIN_NAME &&
+      pluginName !== EXPO_LOCATION_PLUGIN_NAME
+    );
   });
 }
 
@@ -69,6 +75,14 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         {
           kakaoAppKey: KAKAO_NATIVE_APP_KEY,
           kotlinVersion: "2.1.20",
+        },
+      ],
+      [
+        EXPO_BUILD_PROPERTIES_PLUGIN_NAME,
+        {
+          android: {
+            extraMavenRepos: [KAKAO_MAVEN_REPOSITORY],
+          },
         },
       ],
       [
