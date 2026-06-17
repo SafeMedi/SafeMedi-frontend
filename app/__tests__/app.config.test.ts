@@ -106,14 +106,25 @@ describe("app.config", () => {
       expect.objectContaining({
         ExistingFlag: "keep",
         NSAppTransportSecurity: {
-          NSAllowsArbitraryLoads: true,
           NSAllowsLocalNetworking: true,
-          NSAllowsArbitraryLoadsInWebContent: true,
-          NSExceptionDomains: expect.objectContaining({
-            "t1.daumcdn.net": expect.any(Object),
-          }),
+          NSExceptionDomains: {
+            "t1.daumcdn.net": {
+              NSIncludesSubdomains: true,
+              NSExceptionAllowsInsecureHTTPLoads: true,
+            },
+            "map.daumcdn.net": {
+              NSIncludesSubdomains: true,
+              NSExceptionAllowsInsecureHTTPLoads: true,
+            },
+            "mts.daumcdn.net": {
+              NSIncludesSubdomains: true,
+              NSExceptionAllowsInsecureHTTPLoads: true,
+            },
+          },
         },
         NSLocationWhenInUseUsageDescription:
+          "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
+        NSLocationAlwaysAndWhenInUseUsageDescription:
           "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
       }),
     );
