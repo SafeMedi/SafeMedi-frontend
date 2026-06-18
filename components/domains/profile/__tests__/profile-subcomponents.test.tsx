@@ -1,8 +1,8 @@
 import { fireEvent, render } from "@testing-library/react-native";
-import type { FamilyProfile } from "@/api/queries/profile";
 import { ProfileEditActionBar } from "@/components/domains/profile/edit";
 import {
   AppInfoSection,
+  type FamilyProfile,
   FamilyProfileItem,
   FamilyProfileSection,
   LogoutButton,

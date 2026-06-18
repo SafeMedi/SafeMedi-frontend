@@ -1,10 +1,16 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, StyleSheet, Text } from "react-native";
 import { YStack } from "tamagui";
-import type { FamilyProfile } from "@/api/queries/profile";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { palette } from "@/constants/design-tokens";
 import { FamilyProfileItem } from "./FamilyProfileItem";
+
+export type FamilyProfile = {
+  id: string;
+  name: string;
+  isActive: boolean;
+  avatarGradient: readonly [string, string];
+};
 
 export type FamilyProfileSectionProps = {
   profiles: readonly FamilyProfile[];
