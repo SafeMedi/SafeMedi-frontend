@@ -16,8 +16,13 @@ import { LogoutButton } from "./components/LogoutButton";
 import { ProfilePageHeader } from "./components/ProfilePageHeader";
 import { SettingsSection } from "./components/SettingsSection";
 import { UserHeroCard } from "./components/UserHeroCard";
+import { FAMILY_AVATAR_GRADIENTS } from "./constants";
 
 const APP_VERSION = "v1.0.0";
+const AVATAR_GRADIENT_POOL = [
+  FAMILY_AVATAR_GRADIENTS.purple,
+  FAMILY_AVATAR_GRADIENTS.green,
+] as const;
 
 export function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -26,7 +31,7 @@ export function ProfileScreen() {
   const clearUser = useUserStore((s) => s.clearUser);
 
   const profileUser = useProfileUser();
-  const { data: familyProfiles = [] } = useFamilyProfiles();
+  const { data: familySummaries = [] } = useFamilyProfiles();
   const { allergies, chronicConditions } = useHealthInfo();
 
   const handleLogout = () => {
@@ -45,6 +50,22 @@ export function ProfileScreen() {
     ],
     [],
   );
+  const familyProfiles = useMemo(() => {
+    const me = {
+      id: "me",
+      name: profileUser.name,
+      isActive: true,
+      avatarGradient: FAMILY_AVATAR_GRADIENTS.green,
+    };
+    const members = familySummaries.map((family, index) => ({
+      id: String(family.familyId),
+      name: family.name,
+      isActive: false,
+      avatarGradient: AVATAR_GRADIENT_POOL[index % AVATAR_GRADIENT_POOL.length],
+    }));
+
+    return [me, ...members];
+  }, [familySummaries, profileUser.name]);
 
   const handleOpenProfileEdit = () => {
     router.push("/profile/edit");

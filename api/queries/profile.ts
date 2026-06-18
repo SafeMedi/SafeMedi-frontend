@@ -2,8 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchFamilies } from "@/api/endpoints/family";
 import { fetchNotificationSettings, patchNotificationSettings } from "@/api/endpoints/notification";
 import { queryKeys } from "@/api/query-keys";
-import type { NotificationSettings } from "@/api/types";
-import { FAMILY_AVATAR_GRADIENTS } from "@/components/domains/profile/view/constants";
+import type { FamilySummary, NotificationSettings } from "@/api/types";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUserStore } from "@/stores/userStore";
 
@@ -18,43 +17,14 @@ export function useProfileUser() {
   };
 }
 
-/** 가족 프로필 목록 (나 자신 + API 가족 목록) */
-export type FamilyProfile = {
-  id: string;
-  name: string;
-  isActive: boolean;
-  avatarGradient: readonly [string, string];
-};
-
-const AVATAR_GRADIENT_POOL = [
-  FAMILY_AVATAR_GRADIENTS.purple,
-  FAMILY_AVATAR_GRADIENTS.green,
-] as const;
-
 export function useFamilyProfiles() {
   const accessToken = useSessionStore((s) => s.accessToken);
-  const user = useUserStore((s) => s.user);
 
   return useQuery({
     queryKey: queryKeys.profile.families,
     enabled: !!accessToken,
     staleTime: STALE_MS,
-    queryFn: async (): Promise<FamilyProfile[]> => {
-      const families = await fetchFamilies();
-      const me: FamilyProfile = {
-        id: "me",
-        name: user?.displayName ?? "본인",
-        isActive: true,
-        avatarGradient: FAMILY_AVATAR_GRADIENTS.green,
-      };
-      const members: FamilyProfile[] = families.map((f, i) => ({
-        id: String(f.familyId),
-        name: f.name,
-        isActive: false,
-        avatarGradient: AVATAR_GRADIENT_POOL[i % AVATAR_GRADIENT_POOL.length],
-      }));
-      return [me, ...members];
-    },
+    queryFn: async (): Promise<FamilySummary[]> => fetchFamilies(),
   });
 }
 

@@ -86,19 +86,19 @@ describe("api/queries/profile", () => {
     expect(healthResult.current.allergies).toEqual(["아스피린"]);
   });
 
-  it("가족 목록 쿼리는 본인 + 가족 목록을 조합한다", async () => {
+  it("가족 목록 쿼리는 서버 가족 목록을 조회한다", async () => {
     const { result } = renderHook(() => useFamilyProfiles());
     const query = result.current as unknown as {
       enabled: boolean;
       queryKey: unknown;
-      queryFn: () => Promise<Array<{ id: string; isActive: boolean }>>;
+      queryFn: () => Promise<Array<{ familyId: number; name: string }>>;
     };
 
     expect(query.enabled).toBe(true);
     expect(query.queryKey).toEqual(queryKeys.profile.families);
     const list = await query.queryFn();
-    expect(list[0]).toEqual(expect.objectContaining({ id: "me", isActive: true }));
-    expect(list[1]).toEqual(expect.objectContaining({ id: "10", isActive: false }));
+    expect(mockFetchFamilies).toHaveBeenCalledTimes(1);
+    expect(list[0]).toEqual(expect.objectContaining({ familyId: 10, name: "가족A" }));
   });
 
   it("알림 설정 조회/수정 훅은 쿼리 키와 mutation 핸들러를 구성한다", async () => {
