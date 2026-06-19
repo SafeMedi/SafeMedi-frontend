@@ -6,6 +6,7 @@ import ProfileTabRoute from "../profile";
 import ScanTabRoute from "../scan";
 
 const mockDashboardScreen = jest.fn(() => null);
+const mockMedicationReportScreen = jest.fn(() => null);
 const mockMapDomainScreen = jest.fn(() => null);
 const mockProfileScreen = jest.fn(() => null);
 interface RedirectProps {
@@ -35,6 +36,10 @@ jest.mock("@/features/dashboard/home", () => ({
   DashboardScreen: () => mockDashboardScreen(),
 }));
 
+jest.mock("@/features/manage/medication-report", () => ({
+  MedicationReportScreen: () => mockMedicationReportScreen(),
+}));
+
 jest.mock("@/features/profile/view", () => ({
   ProfileScreen: () => mockProfileScreen(),
 }));
@@ -53,10 +58,10 @@ describe("app/(tabs) routes", () => {
   });
 
   it("manage/map route는 각 라우트 컴포넌트를 연결한다", () => {
-    const { toJSON: manageTree } = render(<TabTwoScreen />);
+    render(<TabTwoScreen />);
     render(<MapScreen />);
 
-    expect(manageTree()).toBeTruthy();
+    expect(mockMedicationReportScreen).toHaveBeenCalledTimes(1);
     expect(mockMapDomainScreen).toHaveBeenCalledTimes(1);
   });
 

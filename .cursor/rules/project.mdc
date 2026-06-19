@@ -21,9 +21,9 @@ PR·머지 전 `yarn lint`와 `yarn test` 통과를 전제로 한다. Gradle/ktl
 
 ## 디렉터리
 
-- `app/` — Expo Router 라우트만. 화면 로직은 `components/domains/`에 둔다.
-- `components/domains/` — 도메인별 feature UI 루트
-- 표준 feature 구조는 `components/domains/{domain}/{feature}/`를 사용한다 (architecture 규칙과 동일).
+- `app/` — Expo Router 라우트만. 화면 로직은 `features/`에 둔다.
+- `features/` — 도메인별 feature UI 루트
+- 표준 feature 구조는 `features/{feature}/`를 사용한다 (architecture 규칙과 동일).
 - `components/ui/` — 도메인 무관 공용 UI
 - `api/endpoints/` — fetch 함수
 - `api/queries/` — TanStack Query hooks
@@ -36,7 +36,7 @@ PR·머지 전 `yarn lint`와 `yarn test` 통과를 전제로 한다. Gradle/ktl
 ### 도메인 feature 템플릿
 
 ```
-components/domains/{domain}/{feature}/
+features/{domain}/{feature}/
   {Feature}Screen.tsx
   use{Feature}ViewModel.ts
   components/

@@ -6,6 +6,8 @@ export const queryKeys = {
       ["dashboard", "medication-records", "monthly", date] as const,
     medicationHistoryRecords: (date: string) =>
       ["dashboard", "medication-records", "history", date] as const,
+    medicationStatistics: (startDate: string, endDate: string) =>
+      ["dashboard", "medications", "statistics", startDate, endDate] as const,
   },
   user: {
     me: ["user", "me"] as const,
