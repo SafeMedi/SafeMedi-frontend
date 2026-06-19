@@ -19,11 +19,11 @@ jest.mock("expo-router", () => {
   return { Stack };
 });
 
-jest.mock("@/components/domains/auth", () => ({
+jest.mock("@/features/auth", () => ({
   LoginScreen: () => mockLoginScreen(),
 }));
 
-jest.mock("@/components/domains/tutorial", () => ({
+jest.mock("@/features/tutorial", () => ({
   TutorialScreen: () => mockTutorialScreen(),
 }));
 

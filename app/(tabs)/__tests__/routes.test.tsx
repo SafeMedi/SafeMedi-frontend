@@ -27,15 +27,15 @@ jest.mock("tamagui", () => {
   };
 });
 
-jest.mock("@/components/domains/map", () => ({
+jest.mock("@/features/map", () => ({
   MapScreen: () => mockMapDomainScreen(),
 }));
 
-jest.mock("@/components/domains/dashboard", () => ({
+jest.mock("@/features/dashboard", () => ({
   DashboardScreen: () => mockDashboardScreen(),
 }));
 
-jest.mock("@/components/domains/profile/view", () => ({
+jest.mock("@/features/profile/view", () => ({
   ProfileScreen: () => mockProfileScreen(),
 }));
 

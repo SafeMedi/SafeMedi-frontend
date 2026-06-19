@@ -1,4 +1,4 @@
-import { DashboardScreen } from "@/components/domains/dashboard";
+import { DashboardScreen } from "@/features/dashboard";
 
 export default function DashboardTabRoute() {
   return <DashboardScreen />;

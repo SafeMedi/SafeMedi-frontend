@@ -1,4 +1,4 @@
-import { PrescriptionScanScreen } from "@/components/domains/scan/prescription-scan";
+import { PrescriptionScanScreen } from "@/features/scan/prescription-scan";
 
 export default function ScanDetailRoute() {
   return <PrescriptionScanScreen />;

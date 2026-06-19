@@ -8,7 +8,7 @@ jest.mock("expo-router", () => ({
   useLocalSearchParams: () => mockUseLocalSearchParams(),
 }));
 
-jest.mock("@/components/domains/family", () => ({
+jest.mock("@/features/family", () => ({
   FamilyDetailScreen: (props: { familyId: number | null }) => mockFamilyDetailScreen(props),
 }));
 
