@@ -5,6 +5,8 @@ export type {
   DailyMedicationSummary,
   MedicationHistoryRecordsResponse,
   MedicationRecordStatus,
+  MedicationStatisticsDailyCompliance,
+  MedicationStatisticsResponse,
   MonthlyMedicationRecordGroup,
   MonthlyMedicationRecordItem,
   MonthlyMedicationRecordsResponse,

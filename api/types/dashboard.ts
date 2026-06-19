@@ -55,3 +55,19 @@ export interface MedicationHistoryRecordsResponse {
   readonly date: string;
   readonly items: readonly MonthlyMedicationRecordItem[];
 }
+
+export interface MedicationStatisticsDailyCompliance {
+  readonly date: string;
+  readonly takenCount: number;
+  readonly totalCount: number;
+  readonly fraction: string;
+}
+
+export interface MedicationStatisticsResponse {
+  readonly startDate: string;
+  readonly endDate: string;
+  readonly totalScheduled: number;
+  readonly totalTaken: number;
+  readonly totalComplianceRate: number;
+  readonly dailyCompliance: readonly MedicationStatisticsDailyCompliance[];
+}

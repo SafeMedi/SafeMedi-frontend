@@ -2,6 +2,7 @@ import { apiPaths } from "@/api/paths";
 import {
   fetchDailyMedicationRecords,
   fetchMedicationHistoryRecords,
+  fetchMedicationStatistics,
   fetchMonthlyMedicationRecords,
 } from "../dashboard";
 
@@ -74,5 +75,21 @@ describe("api/endpoints/dashboard", () => {
       date: "2026-05-20",
       items: [],
     });
+  });
+
+  it("복약 통계 요청 시 시작일과 종료일 파라미터를 사용한다", async () => {
+    const expected = { totalComplianceRate: 70, dailyCompliance: [] };
+    const mockJson = jest.fn(async () => expected);
+    mockApiGet.mockReturnValueOnce({ json: mockJson });
+
+    const result = await fetchMedicationStatistics({
+      startDate: "2026-05-14",
+      endDate: "2026-05-20",
+    });
+
+    expect(mockApiGet).toHaveBeenCalledWith(apiPaths.medicationsStatistics, {
+      searchParams: { startDate: "2026-05-14", endDate: "2026-05-20" },
+    });
+    expect(result).toEqual(expected);
   });
 });

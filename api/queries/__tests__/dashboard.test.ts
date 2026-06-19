@@ -4,11 +4,13 @@ import {
   useDashboardDailyMedicationRecords,
   useDashboardMedicationHistoryRecords,
   useDashboardMonthlyMedicationRecords,
+  useMedicationStatistics,
 } from "../dashboard";
 
 const mockFetchDailyMedicationRecords = jest.fn<Promise<unknown>, [unknown]>(async () => ({}));
 const mockFetchMonthlyMedicationRecords = jest.fn<Promise<unknown>, [unknown]>(async () => ({}));
 const mockFetchMedicationHistoryRecords = jest.fn<Promise<unknown>, [unknown]>(async () => ({}));
+const mockFetchMedicationStatistics = jest.fn<Promise<unknown>, [unknown]>(async () => ({}));
 
 let mockAccessToken: string | null = "token";
 
@@ -20,6 +22,7 @@ jest.mock("@/api/endpoints/dashboard", () => ({
   fetchDailyMedicationRecords: (params: unknown) => mockFetchDailyMedicationRecords(params),
   fetchMonthlyMedicationRecords: (params: unknown) => mockFetchMonthlyMedicationRecords(params),
   fetchMedicationHistoryRecords: (params: unknown) => mockFetchMedicationHistoryRecords(params),
+  fetchMedicationStatistics: (params: unknown) => mockFetchMedicationStatistics(params),
 }));
 
 jest.mock("@/stores/sessionStore", () => ({
@@ -67,5 +70,26 @@ describe("api/queries/dashboard", () => {
 
     expect(options.enabled).toBe(false);
     expect(options.queryKey).toEqual(queryKeys.dashboard.medicationHistoryRecords(""));
+  });
+
+  it("복약 통계 쿼리는 기간 파라미터로 요청한다", async () => {
+    const { result } = renderHook(() =>
+      useMedicationStatistics({ startDate: "2026-05-14", endDate: "2026-05-20" }),
+    );
+    const options = result.current as unknown as {
+      enabled: boolean;
+      queryKey: unknown;
+      queryFn: () => Promise<unknown>;
+    };
+
+    expect(options.enabled).toBe(true);
+    expect(options.queryKey).toEqual(
+      queryKeys.dashboard.medicationStatistics("2026-05-14", "2026-05-20"),
+    );
+    await options.queryFn();
+    expect(mockFetchMedicationStatistics).toHaveBeenCalledWith({
+      startDate: "2026-05-14",
+      endDate: "2026-05-20",
+    });
   });
 });

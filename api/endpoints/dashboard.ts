@@ -3,6 +3,7 @@ import { apiPaths } from "@/api/paths";
 import type {
   DailyMedicationRecordsResponse,
   MedicationHistoryRecordsResponse,
+  MedicationStatisticsResponse,
   MonthlyMedicationRecordsResponse,
 } from "@/api/types/dashboard";
 
@@ -40,4 +41,19 @@ export async function fetchMedicationHistoryRecords(
     date: params.date,
     items: selectedGroup?.items ?? [],
   };
+}
+
+interface FetchMedicationStatisticsParams {
+  readonly startDate: string;
+  readonly endDate: string;
+}
+
+export async function fetchMedicationStatistics(
+  params: FetchMedicationStatisticsParams,
+): Promise<MedicationStatisticsResponse> {
+  return api
+    .get(apiPaths.medicationsStatistics, {
+      searchParams: { startDate: params.startDate, endDate: params.endDate },
+    })
+    .json<MedicationStatisticsResponse>();
 }
