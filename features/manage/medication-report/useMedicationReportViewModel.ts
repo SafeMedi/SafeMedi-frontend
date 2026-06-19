@@ -225,15 +225,16 @@ export function buildMedicationReportCalendarWeeks(params: {
   for (let day = 1; day <= daysInMonth; day += 1) {
     const dateText = formatDateToApiParam(new Date(year, month, day));
     const recordGroup = recordsByDate.get(dateText);
+    const isFutureDate = dateText > todayText;
 
-    if (!recordGroup) {
-      const tone: MedicationReportDayTone = dateText > todayText ? "future" : "empty";
+    if (!recordGroup || isFutureDate) {
+      const tone: MedicationReportDayTone = isFutureDate ? "future" : "empty";
       cells.push({
         id: dateText,
         date: dateText,
         day,
-        fraction: null,
-        rate: null,
+        fraction: isFutureDate ? null : null,
+        rate: isFutureDate ? null : null,
         tone,
       });
       continue;
@@ -273,10 +274,14 @@ export function countMedicationReportDayBuckets(records: readonly MonthlyMedicat
   readonly perfectDaysCount: number;
   readonly attentionDaysCount: number;
 } {
+  const todayText = formatDateToApiParam(new Date());
   let perfectDaysCount = 0;
   let attentionDaysCount = 0;
 
   records.forEach((group) => {
+    if (group.date > todayText) {
+      return;
+    }
     const { rate } = computeDayCompliance(group.items);
     if (rate >= 90) {
       perfectDaysCount += 1;
