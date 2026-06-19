@@ -1,12 +1,12 @@
 import { fireEvent, render } from "@testing-library/react-native";
-import {
-  ProfileBasicInfoCard,
-  ProfileEditHeader,
-  ProfileEditNoticeCard,
-  ProfileNicknameCard,
-  ProfileTagEditorCard,
-} from "@/features/profile/edit";
-import { HealthInfoCard, HealthInfoSection, ProfilePageHeader } from "@/features/profile/view";
+import { ProfileBasicInfoCard } from "@/features/profile/edit/components/ProfileBasicInfoCard";
+import { ProfileEditHeader } from "@/features/profile/edit/components/ProfileEditHeader";
+import { ProfileEditNoticeCard } from "@/features/profile/edit/components/ProfileEditNoticeCard";
+import { ProfileNicknameCard } from "@/features/profile/edit/components/ProfileNicknameCard";
+import { ProfileTagEditorCard } from "@/features/profile/edit/components/ProfileTagEditorCard";
+import { HealthInfoCard } from "@/features/profile/view/components/HealthInfoCard";
+import { HealthInfoSection } from "@/features/profile/view/components/HealthInfoSection";
+import { ProfilePageHeader } from "@/features/profile/view/components/ProfilePageHeader";
 
 jest.mock("tamagui", () => {
   const React = require("react");

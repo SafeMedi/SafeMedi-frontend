@@ -1,7 +1,7 @@
 import { act, fireEvent, render } from "@testing-library/react-native";
 import { createRef } from "react";
 import "@/tests/test-utils/test-mocks";
-import { Step1 } from "@/features/tutorial";
+import { Step1 } from "@/features/tutorial/components/Step1";
 import type { StepHandle } from "@/features/tutorial/types";
 import type { User } from "@/stores/userStore";
 import { mockUpdateUser, resetMockStore, setMockUser } from "@/tests/test-utils/test-mocks";

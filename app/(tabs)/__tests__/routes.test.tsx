@@ -31,7 +31,7 @@ jest.mock("@/features/map", () => ({
   MapScreen: () => mockMapDomainScreen(),
 }));
 
-jest.mock("@/features/dashboard", () => ({
+jest.mock("@/features/dashboard/home", () => ({
   DashboardScreen: () => mockDashboardScreen(),
 }));
 

@@ -1,7 +1,7 @@
 import { act, fireEvent, render } from "@testing-library/react-native";
 import { createRef } from "react";
 import "@/tests/test-utils/test-mocks";
-import { Step4 } from "@/features/tutorial";
+import { Step4 } from "@/features/tutorial/components/Step4";
 import type { StepHandle } from "@/features/tutorial/types";
 
 describe("튜토리얼 Step4", () => {

@@ -4,7 +4,7 @@ import { Text, YStack } from "tamagui";
 import { GradientCard } from "@/components/ui/GradientCard";
 import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
-import { PrescriptionScanHeader } from "@/features/scan/prescription-scan";
+import { PrescriptionScanHeader } from "@/features/scan/prescription-scan/components/PrescriptionScanHeader";
 import { AnalysisSummaryCard } from "./components/AnalysisSummaryCard";
 import { DoctorConsultationCard } from "./components/DoctorConsultationCard";
 import { MedicationAnalysisCard } from "./components/MedicationAnalysisCard";

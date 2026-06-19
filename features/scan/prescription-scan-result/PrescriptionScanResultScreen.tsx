@@ -8,7 +8,7 @@ import { PillButton } from "@/components/ui/PillButton";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
-import { PrescriptionScanHeader } from "@/features/scan/prescription-scan";
+import { PrescriptionScanHeader } from "@/features/scan/prescription-scan/components/PrescriptionScanHeader";
 import { MedicationEditorCard } from "./components/MedicationEditorCard";
 import { PrescriptionPeriodCard } from "./components/PrescriptionPeriodCard";
 import { usePrescriptionScanResultViewModel } from "./usePrescriptionScanResultViewModel";

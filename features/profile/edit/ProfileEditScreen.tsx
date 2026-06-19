@@ -3,14 +3,12 @@ import { ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
 
-import {
-  ProfileBasicInfoCard,
-  ProfileEditActionBar,
-  ProfileEditHeader,
-  ProfileEditNoticeCard,
-  ProfileNicknameCard,
-  ProfileTagEditorCard,
-} from "@/features/profile/edit";
+import { ProfileBasicInfoCard } from "./components/ProfileBasicInfoCard";
+import { ProfileEditActionBar } from "./components/ProfileEditActionBar";
+import { ProfileEditHeader } from "./components/ProfileEditHeader";
+import { ProfileEditNoticeCard } from "./components/ProfileEditNoticeCard";
+import { ProfileNicknameCard } from "./components/ProfileNicknameCard";
+import { ProfileTagEditorCard } from "./components/ProfileTagEditorCard";
 import { useProfileEditViewModel } from "./useProfileEditViewModel";
 
 export function ProfileEditScreen() {

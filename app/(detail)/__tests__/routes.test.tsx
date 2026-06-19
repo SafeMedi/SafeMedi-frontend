@@ -25,11 +25,11 @@ jest.mock("expo-router", () => {
   };
 });
 
-jest.mock("@/features/dashboard", () => ({
+jest.mock("@/features/dashboard/medication-history", () => ({
   MedicationHistoryScreen: () => mockMedicationHistoryScreen(),
 }));
 
-jest.mock("@/features/family", () => ({
+jest.mock("@/features/family/invite", () => ({
   FamilyManageScreen: () => mockFamilyManageScreen(),
 }));
 

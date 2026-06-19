@@ -52,9 +52,9 @@ jest.mock("tamagui", () => {
   };
 });
 
-jest.mock("@/features/profile/edit", () => {
+jest.mock("../components/ProfileEditHeader", () => {
   const React = require("react");
-  const { Pressable, Text, TextInput, View } = require("react-native");
+  const { Pressable, Text } = require("react-native");
 
   return {
     ProfileEditHeader: ({ onBack }: { onBack: () => void }) =>
@@ -63,12 +63,28 @@ jest.mock("@/features/profile/edit", () => {
         { onPress: onBack, accessibilityRole: "button", accessibilityLabel: "뒤로가기" },
         React.createElement(Text, null, "헤더"),
       ),
+  };
+});
+
+jest.mock("../components/ProfileNicknameCard", () => {
+  const React = require("react");
+  const { TextInput } = require("react-native");
+
+  return {
     ProfileNicknameCard: ({ value, onChange }: { value: string; onChange: (v: string) => void }) =>
       React.createElement(TextInput, {
         value,
         onChangeText: onChange,
         placeholder: "닉네임",
       }),
+  };
+});
+
+jest.mock("../components/ProfileBasicInfoCard", () => {
+  const React = require("react");
+  const { Text, View } = require("react-native");
+
+  return {
     ProfileBasicInfoCard: ({
       gender,
       bloodType,
@@ -83,9 +99,33 @@ jest.mock("@/features/profile/edit", () => {
         null,
         React.createElement(Text, null, `기본정보:${gender}:${bloodType}:${rhFactor}`),
       ),
+  };
+});
+
+jest.mock("../components/ProfileTagEditorCard", () => {
+  const React = require("react");
+  const { Text } = require("react-native");
+
+  return {
     ProfileTagEditorCard: ({ title, items }: { title: string; items: string[] }) =>
       React.createElement(Text, null, `${title}:${items.join(",")}`),
+  };
+});
+
+jest.mock("../components/ProfileEditNoticeCard", () => {
+  const React = require("react");
+  const { Text } = require("react-native");
+
+  return {
     ProfileEditNoticeCard: () => React.createElement(Text, null, "안내문구"),
+  };
+});
+
+jest.mock("../components/ProfileEditActionBar", () => {
+  const React = require("react");
+  const { Pressable, Text, View } = require("react-native");
+
+  return {
     ProfileEditActionBar: ({
       onCancel,
       onSubmit,

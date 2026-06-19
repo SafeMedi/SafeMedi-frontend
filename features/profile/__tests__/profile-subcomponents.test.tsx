@@ -1,13 +1,13 @@
 import { fireEvent, render } from "@testing-library/react-native";
-import { ProfileEditActionBar } from "@/features/profile/edit";
+import { ProfileEditActionBar } from "@/features/profile/edit/components/ProfileEditActionBar";
+import { AppInfoSection } from "@/features/profile/view/components/AppInfoSection";
 import {
-  AppInfoSection,
   type FamilyProfile,
   FamilyProfileItem,
-  FamilyProfileSection,
-  LogoutButton,
-  UserHeroCard,
-} from "@/features/profile/view";
+} from "@/features/profile/view/components/FamilyProfileItem";
+import { FamilyProfileSection } from "@/features/profile/view/components/FamilyProfileSection";
+import { LogoutButton } from "@/features/profile/view/components/LogoutButton";
+import { UserHeroCard } from "@/features/profile/view/components/UserHeroCard";
 
 jest.mock("tamagui", () => {
   const React = require("react");
