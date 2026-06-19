@@ -42,3 +42,21 @@ export const useUserStore = create<UserState>((set) => ({
     set((state) => (state.user ? { user: { ...state.user, ...patch } } : state)),
   clearUser: () => set({ user: null }),
 }));
+
+/** userStore의 로컬 사용자 모델에서 파생한 프로필 히어로 데이터 */
+export function useProfileUser() {
+  const user = useUserStore((s) => s.user);
+  return {
+    name: user?.displayName ?? "사용자",
+    role: "주 사용자",
+  };
+}
+
+/** userStore의 로컬 사용자 모델에서 파생한 건강 정보 */
+export function useHealthInfo() {
+  const user = useUserStore((s) => s.user);
+  return {
+    allergies: user?.allergies ?? [],
+    chronicConditions: user?.chronicConditions ?? [],
+  };
+}

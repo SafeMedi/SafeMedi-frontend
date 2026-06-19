@@ -32,12 +32,9 @@ jest.mock("expo-router", () => ({
   },
 }));
 
-jest.mock("@/api/queries/profile", () => ({
-  useHealthInfo: () => mockUseHealthInfo(),
-}));
-
 jest.mock("@/stores/userStore", () => ({
   useUserStore: (selector: (state: { user: unknown }) => unknown) => mockUseUserStore(selector),
+  useHealthInfo: () => mockUseHealthInfo(),
 }));
 
 describe("HealthInfoDetailScreen", () => {

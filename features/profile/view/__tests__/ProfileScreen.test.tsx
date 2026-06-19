@@ -36,12 +36,12 @@ jest.mock("@/stores/userStore", () => ({
     selector({
       clearUser: mockClearUser,
     }),
+  useProfileUser: () => ({ name: "홍길동", role: "주 사용자" }),
+  useHealthInfo: () => ({ allergies: ["아스피린"], chronicConditions: ["천식"] }),
 }));
 
 jest.mock("@/api/queries/profile", () => ({
-  useProfileUser: () => ({ name: "홍길동", role: "주 사용자" }),
   useFamilyProfiles: () => ({ data: [] }),
-  useHealthInfo: () => ({ allergies: ["아스피린"], chronicConditions: ["천식"] }),
 }));
 
 jest.mock("tamagui", () => {

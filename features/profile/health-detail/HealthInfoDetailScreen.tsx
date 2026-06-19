@@ -5,10 +5,9 @@ import { useCallback, useMemo } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useHealthInfo } from "@/api/queries/profile";
 import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
-import { useUserStore } from "@/stores/userStore";
+import { useHealthInfo, useUserStore } from "@/stores/userStore";
 import { splitBloodTypeWithRh } from "@/utils/blood-type";
 import { ClinicalAlertCard } from "./components/ClinicalAlertCard";
 import { ClinicianNotesCard } from "./components/ClinicianNotesCard";

@@ -2,10 +2,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { type Href, router } from "expo-router";
 import { useMemo } from "react";
 
-import { useFamilyProfiles, useHealthInfo, useProfileUser } from "@/api/queries/profile";
+import { useFamilyProfiles } from "@/api/queries/profile";
 import { queryKeys } from "@/api/query-keys";
 import { useSessionStore } from "@/stores/sessionStore";
-import { useUserStore } from "@/stores/userStore";
+import { useHealthInfo, useProfileUser, useUserStore } from "@/stores/userStore";
 import type { FamilyProfile } from "./components/FamilyProfileSection";
 import { FAMILY_AVATAR_GRADIENTS } from "./constants";
 
