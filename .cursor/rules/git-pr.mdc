@@ -10,12 +10,16 @@ alwaysApply: true
 - 기본(base) 브랜치: **`main`**
 - `main`에서 직접 PR 생성하지 않는다. feature 브랜치에서 작업 후 PR.
 
+## 커밋
+
+- 커밋메세지 본문에 `Co-authored-by` 는 작성하지 않는다.
+
 ## PR 본문
 
 `.github/PULL_REQUEST_TEMPLATE.md` 섹션을 반드시 채운다:
 
-- 🔥 작업 개요
-- 🛠️ 작업 상세
+- 🔥 작업 배경
+- 🛠️ 작업 내용
 - 🧪 테스트 (체크리스트)
 - 💬 기타 논의 사항
 - ✅ 셀프 체크리스트
