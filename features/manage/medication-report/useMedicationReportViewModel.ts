@@ -26,6 +26,7 @@ export interface MedicationReportRecordItem {
   readonly scheduledTime: string;
   readonly status: MedicationRecordStatus;
   readonly statusLabel: string;
+  readonly statusTone: "taken" | "missed" | "upcoming";
   readonly isTaken: boolean;
 }
 
@@ -86,7 +87,16 @@ function isMedicationTaken(status: MedicationRecordStatus): boolean {
 
 function resolveStatusLabel(status: MedicationRecordStatus): string {
   if (status === "SUCCESS") return "완료";
-  return "미복용";
+  if (status === "UPCOMING") return "대기중";
+  return "복용 필요";
+}
+
+function resolveStatusTone(
+  status: MedicationRecordStatus,
+): MedicationReportRecordItem["statusTone"] {
+  if (status === "SUCCESS") return "taken";
+  if (status === "UPCOMING") return "upcoming";
+  return "missed";
 }
 
 function computeDayCompliance(items: readonly MonthlyMedicationRecordItem[]): {
@@ -132,6 +142,7 @@ function buildRecordItem(record: MonthlyMedicationRecordItem): MedicationReportR
     scheduledTime: record.scheduledTime,
     status: record.status,
     statusLabel: resolveStatusLabel(record.status),
+    statusTone: resolveStatusTone(record.status),
     isTaken: isMedicationTaken(record.status),
   };
 }
@@ -322,11 +333,11 @@ export function useMedicationReportViewModel(today = new Date()): MedicationRepo
   );
 
   const resolvedSelectedDate = useMemo(() => {
-    if (selectedDate && recordsByDate.has(selectedDate)) {
+    if (selectedDate) {
       return selectedDate;
     }
     return resolveDefaultSelectedDate(monthlyQuery.data?.records ?? [], today);
-  }, [monthlyQuery.data?.records, recordsByDate, selectedDate, today]);
+  }, [monthlyQuery.data?.records, selectedDate, today]);
 
   const selectedGroup = resolvedSelectedDate ? recordsByDate.get(resolvedSelectedDate) : undefined;
   const selectedCompliance = selectedGroup

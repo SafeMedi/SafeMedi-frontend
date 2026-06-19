@@ -20,8 +20,8 @@ export function MedicationReportDailyRecordsCard({
 }: MedicationReportDailyRecordsCardProps) {
   return (
     <SurfaceCard style={styles.card}>
-      <YStack gap={4} marginBottom={14}>
-        <XStack alignItems="center" gap={8}>
+      <YStack gap={4} mb={14}>
+        <XStack items="center" gap={8}>
           <Ionicons name="document-text-outline" size={18} color={palette.title_emphasis} />
           <Text style={styles.title}>{title}</Text>
         </XStack>
@@ -41,25 +41,34 @@ export function MedicationReportDailyRecordsCard({
                 <Text style={styles.groupTitle}>📋 {group.prescriptionTitle}</Text>
               </LinearGradient>
 
-              <YStack gap={7} padding={10}>
+              <YStack gap={7} p={10}>
                 {group.items.map((item) => {
-                  const isTaken = item.isTaken;
+                  const isTaken = item.statusTone === "taken";
+                  const isUpcoming = item.statusTone === "upcoming";
                   return (
                     <View
                       key={item.id}
                       style={[
                         styles.recordRow,
-                        isTaken ? styles.recordRowTaken : styles.recordRowMissed,
+                        isTaken
+                          ? styles.recordRowTaken
+                          : isUpcoming
+                            ? styles.recordRowUpcoming
+                            : styles.recordRowMissed,
                       ]}
                     >
                       <View
                         style={[
                           styles.statusIcon,
-                          isTaken ? styles.statusIconTaken : styles.statusIconMissed,
+                          isTaken
+                            ? styles.statusIconTaken
+                            : isUpcoming
+                              ? styles.statusIconUpcoming
+                              : styles.statusIconMissed,
                         ]}
                       >
                         <Ionicons
-                          name={isTaken ? "checkmark" : "close"}
+                          name={isTaken ? "checkmark" : isUpcoming ? "time-outline" : "close"}
                           size={16}
                           color={palette.white}
                         />
@@ -69,12 +78,16 @@ export function MedicationReportDailyRecordsCard({
                         <Text
                           style={[
                             styles.medicationName,
-                            isTaken ? styles.medicationNameTaken : styles.medicationNameMissed,
+                            isTaken
+                              ? styles.medicationNameTaken
+                              : isUpcoming
+                                ? styles.medicationNameUpcoming
+                                : styles.medicationNameMissed,
                           ]}
                         >
                           {item.medicationName}
                         </Text>
-                        <XStack alignItems="center" gap={4}>
+                        <XStack items="center" gap={4}>
                           <Ionicons name="time-outline" size={12} color={palette.icon} />
                           <Text style={styles.scheduledTime}>{item.scheduledTime}</Text>
                         </XStack>
@@ -83,7 +96,11 @@ export function MedicationReportDailyRecordsCard({
                       <View
                         style={[
                           styles.statusBadge,
-                          isTaken ? styles.statusBadgeTaken : styles.statusBadgeMissed,
+                          isTaken
+                            ? styles.statusBadgeTaken
+                            : isUpcoming
+                              ? styles.statusBadgeUpcoming
+                              : styles.statusBadgeMissed,
                         ]}
                       >
                         <Text style={styles.statusBadgeText}>{item.statusLabel}</Text>
@@ -153,6 +170,10 @@ const styles = StyleSheet.create({
     backgroundColor: palette.warning_allergy_bg,
     borderColor: palette.red_soft,
   },
+  recordRowUpcoming: {
+    backgroundColor: palette.surface_neutral,
+    borderColor: palette.dark_gray,
+  },
   statusIcon: {
     width: 28,
     height: 28,
@@ -166,6 +187,9 @@ const styles = StyleSheet.create({
   statusIconMissed: {
     backgroundColor: palette.red_medium,
   },
+  statusIconUpcoming: {
+    backgroundColor: palette.icon,
+  },
   medicationName: {
     fontSize: 14,
     lineHeight: 21,
@@ -176,6 +200,9 @@ const styles = StyleSheet.create({
   },
   medicationNameMissed: {
     color: palette.red_deep,
+  },
+  medicationNameUpcoming: {
+    color: palette.title_emphasis,
   },
   scheduledTime: {
     color: palette.icon,
@@ -193,6 +220,9 @@ const styles = StyleSheet.create({
   },
   statusBadgeMissed: {
     backgroundColor: palette.red_medium,
+  },
+  statusBadgeUpcoming: {
+    backgroundColor: palette.icon,
   },
   statusBadgeText: {
     color: palette.white,

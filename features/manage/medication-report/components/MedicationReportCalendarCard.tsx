@@ -72,12 +72,12 @@ export function MedicationReportCalendarCard({
 
   return (
     <SurfaceCard style={styles.card}>
-      <XStack alignItems="center" gap={8} marginBottom={14}>
+      <XStack items="center" gap={8} mb={14}>
         <Ionicons name="calendar-outline" size={18} color={palette.title_emphasis} />
         <Text style={styles.monthLabel}>{monthLabel}</Text>
       </XStack>
 
-      <XStack marginBottom={8}>
+      <XStack mb={8}>
         {weekdayLabels.map((label) => (
           <View key={label} style={styles.weekdayCell}>
             <Text style={styles.weekdayLabel}>{label}</Text>
@@ -87,7 +87,7 @@ export function MedicationReportCalendarCard({
 
       <YStack gap={8}>
         {weeks.map((week) => (
-          <XStack key={week.map((day) => day.id).join("-")} alignItems="stretch">
+          <XStack key={week.map((day) => day.id).join("-")} items="stretch">
             {week.map((day) => {
               if (day.day === null || day.date === null) {
                 return <View key={day.id} style={styles.dayCellSlot} />;
@@ -137,9 +137,9 @@ export function MedicationReportCalendarCard({
       </YStack>
 
       <View style={styles.legendDivider} />
-      <XStack justifyContent="center" gap={14} paddingTop={14}>
+      <XStack justify="center" gap={14} pt={14}>
         {LEGEND_ITEMS.map((item) => (
-          <XStack key={item.label} alignItems="center" gap={5}>
+          <XStack key={item.label} items="center" gap={5}>
             <View style={[styles.legendDot, { backgroundColor: item.color }]} />
             <Text style={styles.legendLabel}>{item.label}</Text>
           </XStack>

@@ -21,8 +21,8 @@ export function MedicationReportSummaryCard({
 }: MedicationReportSummaryCardProps) {
   return (
     <SurfaceCard style={styles.card}>
-      <XStack alignItems="center" justifyContent="space-between" gap={12}>
-        <XStack alignItems="center" gap={10} flex={1}>
+      <XStack items="center" justify="space-between" gap={12}>
+        <XStack items="center" gap={10} flex={1}>
           <LinearGradient
             colors={[palette.green, palette.opal]}
             start={{ x: 0, y: 0 }}
@@ -39,7 +39,7 @@ export function MedicationReportSummaryCard({
         <Text style={styles.rate}>{complianceRate}%</Text>
       </XStack>
 
-      <XStack gap={7} marginTop={14}>
+      <XStack gap={7} mt={14}>
         <View style={styles.perfectBadge}>
           <MaterialCommunityIcons
             name="check-circle"

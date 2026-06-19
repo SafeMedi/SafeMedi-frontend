@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react-native";
+import { act, renderHook } from "@testing-library/react-native";
 
 import { useDashboardMonthlyMedicationRecords } from "@/api/queries/dashboard";
 import {
@@ -65,7 +65,7 @@ const mockRecords = [
         medicationNames: ["플루티카손"],
         scheduledTime: "20:00",
         takenTime: null,
-        status: "DUE" as const,
+        status: "UPCOMING" as const,
       },
     ],
   },
@@ -148,6 +148,68 @@ describe("useMedicationReportViewModel", () => {
     expect(result.current.selectedDaySummary).toBe("2/3 완료 (67%)");
     expect(result.current.prescriptionGroups).toHaveLength(2);
     expect(result.current.prescriptionGroups[0]?.prescriptionTitle).toBe("신장내과 처방전");
+  });
+
+  it("기록이 없는 과거 날짜도 선택 상태와 빈 기록 화면 모델을 유지한다", () => {
+    mockUseDashboardMonthlyMedicationRecords.mockReturnValue({
+      data: {
+        period: "2026-04",
+        summary: {
+          totalCount: 9,
+          takenCount: 8,
+          fraction: "8/9",
+          successRate: 89,
+        },
+        records: mockRecords,
+      },
+      isLoading: false,
+      isError: false,
+      refetch: mockRefetch,
+    } as unknown as ReturnType<typeof useDashboardMonthlyMedicationRecords>);
+
+    const { result } = renderHook(() =>
+      useMedicationReportViewModel(new Date("2026-04-10T00:00:00")),
+    );
+
+    act(() => {
+      result.current.setSelectedDate("2026-04-08");
+    });
+
+    expect(result.current.selectedDate).toBe("2026-04-08");
+    expect(result.current.selectedDateTitle).toBe("2026-04-08 복약 기록");
+    expect(result.current.selectedDaySummary).toBe("0/0 완료 (0%)");
+    expect(result.current.prescriptionGroups).toHaveLength(0);
+  });
+
+  it("예정 상태는 미복용이 아닌 대기 상태로 표시한다", () => {
+    mockUseDashboardMonthlyMedicationRecords.mockReturnValue({
+      data: {
+        period: "2026-04",
+        summary: {
+          totalCount: 9,
+          takenCount: 8,
+          fraction: "8/9",
+          successRate: 89,
+        },
+        records: mockRecords,
+      },
+      isLoading: false,
+      isError: false,
+      refetch: mockRefetch,
+    } as unknown as ReturnType<typeof useDashboardMonthlyMedicationRecords>);
+
+    const { result } = renderHook(() =>
+      useMedicationReportViewModel(new Date("2026-04-07T00:00:00")),
+    );
+
+    expect(result.current.prescriptionGroups[0]?.items[1]).toEqual(
+      expect.objectContaining({
+        status: "UPCOMING",
+        statusLabel: "대기중",
+        statusTone: "upcoming",
+        isTaken: false,
+      }),
+    );
   });
 
   it("로딩과 에러 상태를 전달하고 refetch를 호출한다", async () => {
