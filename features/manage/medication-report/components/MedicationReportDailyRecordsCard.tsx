@@ -1,0 +1,210 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { LinearGradient } from "expo-linear-gradient";
+import { StyleSheet, View } from "react-native";
+import { Text, XStack, YStack } from "tamagui";
+
+import { SurfaceCard } from "@/components/ui/SurfaceCard";
+import { palette } from "@/constants/design-tokens";
+import type { MedicationReportPrescriptionGroup } from "../useMedicationReportViewModel";
+
+interface MedicationReportDailyRecordsCardProps {
+  readonly title: string;
+  readonly summary: string;
+  readonly prescriptionGroups: readonly MedicationReportPrescriptionGroup[];
+}
+
+export function MedicationReportDailyRecordsCard({
+  title,
+  summary,
+  prescriptionGroups,
+}: MedicationReportDailyRecordsCardProps) {
+  return (
+    <SurfaceCard style={styles.card}>
+      <YStack gap={4} marginBottom={14}>
+        <XStack alignItems="center" gap={8}>
+          <Ionicons name="document-text-outline" size={18} color={palette.title_emphasis} />
+          <Text style={styles.title}>{title}</Text>
+        </XStack>
+        <Text style={styles.summary}>{summary}</Text>
+      </YStack>
+
+      {prescriptionGroups.length > 0 ? (
+        <YStack gap={14}>
+          {prescriptionGroups.map((group) => (
+            <View key={group.id} style={styles.groupCard}>
+              <LinearGradient
+                colors={[palette.blue, palette.purple]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.groupHeader}
+              >
+                <Text style={styles.groupTitle}>📋 {group.prescriptionTitle}</Text>
+              </LinearGradient>
+
+              <YStack gap={7} padding={10}>
+                {group.items.map((item) => {
+                  const isTaken = item.isTaken;
+                  return (
+                    <View
+                      key={item.id}
+                      style={[
+                        styles.recordRow,
+                        isTaken ? styles.recordRowTaken : styles.recordRowMissed,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.statusIcon,
+                          isTaken ? styles.statusIconTaken : styles.statusIconMissed,
+                        ]}
+                      >
+                        <Ionicons
+                          name={isTaken ? "checkmark" : "close"}
+                          size={16}
+                          color={palette.white}
+                        />
+                      </View>
+
+                      <YStack flex={1} gap={2}>
+                        <Text
+                          style={[
+                            styles.medicationName,
+                            isTaken ? styles.medicationNameTaken : styles.medicationNameMissed,
+                          ]}
+                        >
+                          {item.medicationName}
+                        </Text>
+                        <XStack alignItems="center" gap={4}>
+                          <Ionicons name="time-outline" size={12} color={palette.icon} />
+                          <Text style={styles.scheduledTime}>{item.scheduledTime}</Text>
+                        </XStack>
+                      </YStack>
+
+                      <View
+                        style={[
+                          styles.statusBadge,
+                          isTaken ? styles.statusBadgeTaken : styles.statusBadgeMissed,
+                        ]}
+                      >
+                        <Text style={styles.statusBadgeText}>{item.statusLabel}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </YStack>
+            </View>
+          ))}
+        </YStack>
+      ) : (
+        <Text style={styles.emptyText}>선택한 날짜의 복약 기록이 없습니다.</Text>
+      )}
+    </SurfaceCard>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    padding: 18,
+    backgroundColor: palette.overlay_white_90,
+  },
+  title: {
+    color: palette.title_emphasis,
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "700",
+  },
+  summary: {
+    color: palette.icon,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "400",
+  },
+  groupCard: {
+    borderWidth: 1,
+    borderColor: palette.dark_gray,
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: "rgba(255,255,255,0.5)",
+  },
+  groupHeader: {
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  groupTitle: {
+    color: palette.white,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "600",
+  },
+  recordRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  recordRowTaken: {
+    backgroundColor: "#F0FDF4",
+    borderColor: palette.light_green,
+  },
+  recordRowMissed: {
+    backgroundColor: palette.warning_allergy_bg,
+    borderColor: palette.red_soft,
+  },
+  statusIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statusIconTaken: {
+    backgroundColor: palette.green,
+  },
+  statusIconMissed: {
+    backgroundColor: palette.red_medium,
+  },
+  medicationName: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "500",
+  },
+  medicationNameTaken: {
+    color: "#016630",
+  },
+  medicationNameMissed: {
+    color: palette.red_deep,
+  },
+  scheduledTime: {
+    color: palette.icon,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "400",
+  },
+  statusBadge: {
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  statusBadgeTaken: {
+    backgroundColor: palette.green,
+  },
+  statusBadgeMissed: {
+    backgroundColor: palette.red_medium,
+  },
+  statusBadgeText: {
+    color: palette.white,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: "500",
+  },
+  emptyText: {
+    color: palette.icon,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
+    fontWeight: "500",
+  },
+});

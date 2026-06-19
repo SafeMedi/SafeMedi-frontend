@@ -1,5 +1,5 @@
-import { View } from "tamagui";
+import { MedicationReportScreen } from "@/features/manage/medication-report";
 
-export default function TabTwoScreen() {
-  return <View></View>;
+export default function ManageScreen() {
+  return <MedicationReportScreen />;
 }
