@@ -3,7 +3,7 @@ import AuthLayout from "../_layout";
 import LoginRoute from "../login";
 import TutorialRoute from "../tutorial";
 
-const mockStackScreen = jest.fn(() => null);
+const mockStackScreen = jest.fn<null, [unknown]>(() => null);
 const mockLoginScreen = jest.fn(() => null);
 const mockTutorialScreen = jest.fn(() => null);
 
@@ -19,11 +19,11 @@ jest.mock("expo-router", () => {
   return { Stack };
 });
 
-jest.mock("@/components/domains/auth", () => ({
+jest.mock("@/features/auth", () => ({
   LoginScreen: () => mockLoginScreen(),
 }));
 
-jest.mock("@/components/domains/tutorial", () => ({
+jest.mock("@/features/tutorial", () => ({
   TutorialScreen: () => mockTutorialScreen(),
 }));
 
@@ -36,7 +36,7 @@ describe("app/(auth) routes", () => {
     render(<AuthLayout />);
 
     const names = mockStackScreen.mock.calls
-      .map((call) => (call[0] as { name?: string })?.name)
+      .map((call) => (call[0] as unknown as { name?: string })?.name)
       .filter(Boolean);
     expect(names).toEqual(["login", "tutorial"]);
   });

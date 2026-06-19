@@ -2,13 +2,13 @@ import { render } from "@testing-library/react-native";
 import FamilyDetailRoute from "../[familyId]";
 
 const mockUseLocalSearchParams = jest.fn();
-const mockFamilyDetailScreen = jest.fn(() => null);
+const mockFamilyDetailScreen = jest.fn<null, [{ familyId: number | null }]>(() => null);
 
 jest.mock("expo-router", () => ({
   useLocalSearchParams: () => mockUseLocalSearchParams(),
 }));
 
-jest.mock("@/components/domains/family", () => ({
+jest.mock("@/features/family/family-screen", () => ({
   FamilyDetailScreen: (props: { familyId: number | null }) => mockFamilyDetailScreen(props),
 }));
 

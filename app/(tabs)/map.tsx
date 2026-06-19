@@ -1,4 +1,4 @@
-import { MapScreen } from "@/components/domains/map";
+import { MapScreen } from "@/features/map";
 
 export default function MapTabRoute() {
   return <MapScreen />;

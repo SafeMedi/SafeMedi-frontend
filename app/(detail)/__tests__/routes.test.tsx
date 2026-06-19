@@ -25,27 +25,27 @@ jest.mock("expo-router", () => {
   };
 });
 
-jest.mock("@/components/domains/dashboard", () => ({
+jest.mock("@/features/dashboard/medication-history", () => ({
   MedicationHistoryScreen: () => mockMedicationHistoryScreen(),
 }));
 
-jest.mock("@/components/domains/family", () => ({
+jest.mock("@/features/family/invite", () => ({
   FamilyManageScreen: () => mockFamilyManageScreen(),
 }));
 
-jest.mock("@/components/domains/profile/edit", () => ({
+jest.mock("@/features/profile/edit", () => ({
   ProfileEditScreen: () => mockProfileEditScreen(),
 }));
 
-jest.mock("@/components/domains/profile/health-detail", () => ({
+jest.mock("@/features/profile/health-detail", () => ({
   HealthInfoDetailScreen: () => mockHealthInfoDetailScreen(),
 }));
 
-jest.mock("@/components/domains/scan/prescription-scan-result", () => ({
+jest.mock("@/features/scan/prescription-scan-result", () => ({
   PrescriptionScanResultScreen: () => mockPrescriptionScanResultScreen(),
 }));
 
-jest.mock("@/components/domains/scan/prescription-scan", () => ({
+jest.mock("@/features/scan/prescription-scan", () => ({
   PrescriptionScanScreen: () => mockPrescriptionScanScreen(),
 }));
 

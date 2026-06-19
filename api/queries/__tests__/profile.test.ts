@@ -3,9 +3,7 @@ import { renderHook } from "@testing-library/react-native";
 import { queryKeys } from "@/api/query-keys";
 import {
   useFamilyProfiles,
-  useHealthInfo,
   useNotificationSettings,
-  useProfileUser,
   useUpdateNotificationSettings,
 } from "../profile";
 
@@ -29,11 +27,6 @@ const mockSetQueryData = jest.fn<unknown, [unknown, unknown]>();
 const mockInvalidateQueries = jest.fn(async () => {});
 
 let mockAccessToken: string | null = "token";
-let mockUser = {
-  displayName: "홍길동",
-  allergies: ["아스피린"],
-  chronicConditions: ["천식"],
-};
 
 jest.mock("@tanstack/react-query", () => ({
   useQuery: jest.fn((options: unknown) => options),
@@ -55,35 +48,16 @@ jest.mock("@/stores/sessionStore", () => ({
     selector({ accessToken: mockAccessToken }),
 }));
 
-jest.mock("@/stores/userStore", () => ({
-  useUserStore: (selector: (state: { user: typeof mockUser }) => unknown) =>
-    selector({ user: mockUser }),
-}));
-
 describe("api/queries/profile", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockAccessToken = "token";
-    mockUser = {
-      displayName: "홍길동",
-      allergies: ["아스피린"],
-      chronicConditions: ["천식"],
-    };
     mockUseQueryClient.mockReturnValue({
       cancelQueries: mockCancelQueries,
       getQueryData: mockGetQueryData,
       setQueryData: mockSetQueryData,
       invalidateQueries: mockInvalidateQueries,
     } as unknown as ReturnType<typeof useQueryClient>);
-  });
-
-  it("프로필 유저/건강 정보를 userStore에서 파생한다", () => {
-    const { result: userResult } = renderHook(() => useProfileUser());
-    const { result: healthResult } = renderHook(() => useHealthInfo());
-
-    expect(userResult.current.name).toBe("홍길동");
-    expect(userResult.current.role).toBe("주 사용자");
-    expect(healthResult.current.allergies).toEqual(["아스피린"]);
   });
 
   it("가족 목록 쿼리는 서버 가족 목록을 조회한다", async () => {

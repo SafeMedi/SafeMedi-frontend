@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
 
-import { FamilyDetailScreen } from "@/components/domains/family";
+import { FamilyDetailScreen } from "@/features/family/family-screen";
 
 function toFamilyId(value: string | string[] | undefined): number | null {
   if (!value) {

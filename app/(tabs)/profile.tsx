@@ -1,4 +1,4 @@
-import { ProfileScreen } from "@/components/domains/profile/view";
+import { ProfileScreen } from "@/features/profile/view";
 
 export default function ProfileTabRoute() {
   return <ProfileScreen />;

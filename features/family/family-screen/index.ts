@@ -1,0 +1,1 @@
+export { FamilyDetailScreen } from "./FamilyDetailScreen";

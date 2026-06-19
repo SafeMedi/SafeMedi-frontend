@@ -4,18 +4,8 @@ import { fetchNotificationSettings, patchNotificationSettings } from "@/api/endp
 import { queryKeys } from "@/api/query-keys";
 import type { FamilySummary, NotificationSettings } from "@/api/types";
 import { useSessionStore } from "@/stores/sessionStore";
-import { useUserStore } from "@/stores/userStore";
 
 const STALE_MS = 5 * 60 * 1000;
-
-/** 프로필 히어로 카드용 데이터 (userStore에서 파생) */
-export function useProfileUser() {
-  const user = useUserStore((s) => s.user);
-  return {
-    name: user?.displayName ?? "사용자",
-    role: "주 사용자",
-  };
-}
 
 export function useFamilyProfiles() {
   const accessToken = useSessionStore((s) => s.accessToken);
@@ -26,15 +16,6 @@ export function useFamilyProfiles() {
     staleTime: STALE_MS,
     queryFn: async (): Promise<FamilySummary[]> => fetchFamilies(),
   });
-}
-
-/** 건강 정보 (알러지 + 기저질환) — userStore에서 파생 */
-export function useHealthInfo() {
-  const user = useUserStore((s) => s.user);
-  return {
-    allergies: user?.allergies ?? [],
-    chronicConditions: user?.chronicConditions ?? [],
-  };
 }
 
 /** 알림 설정 조회 */

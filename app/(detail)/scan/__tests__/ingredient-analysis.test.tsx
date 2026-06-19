@@ -3,7 +3,7 @@ import IngredientAnalysisDetailRoute from "../ingredient-analysis";
 
 const mockIngredientAnalysisScreen = jest.fn(() => null);
 
-jest.mock("@/components/domains/scan/ingredient-analysis/IngredientAnalysisScreen", () => ({
+jest.mock("@/features/scan/ingredient-analysis/IngredientAnalysisScreen", () => ({
   IngredientAnalysisScreen: () => mockIngredientAnalysisScreen(),
 }));
 

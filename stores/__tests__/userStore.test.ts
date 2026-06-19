@@ -1,4 +1,5 @@
-import { type User, useUserStore } from "@/stores/userStore";
+import { renderHook } from "@testing-library/react-native";
+import { type User, useHealthInfo, useProfileUser, useUserStore } from "@/stores/userStore";
 
 const BASE_USER: User = {
   id: "user-1",
@@ -56,5 +57,18 @@ describe("useUserStore", () => {
     useUserStore.getState().clearUser();
 
     expect(useUserStore.getState().user).toBeNull();
+  });
+
+  it("프로필/건강 정보 selector hook은 로컬 user 상태에서 값을 파생한다", () => {
+    useUserStore.getState().setUser(BASE_USER);
+
+    const { result: profileUser } = renderHook(() => useProfileUser());
+    const { result: healthInfo } = renderHook(() => useHealthInfo());
+
+    expect(profileUser.current).toEqual({ name: "홍길동", role: "주 사용자" });
+    expect(healthInfo.current).toEqual({
+      allergies: ["peanut"],
+      chronicConditions: ["asthma"],
+    });
   });
 });

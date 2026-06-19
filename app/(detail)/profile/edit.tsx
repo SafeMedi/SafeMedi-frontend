@@ -1,4 +1,4 @@
-import { ProfileEditScreen } from "@/components/domains/profile/edit";
+import { ProfileEditScreen } from "@/features/profile/edit";
 
 export default function ProfileEditRoute() {
   return <ProfileEditScreen />;
