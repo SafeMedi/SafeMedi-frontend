@@ -1,10 +1,12 @@
 import { render } from "@testing-library/react-native";
 import TabLayout from "../_layout";
 
-const mockRedirect = jest.fn(() => null);
-const mockAuthGateView = jest.fn(() => null);
-const mockTabsScreen = jest.fn(() => null);
-const mockRouterPush = jest.fn();
+const mockRedirect = jest.fn<null, [{ href: string }]>(() => null);
+const mockAuthGateView = jest.fn<null, [{ kind: "loading" | "error"; onRetry?: () => void }]>(
+  () => null,
+);
+const mockTabsScreen = jest.fn<null, [unknown]>(() => null);
+const mockRouterPush = jest.fn<unknown, unknown[]>();
 
 let mockAuthState:
   | { kind: "loading" }
@@ -85,9 +87,9 @@ describe("app/(tabs)/_layout", () => {
   it("scan 탭 클릭 리스너가 기본 이벤트를 막고 상세 스캔 화면으로 이동한다", () => {
     render(<TabLayout />);
     const screenCall = mockTabsScreen.mock.calls.find(
-      (call) => (call[0] as { name?: string })?.name === "scan",
+      (call) => (call[0] as unknown as { name?: string })?.name === "scan",
     );
-    const scanProps = screenCall?.[0] as {
+    const scanProps = screenCall?.[0] as unknown as {
       listeners?: { tabPress?: (event: { preventDefault: () => void }) => void };
     };
     const preventDefault = jest.fn();

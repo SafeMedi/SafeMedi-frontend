@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react-native";
 import RootLayout, { unstable_settings } from "../_layout";
 
-const mockStackScreen = jest.fn(() => null);
+const mockStackScreen = jest.fn<null, [unknown]>(() => null);
 const mockProfileSync = jest.fn(() => null);
 
 jest.mock("expo-router", () => {
@@ -48,7 +48,7 @@ describe("app/_layout", () => {
     expect(mockProfileSync).toHaveBeenCalledTimes(1);
 
     const names = mockStackScreen.mock.calls
-      .map((call) => (call[0] as { name?: string })?.name)
+      .map((call) => (call[0] as unknown as { name?: string })?.name)
       .filter(Boolean);
     expect(names).toEqual(["index", "(auth)", "(tabs)", "(detail)"]);
   });

@@ -13,7 +13,7 @@ jest.mock("tamagui", () => {
   };
 });
 
-const mockTodayScheduleCard = jest.fn(() => null);
+const mockTodayScheduleCard = jest.fn<null, [{ item: DashboardScheduleCardItem }]>(() => null);
 
 jest.mock("../TodayScheduleCard", () => ({
   TodayScheduleCard: (props: { item: DashboardScheduleCardItem }) => mockTodayScheduleCard(props),

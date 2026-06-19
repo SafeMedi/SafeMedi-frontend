@@ -6,8 +6,10 @@ let mockAuthState:
   | { kind: "error"; retry: () => void }
   | { kind: "ready"; href: string };
 
-const mockRedirect = jest.fn(() => null);
-const mockAuthGateView = jest.fn(() => null);
+const mockRedirect = jest.fn<null, [{ href: string }]>(() => null);
+const mockAuthGateView = jest.fn<null, [{ kind: "loading" | "error"; onRetry?: () => void }]>(
+  () => null,
+);
 
 jest.mock("expo-router", () => ({
   Redirect: (props: { href: string }) => mockRedirect(props),
