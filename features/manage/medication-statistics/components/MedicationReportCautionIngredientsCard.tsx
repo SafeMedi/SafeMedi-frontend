@@ -38,25 +38,29 @@ export function MedicationReportCautionIngredientsCard({
         <Text style={styles.title}>주의 성분 섭취 통계</Text>
       </XStack>
 
-      <YStack gap={10}>
-        {items.map((item) => {
-          const itemStyle = resolveItemStyle(item.riskLevel);
+      {items.length > 0 ? (
+        <YStack gap={10}>
+          {items.map((item) => {
+            const itemStyle = resolveItemStyle(item.riskLevel);
 
-          return (
-            <View key={item.id} style={[styles.itemContainer, itemStyle.container]}>
-              <XStack items="center" justify="space-between" gap={12}>
-                <YStack gap={2} flex={1}>
-                  <Text style={styles.ingredientName}>{item.name}</Text>
-                  <Text style={styles.intakeCount}>이번 달 {item.monthlyIntakeCount}회 섭취</Text>
-                </YStack>
-                <View style={[styles.badge, itemStyle.badge]}>
-                  <Text style={styles.badgeText}>{item.riskLabel}</Text>
-                </View>
-              </XStack>
-            </View>
-          );
-        })}
-      </YStack>
+            return (
+              <View key={item.id} style={[styles.itemContainer, itemStyle.container]}>
+                <XStack items="center" justify="space-between" gap={12}>
+                  <YStack gap={2} flex={1}>
+                    <Text style={styles.ingredientName}>{item.name}</Text>
+                    <Text style={styles.intakeCount}>이번 달 {item.monthlyIntakeCount}회 섭취</Text>
+                  </YStack>
+                  <View style={[styles.badge, itemStyle.badge]}>
+                    <Text style={styles.badgeText}>{item.riskLabel}</Text>
+                  </View>
+                </XStack>
+              </View>
+            );
+          })}
+        </YStack>
+      ) : (
+        <Text style={styles.emptyText}>이번 달 주의가 필요한 성분이 없습니다.</Text>
+      )}
     </SurfaceCard>
   );
 }
@@ -113,5 +117,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 14,
     fontWeight: "500",
+  },
+  emptyText: {
+    color: palette.icon,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
+    fontWeight: "500",
+    paddingVertical: 12,
   },
 });
