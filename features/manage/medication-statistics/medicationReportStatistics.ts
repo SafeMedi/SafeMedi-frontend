@@ -5,11 +5,11 @@ import type {
   MedicationStatisticsResponse,
 } from "@/api/types/dashboard";
 
-export type MedicationReportWeeklyComplianceTone = "success" | "warning";
+export type MedicationReportWeeklyComplianceTone = "success" | "warning" | "future";
 
 export interface MedicationReportWeeklyComplianceItem {
   readonly dayLabel: string;
-  readonly rate: number;
+  readonly rate: number | null;
   readonly tone: MedicationReportWeeklyComplianceTone;
 }
 
@@ -62,27 +62,46 @@ export function getMedicationReportWeekRange(today: Date): {
   weekStart.setHours(0, 0, 0, 0);
   weekStart.setDate(today.getDate() + diffToMonday);
 
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-
   return {
     startDate: formatDateToApiParam(weekStart),
-    endDate: formatDateToApiParam(weekEnd),
+    endDate: formatDateToApiParam(today),
     weekStart,
+  };
+}
+
+export function getMedicationReportMonthRange(today: Date): {
+  readonly startDate: string;
+  readonly endDate: string;
+} {
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  return {
+    startDate: formatDateToApiParam(monthStart),
+    endDate: formatDateToApiParam(today),
   };
 }
 
 export function buildMedicationReportWeeklyCompliance(
   dailyCompliance: readonly MedicationStatisticsDailyCompliance[],
   weekStart: Date,
+  today: Date,
 ): readonly MedicationReportWeeklyComplianceItem[] {
   const complianceByDate = new Map(dailyCompliance.map((entry) => [entry.date, entry]));
+  const todayText = formatDateToApiParam(today);
 
   return WEEKDAY_FULL_LABELS.map((dayLabel, index) => {
     const date = new Date(weekStart);
     date.setDate(weekStart.getDate() + index);
     const dateText = formatDateToApiParam(date);
     const entry = complianceByDate.get(dateText);
+
+    if (dateText > todayText) {
+      return {
+        dayLabel,
+        rate: null,
+        tone: "future" as const,
+      };
+    }
 
     if (!entry || entry.totalCount === 0) {
       return {
@@ -116,7 +135,7 @@ export function mapMedicationReportCautionIngredients(
 export function mapMedicationReportMonthlyAchievements(
   statistics: MedicationStatisticsResponse | undefined,
 ): readonly string[] {
-  return statistics?.monthlyAchievements.map((achievement) => achievement.message) ?? [];
+  return statistics?.monthlyAchievements?.map((achievement) => achievement.message) ?? [];
 }
 
 export function resolveMedicationReportConsultationMessage(

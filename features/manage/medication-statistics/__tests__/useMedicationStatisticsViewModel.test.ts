@@ -3,6 +3,7 @@ import { renderHook } from "@testing-library/react-native";
 import { useMedicationStatistics as useMedicationStatisticsQuery } from "@/api/queries/dashboard";
 import {
   buildMedicationReportWeeklyCompliance,
+  getMedicationReportMonthRange,
   getMedicationReportWeekRange,
   mapMedicationReportCautionIngredients,
   mapMedicationReportMonthlyAchievements,
@@ -11,11 +12,18 @@ import {
 import { useMedicationStatisticsViewModel } from "../useMedicationStatisticsViewModel";
 
 describe("medicationReportStatistics", () => {
-  it("현재 주의 월요일~일요일 범위를 계산한다", () => {
+  it("현재 주의 월요일부터 오늘까지 범위를 계산한다", () => {
     expect(getMedicationReportWeekRange(new Date("2026-04-08T00:00:00"))).toEqual({
       startDate: "2026-04-06",
-      endDate: "2026-04-12",
+      endDate: "2026-04-08",
       weekStart: new Date("2026-04-06T00:00:00"),
+    });
+  });
+
+  it("월간 통계 조회 범위를 계산한다", () => {
+    expect(getMedicationReportMonthRange(new Date("2026-04-08T00:00:00"))).toEqual({
+      startDate: "2026-04-01",
+      endDate: "2026-04-08",
     });
   });
 
@@ -28,6 +36,7 @@ describe("medicationReportStatistics", () => {
         { date: "2026-04-07", takenCount: 9, totalCount: 10, fraction: "9/10" },
       ],
       weekRange.weekStart,
+      new Date("2026-04-08T00:00:00"),
     );
 
     expect(rows[0]).toEqual({
@@ -44,6 +53,11 @@ describe("medicationReportStatistics", () => {
       dayLabel: "수요일",
       rate: 0,
       tone: "warning",
+    });
+    expect(rows[3]).toEqual({
+      dayLabel: "목요일",
+      rate: null,
+      tone: "future",
     });
   });
 
@@ -164,6 +178,6 @@ describe("useMedicationStatisticsViewModel", () => {
     expect(result.current.isLoading).toBe(true);
     expect(result.current.isError).toBe(true);
     await result.current.refetch();
-    expect(mockRefetchStatistics).toHaveBeenCalledTimes(1);
+    expect(mockRefetchStatistics).toHaveBeenCalledTimes(2);
   });
 });

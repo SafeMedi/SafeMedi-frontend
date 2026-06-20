@@ -82,7 +82,8 @@ export interface MedicationStatisticsResponse {
   readonly totalTaken: number;
   readonly totalComplianceRate: number;
   readonly dailyCompliance: readonly MedicationStatisticsDailyCompliance[];
-  readonly cautionIngredients: readonly MedicationStatisticsCautionIngredient[];
-  readonly consultationMessage: string;
-  readonly monthlyAchievements: readonly MedicationStatisticsMonthlyAchievement[];
+  // 통계 API 확장 필드. 서버 배포 순서상 이전 응답도 안전하게 처리한다.
+  readonly cautionIngredients?: readonly MedicationStatisticsCautionIngredient[];
+  readonly consultationMessage?: string;
+  readonly monthlyAchievements?: readonly MedicationStatisticsMonthlyAchievement[];
 }

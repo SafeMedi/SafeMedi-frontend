@@ -29,15 +29,16 @@ export function MedicationReportWeeklyComplianceCard({
           <YStack key={item.dayLabel} gap={4}>
             <XStack items="center" justify="space-between">
               <Text style={styles.dayLabel}>{item.dayLabel}</Text>
-              <Text style={styles.rateLabel}>{item.rate}%</Text>
+              <Text style={styles.rateLabel}>{item.rate === null ? "예정" : `${item.rate}%`}</Text>
             </XStack>
             <View style={styles.track}>
               <View
                 style={[
                   styles.fill,
                   {
-                    width: `${item.rate}%`,
-                    backgroundColor: resolveBarColor(item.tone),
+                    width: `${item.rate ?? 0}%`,
+                    backgroundColor:
+                      item.tone === "future" ? palette.surface_neutral : resolveBarColor(item.tone),
                   },
                 ]}
               />
