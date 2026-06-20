@@ -14,7 +14,7 @@ export function MedicationReportConsultationCard({
 }: MedicationReportConsultationCardProps) {
   return (
     <LinearGradient
-      colors={["#FAF5FF", "#FDF2F8"]}
+      colors={[...palette.bg_consultation_card]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.card}
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#E9D4FF",
+    borderColor: palette.consultation_card_border,
     paddingHorizontal: 15,
     paddingVertical: 15,
   },
@@ -53,13 +53,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   title: {
-    color: "#6E11B0",
+    color: palette.consultation_card_title,
     fontSize: 12,
     lineHeight: 18,
     fontWeight: "600",
   },
   message: {
-    color: "#8200DB",
+    color: palette.consultation_card_message,
     fontSize: 12,
     lineHeight: 18,
     fontWeight: "400",

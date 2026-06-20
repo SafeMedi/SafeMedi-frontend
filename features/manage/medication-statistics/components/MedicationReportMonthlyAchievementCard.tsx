@@ -18,7 +18,7 @@ export function MedicationReportMonthlyAchievementCard({
 
   return (
     <LinearGradient
-      colors={["#F0FDF4", "#ECFDF5"]}
+      colors={[...palette.bg_achievement_card]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.card}
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     paddingVertical: 19,
   },
   title: {
-    color: "#016630",
+    color: palette.achievement_card_title,
     fontSize: 14,
     lineHeight: 21,
     fontWeight: "600",
