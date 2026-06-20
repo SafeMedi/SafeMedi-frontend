@@ -51,6 +51,10 @@ function resolveRiskLabel(riskLevel: MedicationStatisticsIngredientRiskLevel): s
   return riskLevel === "DANGER" ? "위험" : "주의";
 }
 
+function buildCautionIngredientId(ingredient: MedicationStatisticsCautionIngredient): string {
+  return `${ingredient.ingredientName}-${ingredient.riskLevel}-${ingredient.monthlyIntakeCount}`;
+}
+
 export function getMedicationReportWeekRange(today: Date): {
   readonly startDate: string;
   readonly endDate: string;
@@ -123,8 +127,8 @@ export function buildMedicationReportWeeklyCompliance(
 export function mapMedicationReportCautionIngredients(
   ingredients: readonly MedicationStatisticsCautionIngredient[],
 ): readonly MedicationReportCautionIngredientItem[] {
-  return ingredients.map((ingredient, index) => ({
-    id: `${ingredient.ingredientName}-${index}`,
+  return ingredients.map((ingredient) => ({
+    id: buildCautionIngredientId(ingredient),
     name: ingredient.ingredientName,
     monthlyIntakeCount: ingredient.monthlyIntakeCount,
     riskLevel: ingredient.riskLevel,

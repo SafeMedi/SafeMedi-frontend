@@ -82,7 +82,7 @@ describe("medicationReportStatistics", () => {
 
     expect(mapMedicationReportCautionIngredients(statistics.cautionIngredients)).toEqual([
       {
-        id: "아세트아미노펜-0",
+        id: "아세트아미노펜-CAUTION-12",
         name: "아세트아미노펜",
         monthlyIntakeCount: 12,
         riskLevel: "CAUTION",
