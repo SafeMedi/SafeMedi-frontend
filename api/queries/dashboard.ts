@@ -51,14 +51,20 @@ export function useDashboardMedicationHistoryRecords(params: UseDashboardMedicat
 interface UseMedicationStatisticsParams {
   readonly startDate: string;
   readonly endDate: string;
+  readonly enabled?: boolean;
 }
 
 export function useMedicationStatistics(params: UseMedicationStatisticsParams) {
   const accessToken = useSessionStore((state) => state.accessToken);
+  const isEnabled =
+    params.enabled !== false &&
+    !!accessToken &&
+    params.startDate.length > 0 &&
+    params.endDate.length > 0;
 
   return useQuery({
     queryKey: queryKeys.dashboard.medicationStatistics(params.startDate, params.endDate),
-    enabled: !!accessToken && params.startDate.length > 0 && params.endDate.length > 0,
+    enabled: isEnabled,
     staleTime: STALE_MS,
     queryFn: () =>
       fetchMedicationStatistics({ startDate: params.startDate, endDate: params.endDate }),

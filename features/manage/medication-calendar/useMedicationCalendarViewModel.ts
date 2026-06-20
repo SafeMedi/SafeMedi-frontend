@@ -7,20 +7,18 @@ import type {
   MonthlyMedicationRecordItem,
 } from "@/api/types/dashboard";
 
-export type MedicationReportTab = "calendar" | "statistics" | "management";
+export type MedicationCalendarDayTone = "empty" | "future" | "green" | "yellow" | "red";
 
-export type MedicationReportDayTone = "empty" | "future" | "green" | "yellow" | "red";
-
-export interface MedicationReportCalendarDay {
+export interface MedicationCalendarDay {
   readonly id: string;
   readonly date: string | null;
   readonly day: number | null;
   readonly fraction: string | null;
   readonly rate: number | null;
-  readonly tone: MedicationReportDayTone;
+  readonly tone: MedicationCalendarDayTone;
 }
 
-export interface MedicationReportRecordItem {
+export interface MedicationCalendarRecordItem {
   readonly id: string;
   readonly medicationName: string;
   readonly scheduledTime: string;
@@ -30,26 +28,24 @@ export interface MedicationReportRecordItem {
   readonly isTaken: boolean;
 }
 
-export interface MedicationReportPrescriptionGroup {
+export interface MedicationCalendarPrescriptionGroup {
   readonly id: string;
   readonly prescriptionTitle: string;
-  readonly items: readonly MedicationReportRecordItem[];
+  readonly items: readonly MedicationCalendarRecordItem[];
 }
 
-export interface MedicationReportViewModel {
-  readonly activeTab: MedicationReportTab;
-  readonly setActiveTab: (tab: MedicationReportTab) => void;
+export interface MedicationCalendarViewModel {
   readonly monthLabel: string;
   readonly periodRangeLabel: string;
   readonly complianceRate: number;
   readonly perfectDaysCount: number;
   readonly attentionDaysCount: number;
-  readonly calendarWeeks: readonly (readonly MedicationReportCalendarDay[])[];
+  readonly calendarWeeks: readonly (readonly MedicationCalendarDay[])[];
   readonly selectedDate: string | null;
   readonly setSelectedDate: (date: string) => void;
   readonly selectedDateTitle: string;
   readonly selectedDaySummary: string;
-  readonly prescriptionGroups: readonly MedicationReportPrescriptionGroup[];
+  readonly prescriptionGroups: readonly MedicationCalendarPrescriptionGroup[];
   readonly isLoading: boolean;
   readonly isError: boolean;
   readonly refetch: () => Promise<unknown>;
@@ -74,7 +70,7 @@ function clampRate(rate: number): number {
   return Math.max(0, Math.min(100, Math.round(rate)));
 }
 
-function resolveDayTone(rate: number | null): MedicationReportDayTone {
+function resolveDayTone(rate: number | null): MedicationCalendarDayTone {
   if (rate === null) return "empty";
   if (rate >= 90) return "green";
   if (rate >= 70) return "yellow";
@@ -93,7 +89,7 @@ function resolveStatusLabel(status: MedicationRecordStatus): string {
 
 function resolveStatusTone(
   status: MedicationRecordStatus,
-): MedicationReportRecordItem["statusTone"] {
+): MedicationCalendarRecordItem["statusTone"] {
   if (status === "SUCCESS") return "taken";
   if (status === "UPCOMING") return "upcoming";
   return "missed";
@@ -135,7 +131,7 @@ function formatSelectedDaySummary(takenCount: number, totalCount: number, rate: 
   return `${takenCount}/${totalCount} 완료 (${rate}%)`;
 }
 
-function buildRecordItem(record: MonthlyMedicationRecordItem): MedicationReportRecordItem {
+function buildRecordItem(record: MonthlyMedicationRecordItem): MedicationCalendarRecordItem {
   return {
     id: String(record.recordId),
     medicationName: record.medicationNames[0] ?? record.prescriptionTitle,
@@ -149,8 +145,8 @@ function buildRecordItem(record: MonthlyMedicationRecordItem): MedicationReportR
 
 function groupPrescriptions(
   items: readonly MonthlyMedicationRecordItem[],
-): readonly MedicationReportPrescriptionGroup[] {
-  const groups = new Map<string, MedicationReportPrescriptionGroup>();
+): readonly MedicationCalendarPrescriptionGroup[] {
+  const groups = new Map<string, MedicationCalendarPrescriptionGroup>();
 
   items.forEach((item) => {
     const existingGroup = groups.get(item.prescriptionTitle);
@@ -197,11 +193,11 @@ function buildPeriodRangeLabel(
   return `${formatKoreanMonthDay(startDate)} ~ ${formatKoreanMonthDay(endDate)}`;
 }
 
-export function buildMedicationReportCalendarWeeks(params: {
+export function buildMedicationCalendarWeeks(params: {
   readonly monthDate: Date;
   readonly today: Date;
   readonly recordsByDate: ReadonlyMap<string, MonthlyMedicationRecordGroup>;
-}): readonly (readonly MedicationReportCalendarDay[])[] {
+}): readonly (readonly MedicationCalendarDay[])[] {
   const { monthDate, today, recordsByDate } = params;
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
@@ -209,7 +205,7 @@ export function buildMedicationReportCalendarWeeks(params: {
   const firstWeekday = new Date(year, month, 1).getDay();
   const todayText = formatDateToApiParam(today);
 
-  const cells: MedicationReportCalendarDay[] = [];
+  const cells: MedicationCalendarDay[] = [];
 
   for (let index = 0; index < firstWeekday; index += 1) {
     cells.push({
@@ -228,7 +224,7 @@ export function buildMedicationReportCalendarWeeks(params: {
     const isFutureDate = dateText > todayText;
 
     if (!recordGroup || isFutureDate) {
-      const tone: MedicationReportDayTone = isFutureDate ? "future" : "empty";
+      const tone: MedicationCalendarDayTone = isFutureDate ? "future" : "empty";
       cells.push({
         id: dateText,
         date: dateText,
@@ -262,7 +258,7 @@ export function buildMedicationReportCalendarWeeks(params: {
     });
   }
 
-  const weeks: MedicationReportCalendarDay[][] = [];
+  const weeks: MedicationCalendarDay[][] = [];
   for (let index = 0; index < cells.length; index += 7) {
     weeks.push(cells.slice(index, index + 7));
   }
@@ -270,7 +266,9 @@ export function buildMedicationReportCalendarWeeks(params: {
   return weeks;
 }
 
-export function countMedicationReportDayBuckets(records: readonly MonthlyMedicationRecordGroup[]): {
+export function countMedicationCalendarDayBuckets(
+  records: readonly MonthlyMedicationRecordGroup[],
+): {
   readonly perfectDaysCount: number;
   readonly attentionDaysCount: number;
 } {
@@ -308,12 +306,11 @@ export function resolveDefaultSelectedDate(
   return sortedDates[sortedDates.length - 1] ?? null;
 }
 
-export function getMedicationReportWeekdayLabels(): readonly string[] {
+export function getMedicationCalendarWeekdayLabels(): readonly string[] {
   return WEEKDAY_LABELS;
 }
 
-export function useMedicationReportViewModel(today = new Date()): MedicationReportViewModel {
-  const [activeTab, setActiveTab] = useState<MedicationReportTab>("calendar");
+export function useMedicationCalendarViewModel(today = new Date()): MedicationCalendarViewModel {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const monthQueryDate = formatDateToApiParam(today);
@@ -329,7 +326,7 @@ export function useMedicationReportViewModel(today = new Date()): MedicationRepo
 
   const calendarWeeks = useMemo(
     () =>
-      buildMedicationReportCalendarWeeks({
+      buildMedicationCalendarWeeks({
         monthDate: today,
         today,
         recordsByDate,
@@ -350,7 +347,7 @@ export function useMedicationReportViewModel(today = new Date()): MedicationRepo
     : { takenCount: 0, totalCount: 0, fraction: "0/0", rate: 0 };
 
   const { perfectDaysCount, attentionDaysCount } = useMemo(
-    () => countMedicationReportDayBuckets(monthlyQuery.data?.records ?? []),
+    () => countMedicationCalendarDayBuckets(monthlyQuery.data?.records ?? []),
     [monthlyQuery.data?.records],
   );
 
@@ -364,8 +361,6 @@ export function useMedicationReportViewModel(today = new Date()): MedicationRepo
   }, []);
 
   return {
-    activeTab,
-    setActiveTab,
     monthLabel: formatMonthLabel(today),
     periodRangeLabel: buildPeriodRangeLabel(
       monthlyQuery.data?.records.map((group) => group.date) ?? [],

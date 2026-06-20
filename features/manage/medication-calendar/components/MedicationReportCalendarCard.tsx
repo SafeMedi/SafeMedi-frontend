@@ -5,14 +5,14 @@ import { Text, XStack, YStack } from "tamagui";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
 import type {
-  MedicationReportCalendarDay,
-  MedicationReportDayTone,
-} from "../useMedicationReportViewModel";
-import { getMedicationReportWeekdayLabels } from "../useMedicationReportViewModel";
+  MedicationCalendarDay,
+  MedicationCalendarDayTone,
+} from "../useMedicationCalendarViewModel";
+import { getMedicationCalendarWeekdayLabels } from "../useMedicationCalendarViewModel";
 
 interface MedicationReportCalendarCardProps {
   readonly monthLabel: string;
-  readonly weeks: readonly (readonly MedicationReportCalendarDay[])[];
+  readonly weeks: readonly (readonly MedicationCalendarDay[])[];
   readonly selectedDate: string | null;
   readonly onSelectDate: (date: string) => void;
 }
@@ -30,7 +30,7 @@ const EMPTY_DAY_STYLE: DayCellStyle = {
 };
 
 const DAY_TONE_STYLES: Record<
-  Exclude<MedicationReportDayTone, "empty" | "future">,
+  Exclude<MedicationCalendarDayTone, "empty" | "future">,
   DayCellStyle
 > = {
   green: {
@@ -56,7 +56,7 @@ const LEGEND_ITEMS = [
   { label: "70% 미만", color: palette.red_medium },
 ] as const;
 
-function resolveDayCellStyle(tone: MedicationReportDayTone): DayCellStyle | null {
+function resolveDayCellStyle(tone: MedicationCalendarDayTone): DayCellStyle | null {
   if (tone === "future") return null;
   if (tone === "empty") return EMPTY_DAY_STYLE;
   return DAY_TONE_STYLES[tone];
@@ -68,7 +68,7 @@ export function MedicationReportCalendarCard({
   selectedDate,
   onSelectDate,
 }: MedicationReportCalendarCardProps) {
-  const weekdayLabels = getMedicationReportWeekdayLabels();
+  const weekdayLabels = getMedicationCalendarWeekdayLabels();
 
   return (
     <SurfaceCard style={styles.card}>

@@ -5,12 +5,12 @@ import { Text, XStack, YStack } from "tamagui";
 
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
-import type { MedicationReportPrescriptionGroup } from "../useMedicationReportViewModel";
+import type { MedicationCalendarPrescriptionGroup } from "../useMedicationCalendarViewModel";
 
 interface MedicationReportDailyRecordsCardProps {
   readonly title: string;
   readonly summary: string;
-  readonly prescriptionGroups: readonly MedicationReportPrescriptionGroup[];
+  readonly prescriptionGroups: readonly MedicationCalendarPrescriptionGroup[];
 }
 
 export function MedicationReportDailyRecordsCard({
