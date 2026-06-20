@@ -2,11 +2,11 @@ import { act, renderHook } from "@testing-library/react-native";
 
 import { useDashboardMonthlyMedicationRecords } from "@/api/queries/dashboard";
 import {
-  buildMedicationReportCalendarWeeks,
-  countMedicationReportDayBuckets,
+  buildMedicationCalendarWeeks,
+  countMedicationCalendarDayBuckets,
   resolveDefaultSelectedDate,
-  useMedicationReportViewModel,
-} from "../useMedicationReportViewModel";
+  useMedicationCalendarViewModel,
+} from "../useMedicationCalendarViewModel";
 
 const mockUseDashboardMonthlyMedicationRecords =
   useDashboardMonthlyMedicationRecords as jest.MockedFunction<
@@ -71,10 +71,10 @@ const mockRecords = [
   },
 ];
 
-describe("useMedicationReportViewModel helpers", () => {
+describe("useMedicationCalendarViewModel helpers", () => {
   it("캘린더 주간 그리드를 생성한다", () => {
     const recordsByDate = new Map(mockRecords.map((record) => [record.date, record]));
-    const weeks = buildMedicationReportCalendarWeeks({
+    const weeks = buildMedicationCalendarWeeks({
       monthDate: new Date("2026-04-01T00:00:00"),
       today: new Date("2026-04-10T00:00:00"),
       recordsByDate,
@@ -92,7 +92,7 @@ describe("useMedicationReportViewModel helpers", () => {
   });
 
   it("완벽한 날과 주의 필요 일수를 계산한다", () => {
-    expect(countMedicationReportDayBuckets(mockRecords)).toEqual({
+    expect(countMedicationCalendarDayBuckets(mockRecords)).toEqual({
       perfectDaysCount: 0,
       attentionDaysCount: 2,
     });
@@ -108,7 +108,7 @@ describe("useMedicationReportViewModel helpers", () => {
   });
 });
 
-describe("useMedicationReportViewModel", () => {
+describe("useMedicationCalendarViewModel", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseDashboardMonthlyMedicationRecords.mockReturnValue({
@@ -137,7 +137,7 @@ describe("useMedicationReportViewModel", () => {
     } as unknown as ReturnType<typeof useDashboardMonthlyMedicationRecords>);
 
     const { result } = renderHook(() =>
-      useMedicationReportViewModel(new Date("2026-04-06T00:00:00")),
+      useMedicationCalendarViewModel(new Date("2026-04-06T00:00:00")),
     );
 
     expect(result.current.complianceRate).toBe(89);
@@ -168,7 +168,7 @@ describe("useMedicationReportViewModel", () => {
     } as unknown as ReturnType<typeof useDashboardMonthlyMedicationRecords>);
 
     const { result } = renderHook(() =>
-      useMedicationReportViewModel(new Date("2026-04-10T00:00:00")),
+      useMedicationCalendarViewModel(new Date("2026-04-10T00:00:00")),
     );
 
     act(() => {
@@ -199,7 +199,7 @@ describe("useMedicationReportViewModel", () => {
     } as unknown as ReturnType<typeof useDashboardMonthlyMedicationRecords>);
 
     const { result } = renderHook(() =>
-      useMedicationReportViewModel(new Date("2026-04-07T00:00:00")),
+      useMedicationCalendarViewModel(new Date("2026-04-07T00:00:00")),
     );
 
     expect(result.current.prescriptionGroups[0]?.items[1]).toEqual(
@@ -220,7 +220,7 @@ describe("useMedicationReportViewModel", () => {
       refetch: mockRefetch,
     } as unknown as ReturnType<typeof useDashboardMonthlyMedicationRecords>);
 
-    const { result } = renderHook(() => useMedicationReportViewModel());
+    const { result } = renderHook(() => useMedicationCalendarViewModel());
 
     expect(result.current.isLoading).toBe(true);
     expect(result.current.isError).toBe(true);

@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "tamagui";
 
 import { palette } from "@/constants/design-tokens";
-import type { MedicationReportTab } from "../useMedicationReportViewModel";
+import type { MedicationReportTab } from "../types";
 
 interface MedicationReportTabBarProps {
   readonly activeTab: MedicationReportTab;

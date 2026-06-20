@@ -36,7 +36,7 @@ jest.mock("@/features/dashboard/home", () => ({
   DashboardScreen: () => mockDashboardScreen(),
 }));
 
-jest.mock("@/features/manage/medication-report", () => ({
+jest.mock("@/features/manage", () => ({
   MedicationReportScreen: () => mockMedicationReportScreen(),
 }));
 

@@ -1,4 +1,4 @@
-import { MedicationReportScreen } from "@/features/manage/medication-report";
+import { MedicationReportScreen } from "@/features/manage";
 
 export default function ManageScreen() {
   return <MedicationReportScreen />;
