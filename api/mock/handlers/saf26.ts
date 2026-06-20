@@ -18,6 +18,37 @@ function parsePathId(path: string, rx: RegExp): number | undefined {
   return m?.[1] ? Number(m[1]) : undefined;
 }
 
+function addDaysToDateText(dateText: string, days: number): string {
+  const parsedDate = new Date(`${dateText}T00:00:00`);
+  parsedDate.setDate(parsedDate.getDate() + days);
+  const year = parsedDate.getFullYear();
+  const month = String(parsedDate.getMonth() + 1).padStart(2, "0");
+  const day = String(parsedDate.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function buildMockWeeklyDailyCompliance(startDate: string) {
+  const weeklyRates = [
+    { takenCount: 17, totalCount: 20 },
+    { takenCount: 9, totalCount: 10 },
+    { takenCount: 3, totalCount: 4 },
+    { takenCount: 19, totalCount: 20 },
+    { takenCount: 4, totalCount: 5 },
+    { takenCount: 5, totalCount: 5 },
+    { takenCount: 9, totalCount: 10 },
+  ];
+
+  return weeklyRates.map((entry, index) => {
+    const date = addDaysToDateText(startDate, index);
+    return {
+      date,
+      takenCount: entry.takenCount,
+      totalCount: entry.totalCount,
+      fraction: `${entry.takenCount}/${entry.totalCount}`,
+    };
+  });
+}
+
 export function registerSaf26Mocks(registry: MockRegistry): void {
   // --- Auth ---
   registry.registerMatch(
@@ -557,16 +588,42 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
         { status: 400 },
       );
     }
+
+    const dailyCompliance = buildMockWeeklyDailyCompliance(start);
+    const totalScheduled = dailyCompliance.reduce((sum, day) => sum + day.totalCount, 0);
+    const totalTaken = dailyCompliance.reduce((sum, day) => sum + day.takenCount, 0);
+    const totalComplianceRate =
+      totalScheduled > 0 ? Math.round((totalTaken / totalScheduled) * 1000) / 10 : 0;
+
     return {
       startDate: start,
       endDate: end,
-      totalScheduled: 10,
-      totalTaken: 7,
-      totalComplianceRate: 70.0,
-      dailyCompliance: [
-        { date: "2026-04-01", takenCount: 5, totalCount: 5, fraction: "5/5" },
-        { date: "2026-04-02", takenCount: 2, totalCount: 3, fraction: "2/3" },
-        { date: "2026-04-03", takenCount: 0, totalCount: 2, fraction: "0/2" },
+      totalScheduled,
+      totalTaken,
+      totalComplianceRate,
+      dailyCompliance,
+      cautionIngredients: [
+        {
+          ingredientName: "아세트아미노펜",
+          monthlyIntakeCount: 12,
+          riskLevel: "CAUTION",
+        },
+        {
+          ingredientName: "이부프로펜",
+          monthlyIntakeCount: 8,
+          riskLevel: "DANGER",
+        },
+        {
+          ingredientName: "카페인",
+          monthlyIntakeCount: 15,
+          riskLevel: "CAUTION",
+        },
+      ],
+      consultationMessage:
+        "일부 성분의 섭취 빈도가 높습니다. 정기 검진 시 복용 중인 약물 목록을 의사에게 알려주세요.",
+      monthlyAchievements: [
+        { message: "연속 7일 완벽한 복약 달성!" },
+        { message: "이번 달 평균 이행률 목표(80%) 초과" },
       ],
     };
   });

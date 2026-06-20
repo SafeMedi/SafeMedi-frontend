@@ -63,6 +63,18 @@ export interface MedicationStatisticsDailyCompliance {
   readonly fraction: string;
 }
 
+export type MedicationStatisticsIngredientRiskLevel = "CAUTION" | "DANGER";
+
+export interface MedicationStatisticsCautionIngredient {
+  readonly ingredientName: string;
+  readonly monthlyIntakeCount: number;
+  readonly riskLevel: MedicationStatisticsIngredientRiskLevel;
+}
+
+export interface MedicationStatisticsMonthlyAchievement {
+  readonly message: string;
+}
+
 export interface MedicationStatisticsResponse {
   readonly startDate: string;
   readonly endDate: string;
@@ -70,4 +82,7 @@ export interface MedicationStatisticsResponse {
   readonly totalTaken: number;
   readonly totalComplianceRate: number;
   readonly dailyCompliance: readonly MedicationStatisticsDailyCompliance[];
+  readonly cautionIngredients: readonly MedicationStatisticsCautionIngredient[];
+  readonly consultationMessage: string;
+  readonly monthlyAchievements: readonly MedicationStatisticsMonthlyAchievement[];
 }
