@@ -1,35 +1,119 @@
-import { StyleSheet } from "react-native";
-import { Text } from "tamagui";
+import { ActivityIndicator, StyleSheet } from "react-native";
+import { Text, YStack } from "tamagui";
 
-import { SurfaceCard } from "@/components/ui/SurfaceCard";
+import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
+import { MedicationManagementSectionHeader } from "./components/MedicationManagementSectionHeader";
+import { MedicationManagementTipCard } from "./components/MedicationManagementTipCard";
+import { MedicationPrescriptionGroupCard } from "./components/MedicationPrescriptionGroupCard";
+import { useMedicationManagementViewModel } from "./useMedicationManagementViewModel";
 
 export function MedicationManagementTab() {
+  const viewModel = useMedicationManagementViewModel();
+
+  if (viewModel.isLoading) {
+    return (
+      <YStack style={styles.feedbackBox} gap={10}>
+        <ActivityIndicator size="large" color={palette.green} />
+        <Text style={styles.feedbackText}>복약 관리 정보를 불러오는 중입니다.</Text>
+      </YStack>
+    );
+  }
+
+  if (viewModel.isError) {
+    return (
+      <YStack style={styles.feedbackBox} gap={10}>
+        <Text style={styles.feedbackText}>복약 관리 정보를 불러오지 못했습니다.</Text>
+        <PillButton variant="outline" onPress={() => viewModel.refetch()} flex={0}>
+          <Text style={styles.retryText}>다시 시도</Text>
+        </PillButton>
+      </YStack>
+    );
+  }
+
   return (
-    <SurfaceCard style={styles.placeholderCard}>
-      <Text style={styles.placeholderTitle}>복약 관리</Text>
-      <Text style={styles.placeholderDescription}>해당 탭은 준비 중입니다.</Text>
-    </SurfaceCard>
+    <YStack gap={14}>
+      <MedicationManagementSectionHeader />
+
+      {viewModel.prescriptionGroups.length > 0 ? (
+        <YStack gap={10}>
+          {viewModel.prescriptionGroups.map((group) => (
+            <MedicationPrescriptionGroupCard
+              key={group.id}
+              title={group.title}
+              medicationCountLabel={group.medicationCountLabel}
+              medications={group.medications}
+              isExpanded={viewModel.isPrescriptionExpanded(group.prescriptionId)}
+              isMedicationEditing={(medicationId) =>
+                viewModel.isMedicationEditing(group.prescriptionId, medicationId)
+              }
+              editDraft={viewModel.editDraft}
+              isSaveEditEnabled={viewModel.isSaveEditEnabled}
+              isSaving={viewModel.isMutating}
+              onToggleExpanded={() => viewModel.togglePrescriptionExpanded(group.prescriptionId)}
+              onDeletePrescription={() =>
+                viewModel.handleDeletePrescription(group.prescriptionId, group.title)
+              }
+              onStartEditMedication={(medicationId) =>
+                viewModel.startEditMedication(group.prescriptionId, medicationId)
+              }
+              onCancelEditMedication={viewModel.cancelEditMedication}
+              onSaveEditMedication={viewModel.saveEditMedication}
+              onChangeEditDrugName={viewModel.changeEditDrugName}
+              onSelectEditDrug={viewModel.selectEditDrug}
+              onToggleEditTakeSlot={viewModel.toggleEditTakeSlot}
+              onDeleteMedication={(medicationId, drugName) =>
+                viewModel.handleDeleteMedication(group.prescriptionId, medicationId, drugName)
+              }
+            />
+          ))}
+        </YStack>
+      ) : (
+        <YStack style={styles.emptyBox} gap={6}>
+          <Text style={styles.emptyTitle}>등록된 처방전이 없습니다</Text>
+          <Text style={styles.emptyDescription}>처방전 스캔으로 약물을 등록해 보세요.</Text>
+        </YStack>
+      )}
+
+      <MedicationManagementTipCard />
+    </YStack>
   );
 }
 
 const styles = StyleSheet.create({
-  placeholderCard: {
-    paddingVertical: 28,
-    paddingHorizontal: 18,
+  feedbackBox: {
     alignItems: "center",
-    gap: 8,
+    justifyContent: "center",
+    paddingVertical: 42,
   },
-  placeholderTitle: {
-    color: palette.title_emphasis,
-    fontSize: 16,
-    lineHeight: 22,
+  feedbackText: {
+    color: palette.black,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "500",
+  },
+  retryText: {
+    color: palette.green_deep,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: "700",
   },
-  placeholderDescription: {
+  emptyBox: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 28,
+  },
+  emptyTitle: {
+    color: palette.title_emphasis,
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "600",
+  },
+  emptyDescription: {
     color: palette.icon,
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 18,
-    fontWeight: "500",
+    fontWeight: "400",
+    textAlign: "center",
   },
 });
