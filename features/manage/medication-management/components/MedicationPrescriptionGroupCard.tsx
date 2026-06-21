@@ -61,7 +61,7 @@ export function MedicationPrescriptionGroupCard({
       >
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${title} 펼치기`}
+          accessibilityLabel={`${title} ${isExpanded ? "접기" : "펼치기"}`}
           onPress={onToggleExpanded}
           style={styles.headerMain}
         >
