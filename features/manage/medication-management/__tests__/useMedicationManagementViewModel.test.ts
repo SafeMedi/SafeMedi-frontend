@@ -79,7 +79,7 @@ function getConfirmButton(): AlertButton {
   return button;
 }
 
-describe("useMedicationManagementViewModel", () => {
+describe("데이터가 있으면 데이터를 반환한다.", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(Alert, "alert").mockImplementation(jest.fn());

@@ -24,18 +24,37 @@ jest.mock("@/components/ui/PillButton", () => {
 jest.mock("../useMedicationStatisticsViewModel", () => ({
   useMedicationStatisticsViewModel: jest.fn(),
 }));
-jest.mock("../components/MedicationReportWeeklyComplianceCard", () => ({
-  MedicationReportWeeklyComplianceCard: () => null,
-}));
-jest.mock("../components/MedicationReportCautionIngredientsCard", () => ({
-  MedicationReportCautionIngredientsCard: () => null,
-}));
-jest.mock("../components/MedicationReportConsultationCard", () => ({
-  MedicationReportConsultationCard: () => null,
-}));
-jest.mock("../components/MedicationReportMonthlyAchievementCard", () => ({
-  MedicationReportMonthlyAchievementCard: () => null,
-}));
+jest.mock("../components/MedicationReportWeeklyComplianceCard", () => {
+  const React = require("react");
+  const { Text } = require("react-native");
+  return {
+    MedicationReportWeeklyComplianceCard: () =>
+      React.createElement(Text, null, "WEEKLY_COMPLIANCE_CARD"),
+  };
+});
+jest.mock("../components/MedicationReportCautionIngredientsCard", () => {
+  const React = require("react");
+  const { Text } = require("react-native");
+  return {
+    MedicationReportCautionIngredientsCard: () =>
+      React.createElement(Text, null, "CAUTION_INGREDIENTS_CARD"),
+  };
+});
+jest.mock("../components/MedicationReportConsultationCard", () => {
+  const React = require("react");
+  const { Text } = require("react-native");
+  return {
+    MedicationReportConsultationCard: () => React.createElement(Text, null, "CONSULTATION_CARD"),
+  };
+});
+jest.mock("../components/MedicationReportMonthlyAchievementCard", () => {
+  const React = require("react");
+  const { Text } = require("react-native");
+  return {
+    MedicationReportMonthlyAchievementCard: () =>
+      React.createElement(Text, null, "MONTHLY_ACHIEVEMENT_CARD"),
+  };
+});
 const hook = useMedicationStatisticsViewModel as jest.MockedFunction<
   typeof useMedicationStatisticsViewModel
 >;
@@ -52,7 +71,9 @@ const base = {
 describe("MedicationStatisticsTab", () => {
   it("로딩, 오류 재시도, 정상 상태를 처리한다", () => {
     hook.mockReturnValue({ ...base, isLoading: true });
-    const { getByText, rerender, getByLabelText } = render(<MedicationStatisticsTab />);
+    const { getByText, queryByText, rerender, getByLabelText } = render(
+      <MedicationStatisticsTab />,
+    );
     expect(getByText("통계 분석을 불러오는 중입니다.")).toBeTruthy();
     hook.mockReturnValue({ ...base, isError: true });
     rerender(<MedicationStatisticsTab />);
@@ -60,5 +81,11 @@ describe("MedicationStatisticsTab", () => {
     expect(refetch).toHaveBeenCalled();
     hook.mockReturnValue(base);
     rerender(<MedicationStatisticsTab />);
+    expect(queryByText("통계 분석을 불러오는 중입니다.")).toBeNull();
+    expect(queryByText("통계 분석을 불러오지 못했습니다.")).toBeNull();
+    expect(getByText("WEEKLY_COMPLIANCE_CARD")).toBeTruthy();
+    expect(getByText("CAUTION_INGREDIENTS_CARD")).toBeTruthy();
+    expect(getByText("MONTHLY_ACHIEVEMENT_CARD")).toBeTruthy();
+    expect(queryByText("CONSULTATION_CARD")).toBeNull();
   });
 });

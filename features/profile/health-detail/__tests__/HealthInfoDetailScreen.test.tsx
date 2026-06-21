@@ -134,7 +134,10 @@ describe("HealthInfoDetailScreen", () => {
       }),
     );
 
-    const { getAllByText } = render(<HealthInfoDetailScreen />);
-    expect(getAllByText("-").length).toBeGreaterThanOrEqual(2);
+    const { getByText, getAllByText } = render(<HealthInfoDetailScreen />);
+
+    expect(getByText("170 cm")).toBeTruthy();
+    expect(getByText("60 kg")).toBeTruthy();
+    expect(getAllByText("-")).toHaveLength(2);
   });
 });

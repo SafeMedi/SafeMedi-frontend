@@ -108,7 +108,9 @@ describe("처방전 mock", () => {
       },
     });
 
-    const updated = mockState.prescriptions.find((prescription) => prescription.prescriptionId === 11);
+    const updated = mockState.prescriptions.find(
+      (prescription) => prescription.prescriptionId === 11,
+    );
     expect(updated?.medications[0]).toMatchObject({
       drugName: "타이레놀정 650mg",
       takeTimes: ["08:00", "18:00", "22:00"],

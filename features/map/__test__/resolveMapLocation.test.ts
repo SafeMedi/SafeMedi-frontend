@@ -82,6 +82,7 @@ describe("resolveMapLocation", () => {
     mockRequestForegroundPermissionsAsync.mockResolvedValue({ status: "denied" });
 
     await expect(resolveMapLocation()).rejects.toThrow("위치 권한이 허용되지 않았습니다.");
+    expect(mockGetCurrentPositionAsync).not.toHaveBeenCalled();
     expect(mockGetLastKnownPositionAsync).not.toHaveBeenCalled();
   });
 

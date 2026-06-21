@@ -8,7 +8,7 @@ import {
   validateMedicationEditDraft,
 } from "../medicationEditModel";
 
-describe("medicationEditModel", () => {
+describe("데이터가 없으면 기본값을 반환한다.", () => {
   const prescription = {
     prescriptionId: 11,
     title: "신장내과 처방전",

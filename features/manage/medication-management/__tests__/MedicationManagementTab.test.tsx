@@ -59,7 +59,7 @@ const base = {
   handleDeletePrescription: jest.fn(),
 };
 
-describe("MedicationManagementTab", () => {
+describe("데이터가 없으면 기본값을 반환한다.", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockViewModel.mockReturnValue(base);
