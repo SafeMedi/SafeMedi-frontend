@@ -389,23 +389,27 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
         );
       }
       const id = mockState.prescriptionIdSeq++;
-      const conflict = body.medications.some((m) =>
-        mockState.profile.allergies.some((a) => m.atcCode.startsWith(a.code)),
-      );
-      mockState.prescriptions.push({
-        prescriptionId: id,
-        title: body.title,
-        medications: body.medications.map((medication) => ({
+      const medications = body.medications.map((medication) => {
+        const hasWarning = mockState.profile.allergies.some((a) =>
+          medication.atcCode.startsWith(a.code),
+        );
+        return {
           medicationId: mockState.medicationIdSeq++,
           atcCode: medication.atcCode,
           drugName: medication.drugName,
           takeTimes: medication.takeTimes ?? [],
           mainIngredient: medication.drugName,
-          hasWarning: conflict,
-          warningMessage: conflict
+          hasWarning,
+          warningMessage: hasWarning
             ? "알러지 충돌이 발견되었습니다. 의사와 상담 후 복용하세요."
             : null,
-        })),
+        };
+      });
+      const conflict = medications.some((medication) => medication.hasWarning);
+      mockState.prescriptions.push({
+        prescriptionId: id,
+        title: body.title,
+        medications,
       });
       if (conflict) {
         return {
@@ -482,7 +486,9 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
           medicationId: existing?.medicationId ?? mockState.medicationIdSeq++,
           atcCode: medication.atcCode,
           drugName: medication.drugName,
-          takeTimes: medication.takeTimes ?? [],
+          takeTimes: medication.takeTimes
+            ? [...medication.takeTimes]
+            : [...(existing?.takeTimes ?? [])],
           mainIngredient: existing?.mainIngredient ?? medication.drugName,
           hasWarning: existing?.hasWarning ?? false,
           warningMessage: existing?.warningMessage,
