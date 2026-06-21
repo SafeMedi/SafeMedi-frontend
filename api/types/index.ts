@@ -51,5 +51,14 @@ export type {
   DrugSearchItem,
   PrescriptionAllergyWarning,
 } from "./prescription-scan";
+export type {
+  DeletePrescriptionResponse,
+  PrescriptionListItem,
+  PrescriptionMedicationItem,
+  PrescriptionsListResponse,
+  UpdatePrescriptionMedicationBody,
+  UpdatePrescriptionRequest,
+  UpdatePrescriptionResponse,
+} from "./prescriptions";
 export type { TutorialRegistrationBody, TutorialRegistrationResponse } from "./tutorial";
 export type { AllergyItem, UpdateUserProfileBody, UserProfile } from "./user";

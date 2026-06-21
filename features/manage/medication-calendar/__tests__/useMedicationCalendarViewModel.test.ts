@@ -98,6 +98,48 @@ describe("useMedicationCalendarViewModel helpers", () => {
     });
   });
 
+  it("완료율에 따라 초록·노랑 상태와 미래 날짜를 구분한다", () => {
+    const recordsByDate = new Map([
+      [
+        "2026-04-01",
+        {
+          date: "2026-04-01",
+          items: [
+            { ...mockRecords[0].items[0], recordId: 1, status: "SUCCESS" as const },
+            { ...mockRecords[0].items[1], recordId: 2, status: "SUCCESS" as const },
+          ],
+        },
+      ],
+      [
+        "2026-04-02",
+        {
+          date: "2026-04-02",
+          items: [
+            { ...mockRecords[0].items[0], recordId: 3, status: "SUCCESS" as const },
+            { ...mockRecords[0].items[1], recordId: 4, status: "OVERDUE" as const },
+            { ...mockRecords[0].items[1], recordId: 5, status: "SUCCESS" as const },
+            { ...mockRecords[0].items[1], recordId: 6, status: "SUCCESS" as const },
+          ],
+        },
+      ],
+    ]);
+    const days = buildMedicationCalendarWeeks({
+      monthDate: new Date("2026-04-01T00:00:00"),
+      today: new Date("2026-04-02T00:00:00"),
+      recordsByDate,
+    }).flat();
+
+    expect(days.find((day) => day.date === "2026-04-01")).toEqual(
+      expect.objectContaining({ tone: "green", fraction: "2/2" }),
+    );
+    expect(days.find((day) => day.date === "2026-04-02")).toEqual(
+      expect.objectContaining({ tone: "yellow", rate: 75 }),
+    );
+    expect(days.find((day) => day.date === "2026-04-03")).toEqual(
+      expect.objectContaining({ tone: "future", fraction: null }),
+    );
+  });
+
   it("기본 선택 날짜를 오늘 또는 최근 기록일로 결정한다", () => {
     expect(resolveDefaultSelectedDate(mockRecords, new Date("2026-04-06T00:00:00"))).toBe(
       "2026-04-06",
@@ -105,6 +147,7 @@ describe("useMedicationCalendarViewModel helpers", () => {
     expect(resolveDefaultSelectedDate(mockRecords, new Date("2026-04-08T00:00:00"))).toBe(
       "2026-04-07",
     );
+    expect(resolveDefaultSelectedDate([], new Date("2026-04-08T00:00:00"))).toBeNull();
   });
 });
 

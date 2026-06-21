@@ -77,4 +77,40 @@ describe("resolveMapLocation", () => {
     expect(result.usedDevFallback).toBe(false);
     expect(mockGetCurrentPositionAsync).not.toHaveBeenCalled();
   });
+
+  it("권한이 거부되면 위치 조회를 중단한다", async () => {
+    mockRequestForegroundPermissionsAsync.mockResolvedValue({ status: "denied" });
+
+    await expect(resolveMapLocation()).rejects.toThrow("위치 권한이 허용되지 않았습니다.");
+    expect(mockGetCurrentPositionAsync).not.toHaveBeenCalled();
+    expect(mockGetLastKnownPositionAsync).not.toHaveBeenCalled();
+  });
+
+  it("현재 위치와 주소를 조회해 지도 영역을 구성한다", async () => {
+    mockGetCurrentPositionAsync.mockResolvedValue({
+      coords: { latitude: 37.51, longitude: 127.01 },
+    });
+
+    const result = await resolveMapLocation();
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        currentCoordinate: { latitude: 37.51, longitude: 127.01 },
+        currentAddress: "서울 강남구 역삼동 테헤란로",
+        usedDevFallback: false,
+      }),
+    );
+    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it("역지오코딩 실패 시에도 기본 주소로 위치를 반환한다", async () => {
+    mockGetLastKnownPositionAsync.mockResolvedValue({
+      coords: { latitude: 37.51, longitude: 127.01 },
+    });
+    mockReverseGeocodeAsync.mockRejectedValue(new Error("geocode failed"));
+
+    await expect(resolveMapLocation()).resolves.toEqual(
+      expect.objectContaining({ currentAddress: "현재 위치", usedDevFallback: false }),
+    );
+  });
 });

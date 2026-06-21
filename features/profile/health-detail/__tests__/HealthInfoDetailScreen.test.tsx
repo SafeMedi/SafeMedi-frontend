@@ -98,4 +98,46 @@ describe("HealthInfoDetailScreen", () => {
       "의료진 확인 정보를 공유할 수 있도록 준비 중입니다.",
     );
   });
+
+  it("비어 있는 건강 정보는 기본값과 빈 상태를 표시한다", () => {
+    mockUseHealthInfo.mockReturnValue({ allergies: [], chronicConditions: [] });
+    mockUseUserStore.mockImplementation((selector: (state: { user: unknown }) => unknown) =>
+      selector({
+        user: {
+          displayName: null,
+          birthDate: null,
+          gender: null,
+          height: null,
+          weight: null,
+          bloodType: null,
+        },
+      }),
+    );
+
+    const { getAllByText } = render(<HealthInfoDetailScreen />);
+
+    expect(getAllByText("-")).toHaveLength(6);
+    expect(getAllByText("등록된 건강 정보가 없습니다")).toHaveLength(2);
+  });
+
+  it("지원하지 않는 성별과 혈액형은 기본 표기로 처리한다", () => {
+    mockUseUserStore.mockImplementation((selector: (state: { user: unknown }) => unknown) =>
+      selector({
+        user: {
+          displayName: "홍길동",
+          birthDate: "2000-01-01",
+          gender: "unknown",
+          height: 170,
+          weight: 60,
+          bloodType: "잘못된값",
+        },
+      }),
+    );
+
+    const { getByText, getAllByText } = render(<HealthInfoDetailScreen />);
+
+    expect(getByText("170 cm")).toBeTruthy();
+    expect(getByText("60 kg")).toBeTruthy();
+    expect(getAllByText("-")).toHaveLength(2);
+  });
 });

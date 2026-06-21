@@ -18,6 +18,16 @@ function parsePathId(path: string, rx: RegExp): number | undefined {
   return m?.[1] ? Number(m[1]) : undefined;
 }
 
+function clonePrescriptions() {
+  return mockState.prescriptions.map((prescription) => ({
+    ...prescription,
+    medications: prescription.medications.map((medication) => ({
+      ...medication,
+      takeTimes: [...medication.takeTimes],
+    })),
+  }));
+}
+
 function addDaysToDateText(dateText: string, days: number): string {
   const parsedDate = new Date(`${dateText}T00:00:00`);
   parsedDate.setDate(parsedDate.getDate() + days);
@@ -342,6 +352,10 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
   });
 
   // --- Prescriptions ---
+  registry.register("GET", apiPaths.prescriptions, () => ({
+    prescriptions: clonePrescriptions(),
+  }));
+
   registry.register(
     "POST",
     apiPaths.prescriptions,
@@ -375,9 +389,28 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
         );
       }
       const id = mockState.prescriptionIdSeq++;
-      const conflict = body.medications.some((m) =>
-        mockState.profile.allergies.some((a) => m.atcCode.startsWith(a.code)),
-      );
+      const medications = body.medications.map((medication) => {
+        const hasWarning = mockState.profile.allergies.some((a) =>
+          medication.atcCode.startsWith(a.code),
+        );
+        return {
+          medicationId: mockState.medicationIdSeq++,
+          atcCode: medication.atcCode,
+          drugName: medication.drugName,
+          takeTimes: medication.takeTimes ?? [],
+          mainIngredient: medication.drugName,
+          hasWarning,
+          warningMessage: hasWarning
+            ? "알러지 충돌이 발견되었습니다. 의사와 상담 후 복용하세요."
+            : null,
+        };
+      });
+      const conflict = medications.some((medication) => medication.hasWarning);
+      mockState.prescriptions.push({
+        prescriptionId: id,
+        title: body.title,
+        medications,
+      });
       if (conflict) {
         return {
           prescriptionId: id,
@@ -410,12 +443,16 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
     (p) => RX.prescriptionId.test(p),
     (ctx) => {
       const id = parsePathId(ctx.path, RX.prescriptionId);
-      if (id === 99999) {
+      const index = mockState.prescriptions.findIndex(
+        (prescription) => prescription.prescriptionId === id,
+      );
+      if (index < 0) {
         return Response.json(
           { code: "MED_005", message: "존재하지 않는 처방전입니다." },
           { status: 404 },
         );
       }
+      mockState.prescriptions.splice(index, 1);
       return { message: "처방전 및 예정된 복약 스케줄이 성공적으로 삭제되었습니다." };
     },
     { label: "DELETE /api/v1/prescriptions/:prescriptionId" },
@@ -428,14 +465,43 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
       const id = parsePathId(ctx.path, RX.prescriptionId);
       const body = ctx.jsonBody as {
         title?: string;
-        takeTimes?: string[];
-        medications?: { atcCode: string; drugName: string }[];
+        medications?: { atcCode: string; drugName: string; takeTimes?: string[] }[];
       };
+      const prescription = mockState.prescriptions.find((item) => item.prescriptionId === id);
+      if (!prescription) {
+        return Response.json(
+          { code: "MED_005", message: "존재하지 않는 처방전입니다." },
+          { status: 404 },
+        );
+      }
+      const title = body.title ?? prescription.title;
+      const medications = body.medications?.map((medication, index) => {
+        const existing =
+          prescription.medications.find(
+            (item) => item.atcCode === medication.atcCode && item.drugName === medication.drugName,
+          ) ??
+          prescription.medications.find((item) => item.atcCode === medication.atcCode) ??
+          prescription.medications[index];
+        return {
+          medicationId: existing?.medicationId ?? mockState.medicationIdSeq++,
+          atcCode: medication.atcCode,
+          drugName: medication.drugName,
+          takeTimes: medication.takeTimes
+            ? [...medication.takeTimes]
+            : [...(existing?.takeTimes ?? [])],
+          mainIngredient: existing?.mainIngredient ?? medication.drugName,
+          hasWarning: existing?.hasWarning ?? false,
+          warningMessage: existing?.warningMessage,
+        };
+      });
+      mockState.prescriptions = mockState.prescriptions.map((item) =>
+        item.prescriptionId === prescription.prescriptionId
+          ? { ...prescription, title, medications: medications ?? prescription.medications }
+          : item,
+      );
       return {
-        prescriptionId: id ?? 10,
-        title: body.title ?? "수정된 이비인후과 감기약",
-        takeTimes: body.takeTimes ?? ["09:00", "20:00"],
-        medications: body.medications ?? [{ atcCode: "N02BE01", drugName: "타이레놀 500mg" }],
+        prescriptionId: prescription.prescriptionId,
+        title,
         message: "처방전 정보와 향후 복약 스케줄이 성공적으로 업데이트되었습니다.",
       };
     },

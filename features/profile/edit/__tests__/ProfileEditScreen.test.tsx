@@ -18,6 +18,7 @@ const mockUser: User = {
   chronicConditions: ["천식"],
   isTutorial: true,
 };
+let mockActiveUser: User | null = mockUser;
 
 jest.mock("expo-router", () => ({
   router: {
@@ -32,7 +33,7 @@ jest.mock("react-native-safe-area-context", () => ({
 jest.mock("@/stores/userStore", () => ({
   useUserStore: (selector: (state: { user: User | null }) => unknown) =>
     selector({
-      user: mockUser,
+      user: mockActiveUser,
     }),
 }));
 
@@ -152,7 +153,16 @@ jest.mock("../components/ProfileEditActionBar", () => {
 
 describe("프로필 수정 화면", () => {
   beforeEach(() => {
+    mockActiveUser = mockUser;
     jest.clearAllMocks();
+  });
+
+  it("사용자 정보가 없으면 빈 기본값으로 편집 화면을 렌더링한다", () => {
+    mockActiveUser = null;
+
+    const { getByDisplayValue } = render(<ProfileEditScreen />);
+
+    expect(getByDisplayValue("")).toBeTruthy();
   });
 
   it("유저 기본값을 폼에 표시한다", () => {

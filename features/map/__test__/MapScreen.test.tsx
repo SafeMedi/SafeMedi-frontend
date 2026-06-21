@@ -240,4 +240,34 @@ describe("MapScreen", () => {
     fireEvent.press(screen.getByText("facility-2-call"));
     expect(mockOpenUrl).not.toHaveBeenCalled();
   });
+
+  it("개발용 위치, 목록 갱신, 목록 오류를 함께 표시한다", async () => {
+    mockUseMapViewModel.mockReturnValue({
+      ...BASE_VIEW_MODEL,
+      isUsingDevFallbackLocation: true,
+      isRefreshingFacilities: true,
+      facilitiesError: "network",
+    });
+
+    render(<MapScreen />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("실제 GPS를 받지 못해 개발용 기본 위치를 사용 중입니다."),
+      ).toBeTruthy();
+    });
+    expect(screen.getByText("목록을 가져오지 못했어요. 잠시 후 다시 시도해 주세요.")).toBeTruthy();
+  });
+
+  it("외부 링크를 열 수 없으면 전화와 길찾기를 실행하지 않는다", async () => {
+    jest.mocked(Linking.canOpenURL).mockResolvedValueOnce(false).mockResolvedValueOnce(false);
+    render(<MapScreen />);
+    await waitFor(() => expect(screen.getByText("facility-1-call")).toBeTruthy());
+
+    fireEvent.press(screen.getByText("facility-1-call"));
+    fireEvent.press(screen.getByText("facility-1-directions"));
+
+    await waitFor(() => expect(Linking.canOpenURL).toHaveBeenCalledTimes(2));
+    expect(mockOpenUrl).not.toHaveBeenCalled();
+  });
 });
