@@ -52,6 +52,8 @@ describe("medicationEditModel", () => {
       drugName: "타이레놀정 500mg",
       atcCode: "N02BE01",
       takeSlots: ["MORNING", "DINNER"],
+      originalTakeTimes: ["08:00", "18:00", "22:00"],
+      hasChangedTakeSlots: false,
     });
     expect(isMedicationEditDraftSavable(draft)).toBe(true);
     if (!draft) {
@@ -79,6 +81,8 @@ describe("medicationEditModel", () => {
       drugName: "타이레놀정 650mg",
       atcCode: "N02BE01",
       takeSlots: ["MORNING", "LUNCH"] as const,
+      originalTakeTimes: ["08:00", "18:00", "22:00"],
+      hasChangedTakeSlots: true,
     };
 
     expect(buildUpdatedMedicationsAfterEdit(prescription, 101, draft)).toEqual([
@@ -93,5 +97,19 @@ describe("medicationEditModel", () => {
         takeTimes: ["08:00"],
       },
     ]);
+  });
+
+  it("시간 슬롯을 변경하지 않으면 기존 복약 시간을 유지한다", () => {
+    const draft = createMedicationEditDraft(prescription, 101);
+    if (!draft) {
+      throw new Error("draft should exist");
+    }
+
+    expect(
+      buildUpdatedMedicationsAfterEdit(prescription, 101, {
+        ...draft,
+        drugName: "타이레놀정 650mg",
+      })[0]?.takeTimes,
+    ).toEqual(["08:00", "18:00", "22:00"]);
   });
 });

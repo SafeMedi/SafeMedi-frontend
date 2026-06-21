@@ -16,6 +16,8 @@ export interface MedicationEditDraft {
   readonly drugName: string;
   readonly atcCode: string;
   readonly takeSlots: readonly MedicationTakeSlot[];
+  readonly originalTakeTimes: readonly string[];
+  readonly hasChangedTakeSlots: boolean;
 }
 
 export interface MedicationEditValidationResult {
@@ -61,6 +63,8 @@ export function createMedicationEditDraft(
     drugName: medication.drugName,
     atcCode: medication.atcCode,
     takeSlots: convertTakeTimesToTakeSlots(medication.takeTimes),
+    originalTakeTimes: medication.takeTimes,
+    hasChangedTakeSlots: false,
   };
 }
 
@@ -112,6 +116,7 @@ export function toggleMedicationEditTakeSlot(
   return {
     ...draft,
     takeSlots: nextSlots,
+    hasChangedTakeSlots: true,
   };
 }
 
@@ -142,7 +147,9 @@ export function buildUpdatedMedicationsAfterEdit(
   medicationId: number,
   draft: MedicationEditDraft,
 ): readonly UpdatePrescriptionMedicationBody[] {
-  const takeTimes = convertTakeSlotsToTimes(draft.takeSlots);
+  const takeTimes = draft.hasChangedTakeSlots
+    ? convertTakeSlotsToTimes(draft.takeSlots)
+    : [...draft.originalTakeTimes];
 
   return prescription.medications.map((medication) => {
     if (medication.medicationId !== medicationId) {
