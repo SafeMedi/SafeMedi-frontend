@@ -24,7 +24,7 @@ Expo Router · React Native · Tamagui · TanStack Query · Zustand.
 - 새 `useQuery`/`useMutation`인데 `api/query-keys.ts`에 키 미추가
 - 인증 API 호출에 `enabled: !!accessToken` (`useSessionStore`) 누락
 - `api/mock/`을 프로덕션 import 경로에 연결
-- feature 구조 위반: `components/domains/{domain}/{feature}/` 밖에 Screen·ViewModel 배치
+- feature 구조 위반: `features/{feature}/` 에 Screen·ViewModel 배치
 
 ### 타입·런타임
 
@@ -66,7 +66,7 @@ Expo Router · React Native · Tamagui · TanStack Query · Zustand.
 | `api/endpoints/**` | 순수 fetch, 부수 효과 최소 |
 | `api/queries/**` | query key, `enabled`, `staleTime` 기존 도메인과 일관 |
 | `api/types/**` | endpoint·hook과 타입 일치 |
-| `components/domains/**` | Screen + ViewModel + `components/` + `__tests__/` |
+| `features/**` | Screen + ViewModel + `components/` + `__tests__/` |
 | `stores/**` | 세션·전역 UI만, 서버 상태는 Query |
 | `components/ui/**` | 도메인 로직·API 호출 없음 |
 

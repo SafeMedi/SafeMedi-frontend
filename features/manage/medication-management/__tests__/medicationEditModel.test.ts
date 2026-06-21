@@ -62,6 +62,28 @@ describe("medicationEditModel", () => {
     expect(validateMedicationEditDraft({ ...draft, atcCode: "" }).isValid).toBe(false);
   });
 
+  it("필수 입력값이 없거나 존재하지 않는 약물은 편집할 수 없다", () => {
+    const draft = createMedicationEditDraft(prescription, 101);
+    expect(createMedicationEditDraft(prescription, 999)).toBeNull();
+    expect(isMedicationEditDraftSavable(null)).toBe(false);
+    if (!draft) {
+      throw new Error("draft should exist");
+    }
+
+    expect(validateMedicationEditDraft({ ...draft, drugName: "   " })).toEqual({
+      isValid: false,
+      message: "약물명을 입력해주세요.",
+    });
+    expect(validateMedicationEditDraft({ ...draft, atcCode: "   " })).toEqual({
+      isValid: false,
+      message: "약물명은 검색 결과에서 선택해야 합니다.",
+    });
+    expect(validateMedicationEditDraft({ ...draft, takeSlots: [] })).toEqual({
+      isValid: false,
+      message: "복약 시간을 최소 1개 이상 선택해주세요.",
+    });
+  });
+
   it("복약 시간 슬롯을 토글한다", () => {
     const draft = createMedicationEditDraft(prescription, 101);
     expect(draft).not.toBeNull();
