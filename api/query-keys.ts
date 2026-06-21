@@ -20,6 +20,9 @@ export const queryKeys = {
     families: ["profile", "families"] as const,
     notificationSettings: ["profile", "notification-settings"] as const,
   },
+  prescriptions: {
+    list: ["prescriptions", "list"] as const,
+  },
   scan: {
     createPrescription: ["scan", "prescription", "create"] as const,
     analyzeIngredients: ["scan", "ingredients", "analyze"] as const,

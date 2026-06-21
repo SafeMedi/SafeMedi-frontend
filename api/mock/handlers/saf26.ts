@@ -1,3 +1,4 @@
+import { PRESCRIPTIONS_FALLBACK_MOCKS } from "@/api/endpoints/prescriptions";
 import type { MockRegistry } from "@/api/mock/registry";
 import { mockState } from "@/api/mock/state";
 import { apiPaths } from "@/api/paths";
@@ -342,6 +343,8 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
   });
 
   // --- Prescriptions ---
+  registry.register("GET", apiPaths.prescriptions, () => PRESCRIPTIONS_FALLBACK_MOCKS);
+
   registry.register(
     "POST",
     apiPaths.prescriptions,
