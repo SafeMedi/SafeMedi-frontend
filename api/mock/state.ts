@@ -4,6 +4,7 @@ import type {
   FamilySummary,
   NotificationListResponse,
   NotificationSettings,
+  PrescriptionListItem,
   ReceivedFamilyRequest,
   UserProfile,
 } from "@/api/types";
@@ -14,6 +15,7 @@ type MockOnlyState = {
   tutorialCompleted: boolean;
   nextFamilyRequestId: number;
   prescriptionIdSeq: number;
+  medicationIdSeq: number;
   medicationRecordIdSeq: number;
   familyAlertConsent: Map<number, boolean>;
 };
@@ -27,6 +29,7 @@ export const mockState: MockOnlyState & {
   familyDetails: Record<number, FamilyDetail>;
   notificationSettings: NotificationSettings;
   notifications: NotificationListResponse;
+  prescriptions: PrescriptionListItem[];
 } = {
   userDeleted: false,
   tutorialCompleted: false,
@@ -158,7 +161,48 @@ export const mockState: MockOnlyState & {
   familyAlertConsent: new Map<number, boolean>([[1, true]]),
 
   prescriptionIdSeq: 26,
+  medicationIdSeq: 202,
   medicationRecordIdSeq: 502,
+
+  prescriptions: [
+    {
+      prescriptionId: 11,
+      title: "신장내과 처방전",
+      medications: [
+        {
+          medicationId: 101,
+          atcCode: "N02BE01",
+          drugName: "타이레놀정 500mg",
+          takeTimes: ["08:00", "18:00", "22:00"],
+          mainIngredient: "아세트아미노펜",
+          hasWarning: false,
+        },
+        {
+          medicationId: 102,
+          atcCode: "A02BC01",
+          drugName: "오메프라졸캡슐 20mg",
+          takeTimes: ["08:00"],
+          mainIngredient: "오메프라졸",
+          hasWarning: false,
+        },
+      ],
+    },
+    {
+      prescriptionId: 12,
+      title: "심장내과 처방전",
+      medications: [
+        {
+          medicationId: 201,
+          atcCode: "C08CA01",
+          drugName: "암로디핀정 5mg",
+          takeTimes: ["14:00"],
+          mainIngredient: "암로디핀베실산염",
+          hasWarning: true,
+          warningMessage: "이 약물은 주의가 필요합니다. 의사와 상담 후 복용하세요.",
+        },
+      ],
+    },
+  ],
 
   notificationSettings: {
     userId: 1,

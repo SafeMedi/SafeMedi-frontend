@@ -1,10 +1,5 @@
 import { apiPaths } from "@/api/paths";
-import {
-  deletePrescription,
-  fetchPrescriptions,
-  PRESCRIPTIONS_FALLBACK_MOCKS,
-  updatePrescription,
-} from "../prescriptions";
+import { deletePrescription, fetchPrescriptions, updatePrescription } from "../prescriptions";
 
 const mockApiGet = jest.fn();
 const mockApiPatch = jest.fn();
@@ -33,14 +28,12 @@ describe("api/endpoints/prescriptions", () => {
     expect(result).toEqual(expected);
   });
 
-  it("처방전 목록 조회 실패 시 fallback mock을 반환한다", async () => {
+  it("처방전 목록 조회 실패를 호출자에게 전달한다", async () => {
     mockApiGet.mockImplementationOnce(() => {
       throw new Error("network down");
     });
 
-    const result = await fetchPrescriptions();
-
-    expect(result).toEqual(PRESCRIPTIONS_FALLBACK_MOCKS);
+    await expect(fetchPrescriptions()).rejects.toThrow("network down");
   });
 
   it("처방전 수정 PATCH 요청을 호출한다", async () => {
