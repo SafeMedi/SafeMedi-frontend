@@ -107,7 +107,15 @@ export const api: KyInstance = ky.create({
           const body = await readResponseBodyForLog(error.response);
           logApiDev(`[api] ✕ ${label}`, body);
         } else {
-          logApiDev(`[api] ✕ ${label}`);
+          const cause =
+            error instanceof Error && "cause" in error
+              ? (error as Error & { cause?: unknown }).cause
+              : undefined;
+          if (cause !== undefined) {
+            logApiDev(`[api] ✕ ${label}`, cause);
+          } else {
+            logApiDev(`[api] ✕ ${label}`);
+          }
         }
 
         return error;

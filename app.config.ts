@@ -42,9 +42,34 @@ const KAKAO_MAP_ATS_EXCEPTION_DOMAINS = {
   },
 } as const;
 
+/** EXPO_PUBLIC_API_BASE_URL 이 http:// 이면 개발용 cleartext 허용 */
+function allowsInsecureHttp(): boolean {
+  const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+  return baseUrl?.startsWith("http://") ?? false;
+}
+
+function getApiHostAtsException(): Record<string, { NSExceptionAllowsInsecureHTTPLoads: true }> {
+  const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+  if (!baseUrl?.startsWith("http://")) {
+    return {};
+  }
+
+  try {
+    const host = new URL(baseUrl).hostname;
+    return {
+      [host]: {
+        NSExceptionAllowsInsecureHTTPLoads: true,
+      },
+    };
+  } catch {
+    return {};
+  }
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   const existingPlugins = stripManagedPlugins((config.plugins ?? []) as PluginEntry[]);
   const existingInfoPlist = config.ios?.infoPlist ?? {};
+  const insecureHttpAllowed = allowsInsecureHttp();
 
   return {
     ...config,
@@ -56,7 +81,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         ...existingInfoPlist,
         NSAppTransportSecurity: {
           NSAllowsLocalNetworking: true,
-          NSExceptionDomains: KAKAO_MAP_ATS_EXCEPTION_DOMAINS,
+          ...(insecureHttpAllowed ? { NSAllowsArbitraryLoads: true } : {}),
+          NSExceptionDomains: {
+            ...KAKAO_MAP_ATS_EXCEPTION_DOMAINS,
+            ...getApiHostAtsException(),
+          },
         },
         NSLocationWhenInUseUsageDescription:
           existingInfoPlist.NSLocationWhenInUseUsageDescription ?? LOCATION_USAGE_DESCRIPTION,
@@ -66,6 +95,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       },
     },
     plugins: [
+      "./plugins/withIosNetworkSessionFix.js",
       "./plugins/withIosKakaoAppDelegateFix.js",
       ...existingPlugins,
       [
@@ -79,6 +109,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         EXPO_BUILD_PROPERTIES_PLUGIN_NAME,
         {
           android: {
+            ...(insecureHttpAllowed ? { usesCleartextTraffic: true } : {}),
             extraMavenRepos: [KAKAO_MAVEN_REPOSITORY],
           },
         },
