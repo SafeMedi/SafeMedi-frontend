@@ -25,7 +25,7 @@ export const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
       age: user?.birthDate != null ? String(birthDateToManAge(user.birthDate) ?? "") : "",
       height: user?.height != null ? String(user.height) : "",
       weight: user?.weight != null ? String(user.weight) : "",
-      bloodType: defaultBloodType,
+      bloodType: defaultBloodType ?? "A",
       rhFactor: defaultRhFactor ?? "positive",
       gender: user?.gender ?? undefined,
     },
