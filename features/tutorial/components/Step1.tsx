@@ -9,8 +9,8 @@ import { bloodOptions, genderOptions, rhOptions } from "@/constants/health-profi
 import { type TutorialStep1FormValues, tutorialStep1Schema } from "@/features/tutorial/schema";
 import type { StepHandle } from "@/features/tutorial/types";
 import { useUserStore } from "@/stores/userStore";
-import { birthDateToManAge, manAgeToBirthDate } from "@/utils/age";
 import { combineBloodTypeWithRh, splitBloodTypeWithRh } from "@/utils/blood-type";
+import { formatBirthDateToCompact, parseCompactBirthDate } from "@/utils/date";
 
 export const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
   const user = useUserStore((s) => s.user);
@@ -22,12 +22,12 @@ export const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
   const { control, handleSubmit } = useForm<TutorialStep1FormValues>({
     resolver: zodResolver(tutorialStep1Schema),
     defaultValues: {
-      age: user?.birthDate != null ? String(birthDateToManAge(user.birthDate) ?? "") : "",
+      birthDate: user?.birthDate != null ? (formatBirthDateToCompact(user.birthDate) ?? "") : "",
       height: user?.height != null ? String(user.height) : "",
       weight: user?.weight != null ? String(user.weight) : "",
       bloodType: defaultBloodType ?? "A",
       rhFactor: defaultRhFactor ?? "positive",
-      gender: user?.gender ?? undefined,
+      gender: user?.gender ?? "male",
     },
   });
 
@@ -38,8 +38,14 @@ export const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
         new Promise<boolean>((resolve) => {
           void handleSubmit(
             (data) => {
+              const birthDate = parseCompactBirthDate(data.birthDate);
+              if (!birthDate) {
+                resolve(false);
+                return;
+              }
+
               updateUser({
-                birthDate: manAgeToBirthDate(Number(data.age)),
+                birthDate,
                 height: Math.round(Number(data.height.replace(",", "."))),
                 weight: Math.round(Number(data.weight.replace(",", "."))),
                 bloodType: combineBloodTypeWithRh(data.bloodType, data.rhFactor),
@@ -69,18 +75,19 @@ export const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
         </Text>
 
         <YStack gap={8}>
-          <FieldLabel>만 나이</FieldLabel>
+          <FieldLabel>생년월일</FieldLabel>
           <Controller
             control={control}
-            name="age"
+            name="birthDate"
             render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
               <>
                 <Input
                   value={value}
-                  onChangeText={onChange}
+                  onChangeText={(text) => onChange(text.replace(/\D/g, "").slice(0, 6))}
                   onBlur={onBlur}
-                  placeholder="예: 30"
+                  placeholder="ex) 950101"
                   keyboardType="number-pad"
+                  maxLength={6}
                   bg={palette.gray}
                   borderWidth={1}
                   borderColor={error ? palette.red : palette.dark_gray}
