@@ -7,7 +7,18 @@ export const tutorialBasicInfoSchema = z.object({
   gender: z.enum(GENDERS, { message: "성별을 선택해 주세요" }),
 });
 
+const ageSchema = z
+  .string()
+  .trim()
+  .min(1, "만 나이를 입력해 주세요")
+  .refine((value) => /^\d+$/.test(value), "숫자만 입력해 주세요")
+  .refine((value) => {
+    const age = Number(value);
+    return age >= 1 && age <= 120;
+  }, "1~120세 사이로 입력해 주세요");
+
 export const tutorialStep1Schema = tutorialBasicInfoSchema.extend({
+  age: ageSchema,
   height: z
     .string()
     .trim()

@@ -70,7 +70,8 @@ describe("app.config", () => {
       } as ExpoConfig),
     );
 
-    expect(result.plugins?.[0]).toBe("./plugins/withIosKakaoAppDelegateFix.js");
+    expect(result.plugins?.[0]).toBe("./plugins/withIosNetworkSessionFix.js");
+    expect(result.plugins?.[1]).toBe("./plugins/withIosKakaoAppDelegateFix.js");
     expect(result.plugins).toEqual(
       expect.arrayContaining([
         "expo-font",

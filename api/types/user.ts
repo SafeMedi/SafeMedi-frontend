@@ -4,16 +4,16 @@ export type AllergyItem = {
   name: string;
 };
 
-/** GET /api/v1/users/me 응답 (SAF-26) */
+/** GET /api/v1/users/me 응답 (SAF-26). 소셜 로그인 직후·튜토리얼 전에는 null 필드가 올 수 있습니다. */
 export type UserProfile = {
-  displayName: string;
-  birthDate: string;
-  gender: "M" | "F";
-  height: number;
-  weight: number;
-  bloodType: string;
-  diseases: string[];
-  allergies: AllergyItem[];
+  displayName: string | null;
+  birthDate: string | null;
+  gender: "M" | "F" | null;
+  height: number | null;
+  weight: number | null;
+  bloodType: string | null;
+  diseases: string[] | null;
+  allergies: AllergyItem[] | null;
   isTutorialCompleted: boolean;
 };
 

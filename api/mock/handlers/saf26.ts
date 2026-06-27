@@ -109,9 +109,9 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
         );
       }
       const body = ctx.jsonBody as { gender?: string } | undefined;
-      if (body?.gender && body.gender !== "M" && body.gender !== "F") {
+      if (body?.gender && body.gender !== "MALE" && body.gender !== "FEMALE") {
         return Response.json(
-          { code: "VAL_001", message: "성별 값이 올바르지 않습니다. (M, F만 허용)" },
+          { code: "VAL_001", message: "성별 값이 올바르지 않습니다. (MALE, FEMALE만 허용)" },
           { status: 400 },
         );
       }

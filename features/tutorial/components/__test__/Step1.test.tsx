@@ -5,6 +5,9 @@ import { Step1 } from "@/features/tutorial/components/Step1";
 import type { StepHandle } from "@/features/tutorial/types";
 import type { User } from "@/stores/userStore";
 import { mockUpdateUser, resetMockStore, setMockUser } from "@/tests/test-utils/test-mocks";
+import { manAgeToBirthDate } from "@/utils/age";
+
+const referenceDate = new Date("2026-06-27T12:00:00");
 
 const baseUser: User = {
   id: "me",
@@ -23,6 +26,11 @@ const baseUser: User = {
 describe("튜토리얼 Step1", () => {
   beforeEach(() => {
     resetMockStore();
+    jest.useFakeTimers({ now: referenceDate });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it("정상 입력 시 submit이 성공하고 사용자 정보가 업데이트된다", async () => {
@@ -30,6 +38,7 @@ describe("튜토리얼 Step1", () => {
     const ref = createRef<StepHandle>();
     const { getByPlaceholderText, getByLabelText } = render(<Step1 ref={ref} />);
 
+    fireEvent.changeText(getByPlaceholderText("예: 30"), "23");
     fireEvent.changeText(getByPlaceholderText("예: 170"), "171.5");
     fireEvent.changeText(getByPlaceholderText("예: 65"), "66.3");
     fireEvent.press(getByLabelText("AB형"));
@@ -43,8 +52,9 @@ describe("튜토리얼 Step1", () => {
 
     expect(submitted).toBe(true);
     expect(mockUpdateUser).toHaveBeenCalledWith({
-      height: 171.5,
-      weight: 66.3,
+      birthDate: manAgeToBirthDate(23, referenceDate),
+      height: 172,
+      weight: 66,
       bloodType: "AB-",
       gender: "female",
     });

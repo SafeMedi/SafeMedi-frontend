@@ -9,6 +9,7 @@ import { bloodOptions, genderOptions, rhOptions } from "@/constants/health-profi
 import { type TutorialStep1FormValues, tutorialStep1Schema } from "@/features/tutorial/schema";
 import type { StepHandle } from "@/features/tutorial/types";
 import { useUserStore } from "@/stores/userStore";
+import { birthDateToManAge, manAgeToBirthDate } from "@/utils/age";
 import { combineBloodTypeWithRh, splitBloodTypeWithRh } from "@/utils/blood-type";
 
 export const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
@@ -21,6 +22,7 @@ export const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
   const { control, handleSubmit } = useForm<TutorialStep1FormValues>({
     resolver: zodResolver(tutorialStep1Schema),
     defaultValues: {
+      age: user?.birthDate != null ? String(birthDateToManAge(user.birthDate) ?? "") : "",
       height: user?.height != null ? String(user.height) : "",
       weight: user?.weight != null ? String(user.weight) : "",
       bloodType: defaultBloodType,
@@ -37,8 +39,9 @@ export const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
           void handleSubmit(
             (data) => {
               updateUser({
-                height: Number(data.height.replace(",", ".")),
-                weight: Number(data.weight.replace(",", ".")),
+                birthDate: manAgeToBirthDate(Number(data.age)),
+                height: Math.round(Number(data.height.replace(",", "."))),
+                weight: Math.round(Number(data.weight.replace(",", "."))),
                 bloodType: combineBloodTypeWithRh(data.bloodType, data.rhFactor),
                 gender: data.gender,
               });
@@ -64,6 +67,36 @@ export const Step1 = forwardRef<StepHandle>(function Step1(_props, ref) {
         <Text fontSize={14} color={palette.icon} lineHeight={20}>
           서비스 맞춤에 사용됩니다. 언제든 프로필에서 수정할 수 있어요.
         </Text>
+
+        <YStack gap={8}>
+          <FieldLabel>만 나이</FieldLabel>
+          <Controller
+            control={control}
+            name="age"
+            render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+              <>
+                <Input
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  placeholder="예: 30"
+                  keyboardType="number-pad"
+                  bg={palette.gray}
+                  borderWidth={1}
+                  borderColor={error ? palette.red : palette.dark_gray}
+                  color={palette.black}
+                  px={14}
+                  height={45}
+                />
+                {error ? (
+                  <Text fontSize={12} style={{ color: palette.red }}>
+                    {error.message}
+                  </Text>
+                ) : null}
+              </>
+            )}
+          />
+        </YStack>
 
         <YStack gap={8}>
           <FieldLabel>키 (cm)</FieldLabel>

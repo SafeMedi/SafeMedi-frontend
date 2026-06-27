@@ -54,6 +54,11 @@ export function TutorialScreen() {
   const handleComplete = async () => {
     const latest = useUserStore.getState().user;
     if (!latest) return;
+    if (!latest.birthDate) {
+      Alert.alert("입력 확인", "만 나이를 입력해 주세요.");
+      setStep(0);
+      return;
+    }
     try {
       await completeTutorial.mutateAsync(userToTutorialRegistrationBody(latest));
       router.replace("/(tabs)/dashboard");

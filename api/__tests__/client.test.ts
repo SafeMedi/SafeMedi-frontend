@@ -187,7 +187,7 @@ describe("api/client", () => {
     expect(request.headers.get("Authorization")).toBe("Bearer custom");
   });
 
-  it("토큰이 없어도 dev 모드면 요청 debug 로그를 출력한다", () => {
+  it("토큰이 없어도 dev 모드면 요청 debug 로그를 출력한다", async () => {
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     (global as { __DEV__?: boolean }).__DEV__ = true;
 
@@ -211,11 +211,11 @@ describe("api/client", () => {
     });
 
     const options = mockKyCreate.mock.calls[0]?.[0] as {
-      hooks: { beforeRequest: Array<(arg: BeforeRequestHookArg) => void> };
+      hooks: { beforeRequest: Array<(arg: BeforeRequestHookArg) => Promise<void> | void> };
     };
     const request = new Request("https://api.example.com/api/v1/test");
 
-    options.hooks.beforeRequest[0]?.(createBeforeRequestState(request));
+    await options.hooks.beforeRequest[0]?.(createBeforeRequestState(request));
 
     expect(request.headers.get("Authorization")).toBeNull();
     expect(logSpy).toHaveBeenCalledWith("[api] → GET https://api.example.com/api/v1/test");
