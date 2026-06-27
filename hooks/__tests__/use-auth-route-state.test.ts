@@ -70,6 +70,12 @@ jest.mock("@/stores/userStore", () => ({
     }),
 }));
 
+const mockLogout = jest.fn();
+
+jest.mock("@/hooks/use-logout", () => ({
+  useLogout: () => mockLogout,
+}));
+
 jest.mock("@/utils/user-mapper", () => ({
   profileToUser: () =>
     ({
@@ -153,6 +159,7 @@ describe("useAuthRouteState", () => {
     });
 
     expect(mockRefetch).toHaveBeenCalledTimes(1);
+    expect(errorState.logout).toBe(mockLogout);
   });
 
   it("프로필이 있고 튜토리얼 미완료면 튜토리얼로 리다이렉트한다", async () => {

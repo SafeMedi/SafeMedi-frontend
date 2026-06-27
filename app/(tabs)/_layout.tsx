@@ -22,7 +22,7 @@ export default function TabLayout() {
   }
 
   if (authState.kind === "error") {
-    return <AuthGateView kind="error" onRetry={authState.retry} />;
+    return <AuthGateView kind="error" onRetry={authState.retry} onLogout={authState.logout} />;
   }
 
   if (authState.href !== "/(tabs)/dashboard") {

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { isUnauthorizedError } from "@/api/error";
 import { useUserProfile } from "@/api/queries/user";
 import { queryKeys } from "@/api/query-keys";
+import { useLogout } from "@/hooks/use-logout";
 import { useSessionHydrated } from "@/hooks/use-session-hydrated";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUserStore } from "@/stores/userStore";
@@ -13,7 +14,7 @@ export type AuthRouteHref = "/(auth)/login" | "/(auth)/tutorial" | "/(tabs)/dash
 
 type AuthRouteState =
   | { kind: "loading" }
-  | { kind: "error"; retry: () => void }
+  | { kind: "error"; retry: () => void; logout: () => void }
   | { kind: "redirect"; href: AuthRouteHref };
 
 export function useAuthRouteState(): AuthRouteState {
@@ -25,6 +26,7 @@ export function useAuthRouteState(): AuthRouteState {
   const setTutorialCompleted = useSessionStore((s) => s.setTutorialCompleted);
   const user = useUserStore((s) => s.user);
   const setUser = useUserStore((s) => s.setUser);
+  const logout = useLogout();
   const { data: profile, isPending, isError, error, refetch } = useUserProfile();
 
   useEffect(() => {
@@ -67,7 +69,7 @@ export function useAuthRouteState(): AuthRouteState {
     if (isUnauthorizedError(error)) {
       return { kind: "loading" };
     }
-    return { kind: "error", retry: () => void refetch() };
+    return { kind: "error", retry: () => void refetch(), logout };
   }
 
   if (!(profile.isTutorialCompleted || isTutorialCompleted)) {

@@ -10,7 +10,7 @@ const mockParseApiError = jest.fn();
 
 let mockAuthState:
   | { kind: "loading" }
-  | { kind: "error"; retry: () => void }
+  | { kind: "error"; retry: () => void; logout: () => void }
   | { kind: "redirect"; href: "/(auth)/tutorial" | "/(auth)/login" | "/(tabs)/dashboard" } = {
   kind: "redirect",
   href: "/(auth)/tutorial",
@@ -189,7 +189,7 @@ describe("TutorialScreen", () => {
   });
 
   it("auth error 상태에서 재시도 동작을 전달한다", () => {
-    mockAuthState = { kind: "error", retry: mockRetry };
+    mockAuthState = { kind: "error", retry: mockRetry, logout: jest.fn() };
     const { getByLabelText } = render(<TutorialScreen />);
     fireEvent.press(getByLabelText("auth-gate-error"));
     expect(mockRetry).toHaveBeenCalledTimes(1);

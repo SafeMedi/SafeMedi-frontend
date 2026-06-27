@@ -42,7 +42,7 @@ export function LoginScreen() {
   }
 
   if (authState.kind === "error") {
-    return <AuthGateView kind="error" onRetry={authState.retry} />;
+    return <AuthGateView kind="error" onRetry={authState.retry} onLogout={authState.logout} />;
   }
 
   if (authState.kind === "redirect" && authState.href !== "/(auth)/login") {
