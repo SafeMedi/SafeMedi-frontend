@@ -42,9 +42,11 @@ function restoreEnvValue(key: string, Value: string | undefined): void {
 
 describe("app.config", () => {
   const originalKakaoAppKey = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY;
+  const originalApiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
   afterEach(() => {
     restoreEnvValue("EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY", originalKakaoAppKey);
+    restoreEnvValue("EXPO_PUBLIC_API_BASE_URL", originalApiBaseUrl);
     jest.resetModules();
   });
 
@@ -151,5 +153,56 @@ describe("app.config", () => {
           "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
       }),
     );
+  });
+
+  it("http API base URL은 host별 ATS 예외만 추가하고 전역 cleartext는 허용하지 않는다", () => {
+    process.env.EXPO_PUBLIC_API_BASE_URL = "http://localhost:8080";
+    const configFactory = loadAppConfigModule().default;
+
+    const result = configFactory(
+      createConfigContext({
+        plugins: [],
+      } as unknown as ExpoConfig),
+    );
+
+    expect(result.ios?.infoPlist?.NSAppTransportSecurity).toEqual(
+      expect.objectContaining({
+        NSAllowsLocalNetworking: true,
+        NSExceptionDomains: expect.objectContaining({
+          localhost: {
+            NSExceptionAllowsInsecureHTTPLoads: true,
+          },
+        }),
+      }),
+    );
+    expect(result.ios?.infoPlist?.NSAppTransportSecurity).not.toHaveProperty(
+      "NSAllowsArbitraryLoads",
+    );
+    expect(result.plugins).toEqual(
+      expect.arrayContaining([
+        [
+          "expo-build-properties",
+          {
+            android: {
+              usesCleartextTraffic: true,
+              extraMavenRepos: ["https://devrepo.kakao.com/nexus/content/groups/public/"],
+            },
+          },
+        ],
+      ]),
+    );
+  });
+
+  it("http API base URL이 잘못되면 config 생성에 실패한다", () => {
+    process.env.EXPO_PUBLIC_API_BASE_URL = "http://";
+    const configFactory = loadAppConfigModule().default;
+
+    expect(() =>
+      configFactory(
+        createConfigContext({
+          plugins: [],
+        } as unknown as ExpoConfig),
+      ),
+    ).toThrow();
   });
 });
