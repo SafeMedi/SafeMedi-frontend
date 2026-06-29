@@ -168,7 +168,7 @@ export function userToTutorialRegistrationBody(user: User): TutorialRegistration
     height: user.height != null ? Math.round(user.height) : undefined,
     weight: user.weight != null ? Math.round(user.weight) : undefined,
     bloodType: tutorialBloodType,
-    rhType: tutorialRhType ?? (tutorialBloodType ? "PLUS" : undefined),
+    rhType: tutorialRhType,
     diseaseCodes: user.chronicConditions.length
       ? chronicConditionLabelsToDiseaseCodes(user.chronicConditions)
       : undefined,

@@ -130,6 +130,16 @@ describe("튜토리얼 사용자 매핑", () => {
     });
   });
 
+  it("Rh 정보가 없는 혈액형은 rhType을 추정하지 않는다", () => {
+    const body = userToTutorialRegistrationBody({
+      ...baseUser,
+      bloodType: "AB",
+    });
+
+    expect(body.bloodType).toBe("AB");
+    expect(body.rhType).toBeUndefined();
+  });
+
   it("생년월일이 없으면 요청 바디 변환에 실패한다", () => {
     expect(() =>
       userToTutorialRegistrationBody({
