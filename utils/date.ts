@@ -55,8 +55,18 @@ export function parseCompactBirthDate(
   const century = Math.floor(referenceDate.getFullYear() / 100);
   const year = yy <= pivot ? century * 100 + yy : (century - 1) * 100 + yy;
   const iso = `${year}-${normalizeDatePart(month)}-${normalizeDatePart(day)}`;
+  const parsedDate = parseIsoDate(iso);
+  if (!parsedDate) {
+    return null;
+  }
 
-  return parseIsoDate(iso) ? iso : null;
+  const normalizedReferenceDate = new Date(
+    referenceDate.getFullYear(),
+    referenceDate.getMonth(),
+    referenceDate.getDate(),
+  );
+
+  return parsedDate <= normalizedReferenceDate ? iso : null;
 }
 
 /** YYYY-MM-DD → YYMMDD. 파싱 실패 시 null */

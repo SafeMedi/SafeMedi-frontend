@@ -43,6 +43,13 @@ describe("utils/date", () => {
     expect(parseCompactBirthDate("9501")).toBeNull();
   });
 
+  it("parseCompactBirthDate는 기준일 이후 날짜면 null을 반환한다", () => {
+    const referenceDate = new Date("2026-06-29T12:00:00");
+
+    expect(parseCompactBirthDate("261231", referenceDate)).toBeNull();
+    expect(parseCompactBirthDate("260629", referenceDate)).toBe("2026-06-29");
+  });
+
   it("formatBirthDateToCompact는 YYYY-MM-DD를 YYMMDD로 변환한다", () => {
     expect(formatBirthDateToCompact("1995-01-01")).toBe("950101");
     expect(formatBirthDateToCompact("1999-01-01")).toBe("990101");
