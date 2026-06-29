@@ -68,10 +68,10 @@ export function createMockFetch(registry: MockRegistry): typeof fetch {
 }
 
 function resolveNativeFetch(): typeof fetch {
-  if (Platform.OS === "web") {
-    return globalThis.fetch.bind(globalThis);
+  if (apiConfig.useXhrFetch && Platform.OS !== "web") {
+    return createXhrFetch();
   }
-  return createXhrFetch();
+  return globalThis.fetch.bind(globalThis);
 }
 
 export function resolveFetchImplementation(registry: MockRegistry): typeof fetch {

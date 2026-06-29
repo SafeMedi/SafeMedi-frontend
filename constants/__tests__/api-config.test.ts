@@ -12,11 +12,13 @@ describe("api-config", () => {
     process.env = {
       ...originalEnv,
       EXPO_PUBLIC_USE_MOCK_API: "yes",
+      EXPO_PUBLIC_USE_XHR_FETCH: "true",
       EXPO_PUBLIC_API_BASE_URL: "https://api.example.com/",
     };
 
     const { apiConfig } = require("../api-config") as { apiConfig: ApiConfig };
     expect(apiConfig.useMock).toBe(true);
+    expect(apiConfig.useXhrFetch).toBe(true);
     expect(apiConfig.baseUrl).toBe("https://api.example.com");
     expect(apiConfig.timeoutMs).toBe(30000);
   });
@@ -25,10 +27,12 @@ describe("api-config", () => {
     process.env = {
       ...originalEnv,
       EXPO_PUBLIC_USE_MOCK_API: undefined,
+      EXPO_PUBLIC_USE_XHR_FETCH: undefined,
       EXPO_PUBLIC_API_BASE_URL: undefined,
     };
 
     const { apiConfig } = require("../api-config") as { apiConfig: ApiConfig };
+    expect(apiConfig.useXhrFetch).toBe(false);
     expect(apiConfig.baseUrl).toBe("https://api.safemedi.local");
   });
 
