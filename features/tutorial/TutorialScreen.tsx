@@ -55,7 +55,7 @@ export function TutorialScreen() {
     const latest = useUserStore.getState().user;
     if (!latest) return;
     if (!latest.birthDate) {
-      Alert.alert("입력 확인", "만 나이를 입력해 주세요.");
+      Alert.alert("입력 확인", "생년월일을 입력해 주세요.");
       setStep(0);
       return;
     }
