@@ -5,6 +5,16 @@ import { queryKeys } from "@/api/query-keys";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUserStore } from "@/stores/userStore";
 
+const AUTH_SCOPED_QUERY_KEY_PREFIXES = [
+  queryKeys.user.me,
+  ["dashboard"],
+  ["family"],
+  ["profile"],
+  ["prescriptions"],
+  ["scan"],
+  ["map"],
+] as const;
+
 export function useLogout() {
   const queryClient = useQueryClient();
   const clearSession = useSessionStore((s) => s.clearSession);
@@ -13,8 +23,8 @@ export function useLogout() {
   return useCallback(() => {
     clearSession();
     clearUser();
-    queryClient.removeQueries({ queryKey: queryKeys.user.me });
-    queryClient.removeQueries({ queryKey: queryKeys.profile.families });
-    queryClient.removeQueries({ queryKey: queryKeys.profile.notificationSettings });
+    for (const queryKey of AUTH_SCOPED_QUERY_KEY_PREFIXES) {
+      queryClient.removeQueries({ queryKey });
+    }
   }, [clearSession, clearUser, queryClient]);
 }
