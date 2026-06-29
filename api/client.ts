@@ -9,6 +9,27 @@ type KyRequestError = {
   request?: Request;
 };
 
+async function readRequestBodyForLog(request: Request): Promise<unknown> {
+  if (request.method === "GET" || request.method === "HEAD") {
+    return undefined;
+  }
+
+  try {
+    const text = await request.clone().text();
+    if (!text) {
+      return undefined;
+    }
+
+    try {
+      return JSON.parse(text) as unknown;
+    } catch {
+      return text;
+    }
+  } catch {
+    return undefined;
+  }
+}
+
 async function readResponseBodyForLog(response: Response): Promise<unknown> {
   try {
     const text = await response.clone().text();
@@ -74,14 +95,20 @@ export const api: KyInstance = ky.create({
   fetch: fetchImpl,
   hooks: {
     beforeRequest: [
-      ({ request }) => {
+      async ({ request }) => {
         if (!request.headers.has("Authorization")) {
           const token = useSessionStore.getState().accessToken;
           if (token) {
             request.headers.set("Authorization", `Bearer ${token}`);
           }
         }
-        logApiDev(`[api] → ${request.method} ${request.url}`);
+
+        const requestBody = await readRequestBodyForLog(request);
+        if (requestBody !== undefined) {
+          logApiDev(`[api] → ${request.method} ${request.url}`, requestBody);
+        } else {
+          logApiDev(`[api] → ${request.method} ${request.url}`);
+        }
       },
     ],
     afterResponse: [
@@ -107,7 +134,15 @@ export const api: KyInstance = ky.create({
           const body = await readResponseBodyForLog(error.response);
           logApiDev(`[api] ✕ ${label}`, body);
         } else {
-          logApiDev(`[api] ✕ ${label}`);
+          const cause =
+            error instanceof Error && "cause" in error
+              ? (error as Error & { cause?: unknown }).cause
+              : undefined;
+          if (cause !== undefined) {
+            logApiDev(`[api] ✕ ${label}`, cause);
+          } else {
+            logApiDev(`[api] ✕ ${label}`);
+          }
         }
 
         return error;

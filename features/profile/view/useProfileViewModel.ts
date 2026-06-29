@@ -1,11 +1,9 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { type Href, router } from "expo-router";
 import { useMemo } from "react";
 
 import { useFamilyProfiles } from "@/api/queries/profile";
-import { queryKeys } from "@/api/query-keys";
-import { useSessionStore } from "@/stores/sessionStore";
-import { useHealthInfo, useProfileUser, useUserStore } from "@/stores/userStore";
+import { useLogout } from "@/hooks/use-logout";
+import { useHealthInfo, useProfileUser } from "@/stores/userStore";
 import type { FamilyProfile } from "./components/FamilyProfileSection";
 import { FAMILY_AVATAR_GRADIENTS } from "./constants";
 
@@ -16,9 +14,7 @@ const AVATAR_GRADIENT_POOL = [
 ] as const;
 
 export function useProfileViewModel() {
-  const queryClient = useQueryClient();
-  const clearSession = useSessionStore((s) => s.clearSession);
-  const clearUser = useUserStore((s) => s.clearUser);
+  const handleLogout = useLogout();
 
   const profileUser = useProfileUser();
   const { data: familySummaries = [] } = useFamilyProfiles();
@@ -49,14 +45,6 @@ export function useProfileViewModel() {
     ],
     [],
   );
-
-  const handleLogout = () => {
-    clearSession();
-    clearUser();
-    queryClient.removeQueries({ queryKey: queryKeys.user.me });
-    queryClient.removeQueries({ queryKey: queryKeys.profile.families });
-    queryClient.removeQueries({ queryKey: queryKeys.profile.notificationSettings });
-  };
 
   const handleOpenProfileEdit = () => {
     router.push("/profile/edit");

@@ -60,5 +60,13 @@ export type {
   UpdatePrescriptionRequest,
   UpdatePrescriptionResponse,
 } from "./prescriptions";
-export type { TutorialRegistrationBody, TutorialRegistrationResponse } from "./tutorial";
+export type {
+  TutorialAllergyItem,
+  TutorialAllergyType,
+  TutorialBloodType,
+  TutorialGender,
+  TutorialRegistrationBody,
+  TutorialRegistrationResponse,
+  TutorialRhType,
+} from "./tutorial";
 export type { AllergyItem, UpdateUserProfileBody, UserProfile } from "./user";

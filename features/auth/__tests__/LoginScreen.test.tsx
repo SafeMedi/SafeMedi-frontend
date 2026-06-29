@@ -6,7 +6,7 @@ const mockRetry = jest.fn();
 
 let mockAuthState:
   | { kind: "loading" }
-  | { kind: "error"; retry: () => void }
+  | { kind: "error"; retry: () => void; logout: () => void }
   | { kind: "redirect"; href: "/(auth)/login" | "/(tabs)/dashboard" } = {
   kind: "redirect",
   href: "/(auth)/login",
@@ -75,7 +75,7 @@ describe("LoginScreen", () => {
   });
 
   it("error 상태에서는 retry를 전달한다", () => {
-    mockAuthState = { kind: "error", retry: mockRetry };
+    mockAuthState = { kind: "error", retry: mockRetry, logout: jest.fn() };
     const { getByLabelText } = render(<LoginScreen />);
     fireEvent.press(getByLabelText("auth-error"));
     expect(mockRetry).toHaveBeenCalledTimes(1);

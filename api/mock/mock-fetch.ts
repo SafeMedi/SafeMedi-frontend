@@ -1,3 +1,6 @@
+import { Platform } from "react-native";
+
+import { createXhrFetch } from "@/api/xhr-fetch";
 import { apiConfig } from "@/constants/api-config";
 import type { MockRegistry } from "./registry";
 import { pathRelativeToApiBase } from "./resolve-path";
@@ -64,9 +67,16 @@ export function createMockFetch(registry: MockRegistry): typeof fetch {
   };
 }
 
+function resolveNativeFetch(): typeof fetch {
+  if (apiConfig.useXhrFetch && Platform.OS !== "web") {
+    return createXhrFetch();
+  }
+  return globalThis.fetch.bind(globalThis);
+}
+
 export function resolveFetchImplementation(registry: MockRegistry): typeof fetch {
   if (apiConfig.useMock) {
     return createMockFetch(registry);
   }
-  return globalThis.fetch;
+  return resolveNativeFetch();
 }

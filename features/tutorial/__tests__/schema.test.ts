@@ -3,6 +3,7 @@ import { tutorialStep1Schema } from "@/features/tutorial/schema";
 describe("튜토리얼 Step1 스키마", () => {
   it("유효한 Step1 입력값을 허용한다", () => {
     const result = tutorialStep1Schema.safeParse({
+      birthDate: "950101",
       height: "170",
       weight: "65",
       bloodType: "AB",
@@ -15,6 +16,7 @@ describe("튜토리얼 Step1 스키마", () => {
 
   it("허용 범위 내 소수 입력 문자열을 허용한다", () => {
     const result = tutorialStep1Schema.safeParse({
+      birthDate: "990101",
       height: "170,4",
       weight: "65.7",
       bloodType: "A",
@@ -27,6 +29,7 @@ describe("튜토리얼 Step1 스키마", () => {
 
   it("범위를 벗어난 숫자 입력을 거부한다", () => {
     const result = tutorialStep1Schema.safeParse({
+      birthDate: "950101",
       height: "49",
       weight: "9",
       bloodType: "B",
@@ -41,8 +44,22 @@ describe("튜토리얼 Step1 스키마", () => {
     }
   });
 
+  it("유효하지 않은 생년월일 형식을 거부한다", () => {
+    const result = tutorialStep1Schema.safeParse({
+      birthDate: "950231",
+      height: "170",
+      weight: "65",
+      bloodType: "O",
+      rhFactor: "positive",
+      gender: "male",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it("필수값이 비어 있으면 거부한다", () => {
     const result = tutorialStep1Schema.safeParse({
+      birthDate: "",
       height: "",
       weight: "",
       bloodType: undefined,

@@ -42,9 +42,29 @@ const KAKAO_MAP_ATS_EXCEPTION_DOMAINS = {
   },
 } as const;
 
+function getApiHostAtsException(): Record<string, { NSExceptionAllowsInsecureHTTPLoads: true }> {
+  const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+  if (!baseUrl?.startsWith("http://")) {
+    return {};
+  }
+
+  const host = new URL(baseUrl).hostname;
+  if (!host) {
+    throw new Error("[app.config] EXPO_PUBLIC_API_BASE_URL must include a host for http:// URLs");
+  }
+
+  return {
+    [host]: {
+      NSExceptionAllowsInsecureHTTPLoads: true,
+    },
+  };
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   const existingPlugins = stripManagedPlugins((config.plugins ?? []) as PluginEntry[]);
   const existingInfoPlist = config.ios?.infoPlist ?? {};
+  const apiHostAtsException = getApiHostAtsException();
+  const apiHostAllowsInsecureHttp = Object.keys(apiHostAtsException).length > 0;
 
   return {
     ...config,
@@ -56,7 +76,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         ...existingInfoPlist,
         NSAppTransportSecurity: {
           NSAllowsLocalNetworking: true,
-          NSExceptionDomains: KAKAO_MAP_ATS_EXCEPTION_DOMAINS,
+          NSExceptionDomains: {
+            ...KAKAO_MAP_ATS_EXCEPTION_DOMAINS,
+            ...apiHostAtsException,
+          },
         },
         NSLocationWhenInUseUsageDescription:
           existingInfoPlist.NSLocationWhenInUseUsageDescription ?? LOCATION_USAGE_DESCRIPTION,
@@ -66,6 +89,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       },
     },
     plugins: [
+      "./plugins/withIosNetworkSessionFix.js",
       "./plugins/withIosKakaoAppDelegateFix.js",
       ...existingPlugins,
       [
@@ -79,6 +103,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         EXPO_BUILD_PROPERTIES_PLUGIN_NAME,
         {
           android: {
+            ...(apiHostAllowsInsecureHttp ? { usesCleartextTraffic: true } : {}),
             extraMavenRepos: [KAKAO_MAVEN_REPOSITORY],
           },
         },

@@ -144,10 +144,13 @@ describe("프로필 기본 화면", () => {
     expect(mockClearSession).toHaveBeenCalledTimes(1);
     expect(mockClearUser).toHaveBeenCalledTimes(1);
     expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: queryKeys.user.me });
-    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: queryKeys.profile.families });
-    expect(mockRemoveQueries).toHaveBeenCalledWith({
-      queryKey: queryKeys.profile.notificationSettings,
-    });
+    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["dashboard"] });
+    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["family"] });
+    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["profile"] });
+    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["prescriptions"] });
+    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["scan"] });
+    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["map"] });
+    expect(mockRemoveQueries).toHaveBeenCalledTimes(7);
   });
 
   it("건강 정보 상세보기 클릭 시 건강정보 상세 페이지로 이동한다", () => {

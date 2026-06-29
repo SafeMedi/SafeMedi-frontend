@@ -1,5 +1,4 @@
 import { act, renderHook, waitFor } from "@testing-library/react-native";
-import { queryKeys } from "@/api/query-keys";
 import { useAuthRouteState } from "@/hooks/use-auth-route-state";
 import type { User } from "@/stores/userStore";
 
@@ -70,6 +69,12 @@ jest.mock("@/stores/userStore", () => ({
     }),
 }));
 
+const mockLogout = jest.fn();
+
+jest.mock("@/hooks/use-logout", () => ({
+  useLogout: () => mockLogout,
+}));
+
 jest.mock("@/utils/user-mapper", () => ({
   profileToUser: () =>
     ({
@@ -121,7 +126,7 @@ describe("useAuthRouteState", () => {
     expect(result.current).toEqual({ kind: "redirect", href: "/(auth)/login" });
   });
 
-  it("비인가(401) 오류면 세션 정리 후 loading 상태를 유지한다", async () => {
+  it("비인가(401) 오류면 공통 로그아웃 처리 후 loading 상태를 유지한다", async () => {
     mockIsError = true;
     mockUnauthorized = true;
     mockError = new Error("401");
@@ -129,9 +134,10 @@ describe("useAuthRouteState", () => {
     const { result } = renderHook(() => useAuthRouteState());
 
     await waitFor(() => {
-      expect(mockClearSession).toHaveBeenCalledTimes(1);
-      expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: queryKeys.user.me });
+      expect(mockLogout).toHaveBeenCalledTimes(1);
     });
+    expect(mockClearSession).not.toHaveBeenCalled();
+    expect(mockRemoveQueries).not.toHaveBeenCalled();
     expect(result.current).toEqual({ kind: "loading" });
   });
 
@@ -153,6 +159,7 @@ describe("useAuthRouteState", () => {
     });
 
     expect(mockRefetch).toHaveBeenCalledTimes(1);
+    expect(errorState.logout).toBe(mockLogout);
   });
 
   it("프로필이 있고 튜토리얼 미완료면 튜토리얼로 리다이렉트한다", async () => {

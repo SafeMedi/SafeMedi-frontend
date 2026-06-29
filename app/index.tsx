@@ -10,7 +10,7 @@ export default function IndexRedirect() {
   }
 
   if (authState.kind === "error") {
-    return <AuthGateView kind="error" onRetry={authState.retry} />;
+    return <AuthGateView kind="error" onRetry={authState.retry} onLogout={authState.logout} />;
   }
 
   return <Redirect href={authState.href} />;

@@ -2,15 +2,16 @@ import { render } from "@testing-library/react-native";
 import TabLayout from "../_layout";
 
 const mockRedirect = jest.fn<null, [{ href: string }]>(() => null);
-const mockAuthGateView = jest.fn<null, [{ kind: "loading" | "error"; onRetry?: () => void }]>(
-  () => null,
-);
+const mockAuthGateView = jest.fn<
+  null,
+  [{ kind: "loading" | "error"; onRetry?: () => void; onLogout?: () => void }]
+>(() => null);
 const mockTabsScreen = jest.fn<null, [unknown]>(() => null);
 const mockRouterPush = jest.fn<unknown, unknown[]>();
 
 let mockAuthState:
   | { kind: "loading" }
-  | { kind: "error"; retry: () => void }
+  | { kind: "error"; retry: () => void; logout: () => void }
   | { kind: "ready"; href: string };
 let mockUser: { id: string } | null = { id: "user-1" };
 
@@ -43,8 +44,11 @@ jest.mock("@/stores/userStore", () => ({
 }));
 
 jest.mock("@/components/AuthGateView", () => ({
-  AuthGateView: (props: { kind: "loading" | "error"; onRetry?: () => void }) =>
-    mockAuthGateView(props),
+  AuthGateView: (props: {
+    kind: "loading" | "error";
+    onRetry?: () => void;
+    onLogout?: () => void;
+  }) => mockAuthGateView(props),
 }));
 
 describe("app/(tabs)/_layout", () => {
@@ -64,10 +68,15 @@ describe("app/(tabs)/_layout", () => {
 
   it("error 상태면 AuthGateView error를 렌더링한다", () => {
     const retry = jest.fn();
-    mockAuthState = { kind: "error", retry };
+    const logout = jest.fn();
+    mockAuthState = { kind: "error", retry, logout };
     render(<TabLayout />);
 
-    expect(mockAuthGateView).toHaveBeenCalledWith({ kind: "error", onRetry: retry });
+    expect(mockAuthGateView).toHaveBeenCalledWith({
+      kind: "error",
+      onRetry: retry,
+      onLogout: logout,
+    });
   });
 
   it("인증 라우트가 dashboard가 아니면 Redirect한다", () => {

@@ -1,9 +1,8 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 import { isUnauthorizedError } from "@/api/error";
 import { useUserProfile } from "@/api/queries/user";
-import { queryKeys } from "@/api/query-keys";
+import { useLogout } from "@/hooks/use-logout";
 import { useSessionHydrated } from "@/hooks/use-session-hydrated";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUserStore } from "@/stores/userStore";
@@ -13,27 +12,25 @@ export type AuthRouteHref = "/(auth)/login" | "/(auth)/tutorial" | "/(tabs)/dash
 
 type AuthRouteState =
   | { kind: "loading" }
-  | { kind: "error"; retry: () => void }
+  | { kind: "error"; retry: () => void; logout: () => void }
   | { kind: "redirect"; href: AuthRouteHref };
 
 export function useAuthRouteState(): AuthRouteState {
-  const queryClient = useQueryClient();
   const hydrated = useSessionHydrated();
   const accessToken = useSessionStore((s) => s.accessToken);
   const isTutorialCompleted = useSessionStore((s) => s.isTutorialCompleted);
-  const clearSession = useSessionStore((s) => s.clearSession);
   const setTutorialCompleted = useSessionStore((s) => s.setTutorialCompleted);
   const user = useUserStore((s) => s.user);
   const setUser = useUserStore((s) => s.setUser);
+  const logout = useLogout();
   const { data: profile, isPending, isError, error, refetch } = useUserProfile();
 
   useEffect(() => {
     if (!hydrated || !accessToken || !isError || !isUnauthorizedError(error)) {
       return;
     }
-    clearSession();
-    queryClient.removeQueries({ queryKey: queryKeys.user.me });
-  }, [hydrated, accessToken, isError, error, clearSession, queryClient]);
+    logout();
+  }, [hydrated, accessToken, isError, error, logout]);
 
   useEffect(() => {
     if (!hydrated || !accessToken || isError || !profile || user) {
@@ -67,7 +64,7 @@ export function useAuthRouteState(): AuthRouteState {
     if (isUnauthorizedError(error)) {
       return { kind: "loading" };
     }
-    return { kind: "error", retry: () => void refetch() };
+    return { kind: "error", retry: () => void refetch(), logout };
   }
 
   if (!(profile.isTutorialCompleted || isTutorialCompleted)) {
