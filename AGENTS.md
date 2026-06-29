@@ -1,4 +1,4 @@
-# safeMedi — Codex Agent Instructions
+# safeMedi
 
 Expo Router · React Native · Tamagui · TanStack Query · Zustand.
 
@@ -33,6 +33,7 @@ Expo Router · React Native · Tamagui · TanStack Query · Zustand.
 
 - 모든 리뷰 코멘트, 요약, 수정 제안은 한국어로 작성한다.
 - 코드 식별자, 파일 경로, 커맨드, 에러 메시지는 원문(영문)을 유지한다. 설명만 한국어로 작성한다.
+- 브랜치와 커밋은 gitflow 원칙을 준수하고, 커밋도 한국어 작성을 기본으로 한다.
 
 ### P0 / P1 — 반드시 지적 (blocking)
 
