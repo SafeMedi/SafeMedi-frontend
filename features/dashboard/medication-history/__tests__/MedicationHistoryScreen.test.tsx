@@ -8,7 +8,7 @@ const mockUseMedicationHistoryViewModel = jest.fn<
   MedicationHistoryViewModel,
   [string | undefined]
 >();
-const mockUseLocalSearchParams = jest.fn(() => ({ date: "2026-04-06" }));
+const mockUseLocalSearchParams = jest.fn(() => ({ prescriptionId: "11" }));
 
 jest.mock("expo-router", () => ({
   __esModule: true,
@@ -24,8 +24,8 @@ jest.mock("react-native-safe-area-context", () => ({
 }));
 
 jest.mock("../useMedicationHistoryViewModel", () => ({
-  useMedicationHistoryViewModel: (dateParam: string | undefined) =>
-    mockUseMedicationHistoryViewModel(dateParam),
+  useMedicationHistoryViewModel: (prescriptionIdParam: string | undefined) =>
+    mockUseMedicationHistoryViewModel(prescriptionIdParam),
 }));
 
 jest.mock("tamagui", () => {
@@ -151,14 +151,14 @@ describe("MedicationHistoryScreen", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseLocalSearchParams.mockReturnValue({ date: "2026-04-06" });
+    mockUseLocalSearchParams.mockReturnValue({ prescriptionId: "11" });
     mockUseMedicationHistoryViewModel.mockReturnValue(createViewModel());
   });
 
-  it("쿼리 파라미터 date를 viewModel 훅에 전달한다", () => {
+  it("쿼리 파라미터 prescriptionId를 viewModel 훅에 전달한다", () => {
     render(<MedicationHistoryScreen />);
 
-    expect(mockUseMedicationHistoryViewModel).toHaveBeenCalledWith("2026-04-06");
+    expect(mockUseMedicationHistoryViewModel).toHaveBeenCalledWith("11");
   });
 
   it("정상 상태에서 헤더/경고배너/약물카드를 렌더링한다", () => {

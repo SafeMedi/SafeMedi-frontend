@@ -1,26 +1,25 @@
 import { renderHook } from "@testing-library/react-native";
-import { useDashboardMedicationHistoryRecords } from "@/api/queries/dashboard";
+import { usePrescriptionQuery } from "@/api/queries/prescriptions";
 import { useMedicationHistoryViewModel } from "../useMedicationHistoryViewModel";
 
-const mockUseDashboardMedicationHistoryRecords =
-  useDashboardMedicationHistoryRecords as jest.MockedFunction<
-    typeof useDashboardMedicationHistoryRecords
-  >;
+const mockUsePrescriptionQuery = usePrescriptionQuery as jest.MockedFunction<
+  typeof usePrescriptionQuery
+>;
 const mockRefetch = jest.fn(async () => ({}));
 
-jest.mock("@/api/queries/dashboard", () => ({
-  useDashboardMedicationHistoryRecords: jest.fn(),
+jest.mock("@/api/queries/prescriptions", () => ({
+  usePrescriptionQuery: jest.fn(),
 }));
 
 describe("useMedicationHistoryViewModel", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseDashboardMedicationHistoryRecords.mockReturnValue({
+    mockUsePrescriptionQuery.mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: false,
       refetch: mockRefetch,
-    } as unknown as ReturnType<typeof useDashboardMedicationHistoryRecords>);
+    } as unknown as ReturnType<typeof usePrescriptionQuery>);
   });
 
   it("기본 상태에서 빈 데이터와 기본 날짜 라벨을 제공한다", () => {
@@ -32,62 +31,68 @@ describe("useMedicationHistoryViewModel", () => {
   });
 
   it("기록 데이터를 가공해 medication 아이템과 경고 요약을 만든다", () => {
-    mockUseDashboardMedicationHistoryRecords.mockReturnValue({
+    mockUsePrescriptionQuery.mockReturnValue({
       data: {
-        items: [
+        prescriptionId: 11,
+        title: "신장내과 처방전",
+        startDate: "2026-05-19",
+        medications: [
           {
-            recordId: 1,
-            scheduledTime: "09:00",
-            medicationNames: ["A", "B", "A"],
-            prescriptionTitle: "아침약",
-            status: "OVERDUE",
-            warningMessages: ["주의 필요"],
+            medicationId: 1,
+            atcCode: "N02BE01",
+            drugName: "A",
+            takeTimes: ["09:00"],
+            mainIngredient: "B",
+            hasWarning: true,
+            warningMessage: "주의 필요",
           },
           {
-            recordId: 2,
-            scheduledTime: "20:00",
-            medicationNames: ["C"],
-            prescriptionTitle: "저녁약",
-            status: "SUCCESS",
-            warningMessages: [],
+            medicationId: 2,
+            atcCode: "A02BC01",
+            drugName: "C",
+            takeTimes: ["20:00"],
+            mainIngredient: "C",
+            hasWarning: false,
           },
         ],
       },
       isLoading: false,
       isError: false,
       refetch: mockRefetch,
-    } as unknown as ReturnType<typeof useDashboardMedicationHistoryRecords>);
+    } as unknown as ReturnType<typeof usePrescriptionQuery>);
 
-    const { result } = renderHook(() => useMedicationHistoryViewModel("2026-05-19"));
+    const { result } = renderHook(() => useMedicationHistoryViewModel("11"));
 
     expect(result.current.displayDate).not.toBe("-");
     expect(result.current.warningSummary).toContain("경고");
     expect(result.current.medications[0]?.tone).toBe("warning");
-    expect(result.current.medications[0]?.activeIngredients).toEqual(["A", "B"]);
+    expect(result.current.medications[0]?.activeIngredients).toEqual(["B"]);
     expect(result.current.medications[1]?.tone).toBe("safe");
   });
 
-  it("경고 메시지가 없는 DUE 상태에는 기본 경고 문구를 생성한다", () => {
-    mockUseDashboardMedicationHistoryRecords.mockReturnValue({
+  it("경고 메시지가 없는 주의 약물에는 기본 경고 문구를 생성한다", () => {
+    mockUsePrescriptionQuery.mockReturnValue({
       data: {
-        items: [
+        prescriptionId: 11,
+        title: "신장내과 처방전",
+        medications: [
           {
-            recordId: 5,
-            scheduledTime: "13:00",
-            medicationNames: ["A"],
-            prescriptionTitle: "점심약",
-            status: "DUE",
-            warningMessages: [],
+            medicationId: 5,
+            atcCode: "N02BE01",
+            drugName: "A",
+            takeTimes: ["13:00"],
+            mainIngredient: "A",
+            hasWarning: true,
           },
         ],
       },
       isLoading: false,
       isError: false,
       refetch: mockRefetch,
-    } as unknown as ReturnType<typeof useDashboardMedicationHistoryRecords>);
+    } as unknown as ReturnType<typeof usePrescriptionQuery>);
 
-    const { result } = renderHook(() => useMedicationHistoryViewModel("2026-05-18"));
+    const { result } = renderHook(() => useMedicationHistoryViewModel("11"));
 
-    expect(result.current.medications[0]?.warningItems[0]?.message).toContain("복용 필요 상태");
+    expect(result.current.medications[0]?.warningItems[0]?.message).toContain("주의가 필요한 약물");
   });
 });

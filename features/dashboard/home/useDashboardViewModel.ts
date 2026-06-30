@@ -1,13 +1,8 @@
 import { useMemo } from "react";
 
 import { useDashboardTodayMedicationSchedules } from "@/api/queries/dashboard";
+import { usePrescriptionsQuery } from "@/api/queries/prescriptions";
 import type { TodayMedicationScheduleStatus } from "@/api/types";
-
-const LOCALE_DATE_FORMAT_OPTIONS = {
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-} as const;
 
 type DashboardScheduleTone = "success" | "required" | "upcoming";
 
@@ -24,6 +19,7 @@ export interface DashboardScheduleCardItem {
 
 export interface DashboardRecentPrescriptionItem {
   readonly id: string;
+  readonly prescriptionId: number;
   readonly dateLabel: string;
   readonly analysisCount: number;
   readonly hasWarning: boolean;
@@ -42,14 +38,6 @@ export interface DashboardViewModel {
   readonly refetch: () => Promise<unknown>;
 }
 
-function formatDateLabel(dateText: string): string {
-  const parsedDate = new Date(dateText);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return dateText;
-  }
-  return parsedDate.toLocaleDateString("ko-KR", LOCALE_DATE_FORMAT_OPTIONS).replace(/\.$/, "");
-}
-
 function resolveScheduleTone(status: TodayMedicationScheduleStatus): DashboardScheduleTone {
   if (status === "SUCCESS") return "success";
   if (status === "NEED_TAKE" || status === "MISSED") return "required";
@@ -66,6 +54,8 @@ function resolveStatusLabel(status: TodayMedicationScheduleStatus): string {
 
 export function useDashboardViewModel(): DashboardViewModel {
   const todayScheduleQuery = useDashboardTodayMedicationSchedules();
+  const prescriptionsQuery = usePrescriptionsQuery();
+  const prescriptions = prescriptionsQuery.data?.prescriptions ?? [];
 
   const adherenceRate = Math.round(todayScheduleQuery.data?.summary.completionRate ?? 0);
   const adherenceSummaryText = todayScheduleQuery.data?.summary
@@ -80,31 +70,33 @@ export function useDashboardViewModel(): DashboardViewModel {
       prescriptionCount: 1,
       prescriptionTitle: schedule.prescriptionTitle,
       medicationCount: schedule.drugCount,
-      medicationNames: [],
+      medicationNames:
+        prescriptions
+          .find((prescription) => prescription.prescriptionId === schedule.prescriptionId)
+          ?.medications.filter((medication) => medication.takeTimes.includes(schedule.takeTime))
+          .map((medication) => medication.drugName) ?? [],
       statusLabel: resolveStatusLabel(schedule.status),
       tone: resolveScheduleTone(schedule.status),
     }));
-  }, [todayScheduleQuery.data]);
+  }, [prescriptions, todayScheduleQuery.data]);
 
   const scheduleRemainingCount = useMemo(() => {
     return scheduleCards.filter((card) => card.tone !== "success").length;
   }, [scheduleCards]);
 
   const recentPrescriptions = useMemo<readonly DashboardRecentPrescriptionItem[]>(() => {
-    const responseDate = todayScheduleQuery.data?.date;
-    if (!responseDate || scheduleCards.length === 0) return [];
+    return prescriptions.slice(0, 3).map((prescription) => ({
+      id: String(prescription.prescriptionId),
+      prescriptionId: prescription.prescriptionId,
+      dateLabel: prescription.title,
+      analysisCount: prescription.drugCount ?? prescription.medications.length,
+      hasWarning:
+        prescription.hasAllergyConflict ?? prescription.medications.some((item) => item.hasWarning),
+    }));
+  }, [prescriptions]);
 
-    return [
-      {
-        id: responseDate,
-        dateLabel: formatDateLabel(responseDate),
-        analysisCount: scheduleCards.reduce((sum, card) => sum + card.medicationCount, 0),
-        hasWarning: scheduleCards.some((card) => card.tone === "required"),
-      },
-    ];
-  }, [scheduleCards, todayScheduleQuery.data?.date]);
-
-  const refetch = async () => todayScheduleQuery.refetch();
+  const refetch = async () =>
+    Promise.all([todayScheduleQuery.refetch(), prescriptionsQuery.refetch()]);
 
   return {
     adherenceRate,
@@ -115,8 +107,8 @@ export function useDashboardViewModel(): DashboardViewModel {
     healthTipTitle: "건강 팁",
     healthTipDescription:
       "약은 충분한 물과 함께 복용하세요. 최소 200ml(컵 1잔) 이상의 물과 함께 드시면 효과가 더 좋아요.",
-    isLoading: todayScheduleQuery.isLoading,
-    isError: todayScheduleQuery.isError,
+    isLoading: todayScheduleQuery.isLoading || prescriptionsQuery.isLoading,
+    isError: todayScheduleQuery.isError || prescriptionsQuery.isError,
     refetch,
   };
 }
