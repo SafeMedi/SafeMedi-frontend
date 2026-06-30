@@ -45,7 +45,7 @@ export function TodayScheduleSection({ remainingCount, items }: TodayScheduleSec
 
 const styles = StyleSheet.create({
   emptyCard: {
-    paddingVertical: 22,
+    paddingVertical: 36,
     paddingHorizontal: 14,
   },
   emptyText: {

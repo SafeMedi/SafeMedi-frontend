@@ -14,6 +14,7 @@ export interface MedicationEditKey {
 
 export interface MedicationEditDraft {
   readonly drugName: string;
+  readonly drugCode: string;
   readonly atcCode: string;
   readonly takeSlots: readonly MedicationTakeSlot[];
   readonly originalTakeTimes: readonly string[];
@@ -61,6 +62,7 @@ export function createMedicationEditDraft(
 
   return {
     drugName: medication.drugName,
+    drugCode: medication.drugCode ?? "",
     atcCode: medication.atcCode,
     takeSlots: convertTakeTimesToTakeSlots(medication.takeTimes),
     originalTakeTimes: medication.takeTimes,
@@ -127,7 +129,7 @@ export function validateMedicationEditDraft(
     return { isValid: false, message: "약물명을 입력해주세요." };
   }
   if (draft.atcCode.trim().length === 0) {
-    return { isValid: false, message: "약물명은 검색 결과에서 선택해야 합니다." };
+    return { isValid: false, message: "약물 코드가 없는 약물은 수정할 수 없습니다." };
   }
   if (draft.takeSlots.length === 0) {
     return { isValid: false, message: "복약 시간을 최소 1개 이상 선택해주세요." };
@@ -152,17 +154,16 @@ export function buildUpdatedMedicationsAfterEdit(
     : [...draft.originalTakeTimes];
 
   return prescription.medications.map((medication) => {
+    const prescriptionDrugId = medication.prescriptionDrugId ?? medication.medicationId;
     if (medication.medicationId !== medicationId) {
       return {
-        atcCode: medication.atcCode,
-        drugName: medication.drugName,
+        prescriptionDrugId,
         takeTimes: medication.takeTimes,
       };
     }
 
     return {
-      atcCode: draft.atcCode.trim(),
-      drugName: draft.drugName.trim(),
+      prescriptionDrugId,
       takeTimes,
     };
   });

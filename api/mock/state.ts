@@ -171,6 +171,8 @@ export const mockState: MockOnlyState & {
       medications: [
         {
           medicationId: 101,
+          prescriptionDrugId: 101,
+          drugCode: "195700007",
           atcCode: "N02BE01",
           drugName: "타이레놀정 500mg",
           takeTimes: ["08:00", "18:00", "22:00"],
@@ -179,6 +181,8 @@ export const mockState: MockOnlyState & {
         },
         {
           medicationId: 102,
+          prescriptionDrugId: 102,
+          drugCode: "200001234",
           atcCode: "A02BC01",
           drugName: "오메프라졸캡슐 20mg",
           takeTimes: ["08:00"],
@@ -193,6 +197,8 @@ export const mockState: MockOnlyState & {
       medications: [
         {
           medicationId: 201,
+          prescriptionDrugId: 201,
+          drugCode: "200101234",
           atcCode: "C08CA01",
           drugName: "암로디핀정 5mg",
           takeTimes: ["14:00"],

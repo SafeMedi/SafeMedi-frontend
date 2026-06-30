@@ -28,6 +28,7 @@ export const MEDICATION_TAKE_SLOT_OPTIONS: readonly MedicationTakeSlotOption[] =
 
 export interface EditableMedicationItem {
   readonly drugName: string;
+  readonly drugCode: string;
   readonly atcCode: string;
   readonly takeSlots: MedicationTakeSlot[];
 }
@@ -40,6 +41,7 @@ export interface PrescriptionScanResultFormValues {
 }
 
 const EMPTY_MEDICATION_ATC_CODE = "";
+const EMPTY_MEDICATION_DRUG_CODE = "";
 const MANUAL_INPUT_IMAGE_URI_PREFIX = "manual://";
 const EMPTY_RESULT_ERROR = "복약 등록 정보가 없습니다. 스캔 화면으로 이동합니다.";
 const DRUG_NAME_NOT_SELECTED_ERROR = "약물명은 검색 결과에서 선택해야 합니다.";
@@ -58,6 +60,7 @@ function createRequestMedications(
   medications: readonly EditableMedicationItem[],
 ): CreatePrescriptionMedication[] {
   return medications.map((item) => ({
+    drugCode: item.drugCode.trim(),
     atcCode: item.atcCode.trim(),
     drugName: item.drugName.trim(),
     takeTimes: convertTakeSlotsToTimes(item.takeSlots),
@@ -91,6 +94,7 @@ export function usePrescriptionScanResultViewModel() {
       endDate: "",
       medications: result.draft.medications.map((item) => ({
         drugName: item.drugName,
+        drugCode: "",
         atcCode: item.atcCode,
         takeSlots: [],
       })),
@@ -135,6 +139,7 @@ export function usePrescriptionScanResultViewModel() {
   const handlePressAddMedication = useCallback(() => {
     append({
       drugName: "",
+      drugCode: EMPTY_MEDICATION_DRUG_CODE,
       atcCode: EMPTY_MEDICATION_ATC_CODE,
       takeSlots: [],
     });
@@ -167,6 +172,10 @@ export function usePrescriptionScanResultViewModel() {
         shouldDirty: true,
         shouldTouch: true,
       });
+      setValue(`medications.${index}.drugCode`, EMPTY_MEDICATION_DRUG_CODE, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
       setValue(`medications.${index}.atcCode`, EMPTY_MEDICATION_ATC_CODE, {
         shouldDirty: true,
         shouldTouch: true,
@@ -178,6 +187,10 @@ export function usePrescriptionScanResultViewModel() {
   const handleSelectMedicationDrug = useCallback(
     (index: number, item: DrugSearchItem) => {
       setValue(`medications.${index}.drugName`, item.drugName, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      setValue(`medications.${index}.drugCode`, item.drugCode, {
         shouldDirty: true,
         shouldTouch: true,
       });
@@ -249,6 +262,10 @@ export function usePrescriptionScanResultViewModel() {
       return;
     }
     if (medications.some((item) => item.atcCode.length === 0)) {
+      Alert.alert("입력 확인", DRUG_NAME_NOT_SELECTED_ERROR);
+      return;
+    }
+    if (medications.some((item) => item.drugCode.length === 0)) {
       Alert.alert("입력 확인", DRUG_NAME_NOT_SELECTED_ERROR);
       return;
     }

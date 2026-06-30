@@ -17,8 +17,9 @@ const SCREEN_TITLE = "스캔 기록 상세";
 export function MedicationHistoryScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
-  const dateParam = typeof params.date === "string" ? params.date : undefined;
-  const viewModel = useMedicationHistoryViewModel(dateParam);
+  const prescriptionIdParam =
+    typeof params.prescriptionId === "string" ? params.prescriptionId : undefined;
+  const viewModel = useMedicationHistoryViewModel(prescriptionIdParam);
 
   const handlePressApprove = useCallback(() => {
     Alert.alert("의사 상담 후 승인", "이번 버전에서는 승인 기능이 준비 중입니다.");

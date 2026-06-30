@@ -51,8 +51,6 @@ const base = {
   togglePrescriptionExpanded: jest.fn(),
   startEditMedication: jest.fn(),
   cancelEditMedication: jest.fn(),
-  changeEditDrugName: jest.fn(),
-  selectEditDrug: jest.fn(),
   toggleEditTakeSlot: jest.fn(),
   saveEditMedication: jest.fn(),
   handleDeleteMedication: jest.fn(),

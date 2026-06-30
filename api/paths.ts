@@ -19,10 +19,11 @@ export const apiPaths = {
   drugsSearch: "/api/v1/drugs/search",
 
   prescriptions: "/api/v1/prescriptions",
-  prescriptionsAnalysis: "/api/v1/prescriptions/analysis",
+  prescriptionsAnalysis: "/api/v1/prescriptions/analyze",
   prescription: (prescriptionId: number | string) => `/api/v1/prescriptions/${prescriptionId}`,
 
-  medicationRecords: "/api/v1/medication-records",
+  medicationRecords: "/api/v1/medications/records",
+  medicationRecordsToday: "/api/v1/medication-records/today",
   medicationRecord: (recordId: number | string) => `/api/v1/medication-records/${recordId}`,
 
   medicationsStatistics: "/api/v1/medications/statistics",

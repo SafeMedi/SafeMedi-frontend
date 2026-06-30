@@ -4,6 +4,7 @@ import {
   useDashboardDailyMedicationRecords,
   useDashboardMedicationHistoryRecords,
   useDashboardMonthlyMedicationRecords,
+  useDashboardTodayMedicationSchedules,
   useMedicationStatistics,
 } from "../dashboard";
 
@@ -11,6 +12,7 @@ const mockFetchDailyMedicationRecords = jest.fn<Promise<unknown>, [unknown]>(asy
 const mockFetchMonthlyMedicationRecords = jest.fn<Promise<unknown>, [unknown]>(async () => ({}));
 const mockFetchMedicationHistoryRecords = jest.fn<Promise<unknown>, [unknown]>(async () => ({}));
 const mockFetchMedicationStatistics = jest.fn<Promise<unknown>, [unknown]>(async () => ({}));
+const mockFetchTodayMedicationSchedules = jest.fn<Promise<unknown>, []>(async () => ({}));
 
 let mockAccessToken: string | null = "token";
 
@@ -23,6 +25,7 @@ jest.mock("@/api/endpoints/dashboard", () => ({
   fetchMonthlyMedicationRecords: (params: unknown) => mockFetchMonthlyMedicationRecords(params),
   fetchMedicationHistoryRecords: (params: unknown) => mockFetchMedicationHistoryRecords(params),
   fetchMedicationStatistics: (params: unknown) => mockFetchMedicationStatistics(params),
+  fetchTodayMedicationSchedules: () => mockFetchTodayMedicationSchedules(),
 }));
 
 jest.mock("@/stores/sessionStore", () => ({
@@ -48,6 +51,20 @@ describe("api/queries/dashboard", () => {
     expect(options.queryKey).toEqual(queryKeys.dashboard.dailyMedicationRecords("2026-05-19"));
     await options.queryFn();
     expect(mockFetchDailyMedicationRecords).toHaveBeenCalledWith({ date: "2026-05-19" });
+  });
+
+  it("오늘 스케줄 쿼리는 today 엔드포인트 요청 함수를 사용한다", async () => {
+    const { result } = renderHook(() => useDashboardTodayMedicationSchedules());
+    const options = result.current as unknown as {
+      enabled: boolean;
+      queryKey: unknown;
+      queryFn: () => Promise<unknown>;
+    };
+
+    expect(options.enabled).toBe(true);
+    expect(options.queryKey).toEqual(queryKeys.dashboard.todayMedicationSchedules);
+    await options.queryFn();
+    expect(mockFetchTodayMedicationSchedules).toHaveBeenCalledTimes(1);
   });
 
   it("월별 기록 쿼리는 토큰이 없으면 비활성화된다", () => {

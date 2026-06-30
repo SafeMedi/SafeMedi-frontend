@@ -25,10 +25,10 @@ export function DashboardScreen() {
     router.push("/(tabs)/profile");
   };
 
-  const handlePressRecentPrescriptionItem = (itemId: string) => {
+  const handlePressRecentPrescriptionItem = (prescriptionId: number) => {
     router.push({
       pathname: "/(detail)/dashboard/medication-history",
-      params: { date: itemId },
+      params: { prescriptionId: String(prescriptionId) },
     });
   };
 
@@ -70,7 +70,7 @@ export function DashboardScreen() {
             />
             <RecentPrescriptionsSection
               items={viewModel.recentPrescriptions}
-              onPressItem={(item) => handlePressRecentPrescriptionItem(item.id)}
+              onPressItem={(item) => handlePressRecentPrescriptionItem(item.prescriptionId)}
             />
             <HealthTipCard
               title={viewModel.healthTipTitle}

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { useDashboardMedicationHistoryRecords } from "@/api/queries/dashboard";
-import type { MonthlyMedicationRecordItem } from "@/api/types";
+import { usePrescriptionQuery } from "@/api/queries/prescriptions";
+import type { PrescriptionMedicationItem } from "@/api/types/prescriptions";
 import type {
   MedicationHistoryMedicationItem,
   MedicationHistoryViewModel,
@@ -14,9 +14,10 @@ const DATE_FORMAT_OPTIONS = {
   day: "2-digit",
 } as const;
 
-function normalizeDateParam(rawDate: string | undefined): string {
-  if (!rawDate) return "";
-  return rawDate.trim();
+function normalizePrescriptionIdParam(rawPrescriptionId: string | undefined): number | null {
+  if (!rawPrescriptionId) return null;
+  const parsed = Number(rawPrescriptionId);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
 function formatDateLabel(dateText: string): string {
@@ -30,48 +31,48 @@ function extractActiveIngredients(medicationNames: readonly string[]): readonly 
 }
 
 function createDefaultWarningItems(
-  record: MonthlyMedicationRecordItem,
+  medication: PrescriptionMedicationItem,
 ): readonly MedicationHistoryWarningItem[] {
-  if (record.warningMessages && record.warningMessages.length > 0) {
-    return record.warningMessages.map((message, index) => ({
-      id: `${record.recordId}-warning-${index}`,
-      message,
-    }));
+  if (medication.warningMessage) {
+    return [{ id: `${medication.medicationId}-warning`, message: medication.warningMessage }];
   }
-  if (record.status !== "OVERDUE" && record.status !== "DUE") return [];
+  if (!medication.hasWarning) return [];
   return [
     {
-      id: `${record.recordId}-status-warning`,
-      message: "복용 필요 상태입니다. 복용 전 의사 상담이 필요할 수 있습니다.",
+      id: `${medication.medicationId}-status-warning`,
+      message: "주의가 필요한 약물입니다. 복용 전 의사 상담이 필요할 수 있습니다.",
     },
   ];
 }
 
 function createMedicationItem(
-  record: MonthlyMedicationRecordItem,
+  medication: PrescriptionMedicationItem,
 ): MedicationHistoryMedicationItem {
-  const scheduledTimesLabel = `${record.scheduledTime} 복용`;
-  const tone = record.status === "OVERDUE" || record.status === "DUE" ? "warning" : "safe";
+  const scheduledTimesLabel =
+    medication.takeTimes.length > 0
+      ? `${medication.takeTimes.join(", ")} 복용`
+      : "복용 시간 미설정";
+  const tone = medication.hasWarning ? "warning" : "safe";
 
   return {
-    id: String(record.recordId),
-    medicationName: record.medicationNames[0] ?? record.prescriptionTitle,
+    id: String(medication.medicationId),
+    medicationName: medication.drugName,
     scheduledTimesLabel,
-    activeIngredients: extractActiveIngredients(record.medicationNames),
+    activeIngredients: extractActiveIngredients([medication.mainIngredient]),
     tone,
-    warningItems: createDefaultWarningItems(record),
+    warningItems: createDefaultWarningItems(medication),
   };
 }
 
 export function useMedicationHistoryViewModel(
-  dateParam: string | undefined,
+  prescriptionIdParam: string | undefined,
 ): MedicationHistoryViewModel {
-  const date = normalizeDateParam(dateParam);
-  const query = useDashboardMedicationHistoryRecords({ date });
+  const prescriptionId = normalizePrescriptionIdParam(prescriptionIdParam);
+  const query = usePrescriptionQuery(prescriptionId);
 
   const medications = useMemo<readonly MedicationHistoryMedicationItem[]>(() => {
     if (!query.data) return [];
-    return query.data.items.map((record) => createMedicationItem(record));
+    return query.data.medications.map((medication) => createMedicationItem(medication));
   }, [query.data]);
 
   const warningCount = useMemo<number>(() => {
@@ -80,10 +81,14 @@ export function useMedicationHistoryViewModel(
 
   const warningSummary =
     warningCount > 0 ? "일부 약물에 경고 사항이 있습니다. 의사와 상담 후 복용하세요." : null;
-  const displayDate = date ? formatDateLabel(date) : EMPTY_DATE_LABEL;
+  const displayDate = query.data?.createdAt
+    ? formatDateLabel(query.data.createdAt)
+    : query.data?.startDate
+      ? formatDateLabel(query.data.startDate)
+      : "";
 
   return {
-    displayDate,
+    displayDate: displayDate || EMPTY_DATE_LABEL,
     warningSummary,
     medications,
     isLoading: query.isLoading,

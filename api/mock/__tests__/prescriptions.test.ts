@@ -36,8 +36,9 @@ describe("처방전 mock", () => {
     const patchRoute = registry.find("PATCH", context.path);
     const deleteRoute = registry.find("DELETE", context.path);
     const getRoute = registry.find("GET", "/api/v1/prescriptions");
+    const detailRoute = registry.find("GET", context.path);
 
-    if (!patchRoute || !deleteRoute || !getRoute) {
+    if (!patchRoute || !deleteRoute || !getRoute || !detailRoute) {
       throw new Error("처방전 mock route가 등록되지 않았습니다.");
     }
 
@@ -47,9 +48,8 @@ describe("처방전 mock", () => {
       jsonBody: {
         medications: [
           {
-            atcCode: "N02BE01",
-            drugName: "타이레놀정 650mg",
-            takeTimes: ["08:00", "18:00", "22:00"],
+            prescriptionDrugId: 101,
+            takeTimes: ["09:00", "20:00"],
           },
         ],
       },
@@ -62,13 +62,21 @@ describe("처방전 mock", () => {
       jsonBody: undefined,
     });
     expect(updated).toMatchObject({
-      prescriptions: expect.arrayContaining([
+      content: expect.arrayContaining([
         expect.objectContaining({
           prescriptionId: 11,
-          medications: expect.arrayContaining([
-            expect.objectContaining({ drugName: "타이레놀정 650mg" }),
-          ]),
+          drugCount: 2,
         }),
+      ]),
+    });
+    const detail = await detailRoute.handler({
+      ...context,
+      method: "GET",
+      jsonBody: undefined,
+    });
+    expect(detail).toMatchObject({
+      medications: expect.arrayContaining([
+        expect.objectContaining({ prescriptionDrugId: 101, takeTimes: ["09:00", "20:00"] }),
       ]),
     });
 
@@ -81,11 +89,11 @@ describe("처방전 mock", () => {
       jsonBody: undefined,
     });
     expect(deleted).toMatchObject({
-      prescriptions: [expect.objectContaining({ prescriptionId: 12 })],
+      content: [expect.objectContaining({ prescriptionId: 12 })],
     });
   });
 
-  it("처방전 수정 시 takeTimes 미전송이면 기존 복약 시간을 유지한다", async () => {
+  it("처방전 수정 시 prescriptionDrugId 기준으로 복약 시간을 변경한다", async () => {
     const registry = new MockRegistry();
     registerSaf26Mocks(registry);
     const patchRoute = registry.find("PATCH", "/api/v1/prescriptions/11");
@@ -101,8 +109,8 @@ describe("처방전 mock", () => {
       jsonBody: {
         medications: [
           {
-            atcCode: "N02BE01",
-            drugName: "타이레놀정 650mg",
+            prescriptionDrugId: 101,
+            takeTimes: ["09:00", "20:00"],
           },
         ],
       },
@@ -112,8 +120,8 @@ describe("처방전 mock", () => {
       (prescription) => prescription.prescriptionId === 11,
     );
     expect(updated?.medications[0]).toMatchObject({
-      drugName: "타이레놀정 650mg",
-      takeTimes: ["08:00", "18:00", "22:00"],
+      drugName: "타이레놀정 500mg",
+      takeTimes: ["09:00", "20:00"],
     });
   });
 
@@ -134,11 +142,13 @@ describe("처방전 mock", () => {
         title: "혼합 처방전",
         medications: [
           {
+            drugCode: "202000123",
             atcCode: "J01CA04",
             drugName: "아목시실린 캡슐",
             takeTimes: ["08:00"],
           },
           {
+            drugCode: "S01XA20",
             atcCode: "S01XA20",
             drugName: "인공눈물",
             takeTimes: ["12:00"],

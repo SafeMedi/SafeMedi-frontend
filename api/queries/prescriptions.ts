@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   deletePrescription,
+  fetchPrescription,
   fetchPrescriptions,
   updatePrescription,
 } from "@/api/endpoints/prescriptions";
@@ -25,6 +26,20 @@ export function usePrescriptionsQuery() {
   });
 }
 
+export function usePrescriptionQuery(prescriptionId: number | null) {
+  const accessToken = useSessionStore((state) => state.accessToken);
+
+  return useQuery({
+    queryKey:
+      prescriptionId === null
+        ? queryKeys.prescriptions.detail(0)
+        : queryKeys.prescriptions.detail(prescriptionId),
+    enabled: !!accessToken && prescriptionId !== null,
+    staleTime: STALE_MS,
+    queryFn: () => fetchPrescription(prescriptionId ?? 0),
+  });
+}
+
 interface UpdatePrescriptionMutationParams {
   readonly prescriptionId: number;
   readonly body: UpdatePrescriptionRequest;
@@ -38,6 +53,7 @@ export function useUpdatePrescriptionMutation() {
       updatePrescription(prescriptionId, body),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.prescriptions.list });
+      await queryClient.invalidateQueries({ queryKey: ["prescriptions", "detail"] });
     },
   });
 }
@@ -49,6 +65,7 @@ export function useDeletePrescriptionMutation() {
     mutationFn: (prescriptionId: number) => deletePrescription(prescriptionId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.prescriptions.list });
+      await queryClient.invalidateQueries({ queryKey: ["prescriptions", "detail"] });
     },
   });
 }

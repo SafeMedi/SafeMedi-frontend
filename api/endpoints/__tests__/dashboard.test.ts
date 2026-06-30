@@ -4,6 +4,7 @@ import {
   fetchMedicationHistoryRecords,
   fetchMedicationStatistics,
   fetchMonthlyMedicationRecords,
+  fetchTodayMedicationSchedules,
 } from "../dashboard";
 
 const mockApiGet = jest.fn();
@@ -29,6 +30,17 @@ describe("api/endpoints/dashboard", () => {
     expect(mockApiGet).toHaveBeenCalledWith(apiPaths.medicationRecords, {
       searchParams: { type: "DAILY", date: "2026-05-20" },
     });
+    expect(result).toEqual(expected);
+  });
+
+  it("오늘 복약 스케줄 요청 시 today 엔드포인트를 사용한다", async () => {
+    const expected = { summary: { completedCount: 1, totalCount: 4 }, schedules: [] };
+    const mockJson = jest.fn(async () => expected);
+    mockApiGet.mockReturnValueOnce({ json: mockJson });
+
+    const result = await fetchTodayMedicationSchedules();
+
+    expect(mockApiGet).toHaveBeenCalledWith(apiPaths.medicationRecordsToday);
     expect(result).toEqual(expected);
   });
 

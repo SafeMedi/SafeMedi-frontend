@@ -103,21 +103,14 @@ describe("데이터가 있으면 데이터를 반환한다.", () => {
     jest.restoreAllMocks();
   });
 
-  it("약물명을 수정해도 시간 슬롯을 변경하지 않으면 기존 시간을 저장한다", () => {
+  it("수정 저장 시 복약 시간만 PATCH body에 반영한다", () => {
     const { result } = renderHook(() => useMedicationManagementViewModel());
 
     act(() => {
       result.current.startEditMedication(11, 101);
     });
     act(() => {
-      result.current.changeEditDrugName("타이레놀정 650mg");
-    });
-    act(() => {
-      result.current.selectEditDrug({
-        atcCode: "N02BE01",
-        drugName: "타이레놀정 650mg",
-        company: "한미약품",
-      });
+      result.current.toggleEditTakeSlot("LUNCH");
     });
     act(() => {
       result.current.saveEditMedication();
@@ -128,7 +121,10 @@ describe("데이터가 있으면 데이터를 반환한다.", () => {
         prescriptionId: 11,
         body: expect.objectContaining({
           medications: expect.arrayContaining([
-            expect.objectContaining({ takeTimes: ["08:00", "18:00", "22:00"] }),
+            {
+              prescriptionDrugId: 101,
+              takeTimes: ["08:00", "13:00", "19:00"],
+            },
           ]),
         }),
       }),
@@ -136,7 +132,7 @@ describe("데이터가 있으면 데이터를 반환한다.", () => {
     );
   });
 
-  it("약물 삭제는 남은 약물이 있으면 처방전 수정 요청을 보낸다", () => {
+  it("약물 삭제는 남은 약물이 있으면 개별 삭제 미지원 안내를 띄운다", () => {
     const { result } = renderHook(() => useMedicationManagementViewModel());
 
     act(() => {
@@ -144,17 +140,11 @@ describe("데이터가 있으면 데이터를 반환한다.", () => {
       getConfirmButton().onPress?.();
     });
 
-    expect(mockUpdateMutate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        prescriptionId: 11,
-        body: {
-          medications: [
-            { atcCode: "A02BC01", drugName: "오메프라졸캡슐 20mg", takeTimes: ["08:00"] },
-          ],
-        },
-      }),
-      expect.any(Object),
+    expect(Alert.alert).toHaveBeenCalledWith(
+      "삭제 불가",
+      "현재 API는 개별 약물 삭제를 지원하지 않습니다. 처방전 전체 삭제 후 다시 등록해주세요.",
     );
+    expect(mockUpdateMutate).not.toHaveBeenCalled();
     expect(mockDeleteMutate).not.toHaveBeenCalled();
   });
 
@@ -190,13 +180,12 @@ describe("데이터가 있으면 데이터를 반환한다.", () => {
   it("수정 성공 시 편집을 닫고, 유효하지 않은 입력은 안내한다", () => {
     const { result } = renderHook(() => useMedicationManagementViewModel());
     act(() => result.current.startEditMedication(11, 101));
-    act(() => result.current.changeEditDrugName("직접입력"));
+    act(() => result.current.toggleEditTakeSlot("MORNING"));
+    act(() => result.current.toggleEditTakeSlot("DINNER"));
     act(() => result.current.saveEditMedication());
     expect(Alert.alert).toHaveBeenCalledWith("입력 확인", expect.any(String));
 
-    act(() =>
-      result.current.selectEditDrug({ atcCode: "N02BE01", drugName: "타이레놀", company: "한미" }),
-    );
+    act(() => result.current.toggleEditTakeSlot("MORNING"));
     act(() => result.current.saveEditMedication());
     const options = mockUpdateMutate.mock.calls[0]?.[1] as { onSuccess?: () => void };
     act(() => options.onSuccess?.());

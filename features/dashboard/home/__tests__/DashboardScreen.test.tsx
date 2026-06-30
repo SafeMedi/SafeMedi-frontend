@@ -110,10 +110,24 @@ jest.mock("../components/TodayScheduleSection", () => {
 
 jest.mock("../components/RecentPrescriptionsSection", () => {
   const React = require("react");
-  const { Text } = require("react-native");
+  const { Pressable, Text } = require("react-native");
   return {
-    RecentPrescriptionsSection: ({ items }: { items: readonly unknown[] }) =>
-      React.createElement(Text, null, `최근기록:${items.length}`),
+    RecentPrescriptionsSection: ({
+      items,
+      onPressItem,
+    }: {
+      items: readonly { id: string }[];
+      onPressItem: (item: { id: string }) => void;
+    }) =>
+      React.createElement(
+        Pressable,
+        {
+          onPress: () => items[0] && onPressItem(items[0]),
+          accessibilityRole: "button",
+          accessibilityLabel: "최근 처방전 기록",
+        },
+        React.createElement(Text, null, `최근기록:${items.length}`),
+      ),
   };
 });
 
@@ -144,7 +158,13 @@ function createViewModel(overrides?: Partial<DashboardViewModel>): DashboardView
       },
     ],
     recentPrescriptions: [
-      { id: "2026-03-11", dateLabel: "2026.03.11", analysisCount: 3, hasWarning: true },
+      {
+        id: "11",
+        prescriptionId: 11,
+        dateLabel: "신장내과 처방전",
+        analysisCount: 3,
+        hasWarning: true,
+      },
     ],
     healthTipTitle: "건강 팁",
     healthTipDescription: "충분한 물과 함께 복용하세요.",
@@ -188,6 +208,17 @@ describe("DashboardScreen 통합 테스트", () => {
     fireEvent.press(getByLabelText("알림 버튼"));
 
     expect(mockRouterPush).toHaveBeenCalledWith("/(tabs)/profile");
+  });
+
+  it("최근 처방전 기록 클릭 시 prescriptionId를 상세 화면으로 전달한다", () => {
+    const { getByLabelText } = render(<DashboardScreen />);
+
+    fireEvent.press(getByLabelText("최근 처방전 기록"));
+
+    expect(mockRouterPush).toHaveBeenCalledWith({
+      pathname: "/(detail)/dashboard/medication-history",
+      params: { prescriptionId: "11" },
+    });
   });
 
   it("로딩 상태에서 로딩 메시지를 노출한다", () => {

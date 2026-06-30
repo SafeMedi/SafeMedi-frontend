@@ -36,7 +36,12 @@ function toCreatePrescriptionBody(draft: ScanPrescriptionDraft): CreatePrescript
     title: draft.title,
     startDate: draft.startDate,
     endDate: draft.endDate,
-    medications: draft.medications,
+    isDoctorApproved: true,
+    medications: draft.medications.map((medication) => ({
+      drugCode: "",
+      atcCode: medication.atcCode,
+      drugName: medication.drugName,
+    })),
   };
 }
 
@@ -104,14 +109,14 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
     setSubmitFeedback(null);
     try {
       const response = await createMutation.mutateAsync(toCreatePrescriptionBody(draft));
-      const warningMessages = response.allergyWarnings
-        .map((item) => item.warningMessage)
-        .join("\n");
-      const message = response.hasAllergyConflict
+      const allergyWarnings = response.allergyWarnings ?? [];
+      const hasAllergyConflict = response.hasAllergyConflict ?? false;
+      const warningMessages = allergyWarnings.map((item) => item.warningMessage).join("\n");
+      const message = hasAllergyConflict
         ? `${response.message}\n${warningMessages}`
         : response.message;
       setSubmitFeedback({
-        kind: response.hasAllergyConflict ? "warning" : "success",
+        kind: hasAllergyConflict ? "warning" : "success",
         message,
       });
     } catch (submitError) {

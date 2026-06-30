@@ -23,6 +23,29 @@ interface MockAnalysisContext {
   readonly warningType: AnalysisWarningType | null;
 }
 
+interface AnalyzeIngredientsApiMedication {
+  readonly atcCode: string;
+  readonly drugName: string;
+  readonly status: AnalysisRiskLevel;
+  readonly efficacy: string | readonly string[];
+  readonly precautions: readonly string[];
+  readonly warnings: readonly {
+    readonly type: AnalysisWarningType;
+    readonly title?: string;
+    readonly message: string;
+  }[];
+}
+
+interface AnalyzeIngredientsApiResponse {
+  readonly safetySummary: {
+    readonly safeCount: number;
+    readonly warningCount: number;
+    readonly cautionCount?: number;
+    readonly dangerCount: number;
+  };
+  readonly analyzedMedications: readonly AnalyzeIngredientsApiMedication[];
+}
+
 function createStableScore(value: string): number {
   return [...value].reduce((acc, char) => acc + char.charCodeAt(0), 0);
 }
@@ -30,7 +53,12 @@ function createStableScore(value: string): number {
 function resolveMockRiskLevel(
   item: AnalyzeIngredientsRequest["medications"][number],
 ): AnalysisRiskLevel {
-  const scoreSource = [item.atcCode, item.drugName, (item.takeTimes ?? []).join(",")].join("|");
+  const scoreSource = [
+    item.drugCode,
+    item.atcCode,
+    item.drugName,
+    (item.takeTimes ?? []).join(","),
+  ].join("|");
   const score = createStableScore(scoreSource) % 100;
 
   if (score >= 70) {
@@ -109,6 +137,42 @@ function createMockMedication(
   };
 }
 
+function normalizeTextList(value: string | readonly string[]): readonly string[] {
+  return Array.isArray(value) ? value : [value];
+}
+
+function normalizeAnalyzeResponse(
+  body: AnalyzeIngredientsRequest,
+  response: AnalyzeIngredientsApiResponse,
+): AnalyzeIngredientsResponse {
+  const medications = response.analyzedMedications.map((item) => ({
+    atcCode: item.atcCode,
+    drugName: item.drugName,
+    riskLevel: item.status,
+    status: item.status,
+    efficacy: normalizeTextList(item.efficacy),
+    precautions: item.precautions,
+    warnings: item.warnings,
+  }));
+  const cautionCount = response.safetySummary.cautionCount ?? response.safetySummary.warningCount;
+  const shouldConsultDoctor = response.safetySummary.dangerCount > 0 || cautionCount > 0;
+
+  return {
+    title: body.title,
+    analyzedMedicationCount: medications.length,
+    summary: {
+      safeCount: response.safetySummary.safeCount,
+      cautionCount,
+      dangerCount: response.safetySummary.dangerCount,
+    },
+    medications,
+    shouldConsultDoctor,
+    doctorConsultationMessage: shouldConsultDoctor
+      ? "주의가 필요한 약물이 있습니다. 복용 전 의사 또는 약사 상담 여부를 확인해 주세요."
+      : null,
+  };
+}
+
 function createMockResponse(body: AnalyzeIngredientsRequest): AnalyzeIngredientsResponse {
   const medications = body.medications.map(createMockMedication);
   const safeCount = medications.filter((item) => item.riskLevel === "SAFE").length;
@@ -136,9 +200,14 @@ export async function analyzePrescriptionIngredients(
   body: AnalyzeIngredientsRequest,
 ): Promise<AnalyzeIngredientsResponse> {
   try {
-    return await api
-      .post(apiPaths.prescriptionsAnalysis, { json: body })
-      .json<AnalyzeIngredientsResponse>();
+    const response = await api
+      .post(apiPaths.prescriptionsAnalysis, {
+        json: {
+          medications: body.medications.map((item) => ({ drugCode: item.drugCode })),
+        },
+      })
+      .json<AnalyzeIngredientsApiResponse>();
+    return normalizeAnalyzeResponse(body, response);
   } catch (error) {
     if (apiConfig.useMock) {
       return createMockResponse(body);

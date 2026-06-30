@@ -334,16 +334,19 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
     }
     return [
       {
+        drugCode: "202000123",
         atcCode: "J01CA04",
         drugName: "종근당아목시실린캡슐500mg",
         company: "종근당",
       },
       {
+        drugCode: "202000124",
         atcCode: "J01CA04",
         drugName: "보령아목시실린캡슐",
         company: "보령제약",
       },
       {
+        drugCode: "202000125",
         atcCode: "J01CA04",
         drugName: "아목시실린시럽",
         company: "유한양행",
@@ -353,8 +356,51 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
 
   // --- Prescriptions ---
   registry.register("GET", apiPaths.prescriptions, () => ({
-    prescriptions: clonePrescriptions(),
+    content: clonePrescriptions().map((prescription) => ({
+      prescriptionId: prescription.prescriptionId,
+      title: prescription.title,
+      createdAt: prescription.createdAt ?? "2026-03-11",
+      drugCount: prescription.medications.length,
+      hasAllergyConflict: prescription.medications.some((medication) => medication.hasWarning),
+    })),
+    isLast: true,
   }));
+
+  registry.registerMatch(
+    "GET",
+    (p) => RX.prescriptionId.test(p),
+    (ctx) => {
+      const id = parsePathId(ctx.path, RX.prescriptionId);
+      const prescription = clonePrescriptions().find((item) => item.prescriptionId === id);
+      if (!prescription) {
+        return Response.json(
+          { code: "MED_005", message: "존재하지 않는 처방전입니다." },
+          { status: 404 },
+        );
+      }
+      return {
+        prescriptionId: prescription.prescriptionId,
+        title: prescription.title,
+        startDate: prescription.startDate ?? "2026-06-01",
+        endDate: prescription.endDate ?? "2026-06-10",
+        isDoctorApproved: prescription.isDoctorApproved ?? true,
+        hasAllergyConflict:
+          prescription.hasAllergyConflict ??
+          prescription.medications.some((medication) => medication.hasWarning),
+        medications: prescription.medications.map((medication) => ({
+          prescriptionDrugId: medication.prescriptionDrugId ?? medication.medicationId,
+          drugCode: medication.drugCode ?? medication.atcCode,
+          atcCode: medication.atcCode,
+          drugName: medication.drugName,
+          takeTimes: medication.takeTimes,
+          mainIngredient: medication.mainIngredient,
+          hasWarning: medication.hasWarning,
+          warningMessage: medication.warningMessage,
+        })),
+      };
+    },
+    { label: "GET /api/v1/prescriptions/:prescriptionId" },
+  );
 
   registry.register(
     "POST",
@@ -365,6 +411,7 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
         startDate?: string;
         endDate?: string;
         medications?: {
+          drugCode: string;
           atcCode: string;
           drugName: string;
           takeTimes?: string[];
@@ -394,7 +441,9 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
           medication.atcCode.startsWith(a.code),
         );
         return {
-          medicationId: mockState.medicationIdSeq++,
+          medicationId: mockState.medicationIdSeq,
+          prescriptionDrugId: mockState.medicationIdSeq++,
+          drugCode: medication.drugCode,
           atcCode: medication.atcCode,
           drugName: medication.drugName,
           takeTimes: medication.takeTimes ?? [],
@@ -409,6 +458,10 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
       mockState.prescriptions.push({
         prescriptionId: id,
         title: body.title,
+        startDate: body.startDate,
+        endDate: body.endDate,
+        isDoctorApproved: true,
+        hasAllergyConflict: conflict,
         medications,
       });
       if (conflict) {
@@ -465,7 +518,7 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
       const id = parsePathId(ctx.path, RX.prescriptionId);
       const body = ctx.jsonBody as {
         title?: string;
-        medications?: { atcCode: string; drugName: string; takeTimes?: string[] }[];
+        medications?: { prescriptionDrugId: number; takeTimes: string[] }[];
       };
       const prescription = mockState.prescriptions.find((item) => item.prescriptionId === id);
       if (!prescription) {
@@ -475,28 +528,23 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
         );
       }
       const title = body.title ?? prescription.title;
-      const medications = body.medications?.map((medication, index) => {
-        const existing =
-          prescription.medications.find(
-            (item) => item.atcCode === medication.atcCode && item.drugName === medication.drugName,
-          ) ??
-          prescription.medications.find((item) => item.atcCode === medication.atcCode) ??
-          prescription.medications[index];
+      const medicationUpdates = new Map(
+        body.medications?.map((medication) => [medication.prescriptionDrugId, medication]) ?? [],
+      );
+      const medications = prescription.medications.map((medication) => {
+        const prescriptionDrugId = medication.prescriptionDrugId ?? medication.medicationId;
+        const update = medicationUpdates.get(prescriptionDrugId);
+        if (!update) {
+          return medication;
+        }
         return {
-          medicationId: existing?.medicationId ?? mockState.medicationIdSeq++,
-          atcCode: medication.atcCode,
-          drugName: medication.drugName,
-          takeTimes: medication.takeTimes
-            ? [...medication.takeTimes]
-            : [...(existing?.takeTimes ?? [])],
-          mainIngredient: existing?.mainIngredient ?? medication.drugName,
-          hasWarning: existing?.hasWarning ?? false,
-          warningMessage: existing?.warningMessage,
+          ...medication,
+          takeTimes: [...update.takeTimes],
         };
       });
       mockState.prescriptions = mockState.prescriptions.map((item) =>
         item.prescriptionId === prescription.prescriptionId
-          ? { ...prescription, title, medications: medications ?? prescription.medications }
+          ? { ...prescription, title, medications }
           : item,
       );
       return {

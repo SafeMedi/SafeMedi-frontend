@@ -5,6 +5,7 @@ import type {
   MedicationHistoryRecordsResponse,
   MedicationStatisticsResponse,
   MonthlyMedicationRecordsResponse,
+  TodayMedicationSchedulesResponse,
 } from "@/api/types/dashboard";
 
 interface FetchMedicationRecordsParams {
@@ -19,6 +20,10 @@ export async function fetchDailyMedicationRecords(
       searchParams: { type: "DAILY", date: params.date },
     })
     .json<DailyMedicationRecordsResponse>();
+}
+
+export async function fetchTodayMedicationSchedules(): Promise<TodayMedicationSchedulesResponse> {
+  return api.get(apiPaths.medicationRecordsToday).json<TodayMedicationSchedulesResponse>();
 }
 
 export async function fetchMonthlyMedicationRecords(

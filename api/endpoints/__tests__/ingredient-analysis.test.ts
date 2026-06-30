@@ -10,7 +10,7 @@ const BASE_REQUEST: AnalyzeIngredientsRequest = {
   startDate: "2026-05-01",
   endDate: "2026-05-07",
   takeTimes: ["08:00"],
-  medications: [{ atcCode: "A01", drugName: "타이레놀", takeTimes: ["08:00"] }],
+  medications: [{ drugCode: "D01", atcCode: "A01", drugName: "타이레놀", takeTimes: ["08:00"] }],
 };
 
 jest.mock("@/api/client", () => ({
@@ -38,25 +38,47 @@ describe("api/endpoints/ingredient-analysis", () => {
     setMockMode(false);
   });
 
-  it("API 성공 시 서버 응답을 반환한다", async () => {
-    const expected = {
-      title: "성분 분석",
-      analyzedMedicationCount: 1,
-      summary: { safeCount: 1, cautionCount: 0, dangerCount: 0 },
-      medications: [],
-      shouldConsultDoctor: false,
-      doctorConsultationMessage: null,
+  it("API 성공 시 명세 응답을 화면 모델로 정규화한다", async () => {
+    const apiResponse = {
+      safetySummary: { safeCount: 1, warningCount: 0, dangerCount: 0 },
+      analyzedMedications: [
+        {
+          atcCode: "A01",
+          drugName: "타이레놀",
+          status: "SAFE",
+          efficacy: "해열, 진통 효과",
+          precautions: ["공복 복용 시 위장 장애 가능"],
+          warnings: [],
+        },
+      ],
     };
-    const mockJson = jest.fn(async () => expected);
+    const mockJson = jest.fn(async () => apiResponse);
     mockApiPost.mockReturnValue({ json: mockJson });
 
     const result = await analyzePrescriptionIngredients(BASE_REQUEST);
 
     expect(api.post).toBeDefined();
     expect(mockApiPost).toHaveBeenCalledWith(apiPaths.prescriptionsAnalysis, {
-      json: BASE_REQUEST,
+      json: { medications: [{ drugCode: "D01" }] },
     });
-    expect(result).toEqual(expected);
+    expect(result).toEqual({
+      title: "스캔 처방전",
+      analyzedMedicationCount: 1,
+      summary: { safeCount: 1, cautionCount: 0, dangerCount: 0 },
+      medications: [
+        {
+          atcCode: "A01",
+          drugName: "타이레놀",
+          riskLevel: "SAFE",
+          status: "SAFE",
+          efficacy: ["해열, 진통 효과"],
+          precautions: ["공복 복용 시 위장 장애 가능"],
+          warnings: [],
+        },
+      ],
+      shouldConsultDoctor: false,
+      doctorConsultationMessage: null,
+    });
   });
 
   it("mock 모드에서 API 실패 시 mock 응답을 생성한다", async () => {
@@ -82,7 +104,7 @@ describe("api/endpoints/ingredient-analysis", () => {
     });
     const requestWithoutTakeTimes: AnalyzeIngredientsRequest = {
       ...BASE_REQUEST,
-      medications: [{ atcCode: "A01", drugName: "타이레놀" }],
+      medications: [{ drugCode: "D01", atcCode: "A01", drugName: "타이레놀" }],
     };
 
     const result = await analyzePrescriptionIngredients(requestWithoutTakeTimes);
@@ -104,6 +126,7 @@ describe("api/endpoints/ingredient-analysis", () => {
         medications: [
           {
             atcCode: "A01",
+            drugCode: `D-${index}`,
             drugName: `drug-${index}`,
             takeTimes: index % 2 === 0 ? ["08:00"] : undefined,
           },
