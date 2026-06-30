@@ -36,7 +36,7 @@ describe("api/endpoints/drugs", () => {
   });
 
   it("정상 검색 시 API 응답을 반환한다", async () => {
-    const expected = [{ atcCode: "A", drugName: "타이레놀", company: "한국얀센" }];
+    const expected = [{ drugCode: "D01", atcCode: "A", drugName: "타이레놀", company: "한국얀센" }];
     mockApiGet.mockReturnValueOnce({
       json: jest.fn(async () => expected),
     });

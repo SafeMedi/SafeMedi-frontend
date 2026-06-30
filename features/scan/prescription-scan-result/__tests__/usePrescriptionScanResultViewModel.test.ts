@@ -94,6 +94,7 @@ describe("usePrescriptionScanResultViewModel", () => {
     expect(result.current.editingMedicationIndex).toBe(1);
 
     const selectedDrug: DrugSearchItem = {
+      drugCode: "D01",
       atcCode: "N02BE01",
       drugName: "아세트아미노펜",
       company: "SAFE",
@@ -128,6 +129,11 @@ describe("usePrescriptionScanResultViewModel", () => {
     await act(async () => {
       result.current.handleSelectPrescriptionDate("startDate", new Date(2026, 4, 3));
       result.current.handleSelectPrescriptionDate("endDate", new Date(2026, 4, 10));
+      result.current.handleSelectMedicationDrug(0, {
+        drugCode: "D01",
+        atcCode: "A01",
+        drugName: "타이레놀",
+      });
       result.current.handleToggleMedicationTakeSlot(0, "MORNING");
       await result.current.handlePressAnalyze();
     });
@@ -139,6 +145,7 @@ describe("usePrescriptionScanResultViewModel", () => {
       takeTimes: ["08:00"],
       medications: [
         {
+          drugCode: "D01",
           atcCode: "A01",
           drugName: "타이레놀",
           takeTimes: ["08:00"],
@@ -192,6 +199,11 @@ describe("usePrescriptionScanResultViewModel", () => {
     await act(async () => {
       result.current.handleSelectPrescriptionDate("startDate", new Date(2026, 4, 3));
       result.current.handleSelectPrescriptionDate("endDate", new Date(2026, 4, 10));
+      result.current.handleSelectMedicationDrug(0, {
+        drugCode: "D01",
+        atcCode: "A01",
+        drugName: "타이레놀",
+      });
       await result.current.handlePressAnalyze();
     });
 

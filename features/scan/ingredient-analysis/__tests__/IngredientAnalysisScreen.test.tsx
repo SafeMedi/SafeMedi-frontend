@@ -14,7 +14,7 @@ const BASE_REQUEST: AnalyzeIngredientsRequest = {
   startDate: "2026-05-01",
   endDate: "2026-05-07",
   takeTimes: ["08:00"],
-  medications: [{ atcCode: "A01", drugName: "타이레놀", takeTimes: ["08:00"] }],
+  medications: [{ drugCode: "D01", atcCode: "A01", drugName: "타이레놀", takeTimes: ["08:00"] }],
 };
 
 const BASE_RESULT: AnalyzeIngredientsResponse = {

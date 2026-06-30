@@ -1,4 +1,5 @@
 export interface CreatePrescriptionMedication {
+  readonly drugCode: string;
   readonly atcCode: string;
   readonly drugName: string;
   readonly takeTimes?: readonly string[];
@@ -8,6 +9,7 @@ export interface CreatePrescriptionRequest {
   readonly title: string;
   readonly startDate: string;
   readonly endDate: string;
+  readonly isDoctorApproved: boolean;
   readonly medications: readonly CreatePrescriptionMedication[];
 }
 
@@ -20,16 +22,17 @@ export interface PrescriptionAllergyWarning {
 
 export interface CreatePrescriptionResponse {
   readonly prescriptionId: number;
-  readonly title: string;
   readonly message: string;
-  readonly hasAllergyConflict: boolean;
-  readonly allergyWarnings: readonly PrescriptionAllergyWarning[];
+  readonly title?: string;
+  readonly hasAllergyConflict?: boolean;
+  readonly allergyWarnings?: readonly PrescriptionAllergyWarning[];
 }
 
 export interface DrugSearchItem {
+  readonly drugCode: string;
   readonly atcCode: string;
   readonly drugName: string;
-  readonly company: string;
+  readonly company?: string;
 }
 
 export type AnalysisRiskLevel = "SAFE" | "CAUTION" | "DANGER";
@@ -38,7 +41,7 @@ export type AnalysisWarningType = "ALLERGY" | "INTERACTION";
 
 export interface AnalyzeIngredientWarning {
   readonly type: AnalysisWarningType;
-  readonly title: string;
+  readonly title?: string;
   readonly message: string;
 }
 
@@ -46,6 +49,7 @@ export interface AnalyzeIngredientMedication {
   readonly atcCode: string;
   readonly drugName: string;
   readonly riskLevel: AnalysisRiskLevel;
+  readonly status?: AnalysisRiskLevel;
   readonly efficacy: readonly string[];
   readonly precautions: readonly string[];
   readonly warnings: readonly AnalyzeIngredientWarning[];

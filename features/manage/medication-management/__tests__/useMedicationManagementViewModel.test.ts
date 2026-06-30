@@ -114,6 +114,7 @@ describe("데이터가 있으면 데이터를 반환한다.", () => {
     });
     act(() => {
       result.current.selectEditDrug({
+        drugCode: "D01",
         atcCode: "N02BE01",
         drugName: "타이레놀정 650mg",
         company: "한미약품",
@@ -136,7 +137,7 @@ describe("데이터가 있으면 데이터를 반환한다.", () => {
     );
   });
 
-  it("약물 삭제는 남은 약물이 있으면 처방전 수정 요청을 보낸다", () => {
+  it("약물 삭제는 남은 약물이 있으면 개별 삭제 미지원 안내를 띄운다", () => {
     const { result } = renderHook(() => useMedicationManagementViewModel());
 
     act(() => {
@@ -144,17 +145,11 @@ describe("데이터가 있으면 데이터를 반환한다.", () => {
       getConfirmButton().onPress?.();
     });
 
-    expect(mockUpdateMutate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        prescriptionId: 11,
-        body: {
-          medications: [
-            { atcCode: "A02BC01", drugName: "오메프라졸캡슐 20mg", takeTimes: ["08:00"] },
-          ],
-        },
-      }),
-      expect.any(Object),
+    expect(Alert.alert).toHaveBeenCalledWith(
+      "삭제 불가",
+      "현재 API는 개별 약물 삭제를 지원하지 않습니다. 처방전 전체 삭제 후 다시 등록해주세요.",
     );
+    expect(mockUpdateMutate).not.toHaveBeenCalled();
     expect(mockDeleteMutate).not.toHaveBeenCalled();
   });
 
@@ -195,7 +190,12 @@ describe("데이터가 있으면 데이터를 반환한다.", () => {
     expect(Alert.alert).toHaveBeenCalledWith("입력 확인", expect.any(String));
 
     act(() =>
-      result.current.selectEditDrug({ atcCode: "N02BE01", drugName: "타이레놀", company: "한미" }),
+      result.current.selectEditDrug({
+        drugCode: "D01",
+        atcCode: "N02BE01",
+        drugName: "타이레놀",
+        company: "한미",
+      }),
     );
     act(() => result.current.saveEditMedication());
     const options = mockUpdateMutate.mock.calls[0]?.[1] as { onSuccess?: () => void };

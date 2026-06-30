@@ -74,7 +74,7 @@ describe("MedicationDrugSearchField", () => {
     rerender(<TestField onChange={onChange} onSelect={onSelect} />);
     expect(screen.getByText("검색 중...")).toBeTruthy();
 
-    const item = { atcCode: "N02BE01", drugName: "타이레놀정", company: "한미" };
+    const item = { drugCode: "D01", atcCode: "N02BE01", drugName: "타이레놀정", company: "한미" };
     mockUseSearchDrugsQuery.mockReturnValue({ data: [item], isFetching: false });
     rerender(<TestField onChange={onChange} onSelect={onSelect} />);
     fireEvent(screen.getByText("타이레놀정"), "pressIn");

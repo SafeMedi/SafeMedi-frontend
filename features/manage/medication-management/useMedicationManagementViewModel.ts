@@ -95,6 +95,7 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
       return {
         ...currentDraft,
         drugName,
+        drugCode: "",
         atcCode: "",
       };
     });
@@ -108,6 +109,7 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
       return {
         ...currentDraft,
         drugName: item.drugName,
+        drugCode: item.drugCode,
         atcCode: item.atcCode,
       };
     });
@@ -185,6 +187,14 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
               medicationId,
             );
 
+            if (updatedMedications.length > 0) {
+              Alert.alert(
+                "삭제 불가",
+                "현재 API는 개별 약물 삭제를 지원하지 않습니다. 처방전 전체 삭제 후 다시 등록해주세요.",
+              );
+              return;
+            }
+
             if (updatedMedications.length === 0) {
               deletePrescriptionMutation.mutate(prescriptionId, {
                 onError: () => {
@@ -193,29 +203,11 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
               });
               return;
             }
-
-            updatePrescriptionMutation.mutate(
-              {
-                prescriptionId,
-                body: { medications: updatedMedications },
-              },
-              {
-                onError: () => {
-                  Alert.alert("삭제 실패", "약물 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.");
-                },
-              },
-            );
           },
         },
       ]);
     },
-    [
-      deletePrescriptionMutation,
-      editingMedicationKey,
-      handleCancelEditMedication,
-      prescriptions,
-      updatePrescriptionMutation,
-    ],
+    [deletePrescriptionMutation, editingMedicationKey, handleCancelEditMedication, prescriptions],
   );
 
   const handleDeletePrescription = useCallback(

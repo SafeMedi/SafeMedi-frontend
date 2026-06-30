@@ -113,8 +113,7 @@ export function buildUpdatedMedicationsAfterDelete(
   return prescription.medications
     .filter((medication) => medication.medicationId !== medicationId)
     .map((medication) => ({
-      atcCode: medication.atcCode,
-      drugName: medication.drugName,
+      prescriptionDrugId: medication.prescriptionDrugId ?? medication.medicationId,
       takeTimes: medication.takeTimes,
     }));
 }

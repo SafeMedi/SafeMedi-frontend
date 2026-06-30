@@ -50,6 +50,7 @@ describe("데이터가 없으면 기본값을 반환한다.", () => {
 
     expect(draft).toEqual({
       drugName: "타이레놀정 500mg",
+      drugCode: "",
       atcCode: "N02BE01",
       takeSlots: ["MORNING", "DINNER"],
       originalTakeTimes: ["08:00", "18:00", "22:00"],
@@ -101,6 +102,7 @@ describe("데이터가 없으면 기본값을 반환한다.", () => {
   it("약물 수정 PATCH body를 생성한다", () => {
     const draft = {
       drugName: "타이레놀정 650mg",
+      drugCode: "",
       atcCode: "N02BE01",
       takeSlots: ["MORNING", "LUNCH"] as const,
       originalTakeTimes: ["08:00", "18:00", "22:00"],
@@ -109,13 +111,11 @@ describe("데이터가 없으면 기본값을 반환한다.", () => {
 
     expect(buildUpdatedMedicationsAfterEdit(prescription, 101, draft)).toEqual([
       {
-        atcCode: "N02BE01",
-        drugName: "타이레놀정 650mg",
+        prescriptionDrugId: 101,
         takeTimes: ["08:00", "13:00"],
       },
       {
-        atcCode: "A02BC01",
-        drugName: "오메프라졸캡슐 20mg",
+        prescriptionDrugId: 102,
         takeTimes: ["08:00"],
       },
     ]);

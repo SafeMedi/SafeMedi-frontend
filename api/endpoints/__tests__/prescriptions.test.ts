@@ -41,12 +41,12 @@ describe("api/endpoints/prescriptions", () => {
     mockApiPatch.mockReturnValueOnce({ json: jest.fn(async () => expected) });
 
     const result = await updatePrescription(11, {
-      medications: [{ atcCode: "N02BE01", drugName: "타이레놀", takeTimes: ["08:00"] }],
+      medications: [{ prescriptionDrugId: 101, takeTimes: ["08:00"] }],
     });
 
     expect(mockApiPatch).toHaveBeenCalledWith(apiPaths.prescription(11), {
       json: {
-        medications: [{ atcCode: "N02BE01", drugName: "타이레놀", takeTimes: ["08:00"] }],
+        medications: [{ prescriptionDrugId: 101, takeTimes: ["08:00"] }],
       },
     });
     expect(result).toEqual(expected);

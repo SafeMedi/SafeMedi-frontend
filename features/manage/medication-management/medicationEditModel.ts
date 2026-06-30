@@ -14,6 +14,7 @@ export interface MedicationEditKey {
 
 export interface MedicationEditDraft {
   readonly drugName: string;
+  readonly drugCode: string;
   readonly atcCode: string;
   readonly takeSlots: readonly MedicationTakeSlot[];
   readonly originalTakeTimes: readonly string[];
@@ -61,6 +62,7 @@ export function createMedicationEditDraft(
 
   return {
     drugName: medication.drugName,
+    drugCode: medication.drugCode ?? "",
     atcCode: medication.atcCode,
     takeSlots: convertTakeTimesToTakeSlots(medication.takeTimes),
     originalTakeTimes: medication.takeTimes,
@@ -152,17 +154,16 @@ export function buildUpdatedMedicationsAfterEdit(
     : [...draft.originalTakeTimes];
 
   return prescription.medications.map((medication) => {
+    const prescriptionDrugId = medication.prescriptionDrugId ?? medication.medicationId;
     if (medication.medicationId !== medicationId) {
       return {
-        atcCode: medication.atcCode,
-        drugName: medication.drugName,
+        prescriptionDrugId,
         takeTimes: medication.takeTimes,
       };
     }
 
     return {
-      atcCode: draft.atcCode.trim(),
-      drugName: draft.drugName.trim(),
+      prescriptionDrugId,
       takeTimes,
     };
   });

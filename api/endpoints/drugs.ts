@@ -6,11 +6,26 @@ import { apiConfig } from "@/constants/api-config";
 const MIN_SEARCH_KEYWORD_LENGTH = 2;
 
 const DRUG_SEARCH_FALLBACK_MOCKS: readonly DrugSearchItem[] = [
-  { atcCode: "J01CA04", drugName: "종근당아목시실린캡슐500mg", company: "종근당" },
-  { atcCode: "J01CA04", drugName: "보령아목시실린캡슐", company: "보령제약" },
-  { atcCode: "J01CA04", drugName: "아목시실린시럽", company: "유한양행" },
-  { atcCode: "N02BE01", drugName: "타이레놀정500mg", company: "한국얀센" },
-  { atcCode: "A02BC01", drugName: "오메프라졸캡슐20mg", company: "한미약품" },
+  {
+    drugCode: "202000123",
+    atcCode: "J01CA04",
+    drugName: "종근당아목시실린캡슐500mg",
+    company: "종근당",
+  },
+  {
+    drugCode: "202000124",
+    atcCode: "J01CA04",
+    drugName: "보령아목시실린캡슐",
+    company: "보령제약",
+  },
+  { drugCode: "202000125", atcCode: "J01CA04", drugName: "아목시실린시럽", company: "유한양행" },
+  { drugCode: "195700007", atcCode: "N02BE01", drugName: "타이레놀정500mg", company: "한국얀센" },
+  {
+    drugCode: "200001234",
+    atcCode: "A02BC01",
+    drugName: "오메프라졸캡슐20mg",
+    company: "한미약품",
+  },
 ] as const;
 
 function filterDrugSearchMocks(keyword: string): readonly DrugSearchItem[] {

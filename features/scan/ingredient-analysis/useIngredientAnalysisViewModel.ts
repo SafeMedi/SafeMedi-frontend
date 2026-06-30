@@ -78,29 +78,25 @@ export function useIngredientAnalysisViewModel(): IngredientAnalysisViewModel {
     }
 
     try {
-      const response = await createMutation.mutateAsync(request);
-      const warningMessages = response.allergyWarnings
-        .map((item) => item.warningMessage)
-        .join("\n");
-      const feedbackMessage = response.hasAllergyConflict
+      const response = await createMutation.mutateAsync({ ...request, isDoctorApproved: true });
+      const allergyWarnings = response.allergyWarnings ?? [];
+      const hasAllergyConflict = response.hasAllergyConflict ?? false;
+      const warningMessages = allergyWarnings.map((item) => item.warningMessage).join("\n");
+      const feedbackMessage = hasAllergyConflict
         ? `${response.message}\n${warningMessages}`
         : response.message;
 
-      Alert.alert(
-        response.hasAllergyConflict ? "알레르기 주의" : "복약 등록 완료",
-        feedbackMessage,
-        [
-          {
-            text: "확인",
-            onPress: () => {
-              shouldIgnoreMissingRequestAlertRef.current = true;
-              clearRequest();
-              clearOcrResult();
-              router.replace("/(tabs)/dashboard");
-            },
+      Alert.alert(hasAllergyConflict ? "알레르기 주의" : "복약 등록 완료", feedbackMessage, [
+        {
+          text: "확인",
+          onPress: () => {
+            shouldIgnoreMissingRequestAlertRef.current = true;
+            clearRequest();
+            clearOcrResult();
+            router.replace("/(tabs)/dashboard");
           },
-        ],
-      );
+        },
+      ]);
     } catch (error) {
       const parsedError = await parseApiError(error);
       Alert.alert("복약 등록 실패", parsedError.message);
