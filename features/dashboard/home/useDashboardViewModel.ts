@@ -1,6 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Alert } from "react-native";
 
-import { useDashboardTodayMedicationSchedules } from "@/api/queries/dashboard";
+import {
+  useDashboardTodayMedicationSchedules,
+  useUpdateMedicationRecordMutation,
+} from "@/api/queries/dashboard";
 import { usePrescriptionsQuery } from "@/api/queries/prescriptions";
 import type { TodayMedicationScheduleStatus } from "@/api/types";
 
@@ -12,6 +16,8 @@ export interface DashboardSchedulePrescriptionItem {
   readonly prescriptionTitle: string;
   readonly medicationCount: number;
   readonly medicationNames: readonly string[];
+  readonly recordIds: readonly number[];
+  readonly canMarkAsTaken: boolean;
 }
 
 export interface DashboardScheduleCardItem {
@@ -41,6 +47,8 @@ export interface DashboardViewModel {
   readonly healthTipDescription: string;
   readonly isLoading: boolean;
   readonly isError: boolean;
+  readonly takingPrescriptionId: string | null;
+  readonly markPrescriptionAsTaken: (prescription: DashboardSchedulePrescriptionItem) => void;
   readonly refetch: () => Promise<unknown>;
 }
 
@@ -74,7 +82,9 @@ function resolveGroupStatus(
 
 export function useDashboardViewModel(): DashboardViewModel {
   const todayScheduleQuery = useDashboardTodayMedicationSchedules();
+  const updateMedicationRecordMutation = useUpdateMedicationRecordMutation();
   const prescriptionsQuery = usePrescriptionsQuery();
+  const [takingPrescriptionId, setTakingPrescriptionId] = useState<string | null>(null);
   const prescriptions = prescriptionsQuery.data?.prescriptions ?? [];
 
   const adherenceRate = Math.round(todayScheduleQuery.data?.summary.completionRate ?? 0);
@@ -101,19 +111,27 @@ export function useDashboardViewModel(): DashboardViewModel {
         id: takeTime,
         scheduledTime: takeTime,
         prescriptionCount: schedules.length,
-        prescriptions: schedules.map((schedule) => ({
-          id: `${schedule.prescriptionId}-${schedule.takeTime}-${schedule.recordIds.join("-")}`,
-          prescriptionId: schedule.prescriptionId,
-          prescriptionTitle: schedule.prescriptionTitle,
-          medicationCount: schedule.drugCount,
-          medicationNames:
-            schedule.drugNames ??
-            prescriptions
-              .find((prescription) => prescription.prescriptionId === schedule.prescriptionId)
-              ?.medications.filter((medication) => medication.takeTimes.includes(schedule.takeTime))
-              .map((medication) => medication.drugName) ??
-            [],
-        })),
+        prescriptions: schedules.map((schedule) => {
+          const scheduleStatus = getScheduleStatus(schedule.displayStatus ?? schedule.status);
+
+          return {
+            id: `${schedule.prescriptionId}-${schedule.takeTime}-${schedule.recordIds.join("-")}`,
+            prescriptionId: schedule.prescriptionId,
+            prescriptionTitle: schedule.prescriptionTitle,
+            medicationCount: schedule.drugCount,
+            medicationNames:
+              schedule.drugNames ??
+              prescriptions
+                .find((prescription) => prescription.prescriptionId === schedule.prescriptionId)
+                ?.medications.filter((medication) =>
+                  medication.takeTimes.includes(schedule.takeTime),
+                )
+                .map((medication) => medication.drugName) ??
+              [],
+            recordIds: schedule.recordIds,
+            canMarkAsTaken: scheduleStatus === "NEED_TAKE" && schedule.recordIds.length > 0,
+          };
+        }),
         statusLabel: resolveStatusLabel(groupStatus),
         tone: resolveScheduleTone(groupStatus),
       };
@@ -138,6 +156,25 @@ export function useDashboardViewModel(): DashboardViewModel {
   const refetch = async () =>
     Promise.all([todayScheduleQuery.refetch(), prescriptionsQuery.refetch()]);
 
+  const markPrescriptionAsTaken = (prescription: DashboardSchedulePrescriptionItem) => {
+    if (!prescription.canMarkAsTaken || takingPrescriptionId !== null) return;
+
+    setTakingPrescriptionId(prescription.id);
+    void Promise.all(
+      prescription.recordIds.map((recordId) =>
+        updateMedicationRecordMutation.mutateAsync({
+          recordId,
+          body: { status: "SUCCESS" },
+        }),
+      ),
+    )
+      .then(() => refetch())
+      .catch(() => {
+        Alert.alert("복약 처리 실패", "복약 완료 처리 중 오류가 발생했습니다.");
+      })
+      .finally(() => setTakingPrescriptionId(null));
+  };
+
   return {
     adherenceRate,
     adherenceSummaryText,
@@ -149,6 +186,8 @@ export function useDashboardViewModel(): DashboardViewModel {
       "약은 충분한 물과 함께 복용하세요. 최소 200ml(컵 1잔) 이상의 물과 함께 드시면 효과가 더 좋아요.",
     isLoading: todayScheduleQuery.isLoading || prescriptionsQuery.isLoading,
     isError: todayScheduleQuery.isError || prescriptionsQuery.isError,
+    takingPrescriptionId,
+    markPrescriptionAsTaken,
     refetch,
   };
 }

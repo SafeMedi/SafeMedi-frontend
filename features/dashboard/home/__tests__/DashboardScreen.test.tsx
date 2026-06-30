@@ -157,6 +157,8 @@ function createViewModel(overrides?: Partial<DashboardViewModel>): DashboardView
             prescriptionTitle: "신장내과 처방전",
             medicationCount: 2,
             medicationNames: ["타이레놀", "암로디핀"],
+            recordIds: [1, 2],
+            canMarkAsTaken: false,
           },
         ],
         statusLabel: "완료",
@@ -176,6 +178,8 @@ function createViewModel(overrides?: Partial<DashboardViewModel>): DashboardView
     healthTipDescription: "충분한 물과 함께 복용하세요.",
     isLoading: false,
     isError: false,
+    takingPrescriptionId: null,
+    markPrescriptionAsTaken: jest.fn(),
     refetch: mockRefetch,
     ...overrides,
   };

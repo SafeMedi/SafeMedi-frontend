@@ -48,6 +48,18 @@ export interface TodayMedicationSchedulesResponse {
   readonly schedules: readonly TodayMedicationScheduleItem[];
 }
 
+export interface UpdateMedicationRecordRequest {
+  readonly status: "SUCCESS" | "SKIP";
+}
+
+export interface UpdateMedicationRecordResponse {
+  readonly recordId: number;
+  readonly prescriptionId: number;
+  readonly scheduledAt: string;
+  readonly takenAt: string | null;
+  readonly status: TodayMedicationScheduleStatus;
+}
+
 export interface MonthlyMedicationSummary {
   readonly totalCount: number;
   readonly takenCount: number;

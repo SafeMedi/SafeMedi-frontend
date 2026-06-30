@@ -6,7 +6,10 @@ import { Text, XStack, YStack } from "tamagui";
 import { Badge } from "@/components/ui/Badge";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
-import type { DashboardScheduleCardItem } from "@/features/dashboard/home/useDashboardViewModel";
+import type {
+  DashboardScheduleCardItem,
+  DashboardSchedulePrescriptionItem,
+} from "@/features/dashboard/home/useDashboardViewModel";
 
 interface ToneStyle {
   readonly headerGradient: readonly [string, string];
@@ -38,9 +41,15 @@ const TONE_STYLES: Record<DashboardScheduleCardItem["tone"], ToneStyle> = {
 
 interface TodayScheduleCardProps {
   readonly item: DashboardScheduleCardItem;
+  readonly takingPrescriptionId: string | null;
+  readonly onPressTake: (prescription: DashboardSchedulePrescriptionItem) => void;
 }
 
-export function TodayScheduleCard({ item }: TodayScheduleCardProps) {
+export function TodayScheduleCard({
+  item,
+  takingPrescriptionId,
+  onPressTake,
+}: TodayScheduleCardProps) {
   const [expandedPrescriptionIds, setExpandedPrescriptionIds] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
@@ -105,6 +114,7 @@ export function TodayScheduleCard({ item }: TodayScheduleCardProps) {
         {item.prescriptions.map((prescription) => {
           const isExpanded = expandedPrescriptionIds.has(prescription.id);
           const medicationRows = medicationRowsByPrescription.get(prescription.id) ?? [];
+          const isTaking = takingPrescriptionId === prescription.id;
 
           return (
             <View
@@ -131,18 +141,31 @@ export function TodayScheduleCard({ item }: TodayScheduleCardProps) {
                       </Text>
                     </YStack>
                   </XStack>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={`${prescription.prescriptionTitle} 복약 상세 보기`}
-                    style={styles.arrowButton}
-                    onPress={() => handleToggleMedicationList(prescription.id)}
-                  >
-                    <Ionicons
-                      name={isExpanded ? "chevron-down" : "chevron-forward"}
-                      size={14}
-                      color={palette.icon}
-                    />
-                  </Pressable>
+                  <XStack items="center" gap={6}>
+                    {prescription.canMarkAsTaken ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`${prescription.prescriptionTitle} 복약 완료`}
+                        disabled={isTaking}
+                        style={[styles.takeButton, isTaking && styles.takeButtonDisabled]}
+                        onPress={() => onPressTake(prescription)}
+                      >
+                        <Ionicons name="checkmark" size={14} color={palette.green_deep} />
+                      </Pressable>
+                    ) : null}
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`${prescription.prescriptionTitle} 복약 상세 보기`}
+                      style={styles.arrowButton}
+                      onPress={() => handleToggleMedicationList(prescription.id)}
+                    >
+                      <Ionicons
+                        name={isExpanded ? "chevron-down" : "chevron-forward"}
+                        size={14}
+                        color={palette.icon}
+                      />
+                    </Pressable>
+                  </XStack>
                 </XStack>
               </LinearGradient>
 
@@ -236,6 +259,17 @@ const styles = StyleSheet.create({
     backgroundColor: palette.overlay_white_90,
     alignItems: "center",
     justifyContent: "center",
+  },
+  takeButton: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    backgroundColor: palette.overlay_white_90,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  takeButtonDisabled: {
+    opacity: 0.5,
   },
   medicationListContainer: {
     borderTopWidth: 1,

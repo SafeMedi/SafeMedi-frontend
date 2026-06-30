@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   fetchDailyMedicationRecords,
@@ -6,8 +6,10 @@ import {
   fetchMedicationStatistics,
   fetchMonthlyMedicationRecords,
   fetchTodayMedicationSchedules,
+  updateMedicationRecord,
 } from "@/api/endpoints/dashboard";
 import { queryKeys } from "@/api/query-keys";
+import type { UpdateMedicationRecordRequest } from "@/api/types/dashboard";
 import { useSessionStore } from "@/stores/sessionStore";
 
 const STALE_MS = 60 * 1000;
@@ -35,6 +37,25 @@ export function useDashboardTodayMedicationSchedules() {
     enabled: !!accessToken,
     staleTime: STALE_MS,
     queryFn: fetchTodayMedicationSchedules,
+  });
+}
+
+interface UpdateMedicationRecordMutationParams {
+  readonly recordId: number;
+  readonly body: UpdateMedicationRecordRequest;
+}
+
+export function useUpdateMedicationRecordMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ recordId, body }: UpdateMedicationRecordMutationParams) =>
+      updateMedicationRecord(recordId, body),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.dashboard.todayMedicationSchedules,
+      });
+    },
   });
 }
 
