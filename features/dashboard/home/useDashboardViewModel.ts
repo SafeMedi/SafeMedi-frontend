@@ -6,13 +6,19 @@ import type { TodayMedicationScheduleStatus } from "@/api/types";
 
 type DashboardScheduleTone = "success" | "required" | "upcoming";
 
+export interface DashboardSchedulePrescriptionItem {
+  readonly id: string;
+  readonly prescriptionId: number;
+  readonly prescriptionTitle: string;
+  readonly medicationCount: number;
+  readonly medicationNames: readonly string[];
+}
+
 export interface DashboardScheduleCardItem {
   readonly id: string;
   readonly scheduledTime: string;
   readonly prescriptionCount: number;
-  readonly prescriptionTitle: string;
-  readonly medicationCount: number;
-  readonly medicationNames: readonly string[];
+  readonly prescriptions: readonly DashboardSchedulePrescriptionItem[];
   readonly statusLabel: string;
   readonly tone: DashboardScheduleTone;
 }
@@ -52,6 +58,20 @@ function resolveStatusLabel(status: TodayMedicationScheduleStatus): string {
   return "대기중";
 }
 
+function getScheduleStatus(status?: TodayMedicationScheduleStatus): TodayMedicationScheduleStatus {
+  return status ?? "WAITING";
+}
+
+function resolveGroupStatus(
+  statuses: readonly TodayMedicationScheduleStatus[],
+): TodayMedicationScheduleStatus {
+  if (statuses.some((status) => status === "NEED_TAKE")) return "NEED_TAKE";
+  if (statuses.some((status) => status === "MISSED")) return "MISSED";
+  if (statuses.some((status) => status === "WAITING")) return "WAITING";
+  if (statuses.some((status) => status === "SKIP")) return "SKIP";
+  return "SUCCESS";
+}
+
 export function useDashboardViewModel(): DashboardViewModel {
   const todayScheduleQuery = useDashboardTodayMedicationSchedules();
   const prescriptionsQuery = usePrescriptionsQuery();
@@ -64,20 +84,40 @@ export function useDashboardViewModel(): DashboardViewModel {
 
   const scheduleCards = useMemo<readonly DashboardScheduleCardItem[]>(() => {
     if (!todayScheduleQuery.data) return [];
-    return todayScheduleQuery.data.schedules.map((schedule) => ({
-      id: `${schedule.prescriptionId}-${schedule.takeTime}-${schedule.recordIds.join("-")}`,
-      scheduledTime: schedule.takeTime,
-      prescriptionCount: 1,
-      prescriptionTitle: schedule.prescriptionTitle,
-      medicationCount: schedule.drugCount,
-      medicationNames:
-        prescriptions
-          .find((prescription) => prescription.prescriptionId === schedule.prescriptionId)
-          ?.medications.filter((medication) => medication.takeTimes.includes(schedule.takeTime))
-          .map((medication) => medication.drugName) ?? [],
-      statusLabel: resolveStatusLabel(schedule.status),
-      tone: resolveScheduleTone(schedule.status),
-    }));
+    const groupedSchedules = new Map<string, typeof todayScheduleQuery.data.schedules>();
+
+    todayScheduleQuery.data.schedules.forEach((schedule) => {
+      const schedules = groupedSchedules.get(schedule.takeTime) ?? [];
+      groupedSchedules.set(schedule.takeTime, [...schedules, schedule]);
+    });
+
+    return Array.from(groupedSchedules.entries()).map(([takeTime, schedules]) => {
+      const statuses = schedules.map((schedule) =>
+        getScheduleStatus(schedule.displayStatus ?? schedule.status),
+      );
+      const groupStatus = resolveGroupStatus(statuses);
+
+      return {
+        id: takeTime,
+        scheduledTime: takeTime,
+        prescriptionCount: schedules.length,
+        prescriptions: schedules.map((schedule) => ({
+          id: `${schedule.prescriptionId}-${schedule.takeTime}-${schedule.recordIds.join("-")}`,
+          prescriptionId: schedule.prescriptionId,
+          prescriptionTitle: schedule.prescriptionTitle,
+          medicationCount: schedule.drugCount,
+          medicationNames:
+            schedule.drugNames ??
+            prescriptions
+              .find((prescription) => prescription.prescriptionId === schedule.prescriptionId)
+              ?.medications.filter((medication) => medication.takeTimes.includes(schedule.takeTime))
+              .map((medication) => medication.drugName) ??
+            [],
+        })),
+        statusLabel: resolveStatusLabel(groupStatus),
+        tone: resolveScheduleTone(groupStatus),
+      };
+    });
   }, [prescriptions, todayScheduleQuery.data]);
 
   const scheduleRemainingCount = useMemo(() => {

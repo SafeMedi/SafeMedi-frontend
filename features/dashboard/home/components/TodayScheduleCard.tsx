@@ -41,22 +41,38 @@ interface TodayScheduleCardProps {
 }
 
 export function TodayScheduleCard({ item }: TodayScheduleCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedPrescriptionIds, setExpandedPrescriptionIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
   const toneStyle = TONE_STYLES[item.tone];
-  const medicationRows = useMemo(() => {
-    const countMap = new Map<string, number>();
-    return item.medicationNames.map((name) => {
-      const count = (countMap.get(name) ?? 0) + 1;
-      countMap.set(name, count);
-      return {
-        key: `${item.id}-${name}-${count}`,
-        name,
-      };
-    });
-  }, [item.id, item.medicationNames]);
 
-  const handleToggleMedicationList = () => {
-    setIsExpanded((prev) => !prev);
+  const medicationRowsByPrescription = useMemo(() => {
+    return new Map(
+      item.prescriptions.map((prescription) => {
+        const countMap = new Map<string, number>();
+        const rows = prescription.medicationNames.map((name) => {
+          const count = (countMap.get(name) ?? 0) + 1;
+          countMap.set(name, count);
+          return {
+            key: `${prescription.id}-${name}-${count}`,
+            name,
+          };
+        });
+        return [prescription.id, rows] as const;
+      }),
+    );
+  }, [item.prescriptions]);
+
+  const handleToggleMedicationList = (prescriptionId: string) => {
+    setExpandedPrescriptionIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(prescriptionId)) {
+        next.delete(prescriptionId);
+      } else {
+        next.add(prescriptionId);
+      }
+      return next;
+    });
   };
 
   return (
@@ -85,53 +101,69 @@ export function TodayScheduleCard({ item }: TodayScheduleCardProps) {
         </XStack>
       </LinearGradient>
 
-      <View style={[styles.bottomWrap, { borderColor: toneStyle.contentBorder }]}>
-        <LinearGradient
-          colors={[...toneStyle.contentGradient]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.bottom}
-        >
-          <XStack items="center" justify="space-between">
-            <XStack items="center" gap={8}>
-              <View style={styles.bottomIconCircle}>
-                <Ionicons name="document-text-outline" size={12} color={palette.white} />
-              </View>
-              <YStack gap={2}>
-                <Text style={styles.prescriptionTitle}>📋 {item.prescriptionTitle}</Text>
-                <Text style={styles.medicationCount}>{item.medicationCount}개 약물</Text>
-              </YStack>
-            </XStack>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="복약 상세 보기"
-              style={styles.arrowButton}
-              onPress={handleToggleMedicationList}
-            >
-              <Ionicons
-                name={isExpanded ? "chevron-down" : "chevron-forward"}
-                size={14}
-                color={palette.icon}
-              />
-            </Pressable>
-          </XStack>
-        </LinearGradient>
+      <YStack gap={8} style={styles.prescriptionList}>
+        {item.prescriptions.map((prescription) => {
+          const isExpanded = expandedPrescriptionIds.has(prescription.id);
+          const medicationRows = medicationRowsByPrescription.get(prescription.id) ?? [];
 
-        {isExpanded ? (
-          <View style={styles.medicationListContainer}>
-            {medicationRows.length > 0 ? (
-              medicationRows.map((medicationRow) => (
-                <XStack key={medicationRow.key} items="center" gap={6}>
-                  <Text style={styles.medicationBullet}>•</Text>
-                  <Text style={styles.medicationText}>{medicationRow.name}</Text>
+          return (
+            <View
+              key={prescription.id}
+              style={[styles.bottomWrap, { borderColor: toneStyle.contentBorder }]}
+            >
+              <LinearGradient
+                colors={[...toneStyle.contentGradient]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.bottom}
+              >
+                <XStack items="center" justify="space-between">
+                  <XStack items="center" gap={8}>
+                    <View style={styles.bottomIconCircle}>
+                      <Ionicons name="document-text-outline" size={12} color={palette.white} />
+                    </View>
+                    <YStack gap={2}>
+                      <Text style={styles.prescriptionTitle}>
+                        📋 {prescription.prescriptionTitle}
+                      </Text>
+                      <Text style={styles.medicationCount}>
+                        {prescription.medicationCount}개 약물
+                      </Text>
+                    </YStack>
+                  </XStack>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${prescription.prescriptionTitle} 복약 상세 보기`}
+                    style={styles.arrowButton}
+                    onPress={() => handleToggleMedicationList(prescription.id)}
+                  >
+                    <Ionicons
+                      name={isExpanded ? "chevron-down" : "chevron-forward"}
+                      size={14}
+                      color={palette.icon}
+                    />
+                  </Pressable>
                 </XStack>
-              ))
-            ) : (
-              <Text style={styles.medicationText}>약물 정보가 없습니다.</Text>
-            )}
-          </View>
-        ) : null}
-      </View>
+              </LinearGradient>
+
+              {isExpanded ? (
+                <View style={styles.medicationListContainer}>
+                  {medicationRows.length > 0 ? (
+                    medicationRows.map((medicationRow) => (
+                      <XStack key={medicationRow.key} items="center" gap={6}>
+                        <Text style={styles.medicationBullet}>•</Text>
+                        <Text style={styles.medicationText}>{medicationRow.name}</Text>
+                      </XStack>
+                    ))
+                  ) : (
+                    <Text style={styles.medicationText}>약물 정보가 없습니다.</Text>
+                  )}
+                </View>
+              ) : null}
+            </View>
+          );
+        })}
+      </YStack>
     </SurfaceCard>
   );
 }
@@ -165,9 +197,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 14,
   },
-  bottomWrap: {
+  prescriptionList: {
     marginHorizontal: 10,
     marginVertical: 10,
+  },
+  bottomWrap: {
     borderWidth: 1,
     borderRadius: 14,
     overflow: "hidden",

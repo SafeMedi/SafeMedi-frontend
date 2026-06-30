@@ -150,9 +150,15 @@ function createViewModel(overrides?: Partial<DashboardViewModel>): DashboardView
         id: "1",
         scheduledTime: "08:00",
         prescriptionCount: 1,
-        prescriptionTitle: "신장내과 처방전",
-        medicationCount: 2,
-        medicationNames: ["타이레놀", "암로디핀"],
+        prescriptions: [
+          {
+            id: "1-08:00-1",
+            prescriptionId: 1,
+            prescriptionTitle: "신장내과 처방전",
+            medicationCount: 2,
+            medicationNames: ["타이레놀", "암로디핀"],
+          },
+        ],
         statusLabel: "완료",
         tone: "success",
       },

@@ -33,10 +33,12 @@ export interface TodayMedicationScheduleSummary {
 
 export interface TodayMedicationScheduleItem {
   readonly takeTime: string;
-  readonly status: TodayMedicationScheduleStatus;
+  readonly status?: TodayMedicationScheduleStatus;
+  readonly displayStatus?: TodayMedicationScheduleStatus;
   readonly prescriptionId: number;
   readonly prescriptionTitle: string;
   readonly drugCount: number;
+  readonly drugNames?: readonly string[];
   readonly recordIds: readonly number[];
 }
 

@@ -19,9 +19,22 @@ const BASE_ITEM: DashboardScheduleCardItem = {
   id: "1",
   scheduledTime: "08:00",
   prescriptionCount: 2,
-  prescriptionTitle: "아침 복약",
-  medicationCount: 3,
-  medicationNames: ["타이레놀", "타이레놀", "아목시실린"],
+  prescriptions: [
+    {
+      id: "1-08:00-1",
+      prescriptionId: 1,
+      prescriptionTitle: "아침 복약",
+      medicationCount: 3,
+      medicationNames: ["타이레놀", "타이레놀", "아목시실린"],
+    },
+    {
+      id: "2-08:00-2",
+      prescriptionId: 2,
+      prescriptionTitle: "비타민 종합",
+      medicationCount: 1,
+      medicationNames: ["비타민C"],
+    },
+  ],
   statusLabel: "복용 필요",
   tone: "required",
 };
@@ -34,6 +47,8 @@ describe("TodayScheduleCard", () => {
     expect(getByText("2개 처방전")).toBeTruthy();
     expect(getByText("📋 아침 복약")).toBeTruthy();
     expect(getByText("3개 약물")).toBeTruthy();
+    expect(getByText("📋 비타민 종합")).toBeTruthy();
+    expect(getByText("1개 약물")).toBeTruthy();
     expect(getByText("복용 필요")).toBeTruthy();
   });
 
@@ -42,7 +57,7 @@ describe("TodayScheduleCard", () => {
       <TodayScheduleCard item={BASE_ITEM} />,
     );
 
-    fireEvent.press(getByLabelText("복약 상세 보기"));
+    fireEvent.press(getByLabelText("아침 복약 복약 상세 보기"));
 
     expect(getAllByText("타이레놀")).toHaveLength(2);
     expect(getByText("아목시실린")).toBeTruthy();
@@ -50,10 +65,15 @@ describe("TodayScheduleCard", () => {
 
   it("약물 목록이 없으면 빈 상태 문구를 표시한다", () => {
     const { getByLabelText, getByText } = render(
-      <TodayScheduleCard item={{ ...BASE_ITEM, medicationNames: [] }} />,
+      <TodayScheduleCard
+        item={{
+          ...BASE_ITEM,
+          prescriptions: [{ ...BASE_ITEM.prescriptions[0], medicationNames: [] }],
+        }}
+      />,
     );
 
-    fireEvent.press(getByLabelText("복약 상세 보기"));
+    fireEvent.press(getByLabelText("아침 복약 복약 상세 보기"));
     expect(getByText("약물 정보가 없습니다.")).toBeTruthy();
   });
 });

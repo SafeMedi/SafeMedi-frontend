@@ -59,8 +59,18 @@ describe("useDashboardViewModel", () => {
             prescriptionTitle: "아침약",
             prescriptionId: 1,
             drugCount: 2,
+            drugNames: ["타이레놀", "오메프라졸"],
             recordIds: [1, 2],
-            status: "NEED_TAKE",
+            displayStatus: "NEED_TAKE",
+          },
+          {
+            takeTime: "08:00",
+            prescriptionTitle: "위장약",
+            prescriptionId: 3,
+            drugCount: 1,
+            drugNames: ["판토프라졸"],
+            recordIds: [4],
+            displayStatus: "NEED_TAKE",
           },
           {
             takeTime: "20:00",
@@ -130,8 +140,26 @@ describe("useDashboardViewModel", () => {
 
     expect(result.current.adherenceRate).toBe(70);
     expect(result.current.adherenceSummaryText).toBe("7 / 10 완료");
+    expect(result.current.scheduleCards).toHaveLength(2);
     expect(result.current.scheduleCards[0]?.tone).toBe("required");
-    expect(result.current.scheduleCards[0]?.medicationNames).toEqual(["타이레놀", "오메프라졸"]);
+    expect(result.current.scheduleCards[0]?.scheduledTime).toBe("08:00");
+    expect(result.current.scheduleCards[0]?.prescriptionCount).toBe(2);
+    expect(result.current.scheduleCards[0]?.prescriptions).toEqual([
+      {
+        id: "1-08:00-1-2",
+        prescriptionId: 1,
+        prescriptionTitle: "아침약",
+        medicationCount: 2,
+        medicationNames: ["타이레놀", "오메프라졸"],
+      },
+      {
+        id: "3-08:00-4",
+        prescriptionId: 3,
+        prescriptionTitle: "위장약",
+        medicationCount: 1,
+        medicationNames: ["판토프라졸"],
+      },
+    ]);
     expect(result.current.scheduleCards[1]?.statusLabel).toBe("완료");
     expect(result.current.scheduleRemainingCount).toBe(1);
     expect(result.current.recentPrescriptions[0]?.prescriptionId).toBe(1);
