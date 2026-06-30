@@ -1,4 +1,3 @@
-import type { DrugSearchItem } from "@/api/types";
 import type { PrescriptionListItem } from "@/api/types/prescriptions";
 import type { MedicationTakeSlot } from "@/features/scan/prescription-scan-result/usePrescriptionScanResultViewModel";
 import type { MedicationEditDraft, MedicationEditKey } from "./medicationEditModel";
@@ -35,8 +34,6 @@ export interface MedicationManagementViewModel {
   readonly togglePrescriptionExpanded: (prescriptionId: number) => void;
   readonly startEditMedication: (prescriptionId: number, medicationId: number) => void;
   readonly cancelEditMedication: () => void;
-  readonly changeEditDrugName: (drugName: string) => void;
-  readonly selectEditDrug: (item: DrugSearchItem) => void;
   readonly toggleEditTakeSlot: (slot: MedicationTakeSlot) => void;
   readonly saveEditMedication: () => void;
   readonly handleDeleteMedication: (

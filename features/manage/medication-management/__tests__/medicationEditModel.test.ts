@@ -77,7 +77,7 @@ describe("데이터가 없으면 기본값을 반환한다.", () => {
     });
     expect(validateMedicationEditDraft({ ...draft, atcCode: "   " })).toEqual({
       isValid: false,
-      message: "약물명은 검색 결과에서 선택해야 합니다.",
+      message: "약물 코드가 없는 약물은 수정할 수 없습니다.",
     });
     expect(validateMedicationEditDraft({ ...draft, takeSlots: [] })).toEqual({
       isValid: false,
@@ -99,9 +99,9 @@ describe("데이터가 없으면 기본값을 반환한다.", () => {
     expect(withLunch.takeSlots).toEqual(["DINNER", "LUNCH"]);
   });
 
-  it("약물 수정 PATCH body를 생성한다", () => {
+  it("약물 수정 PATCH body는 복약 시간만 생성한다", () => {
     const draft = {
-      drugName: "타이레놀정 650mg",
+      drugName: "타이레놀정 500mg",
       drugCode: "",
       atcCode: "N02BE01",
       takeSlots: ["MORNING", "LUNCH"] as const,
@@ -127,11 +127,10 @@ describe("데이터가 없으면 기본값을 반환한다.", () => {
       throw new Error("draft should exist");
     }
 
-    expect(
-      buildUpdatedMedicationsAfterEdit(prescription, 101, {
-        ...draft,
-        drugName: "타이레놀정 650mg",
-      })[0]?.takeTimes,
-    ).toEqual(["08:00", "18:00", "22:00"]);
+    expect(buildUpdatedMedicationsAfterEdit(prescription, 101, draft)[0]?.takeTimes).toEqual([
+      "08:00",
+      "18:00",
+      "22:00",
+    ]);
   });
 });

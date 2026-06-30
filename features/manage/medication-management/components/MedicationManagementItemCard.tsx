@@ -4,7 +4,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
 
-import type { DrugSearchItem } from "@/api/types";
 import { palette } from "@/constants/design-tokens";
 import type { MedicationTakeSlot } from "@/features/scan/prescription-scan-result/usePrescriptionScanResultViewModel";
 import type { MedicationEditDraft } from "../medicationEditModel";
@@ -21,8 +20,6 @@ interface MedicationManagementItemCardProps {
   readonly onDelete: () => void;
   readonly onCancelEdit: () => void;
   readonly onSaveEdit: () => void;
-  readonly onChangeDrugName: (drugName: string) => void;
-  readonly onSelectDrug: (item: DrugSearchItem) => void;
   readonly onToggleTakeSlot: (slot: MedicationTakeSlot) => void;
 }
 
@@ -36,8 +33,6 @@ export function MedicationManagementItemCard({
   onDelete,
   onCancelEdit,
   onSaveEdit,
-  onChangeDrugName,
-  onSelectDrug,
   onToggleTakeSlot,
 }: MedicationManagementItemCardProps) {
   const cardStyle = medication.hasWarning ? styles.warningCard : styles.normalCard;
@@ -58,8 +53,6 @@ export function MedicationManagementItemCard({
           draft={editDraft}
           isSaveEnabled={isSaveEnabled}
           isSaving={isSaving}
-          onChangeDrugName={onChangeDrugName}
-          onSelectDrug={onSelectDrug}
           onToggleTakeSlot={onToggleTakeSlot}
           onCancel={onCancelEdit}
           onSave={onSaveEdit}

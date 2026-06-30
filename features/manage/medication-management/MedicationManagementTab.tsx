@@ -59,8 +59,6 @@ export function MedicationManagementTab() {
               }
               onCancelEditMedication={viewModel.cancelEditMedication}
               onSaveEditMedication={viewModel.saveEditMedication}
-              onChangeEditDrugName={viewModel.changeEditDrugName}
-              onSelectEditDrug={viewModel.selectEditDrug}
               onToggleEditTakeSlot={viewModel.toggleEditTakeSlot}
               onDeleteMedication={(medicationId, drugName) =>
                 viewModel.handleDeleteMedication(group.prescriptionId, medicationId, drugName)

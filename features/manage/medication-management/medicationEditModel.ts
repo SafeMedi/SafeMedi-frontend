@@ -129,7 +129,7 @@ export function validateMedicationEditDraft(
     return { isValid: false, message: "약물명을 입력해주세요." };
   }
   if (draft.atcCode.trim().length === 0) {
-    return { isValid: false, message: "약물명은 검색 결과에서 선택해야 합니다." };
+    return { isValid: false, message: "약물 코드가 없는 약물은 수정할 수 없습니다." };
   }
   if (draft.takeSlots.length === 0) {
     return { isValid: false, message: "복약 시간을 최소 1개 이상 선택해주세요." };

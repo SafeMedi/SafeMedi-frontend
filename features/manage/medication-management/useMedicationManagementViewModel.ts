@@ -6,7 +6,6 @@ import {
   usePrescriptionsQuery,
   useUpdatePrescriptionMutation,
 } from "@/api/queries/prescriptions";
-import type { DrugSearchItem } from "@/api/types";
 import type { MedicationTakeSlot } from "@/features/scan/prescription-scan-result/usePrescriptionScanResultViewModel";
 import {
   buildUpdatedMedicationsAfterEdit,
@@ -86,34 +85,6 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
     },
     [prescriptions],
   );
-
-  const handleChangeEditDrugName = useCallback((drugName: string) => {
-    setEditDraft((currentDraft) => {
-      if (!currentDraft) {
-        return currentDraft;
-      }
-      return {
-        ...currentDraft,
-        drugName,
-        drugCode: "",
-        atcCode: "",
-      };
-    });
-  }, []);
-
-  const handleSelectEditDrug = useCallback((item: DrugSearchItem) => {
-    setEditDraft((currentDraft) => {
-      if (!currentDraft) {
-        return currentDraft;
-      }
-      return {
-        ...currentDraft,
-        drugName: item.drugName,
-        drugCode: item.drugCode,
-        atcCode: item.atcCode,
-      };
-    });
-  }, []);
 
   const handleToggleEditTakeSlot = useCallback((slot: MedicationTakeSlot) => {
     setEditDraft((currentDraft) => {
@@ -248,8 +219,6 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
     togglePrescriptionExpanded: handleTogglePrescriptionExpanded,
     startEditMedication: handleStartEditMedication,
     cancelEditMedication: handleCancelEditMedication,
-    changeEditDrugName: handleChangeEditDrugName,
-    selectEditDrug: handleSelectEditDrug,
     toggleEditTakeSlot: handleToggleEditTakeSlot,
     saveEditMedication: handleSaveEditMedication,
     handleDeleteMedication,

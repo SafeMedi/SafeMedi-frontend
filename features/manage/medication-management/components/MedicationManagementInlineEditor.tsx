@@ -1,9 +1,6 @@
-import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Text, YStack } from "tamagui";
 
-import { useSearchDrugsQuery } from "@/api/queries/drugs";
-import type { DrugSearchItem } from "@/api/types";
 import { palette } from "@/constants/design-tokens";
 import {
   MEDICATION_TAKE_SLOT_OPTIONS,
@@ -15,105 +12,28 @@ interface MedicationManagementInlineEditorProps {
   readonly draft: MedicationEditDraft;
   readonly isSaveEnabled: boolean;
   readonly isSaving: boolean;
-  readonly onChangeDrugName: (drugName: string) => void;
-  readonly onSelectDrug: (item: DrugSearchItem) => void;
   readonly onToggleTakeSlot: (slot: MedicationTakeSlot) => void;
   readonly onCancel: () => void;
   readonly onSave: () => void;
 }
 
-const MIN_KEYWORD_LENGTH = 2;
-const DEBOUNCE_DELAY_MS = 250;
-
 export function MedicationManagementInlineEditor({
   draft,
   isSaveEnabled,
   isSaving,
-  onChangeDrugName,
-  onSelectDrug,
   onToggleTakeSlot,
   onCancel,
   onSave,
 }: MedicationManagementInlineEditorProps) {
-  const [keyword, setKeyword] = useState<string>(draft.drugName);
-  const [debouncedKeyword, setDebouncedKeyword] = useState<string>(draft.drugName.trim());
-  const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
-
-  useEffect(() => {
-    setKeyword(draft.drugName);
-    setDebouncedKeyword(draft.drugName.trim());
-  }, [draft.drugName]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedKeyword(keyword.trim());
-    }, DEBOUNCE_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [keyword]);
-
-  const isSearchEnabled = debouncedKeyword.length >= MIN_KEYWORD_LENGTH;
-  const { data: searchResults, isFetching } = useSearchDrugsQuery(
-    debouncedKeyword,
-    isSearchEnabled,
-  );
-
-  const shouldShowSuggestions = isInputFocused && isSearchEnabled;
-
-  const handlePressSuggestion = (item: DrugSearchItem) => {
-    setKeyword(item.drugName);
-    setDebouncedKeyword(item.drugName);
-    onSelectDrug(item);
-    setIsInputFocused(false);
-  };
-
   return (
     <YStack gap={12}>
       <YStack gap={8}>
         <Text style={styles.label}>약물이름</Text>
-        <TextInput
-          value={draft.drugName}
-          onChangeText={(nextValue) => {
-            setKeyword(nextValue);
-            onChangeDrugName(nextValue);
-          }}
-          onFocus={() => {
-            setKeyword(draft.drugName);
-            setIsInputFocused(true);
-          }}
-          onBlur={() => {
-            setIsInputFocused(false);
-          }}
-          placeholder="약물명을 한글로 입력 후 목록에서 선택"
-          placeholderTextColor={palette.input_placeholder}
-          style={styles.input}
-        />
-        <Text
-          style={[styles.metaText, draft.atcCode ? styles.verifiedText : styles.unverifiedText]}
-        >
-          {draft.atcCode
-            ? `약물 코드: ${draft.atcCode}`
-            : "검색 결과에서 약물을 선택해야 저장할 수 있습니다."}
-        </Text>
-        {shouldShowSuggestions ? (
-          <View style={styles.suggestionContainer}>
-            {isFetching ? <Text style={styles.metaText}>검색 중...</Text> : null}
-            {!isFetching && (searchResults?.length ?? 0) === 0 ? (
-              <Text style={styles.metaText}>검색 결과가 없습니다.</Text>
-            ) : null}
-            {(searchResults ?? []).map((item) => (
-              <Pressable
-                key={`${item.atcCode}-${item.drugName}`}
-                onPressIn={() => handlePressSuggestion(item)}
-                style={({ pressed }) => [styles.suggestionItem, pressed ? styles.pressed : null]}
-              >
-                <Text style={styles.suggestionTitle}>{item.drugName}</Text>
-                <Text style={styles.suggestionMeta}>
-                  {item.company} · {item.atcCode}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
+        <View style={styles.readonlyField}>
+          <Text style={styles.readonlyDrugName}>{draft.drugName}</Text>
+          <Text style={styles.metaText}>약물 코드는 현재 API에서 수정할 수 없습니다.</Text>
+        </View>
+        <Text style={styles.verifiedText}>약물 코드: {draft.atcCode}</Text>
       </YStack>
 
       <YStack gap={8}>
@@ -191,16 +111,20 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "600",
   },
-  input: {
+  readonlyField: {
     backgroundColor: palette.gray,
     borderWidth: 1,
     borderColor: palette.surface_card_border,
     borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 9,
+    paddingVertical: 10,
+    gap: 4,
+  },
+  readonlyDrugName: {
+    color: palette.black,
     fontSize: 14,
     lineHeight: 20,
-    color: palette.black,
+    fontWeight: "600",
   },
   metaText: {
     color: palette.icon,
@@ -209,33 +133,6 @@ const styles = StyleSheet.create({
   },
   verifiedText: {
     color: palette.green,
-  },
-  unverifiedText: {
-    color: palette.red_medium,
-  },
-  suggestionContainer: {
-    borderWidth: 1,
-    borderColor: palette.border_muted,
-    backgroundColor: palette.white,
-    borderRadius: 10,
-    paddingVertical: 4,
-    gap: 2,
-  },
-  suggestionItem: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    gap: 2,
-  },
-  suggestionTitle: {
-    color: palette.black,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "600",
-  },
-  suggestionMeta: {
-    color: palette.icon,
-    fontSize: 11,
-    lineHeight: 15,
   },
   slotRow: {
     flexDirection: "row",

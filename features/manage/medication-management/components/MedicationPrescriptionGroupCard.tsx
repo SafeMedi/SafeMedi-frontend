@@ -4,7 +4,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
 
-import type { DrugSearchItem } from "@/api/types";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
 import type { MedicationTakeSlot } from "@/features/scan/prescription-scan-result/usePrescriptionScanResultViewModel";
@@ -26,8 +25,6 @@ interface MedicationPrescriptionGroupCardProps {
   readonly onStartEditMedication: (medicationId: number) => void;
   readonly onCancelEditMedication: () => void;
   readonly onSaveEditMedication: () => void;
-  readonly onChangeEditDrugName: (drugName: string) => void;
-  readonly onSelectEditDrug: (item: DrugSearchItem) => void;
   readonly onToggleEditTakeSlot: (slot: MedicationTakeSlot) => void;
   readonly onDeleteMedication: (medicationId: number, drugName: string) => void;
 }
@@ -46,8 +43,6 @@ export function MedicationPrescriptionGroupCard({
   onStartEditMedication,
   onCancelEditMedication,
   onSaveEditMedication,
-  onChangeEditDrugName,
-  onSelectEditDrug,
   onToggleEditTakeSlot,
   onDeleteMedication,
 }: MedicationPrescriptionGroupCardProps) {
@@ -112,8 +107,6 @@ export function MedicationPrescriptionGroupCard({
                 onDelete={() => onDeleteMedication(medication.medicationId, medication.drugName)}
                 onCancelEdit={onCancelEditMedication}
                 onSaveEdit={onSaveEditMedication}
-                onChangeDrugName={onChangeEditDrugName}
-                onSelectDrug={onSelectEditDrug}
                 onToggleTakeSlot={onToggleEditTakeSlot}
               />
             );
