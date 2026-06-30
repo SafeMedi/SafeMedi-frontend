@@ -23,6 +23,7 @@ export const apiPaths = {
   prescription: (prescriptionId: number | string) => `/api/v1/prescriptions/${prescriptionId}`,
 
   medicationRecords: "/api/v1/medications/records",
+  medicationRecordsToday: "/api/v1/medication-records/today",
   medicationRecord: (recordId: number | string) => `/api/v1/medication-records/${recordId}`,
 
   medicationsStatistics: "/api/v1/medications/statistics",

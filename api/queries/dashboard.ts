@@ -5,6 +5,7 @@ import {
   fetchMedicationHistoryRecords,
   fetchMedicationStatistics,
   fetchMonthlyMedicationRecords,
+  fetchTodayMedicationSchedules,
 } from "@/api/endpoints/dashboard";
 import { queryKeys } from "@/api/query-keys";
 import { useSessionStore } from "@/stores/sessionStore";
@@ -23,6 +24,17 @@ export function useDashboardDailyMedicationRecords(params: UseDashboardMedicatio
     enabled: !!accessToken,
     staleTime: STALE_MS,
     queryFn: () => fetchDailyMedicationRecords({ date: params.date }),
+  });
+}
+
+export function useDashboardTodayMedicationSchedules() {
+  const accessToken = useSessionStore((state) => state.accessToken);
+
+  return useQuery({
+    queryKey: queryKeys.dashboard.todayMedicationSchedules,
+    enabled: !!accessToken,
+    staleTime: STALE_MS,
+    queryFn: fetchTodayMedicationSchedules,
   });
 }
 

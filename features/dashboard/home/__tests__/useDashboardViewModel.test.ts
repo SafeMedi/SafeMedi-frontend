@@ -1,42 +1,27 @@
 import { renderHook } from "@testing-library/react-native";
-import {
-  useDashboardDailyMedicationRecords,
-  useDashboardMonthlyMedicationRecords,
-} from "@/api/queries/dashboard";
+import { useDashboardTodayMedicationSchedules } from "@/api/queries/dashboard";
 import { useDashboardViewModel } from "../useDashboardViewModel";
 
-const mockUseDashboardDailyMedicationRecords =
-  useDashboardDailyMedicationRecords as jest.MockedFunction<
-    typeof useDashboardDailyMedicationRecords
-  >;
-const mockUseDashboardMonthlyMedicationRecords =
-  useDashboardMonthlyMedicationRecords as jest.MockedFunction<
-    typeof useDashboardMonthlyMedicationRecords
+const mockUseDashboardTodayMedicationSchedules =
+  useDashboardTodayMedicationSchedules as jest.MockedFunction<
+    typeof useDashboardTodayMedicationSchedules
   >;
 
-const mockDailyRefetch = jest.fn(async () => ({}));
-const mockMonthlyRefetch = jest.fn(async () => ({}));
+const mockTodayRefetch = jest.fn(async () => ({}));
 
 jest.mock("@/api/queries/dashboard", () => ({
-  useDashboardDailyMedicationRecords: jest.fn(),
-  useDashboardMonthlyMedicationRecords: jest.fn(),
+  useDashboardTodayMedicationSchedules: jest.fn(),
 }));
 
 describe("useDashboardViewModel", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseDashboardDailyMedicationRecords.mockReturnValue({
+    mockUseDashboardTodayMedicationSchedules.mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: false,
-      refetch: mockDailyRefetch,
-    } as unknown as ReturnType<typeof useDashboardDailyMedicationRecords>);
-    mockUseDashboardMonthlyMedicationRecords.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isError: false,
-      refetch: mockMonthlyRefetch,
-    } as unknown as ReturnType<typeof useDashboardMonthlyMedicationRecords>);
+      refetch: mockTodayRefetch,
+    } as unknown as ReturnType<typeof useDashboardTodayMedicationSchedules>);
   });
 
   it("데이터가 없으면 기본값을 반환한다", () => {
@@ -49,47 +34,34 @@ describe("useDashboardViewModel", () => {
     expect(result.current.scheduleRemainingCount).toBe(0);
   });
 
-  it("일별/월별 데이터가 있으면 카드와 최근 처방 정보를 계산한다", () => {
-    mockUseDashboardDailyMedicationRecords.mockReturnValue({
+  it("오늘 스케줄 데이터가 있으면 카드와 최근 처방 정보를 계산한다", () => {
+    mockUseDashboardTodayMedicationSchedules.mockReturnValue({
       data: {
-        summary: { totalCount: 10, takenCount: 7, fraction: "7 / 10 완료" },
-        records: [
+        date: "2026-05-19",
+        summary: { totalCount: 10, completedCount: 7, completionRate: 70 },
+        schedules: [
           {
-            recordId: 1,
-            scheduledTime: "08:00",
+            takeTime: "08:00",
             prescriptionTitle: "아침약",
-            medicationNames: ["A", "B"],
-            status: "DUE",
+            prescriptionId: 1,
+            drugCount: 2,
+            recordIds: [1, 2],
+            status: "NEED_TAKE",
           },
           {
-            recordId: 2,
-            scheduledTime: "20:00",
+            takeTime: "20:00",
             prescriptionTitle: "저녁약",
-            medicationNames: ["C"],
+            prescriptionId: 2,
+            drugCount: 1,
+            recordIds: [3],
             status: "SUCCESS",
           },
         ],
       },
       isLoading: false,
       isError: false,
-      refetch: mockDailyRefetch,
-    } as unknown as ReturnType<typeof useDashboardDailyMedicationRecords>);
-    mockUseDashboardMonthlyMedicationRecords.mockReturnValue({
-      data: {
-        records: [
-          {
-            date: "2026-05-19",
-            items: [
-              { medicationNames: ["A"], status: "DUE" },
-              { medicationNames: ["B", "C"], status: "SUCCESS" },
-            ],
-          },
-        ],
-      },
-      isLoading: false,
-      isError: false,
-      refetch: mockMonthlyRefetch,
-    } as unknown as ReturnType<typeof useDashboardMonthlyMedicationRecords>);
+      refetch: mockTodayRefetch,
+    } as unknown as ReturnType<typeof useDashboardTodayMedicationSchedules>);
 
     const { result } = renderHook(() => useDashboardViewModel());
 
@@ -103,25 +75,18 @@ describe("useDashboardViewModel", () => {
   });
 
   it("로딩/에러 상태를 반영하고 refetch를 병렬로 호출한다", async () => {
-    mockUseDashboardDailyMedicationRecords.mockReturnValue({
+    mockUseDashboardTodayMedicationSchedules.mockReturnValue({
       data: undefined,
       isLoading: true,
-      isError: false,
-      refetch: mockDailyRefetch,
-    } as unknown as ReturnType<typeof useDashboardDailyMedicationRecords>);
-    mockUseDashboardMonthlyMedicationRecords.mockReturnValue({
-      data: undefined,
-      isLoading: false,
       isError: true,
-      refetch: mockMonthlyRefetch,
-    } as unknown as ReturnType<typeof useDashboardMonthlyMedicationRecords>);
+      refetch: mockTodayRefetch,
+    } as unknown as ReturnType<typeof useDashboardTodayMedicationSchedules>);
 
     const { result } = renderHook(() => useDashboardViewModel());
 
     expect(result.current.isLoading).toBe(true);
     expect(result.current.isError).toBe(true);
     await result.current.refetch();
-    expect(mockDailyRefetch).toHaveBeenCalledTimes(1);
-    expect(mockMonthlyRefetch).toHaveBeenCalledTimes(1);
+    expect(mockTodayRefetch).toHaveBeenCalledTimes(1);
   });
 });

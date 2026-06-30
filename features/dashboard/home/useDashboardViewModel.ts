@@ -1,10 +1,7 @@
 import { useMemo } from "react";
 
-import {
-  useDashboardDailyMedicationRecords,
-  useDashboardMonthlyMedicationRecords,
-} from "@/api/queries/dashboard";
-import type { DailyMedicationRecordItem } from "@/api/types";
+import { useDashboardTodayMedicationSchedules } from "@/api/queries/dashboard";
+import type { TodayMedicationScheduleStatus } from "@/api/types";
 
 const LOCALE_DATE_FORMAT_OPTIONS = {
   year: "numeric",
@@ -45,13 +42,6 @@ export interface DashboardViewModel {
   readonly refetch: () => Promise<unknown>;
 }
 
-function formatDateToApiParam(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 function formatDateLabel(dateText: string): string {
   const parsedDate = new Date(dateText);
   if (Number.isNaN(parsedDate.getTime())) {
@@ -60,68 +50,61 @@ function formatDateLabel(dateText: string): string {
   return parsedDate.toLocaleDateString("ko-KR", LOCALE_DATE_FORMAT_OPTIONS).replace(/\.$/, "");
 }
 
-function resolveScheduleTone(status: DailyMedicationRecordItem["status"]): DashboardScheduleTone {
+function resolveScheduleTone(status: TodayMedicationScheduleStatus): DashboardScheduleTone {
   if (status === "SUCCESS") return "success";
-  if (status === "DUE" || status === "OVERDUE") return "required";
+  if (status === "NEED_TAKE" || status === "MISSED") return "required";
   return "upcoming";
 }
 
-function resolveStatusLabel(status: DailyMedicationRecordItem["status"]): string {
+function resolveStatusLabel(status: TodayMedicationScheduleStatus): string {
   if (status === "SUCCESS") return "완료";
-  if (status === "DUE" || status === "OVERDUE") return "복용 필요";
+  if (status === "NEED_TAKE") return "복용 필요";
+  if (status === "MISSED") return "미복용";
+  if (status === "SKIP") return "건너뜀";
   return "대기중";
 }
 
 export function useDashboardViewModel(): DashboardViewModel {
-  const today = formatDateToApiParam(new Date());
+  const todayScheduleQuery = useDashboardTodayMedicationSchedules();
 
-  const dailyQuery = useDashboardDailyMedicationRecords({ date: today });
-  const monthlyQuery = useDashboardMonthlyMedicationRecords({ date: today });
-
-  const adherenceRate = dailyQuery.data?.summary.totalCount
-    ? Math.round((dailyQuery.data.summary.takenCount / dailyQuery.data.summary.totalCount) * 100)
-    : 0;
-  const adherenceSummaryText = dailyQuery.data?.summary.fraction ?? "0 / 0 완료";
+  const adherenceRate = Math.round(todayScheduleQuery.data?.summary.completionRate ?? 0);
+  const adherenceSummaryText = todayScheduleQuery.data?.summary
+    ? `${todayScheduleQuery.data.summary.completedCount} / ${todayScheduleQuery.data.summary.totalCount} 완료`
+    : "0 / 0 완료";
 
   const scheduleCards = useMemo<readonly DashboardScheduleCardItem[]>(() => {
-    if (!dailyQuery.data) return [];
-    return dailyQuery.data.records.map((record) => ({
-      id: String(record.recordId),
-      scheduledTime: record.scheduledTime,
+    if (!todayScheduleQuery.data) return [];
+    return todayScheduleQuery.data.schedules.map((schedule) => ({
+      id: `${schedule.prescriptionId}-${schedule.takeTime}-${schedule.recordIds.join("-")}`,
+      scheduledTime: schedule.takeTime,
       prescriptionCount: 1,
-      prescriptionTitle: record.prescriptionTitle,
-      medicationCount: record.medicationNames.length,
-      medicationNames: record.medicationNames,
-      statusLabel: resolveStatusLabel(record.status),
-      tone: resolveScheduleTone(record.status),
+      prescriptionTitle: schedule.prescriptionTitle,
+      medicationCount: schedule.drugCount,
+      medicationNames: [],
+      statusLabel: resolveStatusLabel(schedule.status),
+      tone: resolveScheduleTone(schedule.status),
     }));
-  }, [dailyQuery.data]);
+  }, [todayScheduleQuery.data]);
 
   const scheduleRemainingCount = useMemo(() => {
     return scheduleCards.filter((card) => card.tone !== "success").length;
   }, [scheduleCards]);
 
   const recentPrescriptions = useMemo<readonly DashboardRecentPrescriptionItem[]>(() => {
-    if (!monthlyQuery.data) return [];
+    const responseDate = todayScheduleQuery.data?.date;
+    if (!responseDate || scheduleCards.length === 0) return [];
 
-    return monthlyQuery.data.records.slice(0, 3).map((group) => {
-      const medicationSet = new Set<string>();
-      group.items.forEach((item) => {
-        item.medicationNames.forEach((name) => {
-          medicationSet.add(name);
-        });
-      });
+    return [
+      {
+        id: responseDate,
+        dateLabel: formatDateLabel(responseDate),
+        analysisCount: scheduleCards.reduce((sum, card) => sum + card.medicationCount, 0),
+        hasWarning: scheduleCards.some((card) => card.tone === "required"),
+      },
+    ];
+  }, [scheduleCards, todayScheduleQuery.data?.date]);
 
-      return {
-        id: group.date,
-        dateLabel: formatDateLabel(group.date),
-        analysisCount: medicationSet.size,
-        hasWarning: group.items.some((item) => item.status === "OVERDUE" || item.status === "DUE"),
-      };
-    });
-  }, [monthlyQuery.data]);
-
-  const refetch = async () => Promise.all([dailyQuery.refetch(), monthlyQuery.refetch()]);
+  const refetch = async () => todayScheduleQuery.refetch();
 
   return {
     adherenceRate,
@@ -132,8 +115,8 @@ export function useDashboardViewModel(): DashboardViewModel {
     healthTipTitle: "건강 팁",
     healthTipDescription:
       "약은 충분한 물과 함께 복용하세요. 최소 200ml(컵 1잔) 이상의 물과 함께 드시면 효과가 더 좋아요.",
-    isLoading: dailyQuery.isLoading || monthlyQuery.isLoading,
-    isError: dailyQuery.isError || monthlyQuery.isError,
+    isLoading: todayScheduleQuery.isLoading,
+    isError: todayScheduleQuery.isError,
     refetch,
   };
 }
