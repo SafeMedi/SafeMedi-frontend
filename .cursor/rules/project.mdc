@@ -3,9 +3,9 @@ description: safeMedi 프로젝트 개요, 스택, 디렉터리 구조
 alwaysApply: true
 ---
 
-# safeMedi Frontend
+# safeMedi
 
-Expo Router 기반 React Native 앱 (Expo ~54, React Navigation, Tamagui).
+Expo Router · React Native · Tamagui · TanStack Query · Zustand.
 
 ## 명령어
 
@@ -17,13 +17,13 @@ Expo Router 기반 React Native 앱 (Expo ~54, React Navigation, Tamagui).
 | 테스트 | `yarn test` |
 | 커버리지 | `yarn test --coverage` (전역 60% threshold) |
 
-PR·머지 전 `yarn lint`와 `yarn test` 통과를 전제로 한다. Gradle/ktlint는 사용하지 않는다.
+PR·머지 전 `yarn lint`와 `yarn test` 통과를 전제로 한다.
 
 ## 디렉터리
 
-- `app/` — Expo Router 라우트만. 화면 로직은 `features/`에 둔다.
+- `app/` — Expo Router 라우트만 (Screen re-export). 화면 로직은 `features/`에 둔다.
 - `features/` — 도메인별 feature UI 루트
-- 표준 feature 구조는 `features/{feature}/`를 사용한다 (architecture 규칙과 동일).
+- 표준 feature 구조는 `features/{domain}/{feature}/`를 사용한다 (architecture 규칙과 동일).
 - `components/ui/` — 도메인 무관 공용 UI
 - `api/endpoints/` — fetch 함수
 - `api/queries/` — TanStack Query hooks
@@ -32,6 +32,10 @@ PR·머지 전 `yarn lint`와 `yarn test` 통과를 전제로 한다. Gradle/ktl
 - `stores/` — Zustand (session, user 등)
 - `hooks/` — 공용 hooks
 - `constants/` — design-tokens, api-config 등
+
+API 레이어는 `api/endpoints/` → `api/queries/` → `api/query-keys.ts` → `api/types/` 흐름을 따른다.
+서버 상태는 TanStack Query, 세션·전역 UI는 Zustand (`stores/`)로 관리한다.
+`api/mock/`은 테스트·로컬 전용이며 프로덕션 경로에 연결하지 않는다.
 
 ### 도메인 feature 템플릿
 
