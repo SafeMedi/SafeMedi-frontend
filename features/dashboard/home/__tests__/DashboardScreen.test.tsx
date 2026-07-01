@@ -21,6 +21,12 @@ jest.mock("../useDashboardViewModel", () => ({
   useDashboardViewModel: () => mockUseDashboardViewModel(),
 }));
 
+jest.mock("@/api/queries/notification", () => ({
+  useUnreadNotificationCount: () => ({
+    data: { unreadCount: 1 },
+  }),
+}));
+
 jest.mock("tamagui", () => {
   const React = require("react");
   const { Text, View } = require("react-native");
@@ -212,12 +218,12 @@ describe("DashboardScreen 통합 테스트", () => {
     expect(mockRouterPush).toHaveBeenCalledWith("/(detail)/scan/scan");
   });
 
-  it("알림 버튼 클릭 시 프로필 탭으로 이동한다", () => {
+  it("알림 버튼 클릭 시 알림 화면으로 이동한다", () => {
     const { getByLabelText } = render(<DashboardScreen />);
 
     fireEvent.press(getByLabelText("알림 버튼"));
 
-    expect(mockRouterPush).toHaveBeenCalledWith("/(tabs)/profile");
+    expect(mockRouterPush).toHaveBeenCalledWith("/(detail)/notifications");
   });
 
   it("최근 처방전 기록 클릭 시 prescriptionId를 상세 화면으로 전달한다", () => {
