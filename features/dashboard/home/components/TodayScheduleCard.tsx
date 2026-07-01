@@ -114,7 +114,7 @@ export function TodayScheduleCard({
         {item.prescriptions.map((prescription) => {
           const isExpanded = expandedPrescriptionIds.has(prescription.id);
           const medicationRows = medicationRowsByPrescription.get(prescription.id) ?? [];
-          const isTaking = takingPrescriptionId === prescription.id;
+          const isTakeDisabled = takingPrescriptionId !== null;
 
           return (
             <View
@@ -146,8 +146,8 @@ export function TodayScheduleCard({
                       <Pressable
                         accessibilityRole="button"
                         accessibilityLabel={`${prescription.prescriptionTitle} 복약 완료`}
-                        disabled={isTaking}
-                        style={[styles.takeButton, isTaking && styles.takeButtonDisabled]}
+                        disabled={isTakeDisabled}
+                        style={[styles.takeButton, isTakeDisabled && styles.takeButtonDisabled]}
                         onPress={() => onPressTake(prescription)}
                       >
                         <Ionicons name="checkmark" size={18} color={palette.green_deep} />
