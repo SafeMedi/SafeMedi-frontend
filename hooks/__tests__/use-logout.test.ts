@@ -4,11 +4,21 @@ import { useLogout } from "@/hooks/use-logout";
 const mockRemoveQueries = jest.fn();
 const mockClearSession = jest.fn();
 const mockClearUser = jest.fn();
+const mockDeleteDeviceToken = jest.fn();
 
 jest.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({
     removeQueries: mockRemoveQueries,
   }),
+}));
+
+jest.mock("@/api/endpoints/device-token", () => ({
+  deleteDeviceToken: (...args: unknown[]) => mockDeleteDeviceToken(...args),
+}));
+
+jest.mock("@/hooks/push-notification-token-store", () => ({
+  getRegisteredDeviceToken: () => "mock-device-token",
+  clearRegisteredDeviceToken: jest.fn(),
 }));
 
 jest.mock("@/stores/sessionStore", () => ({
@@ -24,15 +34,17 @@ jest.mock("@/stores/userStore", () => ({
 describe("useLogout", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockDeleteDeviceToken.mockResolvedValue({ message: "ok" });
   });
 
-  it("세션, 사용자, 인증 스코프 query cache를 정리한다", () => {
+  it("세션, 사용자, 인증 스코프 query cache를 정리한다", async () => {
     const { result } = renderHook(() => useLogout());
 
-    act(() => {
-      result.current();
+    await act(async () => {
+      await result.current();
     });
 
+    expect(mockDeleteDeviceToken).toHaveBeenCalledWith({ deviceToken: "mock-device-token" });
     expect(mockClearSession).toHaveBeenCalledTimes(1);
     expect(mockClearUser).toHaveBeenCalledTimes(1);
     expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["user", "me"] });
@@ -42,6 +54,7 @@ describe("useLogout", () => {
     expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["prescriptions"] });
     expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["scan"] });
     expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["map"] });
-    expect(mockRemoveQueries).toHaveBeenCalledTimes(7);
+    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["notification"] });
+    expect(mockRemoveQueries).toHaveBeenCalledTimes(8);
   });
 });

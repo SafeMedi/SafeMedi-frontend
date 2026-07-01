@@ -3,6 +3,7 @@ import { ActivityIndicator, ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
 
+import { useUnreadNotificationCount } from "@/api/queries/notification";
 import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
 import { AdherenceSummaryCard } from "./components/AdherenceSummaryCard";
@@ -16,13 +17,15 @@ import { useDashboardViewModel } from "./useDashboardViewModel";
 export function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const viewModel = useDashboardViewModel();
+  const unreadCountQuery = useUnreadNotificationCount();
+  const hasUnreadNotification = (unreadCountQuery.data?.unreadCount ?? 0) > 0;
 
   const handlePressScan = () => {
     router.push("/(detail)/scan/scan");
   };
 
   const handlePressNotification = () => {
-    router.push("/(tabs)/profile");
+    router.push("/(detail)/notifications");
   };
 
   const handlePressRecentPrescriptionItem = (prescriptionId: number) => {
@@ -39,7 +42,10 @@ export function DashboardScreen() {
       showsVerticalScrollIndicator={false}
     >
       <YStack gap={14}>
-        <DashboardTopHeader onPressNotification={handlePressNotification} hasUnreadNotification />
+        <DashboardTopHeader
+          onPressNotification={handlePressNotification}
+          hasUnreadNotification={hasUnreadNotification}
+        />
         <ScanPrescriptionCard onPress={handlePressScan} />
 
         {viewModel.isLoading ? (

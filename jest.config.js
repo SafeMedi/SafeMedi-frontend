@@ -11,6 +11,7 @@ module.exports = {
     "!<rootDir>/**/types.ts",
     "!<rootDir>/coverage/**",
     "!<rootDir>/api/mock/**",
+    "!<rootDir>/plugins/**",
     "!<rootDir>/scripts/**",
     "!<rootDir>/tests/**",
     "!<rootDir>/babel.config.js",

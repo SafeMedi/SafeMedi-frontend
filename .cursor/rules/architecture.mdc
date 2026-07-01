@@ -11,7 +11,7 @@ alwaysApply: true
 
 ```tsx
 // app/(tabs)/dashboard.tsx — 패턴 예시
-import { DashboardScreen } from "@/components/domains/dashboard/home/DashboardScreen";
+import { DashboardScreen } from "@/features/dashboard/home/DashboardScreen";
 
 export default function DashboardTabRoute() {
   return <DashboardScreen />;
@@ -54,7 +54,7 @@ features/{domain}/{feature}/
 - `view/` 같은 별도 레이어는 기본 구조로 강제하지 않는다.
 - 파일명은 `XxxScreen.tsx` 같은 placeholder를 사용하지 않고 기능 의미가 드러나는 이름을 사용한다.
 
-features 예: `dashboard`, `profile`, `family`, `scan`, `auth`, `tutorial`.
+features 예: `features/manage/medication-management`, `features/profile/edit`.
 
 ## 상태
 
