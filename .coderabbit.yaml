@@ -11,8 +11,9 @@ tone_instructions: >
 reviews:
   profile: chill # chill=가벼운 피드백 / assertive=세밀·다량 피드백
   request_changes_workflow: true # true면 pre-merge 실패 시 GitHub "Changes requested" 요청
-  high_level_summary: true # PR 설명 또는 walkthrough에 변경 사항 고수준 요약 생성
-  high_level_summary_placeholder: '@coderabbitai summary'  # 요약 삽입 위치 placeholder (기본값)
+  high_level_summary: true # 변경 사항 고수준 요약 생성
+  high_level_summary_in_walkthrough: true # 요약을 PR 본문이 아닌 walkthrough 댓글 상단에 표시
+  high_level_summary_placeholder: '@coderabbitai summary'  # 본문 placeholder (in_walkthrough 사용 시 미사용)
   review_status: true # 리뷰 진행·스킵 등 상태 메시지를 walkthrough에 표시
   review_details: false # true면 무시된 파일·추가 컨텍스트 등 상세 디버그 정보 표시
   poem: false # walkthrough에 시(유머) 생성 여부
