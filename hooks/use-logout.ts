@@ -31,8 +31,11 @@ export function useLogout() {
     if (deviceToken) {
       try {
         await deleteDeviceToken({ deviceToken });
-      } catch {
+      } catch (error) {
         // 토큰 해제 실패는 로그아웃 진행을 막지 않음
+        if (__DEV__) {
+          console.error("토큰 해제 실패", error);
+        }
       }
       clearRegisteredDeviceToken();
     }
