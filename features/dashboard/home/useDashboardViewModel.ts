@@ -228,7 +228,7 @@ export function useDashboardViewModel(): DashboardViewModel {
     if (!prescription.canMarkAsTaken || takingPrescriptionId !== null) return;
 
     setTakingPrescriptionId(prescription.id);
-    void Promise.all(
+    void Promise.allSettled(
       prescription.recordIds.map((recordId) =>
         updateMedicationRecordMutation.mutateAsync({
           recordId,
@@ -236,9 +236,20 @@ export function useDashboardViewModel(): DashboardViewModel {
         }),
       ),
     )
-      .then(() => refetch())
-      .catch(() => {
-        Alert.alert("복약 처리 실패", "복약 완료 처리 중 오류가 발생했습니다.");
+      .then(async (results) => {
+        const fulfilledCount = results.filter((result) => result.status === "fulfilled").length;
+        const rejectedCount = results.length - fulfilledCount;
+
+        if (rejectedCount > 0 && fulfilledCount > 0) {
+          Alert.alert(
+            "복약 처리 일부 실패",
+            `${results.length}건 중 ${fulfilledCount}건은 완료되었으나 ${rejectedCount}건에서 오류가 발생했습니다.`,
+          );
+        } else if (rejectedCount > 0) {
+          Alert.alert("복약 처리 실패", "복약 완료 처리 중 오류가 발생했습니다.");
+        }
+
+        await refetch();
       })
       .finally(() => setTakingPrescriptionId(null));
   };

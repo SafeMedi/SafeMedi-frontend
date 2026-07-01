@@ -1,4 +1,5 @@
 import { act, renderHook } from "@testing-library/react-native";
+import { Alert } from "react-native";
 import {
   useDashboardTodayMedicationSchedules,
   useUpdateMedicationRecordMutation,
@@ -29,6 +30,7 @@ jest.mock("@/api/queries/dashboard", () => ({
 jest.mock("@/api/queries/prescriptions", () => ({
   usePrescriptionsQuery: jest.fn(),
 }));
+jest.spyOn(Alert, "alert").mockImplementation(() => {});
 
 describe("useDashboardViewModel", () => {
   beforeEach(() => {
@@ -296,6 +298,90 @@ describe("useDashboardViewModel", () => {
       recordId: 501,
       body: { status: "SUCCESS" },
     });
+  });
+
+  it("일부 recordId만 실패하면 부분 실패 알림을 표시하고 데이터를 갱신한다", async () => {
+    mockMutateAsync.mockResolvedValueOnce({}).mockRejectedValueOnce(new Error("network error"));
+    mockUseDashboardTodayMedicationSchedules.mockReturnValue({
+      data: {
+        date: "2026-05-19",
+        summary: { totalCount: 2, completedCount: 0, completionRate: 0 },
+        schedules: [
+          {
+            takeTime: "08:00",
+            prescriptionTitle: "아침약",
+            prescriptionId: 1,
+            drugCount: 2,
+            drugNames: ["타이레놀", "오메프라졸"],
+            recordIds: [1, 2],
+            displayStatus: "NEED_TAKE",
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: mockTodayRefetch,
+    } as unknown as ReturnType<typeof useDashboardTodayMedicationSchedules>);
+
+    const { result } = renderHook(() => useDashboardViewModel());
+    const prescription = result.current.scheduleCards[0]?.prescriptions[0];
+    expect(prescription).toBeDefined();
+    if (!prescription) return;
+
+    await act(async () => {
+      result.current.markPrescriptionAsTaken(prescription);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      "복약 처리 일부 실패",
+      "2건 중 1건은 완료되었으나 1건에서 오류가 발생했습니다.",
+    );
+    expect(mockTodayRefetch).toHaveBeenCalledTimes(1);
+    expect(mockPrescriptionsRefetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("모든 recordId가 실패하면 실패 알림을 표시하고 데이터를 갱신한다", async () => {
+    mockMutateAsync.mockRejectedValue(new Error("network error"));
+    mockUseDashboardTodayMedicationSchedules.mockReturnValue({
+      data: {
+        date: "2026-05-19",
+        summary: { totalCount: 2, completedCount: 0, completionRate: 0 },
+        schedules: [
+          {
+            takeTime: "08:00",
+            prescriptionTitle: "아침약",
+            prescriptionId: 1,
+            drugCount: 2,
+            drugNames: ["타이레놀", "오메프라졸"],
+            recordIds: [1, 2],
+            displayStatus: "NEED_TAKE",
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: mockTodayRefetch,
+    } as unknown as ReturnType<typeof useDashboardTodayMedicationSchedules>);
+
+    const { result } = renderHook(() => useDashboardViewModel());
+    const prescription = result.current.scheduleCards[0]?.prescriptions[0];
+    expect(prescription).toBeDefined();
+    if (!prescription) return;
+
+    await act(async () => {
+      result.current.markPrescriptionAsTaken(prescription);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      "복약 처리 실패",
+      "복약 완료 처리 중 오류가 발생했습니다.",
+    );
+    expect(mockTodayRefetch).toHaveBeenCalledTimes(1);
+    expect(mockPrescriptionsRefetch).toHaveBeenCalledTimes(1);
   });
 
   it("로딩/에러 상태를 반영하고 refetch를 병렬로 호출한다", async () => {
