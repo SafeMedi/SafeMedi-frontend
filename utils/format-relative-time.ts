@@ -55,6 +55,10 @@ export function formatNotificationRelativeTime(
     return `오늘 ${formatTimeOfDay(parsed)}`;
   }
 
+  if (dayDiff <= 0) {
+    return "방금 전";
+  }
+
   if (dayDiff === 1) {
     return "어제";
   }
