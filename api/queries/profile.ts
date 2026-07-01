@@ -34,7 +34,9 @@ export function useUpdateNotificationSettings() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (
-      body: Partial<Pick<NotificationSettings, "isMyReminderOn" | "isFamilyReminderOn">>,
+      body: Partial<
+        Pick<NotificationSettings, "isMyReminderOn" | "isFamilyReminderOn" | "isMissedAlertOn">
+      >,
     ) => patchNotificationSettings(body),
     onMutate: async (patch) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.profile.notificationSettings });

@@ -12,13 +12,11 @@ export type NotificationType =
 /** 알림 이동 대상 유형 */
 export type NotificationTargetType = "MEDICATION_RECORD" | "PRESCRIPTION" | "REPORT";
 
-/** PATCH /api/v1/notifications/settings 응답 */
+/** GET/PATCH /api/v1/users/notification-settings 응답 */
 export type NotificationSettings = {
-  userId: number;
   isMyReminderOn: boolean;
   isFamilyReminderOn: boolean;
   isMissedAlertOn: boolean;
-  updatedAt: string;
 };
 
 /** GET /api/v1/notifications content 항목 */

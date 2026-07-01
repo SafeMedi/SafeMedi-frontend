@@ -33,5 +33,5 @@ export const apiPaths = {
   notificationsReadAll: "/api/v1/notifications/read-all",
   notificationRead: (notificationId: number | string) =>
     `/api/v1/notifications/${notificationId}/read`,
-  notificationsSettings: "/api/v1/notifications/settings",
+  notificationsSettings: "/api/v1/users/notification-settings",
 } as const;

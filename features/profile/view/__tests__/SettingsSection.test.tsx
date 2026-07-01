@@ -4,9 +4,12 @@ import { SettingsSection } from "../components/SettingsSection";
 const mockMutate = jest.fn();
 const mockPrivacyPress = jest.fn();
 
-let mockSettings: { isMyReminderOn: boolean; isFamilyReminderOn: boolean } | undefined = {
+let mockSettings:
+  | { isMyReminderOn: boolean; isFamilyReminderOn: boolean; isMissedAlertOn: boolean }
+  | undefined = {
   isMyReminderOn: true,
   isFamilyReminderOn: false,
+  isMissedAlertOn: true,
 };
 let mockIsPending = false;
 
@@ -91,6 +94,7 @@ describe("SettingsSection", () => {
     mockSettings = {
       isMyReminderOn: true,
       isFamilyReminderOn: false,
+      isMissedAlertOn: true,
     };
   });
 
@@ -102,6 +106,9 @@ describe("SettingsSection", () => {
 
     fireEvent.press(getByLabelText("가족 알림 토글"));
     expect(mockMutate).toHaveBeenCalledWith({ isFamilyReminderOn: true });
+
+    fireEvent.press(getByLabelText("미복용 알림 토글"));
+    expect(mockMutate).toHaveBeenCalledWith({ isMissedAlertOn: false });
   });
 
   it("개인정보 보호 행 클릭 시 onPrivacyPress를 호출한다", () => {
@@ -116,7 +123,7 @@ describe("SettingsSection", () => {
     fireEvent.press(getByLabelText("복약 알림 토글"));
     expect(mockMutate).not.toHaveBeenCalled();
 
-    mockSettings = { isMyReminderOn: true, isFamilyReminderOn: false };
+    mockSettings = { isMyReminderOn: true, isFamilyReminderOn: false, isMissedAlertOn: true };
     mockIsPending = true;
     rerender(<SettingsSection />);
     fireEvent.press(getByLabelText("복약 알림 토글"));

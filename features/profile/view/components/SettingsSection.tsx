@@ -18,10 +18,16 @@ export function SettingsSection({ onPrivacyPress }: SettingsSectionProps) {
   const isSettingsReady = !!settings;
   const medicationAlarm = settings?.isMyReminderOn ?? true;
   const familyAlarm = settings?.isFamilyReminderOn ?? true;
+  const missedAlarm = settings?.isMissedAlertOn ?? true;
   const isToggleDisabled = isUpdatingSettings || !isSettingsReady;
 
-  const handleToggleSetting = (key: "isMyReminderOn" | "isFamilyReminderOn", next: boolean) => {
-    const patch: Partial<Pick<NotificationSettings, "isMyReminderOn" | "isFamilyReminderOn">> = {
+  const handleToggleSetting = (
+    key: "isMyReminderOn" | "isFamilyReminderOn" | "isMissedAlertOn",
+    next: boolean,
+  ) => {
+    const patch: Partial<
+      Pick<NotificationSettings, "isMyReminderOn" | "isFamilyReminderOn" | "isMissedAlertOn">
+    > = {
       [key]: next,
     };
     updateSettings(patch);
@@ -55,6 +61,20 @@ export function SettingsSection({ onPrivacyPress }: SettingsSectionProps) {
               onValueChange={(next) => handleToggleSetting("isFamilyReminderOn", next)}
               disabled={isToggleDisabled}
               accessibilityLabel="가족 알림 토글"
+            />
+          }
+          hasBorderBottom
+        />
+        <ListLinkRow
+          icon={<Ionicons name="warning-outline" size={18} color={palette.red_strong} />}
+          title="미복용 알림"
+          subtitle="복약을 놓치면 알림을 받습니다"
+          trailing={
+            <ToggleSwitch
+              value={missedAlarm}
+              onValueChange={(next) => handleToggleSetting("isMissedAlertOn", next)}
+              disabled={isToggleDisabled}
+              accessibilityLabel="미복용 알림 토글"
             />
           }
           hasBorderBottom
