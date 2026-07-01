@@ -21,6 +21,17 @@ type EventSubscription = {
   remove: () => void;
 };
 
+export type PushTokenRegistrationResult =
+  | { readonly status: "registered" }
+  | {
+      readonly status: "skipped";
+      readonly reason:
+        | "native-module-unavailable"
+        | "ios-simulator"
+        | "ios-remote-push-disabled"
+        | "device-token-unavailable";
+    };
+
 const NOOP_SUBSCRIPTION: EventSubscription = { remove: () => {} };
 const EXPO_PUSH_TOKEN_NATIVE_MODULE = "ExpoPushTokenManager";
 
@@ -77,20 +88,12 @@ function loadNotificationsModule(): ExpoNotificationsModule | null {
 }
 
 export function isPushNotificationsNativeModuleAvailable(): boolean {
-  return Constants.isDevice && isPushTokenNativeModuleAvailable();
-}
-
-function getDeviceType(): DeviceType {
-  return Platform.OS === "ios" ? "IOS" : "ANDROID";
-}
-
-function isPhysicalDevice(): boolean {
-  return Constants.isDevice;
+  return isPushTokenNativeModuleAvailable();
 }
 
 export async function requestPushNotificationPermissions(): Promise<boolean> {
   const notifications = loadNotificationsModule();
-  if (!notifications || !isPhysicalDevice()) {
+  if (!notifications) {
     return false;
   }
 
@@ -105,7 +108,7 @@ export async function requestPushNotificationPermissions(): Promise<boolean> {
 
 export async function getDevicePushToken(): Promise<string | null> {
   const notifications = loadNotificationsModule();
-  if (!notifications || !isPhysicalDevice()) {
+  if (!notifications) {
     return null;
   }
 
@@ -131,25 +134,30 @@ export async function getDevicePushToken(): Promise<string | null> {
 
 export async function registerPushTokenWithBackend(
   registerFn: (body: { deviceToken: string; deviceType: DeviceType }) => Promise<unknown>,
-): Promise<void> {
+): Promise<PushTokenRegistrationResult> {
   if (!isPushNotificationsNativeModuleAvailable()) {
-    return;
+    return { status: "skipped", reason: "native-module-unavailable" };
+  }
+
+  if (Platform.OS === "ios" && !Constants.isDevice) {
+    return { status: "skipped", reason: "ios-simulator" };
   }
 
   // iOS 원격 푸시는 유료 Apple Developer + APNs 설정 후 활성화
   if (Platform.OS === "ios" && process.env.EXPO_PUBLIC_IOS_ENABLE_REMOTE_PUSH !== "true") {
-    return;
+    return { status: "skipped", reason: "ios-remote-push-disabled" };
   }
 
   const deviceToken = await getDevicePushToken();
   if (!deviceToken) {
-    return;
+    return { status: "skipped", reason: "device-token-unavailable" };
   }
 
   await registerFn({
     deviceToken,
-    deviceType: getDeviceType(),
+    deviceType: Platform.OS === "ios" ? "IOS" : "ANDROID",
   });
+  return { status: "registered" };
 }
 
 export function addNotificationReceivedListener(listener: NotificationListener): EventSubscription {

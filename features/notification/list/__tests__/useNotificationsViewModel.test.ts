@@ -29,6 +29,16 @@ jest.mock("@/api/queries/notification", () => ({
           targetId: 100,
           createdAt: "2026-04-07T08:50:00",
         },
+        {
+          notificationId: 2,
+          type: "MEDICATION_COMPLETED",
+          title: "복약 완료",
+          message: "이미 읽은 알림",
+          isRead: true,
+          targetType: "MEDICATION_RECORD",
+          targetId: 101,
+          createdAt: "2026-04-07T07:00:00",
+        },
       ],
     },
     isLoading: false,
@@ -55,7 +65,7 @@ describe("useNotificationsViewModel", () => {
   it("알림 목록과 미읽음 개수를 반환한다", () => {
     const { result } = renderHook(() => useNotificationsViewModel());
 
-    expect(result.current.items).toHaveLength(1);
+    expect(result.current.items).toHaveLength(2);
     expect(result.current.unreadCount).toBe(1);
   });
 
@@ -82,6 +92,16 @@ describe("useNotificationsViewModel", () => {
     result.current.handlePressNotification(item);
 
     expect(mockMarkRead).toHaveBeenCalledWith(1);
+    expect(mockRouterPush).toHaveBeenCalledWith("/(tabs)/dashboard");
+  });
+
+  it("이미 읽은 알림 클릭 시 읽음 처리는 생략하고 대상 화면으로 이동한다", () => {
+    const { result } = renderHook(() => useNotificationsViewModel());
+    const item = result.current.items[1];
+
+    result.current.handlePressNotification(item);
+
+    expect(mockMarkRead).not.toHaveBeenCalled();
     expect(mockRouterPush).toHaveBeenCalledWith("/(tabs)/dashboard");
   });
 });

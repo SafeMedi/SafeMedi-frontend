@@ -24,6 +24,16 @@ jest.mock("../useNotificationsViewModel", () => ({
         targetId: 500,
         createdAt: "2026-04-07T08:50:00",
       },
+      {
+        notificationId: 2,
+        type: "MEDICATION_COMPLETED",
+        title: "복약 완료",
+        message: "타이레놀정 500mg 복용을 완료했어요",
+        isRead: true,
+        targetType: "MEDICATION_RECORD",
+        targetId: 501,
+        createdAt: "2026-04-07T07:00:00",
+      },
     ],
     unreadCount: 1,
     isLoading: false,
@@ -76,6 +86,7 @@ describe("NotificationsScreen", () => {
     expect(getByText("알림")).toBeTruthy();
     expect(getByText("1개의 새 알림")).toBeTruthy();
     expect(getByText("약 복용 시간입니다")).toBeTruthy();
+    expect(getByText("복약 완료")).toBeTruthy();
   });
 
   it("모두 읽음 버튼 클릭 시 핸들러를 호출한다", () => {

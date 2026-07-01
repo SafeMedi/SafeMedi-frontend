@@ -10,6 +10,19 @@ import {
 import { useSessionHydrated } from "@/hooks/use-session-hydrated";
 import { useSessionStore } from "@/stores/sessionStore";
 
+function warnPushTokenRegistration(message: string, error?: unknown): void {
+  if (!__DEV__) {
+    return;
+  }
+
+  if (error instanceof Error) {
+    console.warn(`[PushNotificationSync] ${message}: ${error.message}`);
+    return;
+  }
+
+  console.warn(`[PushNotificationSync] ${message}`);
+}
+
 /**
  * 로그인 후 FCM 디바이스 토큰을 서버에 등록하고, 푸시 수신 시 알림 쿼리를 갱신합니다.
  */
@@ -28,9 +41,16 @@ export function PushNotificationSync() {
     void registerPushTokenWithBackend(async (body) => {
       if (cancelled) return;
       await postDeviceToken(body);
-    }).catch(() => {
-      // 권한 거부·시뮬레이터 등은 조용히 무시
-    });
+    })
+      .then((result) => {
+        if (cancelled || result.status === "registered") {
+          return;
+        }
+        warnPushTokenRegistration(`FCM 디바이스 토큰 등록 스킵 (${result.reason})`);
+      })
+      .catch((error: unknown) => {
+        warnPushTokenRegistration("FCM 디바이스 토큰 등록 실패", error);
+      });
 
     const invalidateNotifications = () => {
       void queryClient.invalidateQueries({ queryKey: ["notification"] });
