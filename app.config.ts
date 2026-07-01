@@ -92,6 +92,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "./plugins/withIosNetworkSessionFix.js",
       "./plugins/withIosKakaoAppDelegateFix.js",
       ...existingPlugins,
+      "./plugins/withIosPushDisabled.js",
       [
         KAKAO_LOGIN_PLUGIN_NAME,
         {

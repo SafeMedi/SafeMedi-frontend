@@ -6,6 +6,7 @@ import "react-native-reanimated";
 import { TamaguiProvider } from "tamagui";
 
 import { ProfileSync } from "@/components/ProfileSync";
+import { PushNotificationSync } from "@/components/PushNotificationSync";
 import { palette } from "@/constants/design-tokens";
 import { tamaguiConfig } from "../tamagui.config";
 
@@ -38,6 +39,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <ProfileSync />
+      <PushNotificationSync />
       <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
         <ThemeProvider value={navigationLight}>
           <Stack>

@@ -40,6 +40,15 @@ jest.mock("@/stores/userStore", () => ({
   useHealthInfo: () => ({ allergies: ["아스피린"], chronicConditions: ["천식"] }),
 }));
 
+jest.mock("@/api/endpoints/device-token", () => ({
+  deleteDeviceToken: jest.fn(async () => ({ message: "ok" })),
+}));
+
+jest.mock("@/hooks/push-notification-token-store", () => ({
+  getRegisteredDeviceToken: () => null,
+  clearRegisteredDeviceToken: jest.fn(),
+}));
+
 jest.mock("@/api/queries/profile", () => ({
   useFamilyProfiles: () => ({ data: [] }),
 }));
@@ -150,7 +159,8 @@ describe("프로필 기본 화면", () => {
     expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["prescriptions"] });
     expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["scan"] });
     expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["map"] });
-    expect(mockRemoveQueries).toHaveBeenCalledTimes(7);
+    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["notification"] });
+    expect(mockRemoveQueries).toHaveBeenCalledTimes(8);
   });
 
   it("건강 정보 상세보기 클릭 시 건강정보 상세 페이지로 이동한다", () => {
