@@ -19,7 +19,6 @@ import {
   validateMedicationEditDraft,
 } from "./medicationEditModel";
 import {
-  buildUpdatedMedicationsAfterDelete,
   isPrescriptionExpanded,
   type MedicationManagementViewModel,
   mapPrescriptionsToManagementGroups,
@@ -34,6 +33,8 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
   const [collapsedPrescriptionIds, setCollapsedPrescriptionIds] = useState<ReadonlySet<number>>(
     () => new Set<number>(),
   );
+  const [editingPrescriptionId, setEditingPrescriptionId] = useState<number | null>(null);
+  const [prescriptionTitleDraft, setPrescriptionTitleDraft] = useState("");
   const [editingMedicationKey, setEditingMedicationKey] = useState<MedicationEditKey | null>(null);
   const [editDraft, setEditDraft] = useState<MedicationEditDraft | null>(null);
 
@@ -45,6 +46,13 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
   );
 
   const isSaveEditEnabled = useMemo(() => isMedicationEditDraftSavable(editDraft), [editDraft]);
+  const isPrescriptionTitleSaveEnabled = useMemo(() => {
+    const currentPrescription = prescriptions.find(
+      (item) => item.prescriptionId === editingPrescriptionId,
+    );
+    const nextTitle = prescriptionTitleDraft.trim();
+    return !!currentPrescription && nextTitle.length > 0 && nextTitle !== currentPrescription.title;
+  }, [editingPrescriptionId, prescriptionTitleDraft, prescriptions]);
 
   const handleTogglePrescriptionExpanded = useCallback((prescriptionId: number) => {
     setCollapsedPrescriptionIds((currentIds) =>
@@ -55,6 +63,11 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
   const checkPrescriptionExpanded = useCallback(
     (prescriptionId: number) => isPrescriptionExpanded(collapsedPrescriptionIds, prescriptionId),
     [collapsedPrescriptionIds],
+  );
+
+  const checkPrescriptionTitleEditing = useCallback(
+    (prescriptionId: number) => editingPrescriptionId === prescriptionId,
+    [editingPrescriptionId],
   );
 
   const checkMedicationEditing = useCallback(
@@ -68,6 +81,78 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
     setEditDraft(null);
   }, []);
 
+  const handleCancelEditPrescriptionTitle = useCallback(() => {
+    setEditingPrescriptionId(null);
+    setPrescriptionTitleDraft("");
+  }, []);
+
+  const handleStartEditPrescriptionTitle = useCallback(
+    (prescriptionId: number) => {
+      const prescription = prescriptions.find((item) => item.prescriptionId === prescriptionId);
+      if (!prescription) {
+        return;
+      }
+
+      handleCancelEditMedication();
+      setCollapsedPrescriptionIds((currentIds) => {
+        if (!currentIds.has(prescriptionId)) {
+          return currentIds;
+        }
+        const nextIds = new Set(currentIds);
+        nextIds.delete(prescriptionId);
+        return nextIds;
+      });
+      setEditingPrescriptionId(prescriptionId);
+      setPrescriptionTitleDraft(prescription.title);
+    },
+    [handleCancelEditMedication, prescriptions],
+  );
+
+  const handleSavePrescriptionTitle = useCallback(() => {
+    if (editingPrescriptionId === null) {
+      return;
+    }
+
+    const nextTitle = prescriptionTitleDraft.trim();
+    if (nextTitle.length === 0) {
+      Alert.alert("입력 확인", "처방전 이름을 입력해주세요.");
+      return;
+    }
+
+    const prescription = prescriptions.find(
+      (item) => item.prescriptionId === editingPrescriptionId,
+    );
+    if (!prescription) {
+      return;
+    }
+
+    if (nextTitle === prescription.title) {
+      handleCancelEditPrescriptionTitle();
+      return;
+    }
+
+    updatePrescriptionMutation.mutate(
+      {
+        prescriptionId: editingPrescriptionId,
+        body: { title: nextTitle },
+      },
+      {
+        onSuccess: () => {
+          handleCancelEditPrescriptionTitle();
+        },
+        onError: () => {
+          Alert.alert("저장 실패", "처방전 이름 수정에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        },
+      },
+    );
+  }, [
+    editingPrescriptionId,
+    handleCancelEditPrescriptionTitle,
+    prescriptionTitleDraft,
+    prescriptions,
+    updatePrescriptionMutation,
+  ]);
+
   const handleStartEditMedication = useCallback(
     (prescriptionId: number, medicationId: number) => {
       const prescription = prescriptions.find((item) => item.prescriptionId === prescriptionId);
@@ -80,10 +165,11 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
         return;
       }
 
+      handleCancelEditPrescriptionTitle();
       setEditingMedicationKey(createMedicationEditKey(prescriptionId, medicationId));
       setEditDraft(nextDraft);
     },
-    [prescriptions],
+    [handleCancelEditPrescriptionTitle, prescriptions],
   );
 
   const handleToggleEditTakeSlot = useCallback((slot: MedicationTakeSlot) => {
@@ -136,55 +222,13 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
     );
   }, [editDraft, editingMedicationKey, prescriptions, updatePrescriptionMutation]);
 
-  const handleDeleteMedication = useCallback(
-    (prescriptionId: number, medicationId: number, drugName: string) => {
-      if (isMedicationEditing(editingMedicationKey, prescriptionId, medicationId)) {
-        handleCancelEditMedication();
-      }
-
-      const prescription = prescriptions.find((item) => item.prescriptionId === prescriptionId);
-      if (!prescription) {
-        return;
-      }
-
-      Alert.alert("약물 삭제", `'${drugName}' 약물을 삭제할까요?`, [
-        { text: "취소", style: "cancel" },
-        {
-          text: "삭제",
-          style: "destructive",
-          onPress: () => {
-            const updatedMedications = buildUpdatedMedicationsAfterDelete(
-              prescription,
-              medicationId,
-            );
-
-            if (updatedMedications.length > 0) {
-              Alert.alert(
-                "삭제 불가",
-                "현재 API는 개별 약물 삭제를 지원하지 않습니다. 처방전 전체 삭제 후 다시 등록해주세요.",
-              );
-              return;
-            }
-
-            if (updatedMedications.length === 0) {
-              deletePrescriptionMutation.mutate(prescriptionId, {
-                onError: () => {
-                  Alert.alert("삭제 실패", "약물 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.");
-                },
-              });
-              return;
-            }
-          },
-        },
-      ]);
-    },
-    [deletePrescriptionMutation, editingMedicationKey, handleCancelEditMedication, prescriptions],
-  );
-
   const handleDeletePrescription = useCallback(
     (prescriptionId: number, title: string) => {
       if (editingMedicationKey?.prescriptionId === prescriptionId) {
         handleCancelEditMedication();
+      }
+      if (editingPrescriptionId === prescriptionId) {
+        handleCancelEditPrescriptionTitle();
       }
 
       Alert.alert("처방전 삭제", `'${title}' 처방전과 예정된 복약 스케줄을 삭제할까요?`, [
@@ -202,26 +246,39 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
         },
       ]);
     },
-    [deletePrescriptionMutation, editingMedicationKey, handleCancelEditMedication],
+    [
+      deletePrescriptionMutation,
+      editingMedicationKey,
+      editingPrescriptionId,
+      handleCancelEditMedication,
+      handleCancelEditPrescriptionTitle,
+    ],
   );
 
   return {
     prescriptionGroups,
     isPrescriptionExpanded: checkPrescriptionExpanded,
+    editingPrescriptionId,
+    prescriptionTitleDraft,
     editingMedicationKey,
     editDraft,
     isMedicationEditing: checkMedicationEditing,
+    isPrescriptionTitleEditing: checkPrescriptionTitleEditing,
+    isPrescriptionTitleSaveEnabled,
     isSaveEditEnabled,
     isLoading: prescriptionsQuery.isLoading,
     isError: prescriptionsQuery.isError,
     isMutating: updatePrescriptionMutation.isPending || deletePrescriptionMutation.isPending,
     refetch: () => prescriptionsQuery.refetch(),
     togglePrescriptionExpanded: handleTogglePrescriptionExpanded,
+    startEditPrescriptionTitle: handleStartEditPrescriptionTitle,
+    changePrescriptionTitleDraft: setPrescriptionTitleDraft,
+    cancelEditPrescriptionTitle: handleCancelEditPrescriptionTitle,
+    savePrescriptionTitle: handleSavePrescriptionTitle,
     startEditMedication: handleStartEditMedication,
     cancelEditMedication: handleCancelEditMedication,
     toggleEditTakeSlot: handleToggleEditTakeSlot,
     saveEditMedication: handleSaveEditMedication,
-    handleDeleteMedication,
     handleDeletePrescription,
   };
 }

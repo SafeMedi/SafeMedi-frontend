@@ -24,9 +24,17 @@ const ITEMS: readonly DashboardScheduleCardItem[] = [
     id: "1",
     scheduledTime: "08:00",
     prescriptionCount: 1,
-    prescriptionTitle: "아침",
-    medicationCount: 1,
-    medicationNames: ["타이레놀"],
+    prescriptions: [
+      {
+        id: "1-08:00-1",
+        prescriptionId: 1,
+        prescriptionTitle: "아침",
+        medicationCount: 1,
+        medicationNames: ["타이레놀"],
+        recordIds: [1],
+        canMarkAsTaken: false,
+      },
+    ],
     statusLabel: "완료",
     tone: "success",
   },
@@ -34,21 +42,38 @@ const ITEMS: readonly DashboardScheduleCardItem[] = [
     id: "2",
     scheduledTime: "20:00",
     prescriptionCount: 1,
-    prescriptionTitle: "저녁",
-    medicationCount: 1,
-    medicationNames: ["아목시실린"],
+    prescriptions: [
+      {
+        id: "2-20:00-2",
+        prescriptionId: 2,
+        prescriptionTitle: "저녁",
+        medicationCount: 1,
+        medicationNames: ["아목시실린"],
+        recordIds: [2],
+        canMarkAsTaken: true,
+      },
+    ],
     statusLabel: "복용 필요",
     tone: "required",
   },
 ];
 
 describe("TodayScheduleSection", () => {
+  const mockOnPressTake = jest.fn();
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it("남은 개수 뱃지와 스케줄 카드 목록을 렌더링한다", () => {
-    const { getByText } = render(<TodayScheduleSection remainingCount={2} items={ITEMS} />);
+    const { getByText } = render(
+      <TodayScheduleSection
+        remainingCount={2}
+        items={ITEMS}
+        takingPrescriptionId={null}
+        onPressTake={mockOnPressTake}
+      />,
+    );
 
     expect(getByText("오늘의 복약 스케줄")).toBeTruthy();
     expect(getByText("2개 남음")).toBeTruthy();
@@ -56,7 +81,14 @@ describe("TodayScheduleSection", () => {
   });
 
   it("아이템이 없으면 빈 상태 문구를 렌더링한다", () => {
-    const { getByText } = render(<TodayScheduleSection remainingCount={0} items={[]} />);
+    const { getByText } = render(
+      <TodayScheduleSection
+        remainingCount={0}
+        items={[]}
+        takingPrescriptionId={null}
+        onPressTake={mockOnPressTake}
+      />,
+    );
 
     expect(getByText("오늘 예정된 복약 스케줄이 없습니다.")).toBeTruthy();
     expect(mockTodayScheduleCard).not.toHaveBeenCalled();

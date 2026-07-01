@@ -44,13 +44,20 @@ export function MedicationManagementTab() {
               medicationCountLabel={group.medicationCountLabel}
               medications={group.medications}
               isExpanded={viewModel.isPrescriptionExpanded(group.prescriptionId)}
+              isTitleEditing={viewModel.isPrescriptionTitleEditing(group.prescriptionId)}
+              titleDraft={viewModel.prescriptionTitleDraft}
               isMedicationEditing={(medicationId) =>
                 viewModel.isMedicationEditing(group.prescriptionId, medicationId)
               }
               editDraft={viewModel.editDraft}
+              isTitleSaveEnabled={viewModel.isPrescriptionTitleSaveEnabled}
               isSaveEditEnabled={viewModel.isSaveEditEnabled}
               isSaving={viewModel.isMutating}
               onToggleExpanded={() => viewModel.togglePrescriptionExpanded(group.prescriptionId)}
+              onStartEditTitle={() => viewModel.startEditPrescriptionTitle(group.prescriptionId)}
+              onChangeTitleDraft={viewModel.changePrescriptionTitleDraft}
+              onCancelEditTitle={viewModel.cancelEditPrescriptionTitle}
+              onSaveEditTitle={viewModel.savePrescriptionTitle}
               onDeletePrescription={() =>
                 viewModel.handleDeletePrescription(group.prescriptionId, group.title)
               }
@@ -60,9 +67,6 @@ export function MedicationManagementTab() {
               onCancelEditMedication={viewModel.cancelEditMedication}
               onSaveEditMedication={viewModel.saveEditMedication}
               onToggleEditTakeSlot={viewModel.toggleEditTakeSlot}
-              onDeleteMedication={(medicationId, drugName) =>
-                viewModel.handleDeleteMedication(group.prescriptionId, medicationId, drugName)
-              }
             />
           ))}
         </YStack>

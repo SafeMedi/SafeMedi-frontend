@@ -1,5 +1,9 @@
-import { renderHook } from "@testing-library/react-native";
-import { useDashboardTodayMedicationSchedules } from "@/api/queries/dashboard";
+import { act, renderHook } from "@testing-library/react-native";
+import { Alert } from "react-native";
+import {
+  useDashboardTodayMedicationSchedules,
+  useMarkMedicationRecordsMutation,
+} from "@/api/queries/dashboard";
 import { usePrescriptionsQuery } from "@/api/queries/prescriptions";
 import { useDashboardViewModel } from "../useDashboardViewModel";
 
@@ -7,19 +11,24 @@ const mockUseDashboardTodayMedicationSchedules =
   useDashboardTodayMedicationSchedules as jest.MockedFunction<
     typeof useDashboardTodayMedicationSchedules
   >;
+const mockUseMarkMedicationRecordsMutation =
+  useMarkMedicationRecordsMutation as jest.MockedFunction<typeof useMarkMedicationRecordsMutation>;
 const mockUsePrescriptionsQuery = usePrescriptionsQuery as jest.MockedFunction<
   typeof usePrescriptionsQuery
 >;
 
 const mockTodayRefetch = jest.fn(async () => ({}));
 const mockPrescriptionsRefetch = jest.fn(async () => ({}));
+const mockMutateAsync = jest.fn(async () => ({}));
 
 jest.mock("@/api/queries/dashboard", () => ({
   useDashboardTodayMedicationSchedules: jest.fn(),
+  useMarkMedicationRecordsMutation: jest.fn(),
 }));
 jest.mock("@/api/queries/prescriptions", () => ({
   usePrescriptionsQuery: jest.fn(),
 }));
+jest.spyOn(Alert, "alert").mockImplementation(() => {});
 
 describe("useDashboardViewModel", () => {
   beforeEach(() => {
@@ -30,6 +39,10 @@ describe("useDashboardViewModel", () => {
       isError: false,
       refetch: mockTodayRefetch,
     } as unknown as ReturnType<typeof useDashboardTodayMedicationSchedules>);
+    mockUseMarkMedicationRecordsMutation.mockReturnValue({
+      isPending: false,
+      mutateAsync: mockMutateAsync,
+    } as unknown as ReturnType<typeof useMarkMedicationRecordsMutation>);
     mockUsePrescriptionsQuery.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -59,8 +72,18 @@ describe("useDashboardViewModel", () => {
             prescriptionTitle: "아침약",
             prescriptionId: 1,
             drugCount: 2,
+            drugNames: ["타이레놀", "오메프라졸"],
             recordIds: [1, 2],
-            status: "NEED_TAKE",
+            displayStatus: "NEED_TAKE",
+          },
+          {
+            takeTime: "08:00",
+            prescriptionTitle: "위장약",
+            prescriptionId: 3,
+            drugCount: 1,
+            drugNames: ["판토프라졸"],
+            recordIds: [4],
+            displayStatus: "NEED_TAKE",
           },
           {
             takeTime: "20:00",
@@ -130,14 +153,236 @@ describe("useDashboardViewModel", () => {
 
     expect(result.current.adherenceRate).toBe(70);
     expect(result.current.adherenceSummaryText).toBe("7 / 10 완료");
+    expect(result.current.scheduleCards).toHaveLength(2);
     expect(result.current.scheduleCards[0]?.tone).toBe("required");
-    expect(result.current.scheduleCards[0]?.medicationNames).toEqual(["타이레놀", "오메프라졸"]);
+    expect(result.current.scheduleCards[0]?.scheduledTime).toBe("08:00");
+    expect(result.current.scheduleCards[0]?.prescriptionCount).toBe(2);
+    expect(result.current.scheduleCards[0]?.prescriptions).toEqual([
+      {
+        id: "1-08:00-1-2",
+        prescriptionId: 1,
+        prescriptionTitle: "아침약",
+        medicationCount: 2,
+        medicationNames: ["타이레놀", "오메프라졸"],
+        recordIds: [1, 2],
+        canMarkAsTaken: true,
+      },
+      {
+        id: "3-08:00-4",
+        prescriptionId: 3,
+        prescriptionTitle: "위장약",
+        medicationCount: 1,
+        medicationNames: ["판토프라졸"],
+        recordIds: [4],
+        canMarkAsTaken: true,
+      },
+    ]);
     expect(result.current.scheduleCards[1]?.statusLabel).toBe("완료");
     expect(result.current.scheduleRemainingCount).toBe(1);
     expect(result.current.recentPrescriptions[0]?.prescriptionId).toBe(1);
     expect(result.current.recentPrescriptions[0]?.dateLabel).toBe("아침약");
     expect(result.current.recentPrescriptions[0]?.analysisCount).toBe(2);
     expect(result.current.recentPrescriptions[0]?.hasWarning).toBe(true);
+  });
+
+  it("복약 가능 처방은 모든 recordId를 일괄 완료 mutation으로 처리한다", async () => {
+    mockMutateAsync.mockResolvedValue([
+      { status: "fulfilled", value: {} },
+      { status: "fulfilled", value: {} },
+    ]);
+    mockUseDashboardTodayMedicationSchedules.mockReturnValue({
+      data: {
+        date: "2026-05-19",
+        summary: { totalCount: 2, completedCount: 0, completionRate: 0 },
+        schedules: [
+          {
+            takeTime: "08:00",
+            prescriptionTitle: "아침약",
+            prescriptionId: 1,
+            drugCount: 2,
+            drugNames: ["타이레놀", "오메프라졸"],
+            recordIds: [1, 2],
+            displayStatus: "NEED_TAKE",
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: mockTodayRefetch,
+    } as unknown as ReturnType<typeof useDashboardTodayMedicationSchedules>);
+
+    const { result } = renderHook(() => useDashboardViewModel());
+    const prescription = result.current.scheduleCards[0]?.prescriptions[0];
+    expect(prescription).toBeDefined();
+    if (!prescription) return;
+
+    await act(async () => {
+      result.current.markPrescriptionAsTaken(prescription);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    expect(mockMutateAsync).toHaveBeenCalledWith({
+      recordIds: [1, 2],
+      body: { status: "SUCCESS" },
+    });
+    expect(mockTodayRefetch).not.toHaveBeenCalled();
+    expect(mockPrescriptionsRefetch).not.toHaveBeenCalled();
+  });
+
+  it("약물별 스케줄 row는 같은 시간대의 처방전 단위로 병합해 한 번에 완료 처리한다", async () => {
+    mockMutateAsync.mockResolvedValue([
+      { status: "fulfilled", value: {} },
+      { status: "fulfilled", value: {} },
+    ]);
+    mockUseDashboardTodayMedicationSchedules.mockReturnValue({
+      data: {
+        date: "2026-05-19",
+        summary: { totalCount: 2, completedCount: 0, completionRate: 0 },
+        schedules: [
+          {
+            takeTime: "08:00",
+            prescriptionTitle: "감기약",
+            prescriptionId: 10,
+            drugCount: 1,
+            drugNames: ["타이레놀"],
+            recordIds: [500],
+            displayStatus: "NEED_TAKE",
+          },
+          {
+            takeTime: "08:00",
+            prescriptionTitle: "감기약",
+            prescriptionId: 10,
+            drugCount: 1,
+            drugNames: ["코푸시럽"],
+            recordIds: [501],
+            displayStatus: "NEED_TAKE",
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: mockTodayRefetch,
+    } as unknown as ReturnType<typeof useDashboardTodayMedicationSchedules>);
+
+    const { result } = renderHook(() => useDashboardViewModel());
+
+    expect(result.current.scheduleCards[0]?.prescriptionCount).toBe(1);
+    expect(result.current.scheduleCards[0]?.prescriptions).toEqual([
+      {
+        id: "10-08:00-500-501",
+        prescriptionId: 10,
+        prescriptionTitle: "감기약",
+        medicationCount: 2,
+        medicationNames: ["타이레놀", "코푸시럽"],
+        recordIds: [500, 501],
+        canMarkAsTaken: true,
+      },
+    ]);
+
+    const prescription = result.current.scheduleCards[0]?.prescriptions[0];
+    expect(prescription).toBeDefined();
+    if (!prescription) return;
+
+    await act(async () => {
+      result.current.markPrescriptionAsTaken(prescription);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    expect(mockMutateAsync).toHaveBeenCalledWith({
+      recordIds: [500, 501],
+      body: { status: "SUCCESS" },
+    });
+  });
+
+  it("일부 recordId만 실패하면 부분 실패 알림을 표시한다", async () => {
+    mockMutateAsync.mockResolvedValue([
+      { status: "fulfilled", value: {} },
+      { status: "rejected", reason: new Error("network error") },
+    ]);
+    mockUseDashboardTodayMedicationSchedules.mockReturnValue({
+      data: {
+        date: "2026-05-19",
+        summary: { totalCount: 2, completedCount: 0, completionRate: 0 },
+        schedules: [
+          {
+            takeTime: "08:00",
+            prescriptionTitle: "아침약",
+            prescriptionId: 1,
+            drugCount: 2,
+            drugNames: ["타이레놀", "오메프라졸"],
+            recordIds: [1, 2],
+            displayStatus: "NEED_TAKE",
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: mockTodayRefetch,
+    } as unknown as ReturnType<typeof useDashboardTodayMedicationSchedules>);
+
+    const { result } = renderHook(() => useDashboardViewModel());
+    const prescription = result.current.scheduleCards[0]?.prescriptions[0];
+    expect(prescription).toBeDefined();
+    if (!prescription) return;
+
+    await act(async () => {
+      result.current.markPrescriptionAsTaken(prescription);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      "복약 처리 일부 실패",
+      "2건 중 1건은 완료되었으나 1건에서 오류가 발생했습니다.",
+    );
+    expect(mockTodayRefetch).not.toHaveBeenCalled();
+    expect(mockPrescriptionsRefetch).not.toHaveBeenCalled();
+  });
+
+  it("모든 recordId가 실패하면 실패 알림을 표시한다", async () => {
+    mockMutateAsync.mockRejectedValue(new Error("network error"));
+    mockUseDashboardTodayMedicationSchedules.mockReturnValue({
+      data: {
+        date: "2026-05-19",
+        summary: { totalCount: 2, completedCount: 0, completionRate: 0 },
+        schedules: [
+          {
+            takeTime: "08:00",
+            prescriptionTitle: "아침약",
+            prescriptionId: 1,
+            drugCount: 2,
+            drugNames: ["타이레놀", "오메프라졸"],
+            recordIds: [1, 2],
+            displayStatus: "NEED_TAKE",
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: mockTodayRefetch,
+    } as unknown as ReturnType<typeof useDashboardTodayMedicationSchedules>);
+
+    const { result } = renderHook(() => useDashboardViewModel());
+    const prescription = result.current.scheduleCards[0]?.prescriptions[0];
+    expect(prescription).toBeDefined();
+    if (!prescription) return;
+
+    await act(async () => {
+      result.current.markPrescriptionAsTaken(prescription);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      "복약 처리 실패",
+      "복약 완료 처리 중 오류가 발생했습니다.",
+    );
+    expect(mockTodayRefetch).not.toHaveBeenCalled();
+    expect(mockPrescriptionsRefetch).not.toHaveBeenCalled();
   });
 
   it("로딩/에러 상태를 반영하고 refetch를 병렬로 호출한다", async () => {

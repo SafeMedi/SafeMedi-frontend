@@ -5,15 +5,25 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
-import type { DashboardScheduleCardItem } from "@/features/dashboard/home/useDashboardViewModel";
+import type {
+  DashboardScheduleCardItem,
+  DashboardSchedulePrescriptionItem,
+} from "@/features/dashboard/home/useDashboardViewModel";
 import { TodayScheduleCard } from "./TodayScheduleCard";
 
 interface TodayScheduleSectionProps {
   readonly remainingCount: number;
   readonly items: readonly DashboardScheduleCardItem[];
+  readonly takingPrescriptionId: string | null;
+  readonly onPressTake: (prescription: DashboardSchedulePrescriptionItem) => void;
 }
 
-export function TodayScheduleSection({ remainingCount, items }: TodayScheduleSectionProps) {
+export function TodayScheduleSection({
+  remainingCount,
+  items,
+  takingPrescriptionId,
+  onPressTake,
+}: TodayScheduleSectionProps) {
   return (
     <YStack gap={10}>
       <SectionHeader
@@ -31,7 +41,12 @@ export function TodayScheduleSection({ remainingCount, items }: TodayScheduleSec
       {items.length > 0 ? (
         <YStack gap={10}>
           {items.map((item) => (
-            <TodayScheduleCard key={item.id} item={item} />
+            <TodayScheduleCard
+              key={item.id}
+              item={item}
+              takingPrescriptionId={takingPrescriptionId}
+              onPressTake={onPressTake}
+            />
           ))}
         </YStack>
       ) : (

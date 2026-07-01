@@ -100,7 +100,6 @@ describe("MedicationManagementInlineEditor", () => {
 describe("MedicationManagementItemCard 및 MedicationPrescriptionGroupCard", () => {
   const callbacks = {
     onEdit: jest.fn(),
-    onDelete: jest.fn(),
     onCancelEdit: jest.fn(),
     onSaveEdit: jest.fn(),
     onToggleTakeSlot: jest.fn(),
@@ -110,8 +109,8 @@ describe("MedicationManagementItemCard 및 MedicationPrescriptionGroupCard", () 
     jest.clearAllMocks();
   });
 
-  it("약물 카드의 수정·삭제와 경고 표시를 처리한다", () => {
-    const { getByLabelText, getByText, rerender } = render(
+  it("약물 카드의 수정과 경고 표시를 처리하고 삭제 버튼은 노출하지 않는다", () => {
+    const { getByLabelText, getByText, queryByLabelText, rerender } = render(
       <MedicationManagementItemCard
         medication={medication}
         isEditing={false}
@@ -122,10 +121,9 @@ describe("MedicationManagementItemCard 및 MedicationPrescriptionGroupCard", () 
       />,
     );
 
+    expect(queryByLabelText("타이레놀정 500mg 삭제")).toBeNull();
     fireEvent.press(getByLabelText("타이레놀정 500mg 수정"));
-    fireEvent.press(getByLabelText("타이레놀정 500mg 삭제"));
     expect(callbacks.onEdit).toHaveBeenCalledTimes(1);
-    expect(callbacks.onDelete).toHaveBeenCalledTimes(1);
 
     rerender(
       <MedicationManagementItemCard
@@ -143,24 +141,33 @@ describe("MedicationManagementItemCard 및 MedicationPrescriptionGroupCard", () 
 
   it("처방전 그룹을 확장할 때 약물 카드와 이벤트를 표시한다", () => {
     const onToggleExpanded = jest.fn();
+    const onStartEditTitle = jest.fn();
+    const onChangeTitleDraft = jest.fn();
+    const onCancelEditTitle = jest.fn();
+    const onSaveEditTitle = jest.fn();
     const onDeletePrescription = jest.fn();
     const onStartEditMedication = jest.fn();
-    const onDeleteMedication = jest.fn();
     const props = {
       title: "신장내과 처방전",
       medicationCountLabel: "1개",
       medications: [medication],
+      isTitleEditing: false,
+      titleDraft: "",
       isMedicationEditing: () => false,
       editDraft: null,
+      isTitleSaveEnabled: false,
       isSaveEditEnabled: false,
       isSaving: false,
       onToggleExpanded,
+      onStartEditTitle,
+      onChangeTitleDraft,
+      onCancelEditTitle,
+      onSaveEditTitle,
       onDeletePrescription,
       onStartEditMedication,
       onCancelEditMedication: jest.fn(),
       onSaveEditMedication: jest.fn(),
       onToggleEditTakeSlot: jest.fn(),
-      onDeleteMedication,
     };
     const { getAllByLabelText, getByLabelText, getByText, rerender } = render(
       <MedicationPrescriptionGroupCard {...props} isExpanded={false} />,
@@ -168,14 +175,55 @@ describe("MedicationManagementItemCard 및 MedicationPrescriptionGroupCard", () 
 
     expect(getByText("📋 신장내과 처방전")).toBeTruthy();
     fireEvent.press(getAllByLabelText("신장내과 처방전 펼치기")[0]);
-    fireEvent.press(getByLabelText("신장내과 처방전 처방전 삭제"));
+    fireEvent.press(getByLabelText("신장내과 처방전 처방전 이름 수정"));
     expect(onToggleExpanded).toHaveBeenCalledTimes(1);
-    expect(onDeletePrescription).toHaveBeenCalledTimes(1);
+    expect(onStartEditTitle).toHaveBeenCalledTimes(1);
 
     rerender(<MedicationPrescriptionGroupCard {...props} isExpanded />);
+    fireEvent.press(getByLabelText("신장내과 처방전 처방전 삭제"));
     fireEvent.press(getByLabelText("타이레놀정 500mg 수정"));
-    fireEvent.press(getByLabelText("타이레놀정 500mg 삭제"));
+    expect(() => getByLabelText("타이레놀정 500mg 삭제")).toThrow();
+    expect(onDeletePrescription).toHaveBeenCalledTimes(1);
     expect(onStartEditMedication).toHaveBeenCalledWith(101);
-    expect(onDeleteMedication).toHaveBeenCalledWith(101, "타이레놀정 500mg");
+  });
+
+  it("처방전 이름 편집 입력과 저장 이벤트를 전달한다", () => {
+    const onChangeTitleDraft = jest.fn();
+    const onCancelEditTitle = jest.fn();
+    const onSaveEditTitle = jest.fn();
+
+    const { getByLabelText, getByDisplayValue } = render(
+      <MedicationPrescriptionGroupCard
+        title="신장내과 처방전"
+        medicationCountLabel="1개"
+        medications={[medication]}
+        isExpanded
+        isTitleEditing
+        titleDraft="신장내과 처방전"
+        isMedicationEditing={() => false}
+        editDraft={null}
+        isTitleSaveEnabled={true}
+        isSaveEditEnabled={false}
+        isSaving={false}
+        onToggleExpanded={jest.fn()}
+        onStartEditTitle={jest.fn()}
+        onChangeTitleDraft={onChangeTitleDraft}
+        onCancelEditTitle={onCancelEditTitle}
+        onSaveEditTitle={onSaveEditTitle}
+        onDeletePrescription={jest.fn()}
+        onStartEditMedication={jest.fn()}
+        onCancelEditMedication={jest.fn()}
+        onSaveEditMedication={jest.fn()}
+        onToggleEditTakeSlot={jest.fn()}
+      />,
+    );
+
+    fireEvent.changeText(getByDisplayValue("신장내과 처방전"), "수정된 처방전");
+    fireEvent.press(getByLabelText("처방전 이름 수정 저장"));
+    fireEvent.press(getByLabelText("처방전 이름 수정 취소"));
+
+    expect(onChangeTitleDraft).toHaveBeenCalledWith("수정된 처방전");
+    expect(onSaveEditTitle).toHaveBeenCalledTimes(1);
+    expect(onCancelEditTitle).toHaveBeenCalledTimes(1);
   });
 });

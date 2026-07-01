@@ -18,6 +18,8 @@ export type {
   TodayMedicationScheduleStatus,
   TodayMedicationScheduleSummary,
   TodayMedicationSchedulesResponse,
+  UpdateMedicationRecordRequest,
+  UpdateMedicationRecordResponse,
 } from "./dashboard";
 export type {
   FamilyDetail,

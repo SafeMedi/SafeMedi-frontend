@@ -17,7 +17,6 @@ interface MedicationManagementItemCardProps {
   readonly isSaveEnabled: boolean;
   readonly isSaving: boolean;
   readonly onEdit: () => void;
-  readonly onDelete: () => void;
   readonly onCancelEdit: () => void;
   readonly onSaveEdit: () => void;
   readonly onToggleTakeSlot: (slot: MedicationTakeSlot) => void;
@@ -30,7 +29,6 @@ export function MedicationManagementItemCard({
   isSaveEnabled,
   isSaving,
   onEdit,
-  onDelete,
   onCancelEdit,
   onSaveEdit,
   onToggleTakeSlot,
@@ -103,20 +101,6 @@ export function MedicationManagementItemCard({
           >
             <Ionicons name="create-outline" size={14} color={palette.green_deep} />
             <Text style={styles.editButtonText}>수정</Text>
-          </Pressable>
-
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`${medication.drugName} 삭제`}
-            onPress={onDelete}
-            style={({ pressed }) => [
-              styles.actionButton,
-              styles.deleteButton,
-              pressed && styles.pressed,
-            ]}
-          >
-            <Ionicons name="trash-outline" size={14} color={palette.red_quick_text} />
-            <Text style={styles.deleteButtonText}>삭제</Text>
           </Pressable>
         </XStack>
 
@@ -230,17 +214,8 @@ const styles = StyleSheet.create({
   editButton: {
     borderColor: palette.green_soft,
   },
-  deleteButton: {
-    borderColor: palette.red_outline,
-  },
   editButtonText: {
     color: palette.green_deep,
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: "500",
-  },
-  deleteButtonText: {
-    color: palette.red_quick_text,
     fontSize: 12,
     lineHeight: 18,
     fontWeight: "500",

@@ -23,24 +23,27 @@ export interface MedicationManagementPrescriptionGroup {
 export interface MedicationManagementViewModel {
   readonly prescriptionGroups: readonly MedicationManagementPrescriptionGroup[];
   readonly isPrescriptionExpanded: (prescriptionId: number) => boolean;
+  readonly editingPrescriptionId: number | null;
+  readonly prescriptionTitleDraft: string;
   readonly editingMedicationKey: MedicationEditKey | null;
   readonly editDraft: MedicationEditDraft | null;
   readonly isMedicationEditing: (prescriptionId: number, medicationId: number) => boolean;
+  readonly isPrescriptionTitleEditing: (prescriptionId: number) => boolean;
+  readonly isPrescriptionTitleSaveEnabled: boolean;
   readonly isSaveEditEnabled: boolean;
   readonly isLoading: boolean;
   readonly isError: boolean;
   readonly isMutating: boolean;
   readonly refetch: () => Promise<unknown>;
   readonly togglePrescriptionExpanded: (prescriptionId: number) => void;
+  readonly startEditPrescriptionTitle: (prescriptionId: number) => void;
+  readonly changePrescriptionTitleDraft: (title: string) => void;
+  readonly cancelEditPrescriptionTitle: () => void;
+  readonly savePrescriptionTitle: () => void;
   readonly startEditMedication: (prescriptionId: number, medicationId: number) => void;
   readonly cancelEditMedication: () => void;
   readonly toggleEditTakeSlot: (slot: MedicationTakeSlot) => void;
   readonly saveEditMedication: () => void;
-  readonly handleDeleteMedication: (
-    prescriptionId: number,
-    medicationId: number,
-    drugName: string,
-  ) => void;
   readonly handleDeletePrescription: (prescriptionId: number, title: string) => void;
 }
 
@@ -101,16 +104,4 @@ export function toggleCollapsedPrescriptionId(
   }
   nextIds.add(prescriptionId);
   return nextIds;
-}
-
-export function buildUpdatedMedicationsAfterDelete(
-  prescription: PrescriptionListItem,
-  medicationId: number,
-) {
-  return prescription.medications
-    .filter((medication) => medication.medicationId !== medicationId)
-    .map((medication) => ({
-      prescriptionDrugId: medication.prescriptionDrugId ?? medication.medicationId,
-      takeTimes: medication.takeTimes,
-    }));
 }

@@ -38,7 +38,8 @@ Expo Router · React Native · Tamagui · TanStack Query · Zustand.
 - 커밋 요청 시 직접 관여한 파일만을 대상으로 한다. 작업하지 않은 파일은 제외한다.
 - PR의 제목은 티켓명 강조 뒤에 개발 내용을 작성한다. `SAF-00` feat: ~~ 
 - PR작성 시 `.github/PULL_REQUEST_TEMPLATE.md`파일의 규칙을 따른다. 
-  - "관련 이슈"의 경우 github에 존재하는 이슈만 작성하고 linear의 티켓명은 제목에 있으므로 작성하지 않는다. 이슈가 없을 경우 공백을 허용한다.
+- "관련 이슈"의 경우 github에 존재하는 이슈를 가장 우선으로 작성한다. PR에서 관련된 이슈가 해결된 경우 Closed 를 사용해 PR 종료 시 닫히도록 진행한다. 
+  - 특정 github의 이슈와 관련되지 않아서 작성할 내용이 없는 경우 "관련 이슈" 부분을 제거하고, "작업 배경"부터 시작하도록 한다.
 
 
 ### P0 / P1 — 반드시 지적 (blocking)

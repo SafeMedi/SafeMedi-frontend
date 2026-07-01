@@ -6,6 +6,8 @@ import type {
   MedicationStatisticsResponse,
   MonthlyMedicationRecordsResponse,
   TodayMedicationSchedulesResponse,
+  UpdateMedicationRecordRequest,
+  UpdateMedicationRecordResponse,
 } from "@/api/types/dashboard";
 
 interface FetchMedicationRecordsParams {
@@ -24,6 +26,15 @@ export async function fetchDailyMedicationRecords(
 
 export async function fetchTodayMedicationSchedules(): Promise<TodayMedicationSchedulesResponse> {
   return api.get(apiPaths.medicationRecordsToday).json<TodayMedicationSchedulesResponse>();
+}
+
+export async function updateMedicationRecord(
+  recordId: number,
+  body: UpdateMedicationRecordRequest,
+): Promise<UpdateMedicationRecordResponse> {
+  return api
+    .patch(apiPaths.medicationRecord(recordId), { json: body })
+    .json<UpdateMedicationRecordResponse>();
 }
 
 export async function fetchMonthlyMedicationRecords(
