@@ -132,32 +132,50 @@ describe("데이터가 있으면 데이터를 반환한다.", () => {
     );
   });
 
-  it("약물 삭제는 남은 약물이 있으면 개별 삭제 미지원 안내를 띄운다", () => {
+  it("처방전 이름 수정 저장 시 title만 PATCH body에 반영한다", () => {
     const { result } = renderHook(() => useMedicationManagementViewModel());
 
     act(() => {
-      result.current.handleDeleteMedication(11, 101, "타이레놀정 500mg");
-      getConfirmButton().onPress?.();
+      result.current.startEditPrescriptionTitle(11);
+    });
+    expect(result.current.isPrescriptionTitleEditing(11)).toBe(true);
+    expect(result.current.prescriptionTitleDraft).toBe("신장내과 처방전");
+
+    act(() => {
+      result.current.changePrescriptionTitleDraft("수정된 신장내과 처방전");
+    });
+    expect(result.current.isPrescriptionTitleSaveEnabled).toBe(true);
+
+    act(() => {
+      result.current.savePrescriptionTitle();
     });
 
-    expect(Alert.alert).toHaveBeenCalledWith(
-      "삭제 불가",
-      "현재 API는 개별 약물 삭제를 지원하지 않습니다. 처방전 전체 삭제 후 다시 등록해주세요.",
+    expect(mockUpdateMutate).toHaveBeenCalledWith(
+      {
+        prescriptionId: 11,
+        body: { title: "수정된 신장내과 처방전" },
+      },
+      expect.any(Object),
     );
-    expect(mockUpdateMutate).not.toHaveBeenCalled();
-    expect(mockDeleteMutate).not.toHaveBeenCalled();
   });
 
-  it("마지막 약물 삭제는 처방전 삭제 요청을 보낸다", () => {
+  it("처방전 이름 수정은 빈 제목을 막고 성공 시 편집을 닫는다", () => {
     const { result } = renderHook(() => useMedicationManagementViewModel());
 
-    act(() => {
-      result.current.handleDeleteMedication(12, 201, "암로디핀정 5mg");
-      getConfirmButton().onPress?.();
-    });
+    act(() => result.current.startEditPrescriptionTitle(11));
+    act(() => result.current.changePrescriptionTitleDraft("   "));
+    act(() => result.current.savePrescriptionTitle());
 
-    expect(mockDeleteMutate).toHaveBeenCalledWith(12, expect.any(Object));
+    expect(Alert.alert).toHaveBeenCalledWith("입력 확인", "처방전 이름을 입력해주세요.");
     expect(mockUpdateMutate).not.toHaveBeenCalled();
+
+    act(() => result.current.changePrescriptionTitleDraft("수정된 처방전"));
+    act(() => result.current.savePrescriptionTitle());
+    const options = mockUpdateMutate.mock.calls[0]?.[1] as { onSuccess?: () => void };
+    act(() => options.onSuccess?.());
+
+    expect(result.current.editingPrescriptionId).toBeNull();
+    expect(result.current.prescriptionTitleDraft).toBe("");
   });
 
   it("조회 상태와 새로고침 함수를 화면 모델에 전달한다", async () => {
@@ -177,7 +195,17 @@ describe("데이터가 있으면 데이터를 반환한다.", () => {
     expect(mockRefetch).toHaveBeenCalledTimes(1);
   });
 
-  it("수정 성공 시 편집을 닫고, 유효하지 않은 입력은 안내한다", () => {
+  it("처방전 접기와 처방전 삭제 확인을 처리한다", () => {
+    const { result } = renderHook(() => useMedicationManagementViewModel());
+    expect(result.current.isPrescriptionExpanded(11)).toBe(true);
+    act(() => result.current.togglePrescriptionExpanded(11));
+    expect(result.current.isPrescriptionExpanded(11)).toBe(false);
+    act(() => result.current.handleDeletePrescription(11, "신장내과 처방전"));
+    getConfirmButton().onPress?.();
+    expect(mockDeleteMutate).toHaveBeenCalledWith(11, expect.any(Object));
+  });
+
+  it("약물 수정 성공 시 편집을 닫고, 유효하지 않은 입력은 안내한다", () => {
     const { result } = renderHook(() => useMedicationManagementViewModel());
     act(() => result.current.startEditMedication(11, 101));
     act(() => result.current.toggleEditTakeSlot("MORNING"));
@@ -192,17 +220,7 @@ describe("데이터가 있으면 데이터를 반환한다.", () => {
     expect(result.current.editDraft).toBeNull();
   });
 
-  it("처방전 접기와 처방전 삭제 확인을 처리한다", () => {
-    const { result } = renderHook(() => useMedicationManagementViewModel());
-    expect(result.current.isPrescriptionExpanded(11)).toBe(true);
-    act(() => result.current.togglePrescriptionExpanded(11));
-    expect(result.current.isPrescriptionExpanded(11)).toBe(false);
-    act(() => result.current.handleDeletePrescription(11, "신장내과 처방전"));
-    getConfirmButton().onPress?.();
-    expect(mockDeleteMutate).toHaveBeenCalledWith(11, expect.any(Object));
-  });
-
-  it("수정 실패 시 편집 상태를 유지하고 오류를 안내한다", () => {
+  it("약물 수정 실패 시 편집 상태를 유지하고 오류를 안내한다", () => {
     const { result } = renderHook(() => useMedicationManagementViewModel());
     act(() => result.current.startEditMedication(11, 101));
     act(() => result.current.saveEditMedication());
@@ -212,20 +230,12 @@ describe("데이터가 있으면 데이터를 반환한다.", () => {
     expect(Alert.alert).toHaveBeenCalledWith("저장 실패", expect.any(String));
   });
 
-  it("존재하지 않는 약물은 편집하지 않고, 편집 중 삭제는 편집을 닫는다", () => {
+  it("존재하지 않는 약물은 편집하지 않고, 수정 시간 슬롯을 전환하고 취소하면 초기화한다", () => {
     const { result } = renderHook(() => useMedicationManagementViewModel());
 
     act(() => result.current.startEditMedication(999, 999));
     expect(result.current.editDraft).toBeNull();
 
-    act(() => result.current.startEditMedication(11, 101));
-    act(() => result.current.handleDeleteMedication(11, 101, "타이레놀정 500mg"));
-
-    expect(result.current.editDraft).toBeNull();
-  });
-
-  it("수정 시간 슬롯을 전환하고 취소하면 편집 상태를 초기화한다", () => {
-    const { result } = renderHook(() => useMedicationManagementViewModel());
     act(() => result.current.startEditMedication(11, 101));
     act(() => result.current.toggleEditTakeSlot("MORNING"));
     expect(result.current.editDraft?.takeSlots).not.toContain("MORNING");

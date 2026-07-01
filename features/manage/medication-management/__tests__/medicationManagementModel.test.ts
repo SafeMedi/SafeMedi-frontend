@@ -1,5 +1,4 @@
 import {
-  buildUpdatedMedicationsAfterDelete,
   formatMedicationTakeTimesLabel,
   isPrescriptionExpanded,
   mapPrescriptionsToManagementGroups,
@@ -57,10 +56,5 @@ describe("medicationManagementModel", () => {
     const collapsed = toggleCollapsedPrescriptionId(new Set(), 11);
     expect(isPrescriptionExpanded(collapsed, 11)).toBe(false);
     expect(isPrescriptionExpanded(toggleCollapsedPrescriptionId(collapsed, 11), 11)).toBe(true);
-  });
-
-  it("약물 삭제 후 PATCH 요청 body를 생성한다", () => {
-    const updatedMedications = buildUpdatedMedicationsAfterDelete(prescriptions[0], 101);
-    expect(updatedMedications).toEqual([]);
   });
 });
