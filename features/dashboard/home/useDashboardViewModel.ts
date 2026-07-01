@@ -6,7 +6,7 @@ import {
   useUpdateMedicationRecordMutation,
 } from "@/api/queries/dashboard";
 import { usePrescriptionsQuery } from "@/api/queries/prescriptions";
-import type { TodayMedicationScheduleStatus } from "@/api/types";
+import type { TodayMedicationScheduleItem, TodayMedicationScheduleStatus } from "@/api/types";
 
 type DashboardScheduleTone = "success" | "required" | "upcoming";
 
@@ -80,6 +80,81 @@ function resolveGroupStatus(
   return "SUCCESS";
 }
 
+interface PrescriptionScheduleGroup {
+  readonly prescriptionId: number;
+  readonly prescriptionTitle: string;
+  readonly drugCount: number;
+  readonly drugNames: readonly string[] | undefined;
+  readonly recordIds: readonly number[];
+  readonly markableRecordIds: readonly number[];
+  readonly status: TodayMedicationScheduleStatus;
+  readonly takeTime: string;
+}
+
+function uniqueNumbers(values: readonly number[]): number[] {
+  return Array.from(new Set(values));
+}
+
+function uniqueTexts(values: readonly string[]): string[] {
+  return Array.from(new Set(values));
+}
+
+function mergeDrugNames(
+  currentDrugNames: readonly string[] | undefined,
+  nextDrugNames: readonly string[] | undefined,
+): readonly string[] | undefined {
+  const mergedNames = uniqueTexts([...(currentDrugNames ?? []), ...(nextDrugNames ?? [])]);
+  return mergedNames.length > 0 ? mergedNames : undefined;
+}
+
+function groupSchedulesByPrescription(
+  schedules: readonly TodayMedicationScheduleItem[],
+): readonly PrescriptionScheduleGroup[] {
+  const groups = new Map<
+    string,
+    PrescriptionScheduleGroup & { statuses: TodayMedicationScheduleStatus[] }
+  >();
+
+  schedules.forEach((schedule) => {
+    const key = `${schedule.prescriptionId}-${schedule.takeTime}`;
+    const scheduleStatus = getScheduleStatus(schedule.displayStatus ?? schedule.status);
+    const existingGroup = groups.get(key);
+    const nextRecordIds = schedule.recordIds;
+    const nextMarkableRecordIds = scheduleStatus === "NEED_TAKE" ? schedule.recordIds : [];
+
+    if (existingGroup) {
+      const statuses = [...existingGroup.statuses, scheduleStatus];
+      groups.set(key, {
+        ...existingGroup,
+        drugCount: existingGroup.drugCount + schedule.drugCount,
+        drugNames: mergeDrugNames(existingGroup.drugNames, schedule.drugNames),
+        recordIds: uniqueNumbers([...existingGroup.recordIds, ...nextRecordIds]),
+        markableRecordIds: uniqueNumbers([
+          ...existingGroup.markableRecordIds,
+          ...nextMarkableRecordIds,
+        ]),
+        status: resolveGroupStatus(statuses),
+        statuses,
+      });
+      return;
+    }
+
+    groups.set(key, {
+      prescriptionId: schedule.prescriptionId,
+      prescriptionTitle: schedule.prescriptionTitle,
+      drugCount: schedule.drugCount,
+      drugNames: schedule.drugNames,
+      recordIds: uniqueNumbers(nextRecordIds),
+      markableRecordIds: uniqueNumbers(nextMarkableRecordIds),
+      status: scheduleStatus,
+      takeTime: schedule.takeTime,
+      statuses: [scheduleStatus],
+    });
+  });
+
+  return Array.from(groups.values()).map(({ statuses: _statuses, ...group }) => group);
+}
+
 export function useDashboardViewModel(): DashboardViewModel {
   const todayScheduleQuery = useDashboardTodayMedicationSchedules();
   const updateMedicationRecordMutation = useUpdateMedicationRecordMutation();
@@ -102,36 +177,29 @@ export function useDashboardViewModel(): DashboardViewModel {
     });
 
     return Array.from(groupedSchedules.entries()).map(([takeTime, schedules]) => {
-      const statuses = schedules.map((schedule) =>
-        getScheduleStatus(schedule.displayStatus ?? schedule.status),
-      );
+      const prescriptionSchedules = groupSchedulesByPrescription(schedules);
+      const statuses = prescriptionSchedules.map((schedule) => schedule.status);
       const groupStatus = resolveGroupStatus(statuses);
 
       return {
         id: takeTime,
         scheduledTime: takeTime,
-        prescriptionCount: schedules.length,
-        prescriptions: schedules.map((schedule) => {
-          const scheduleStatus = getScheduleStatus(schedule.displayStatus ?? schedule.status);
-
-          return {
-            id: `${schedule.prescriptionId}-${schedule.takeTime}-${schedule.recordIds.join("-")}`,
-            prescriptionId: schedule.prescriptionId,
-            prescriptionTitle: schedule.prescriptionTitle,
-            medicationCount: schedule.drugCount,
-            medicationNames:
-              schedule.drugNames ??
-              prescriptions
-                .find((prescription) => prescription.prescriptionId === schedule.prescriptionId)
-                ?.medications.filter((medication) =>
-                  medication.takeTimes.includes(schedule.takeTime),
-                )
-                .map((medication) => medication.drugName) ??
-              [],
-            recordIds: schedule.recordIds,
-            canMarkAsTaken: scheduleStatus === "NEED_TAKE" && schedule.recordIds.length > 0,
-          };
-        }),
+        prescriptionCount: prescriptionSchedules.length,
+        prescriptions: prescriptionSchedules.map((schedule) => ({
+          id: `${schedule.prescriptionId}-${schedule.takeTime}-${schedule.recordIds.join("-")}`,
+          prescriptionId: schedule.prescriptionId,
+          prescriptionTitle: schedule.prescriptionTitle,
+          medicationCount: schedule.drugCount,
+          medicationNames:
+            schedule.drugNames ??
+            prescriptions
+              .find((prescription) => prescription.prescriptionId === schedule.prescriptionId)
+              ?.medications.filter((medication) => medication.takeTimes.includes(schedule.takeTime))
+              .map((medication) => medication.drugName) ??
+            [],
+          recordIds: schedule.markableRecordIds,
+          canMarkAsTaken: schedule.status === "NEED_TAKE" && schedule.markableRecordIds.length > 0,
+        })),
         statusLabel: resolveStatusLabel(groupStatus),
         tone: resolveScheduleTone(groupStatus),
       };

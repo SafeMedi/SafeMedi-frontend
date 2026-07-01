@@ -150,7 +150,7 @@ export function TodayScheduleCard({
                         style={[styles.takeButton, isTaking && styles.takeButtonDisabled]}
                         onPress={() => onPressTake(prescription)}
                       >
-                        <Ionicons name="checkmark" size={14} color={palette.green_deep} />
+                        <Ionicons name="checkmark" size={18} color={palette.green_deep} />
                       </Pressable>
                     ) : null}
                     <Pressable
@@ -161,7 +161,7 @@ export function TodayScheduleCard({
                     >
                       <Ionicons
                         name={isExpanded ? "chevron-down" : "chevron-forward"}
-                        size={14}
+                        size={18}
                         color={palette.icon}
                       />
                     </Pressable>
@@ -253,18 +253,17 @@ const styles = StyleSheet.create({
     lineHeight: 14,
   },
   arrowButton: {
-    width: 20,
-    height: 20,
+    width: 24,
+    height: 24,
     borderRadius: 4,
     backgroundColor: palette.overlay_white_90,
     alignItems: "center",
     justifyContent: "center",
   },
   takeButton: {
-    width: 20,
-    height: 20,
+    width: 24,
+    height: 24,
     borderRadius: 4,
-    backgroundColor: palette.overlay_white_90,
     alignItems: "center",
     justifyContent: "center",
   },

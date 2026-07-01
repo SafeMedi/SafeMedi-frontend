@@ -231,6 +231,73 @@ describe("useDashboardViewModel", () => {
     expect(mockPrescriptionsRefetch).toHaveBeenCalledTimes(1);
   });
 
+  it("약물별 스케줄 row는 같은 시간대의 처방전 단위로 병합해 한 번에 완료 처리한다", async () => {
+    mockUseDashboardTodayMedicationSchedules.mockReturnValue({
+      data: {
+        date: "2026-05-19",
+        summary: { totalCount: 2, completedCount: 0, completionRate: 0 },
+        schedules: [
+          {
+            takeTime: "08:00",
+            prescriptionTitle: "감기약",
+            prescriptionId: 10,
+            drugCount: 1,
+            drugNames: ["타이레놀"],
+            recordIds: [500],
+            displayStatus: "NEED_TAKE",
+          },
+          {
+            takeTime: "08:00",
+            prescriptionTitle: "감기약",
+            prescriptionId: 10,
+            drugCount: 1,
+            drugNames: ["코푸시럽"],
+            recordIds: [501],
+            displayStatus: "NEED_TAKE",
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: mockTodayRefetch,
+    } as unknown as ReturnType<typeof useDashboardTodayMedicationSchedules>);
+
+    const { result } = renderHook(() => useDashboardViewModel());
+
+    expect(result.current.scheduleCards[0]?.prescriptionCount).toBe(1);
+    expect(result.current.scheduleCards[0]?.prescriptions).toEqual([
+      {
+        id: "10-08:00-500-501",
+        prescriptionId: 10,
+        prescriptionTitle: "감기약",
+        medicationCount: 2,
+        medicationNames: ["타이레놀", "코푸시럽"],
+        recordIds: [500, 501],
+        canMarkAsTaken: true,
+      },
+    ]);
+
+    const prescription = result.current.scheduleCards[0]?.prescriptions[0];
+    expect(prescription).toBeDefined();
+    if (!prescription) return;
+
+    await act(async () => {
+      result.current.markPrescriptionAsTaken(prescription);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockMutateAsync).toHaveBeenCalledTimes(2);
+    expect(mockMutateAsync).toHaveBeenNthCalledWith(1, {
+      recordId: 500,
+      body: { status: "SUCCESS" },
+    });
+    expect(mockMutateAsync).toHaveBeenNthCalledWith(2, {
+      recordId: 501,
+      body: { status: "SUCCESS" },
+    });
+  });
+
   it("로딩/에러 상태를 반영하고 refetch를 병렬로 호출한다", async () => {
     mockUseDashboardTodayMedicationSchedules.mockReturnValue({
       data: undefined,
