@@ -84,6 +84,21 @@ describe("api/endpoints core modules", () => {
     expect(mockApiPatch).toHaveBeenCalledWith(apiPaths.notificationsReadAll);
   });
 
+  it("notification list endpoint는 선택된 query parameter만 조합한다", async () => {
+    mockApiGet
+      .mockReturnValueOnce({ json: jest.fn(async () => ({ content: [] })) })
+      .mockReturnValueOnce({ json: jest.fn(async () => ({ content: [] })) })
+      .mockReturnValueOnce({ json: jest.fn(async () => ({ content: [] })) });
+
+    await fetchNotifications();
+    await fetchNotifications({ page: 1 });
+    await fetchNotifications({ size: 30 });
+
+    expect(mockApiGet).toHaveBeenNthCalledWith(1, apiPaths.notifications);
+    expect(mockApiGet).toHaveBeenNthCalledWith(2, `${apiPaths.notifications}?page=1`);
+    expect(mockApiGet).toHaveBeenNthCalledWith(3, `${apiPaths.notifications}?size=30`);
+  });
+
   it("prescription/tutorial/user endpoints를 호출한다", async () => {
     mockApiPost
       .mockReturnValueOnce({ json: jest.fn(async () => ({ prescriptionId: 1 })) })
