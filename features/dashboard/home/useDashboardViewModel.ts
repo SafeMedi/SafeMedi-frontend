@@ -3,7 +3,7 @@ import { Alert } from "react-native";
 
 import {
   useDashboardTodayMedicationSchedules,
-  useUpdateMedicationRecordMutation,
+  useMarkMedicationRecordsMutation,
 } from "@/api/queries/dashboard";
 import { usePrescriptionsQuery } from "@/api/queries/prescriptions";
 import type { TodayMedicationScheduleItem, TodayMedicationScheduleStatus } from "@/api/types";
@@ -157,7 +157,7 @@ function groupSchedulesByPrescription(
 
 export function useDashboardViewModel(): DashboardViewModel {
   const todayScheduleQuery = useDashboardTodayMedicationSchedules();
-  const updateMedicationRecordMutation = useUpdateMedicationRecordMutation();
+  const markMedicationRecordsMutation = useMarkMedicationRecordsMutation();
   const prescriptionsQuery = usePrescriptionsQuery();
   const [takingPrescriptionId, setTakingPrescriptionId] = useState<string | null>(null);
   const prescriptions = prescriptionsQuery.data?.prescriptions ?? [];
@@ -228,15 +228,12 @@ export function useDashboardViewModel(): DashboardViewModel {
     if (!prescription.canMarkAsTaken || takingPrescriptionId !== null) return;
 
     setTakingPrescriptionId(prescription.id);
-    void Promise.allSettled(
-      prescription.recordIds.map((recordId) =>
-        updateMedicationRecordMutation.mutateAsync({
-          recordId,
-          body: { status: "SUCCESS" },
-        }),
-      ),
-    )
-      .then(async (results) => {
+    void markMedicationRecordsMutation
+      .mutateAsync({
+        recordIds: prescription.recordIds,
+        body: { status: "SUCCESS" },
+      })
+      .then((results) => {
         const fulfilledCount = results.filter((result) => result.status === "fulfilled").length;
         const rejectedCount = results.length - fulfilledCount;
 
@@ -248,8 +245,9 @@ export function useDashboardViewModel(): DashboardViewModel {
         } else if (rejectedCount > 0) {
           Alert.alert("복약 처리 실패", "복약 완료 처리 중 오류가 발생했습니다.");
         }
-
-        await refetch();
+      })
+      .catch(() => {
+        Alert.alert("복약 처리 실패", "복약 완료 처리 중 오류가 발생했습니다.");
       })
       .finally(() => setTakingPrescriptionId(null));
   };

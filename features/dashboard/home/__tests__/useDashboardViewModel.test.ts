@@ -2,7 +2,7 @@ import { act, renderHook } from "@testing-library/react-native";
 import { Alert } from "react-native";
 import {
   useDashboardTodayMedicationSchedules,
-  useUpdateMedicationRecordMutation,
+  useMarkMedicationRecordsMutation,
 } from "@/api/queries/dashboard";
 import { usePrescriptionsQuery } from "@/api/queries/prescriptions";
 import { useDashboardViewModel } from "../useDashboardViewModel";
@@ -11,10 +11,8 @@ const mockUseDashboardTodayMedicationSchedules =
   useDashboardTodayMedicationSchedules as jest.MockedFunction<
     typeof useDashboardTodayMedicationSchedules
   >;
-const mockUseUpdateMedicationRecordMutation =
-  useUpdateMedicationRecordMutation as jest.MockedFunction<
-    typeof useUpdateMedicationRecordMutation
-  >;
+const mockUseMarkMedicationRecordsMutation =
+  useMarkMedicationRecordsMutation as jest.MockedFunction<typeof useMarkMedicationRecordsMutation>;
 const mockUsePrescriptionsQuery = usePrescriptionsQuery as jest.MockedFunction<
   typeof usePrescriptionsQuery
 >;
@@ -25,7 +23,7 @@ const mockMutateAsync = jest.fn(async () => ({}));
 
 jest.mock("@/api/queries/dashboard", () => ({
   useDashboardTodayMedicationSchedules: jest.fn(),
-  useUpdateMedicationRecordMutation: jest.fn(),
+  useMarkMedicationRecordsMutation: jest.fn(),
 }));
 jest.mock("@/api/queries/prescriptions", () => ({
   usePrescriptionsQuery: jest.fn(),
@@ -41,10 +39,10 @@ describe("useDashboardViewModel", () => {
       isError: false,
       refetch: mockTodayRefetch,
     } as unknown as ReturnType<typeof useDashboardTodayMedicationSchedules>);
-    mockUseUpdateMedicationRecordMutation.mockReturnValue({
+    mockUseMarkMedicationRecordsMutation.mockReturnValue({
       isPending: false,
       mutateAsync: mockMutateAsync,
-    } as unknown as ReturnType<typeof useUpdateMedicationRecordMutation>);
+    } as unknown as ReturnType<typeof useMarkMedicationRecordsMutation>);
     mockUsePrescriptionsQuery.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -187,7 +185,11 @@ describe("useDashboardViewModel", () => {
     expect(result.current.recentPrescriptions[0]?.hasWarning).toBe(true);
   });
 
-  it("복약 가능 처방은 모든 recordId를 완료 처리하고 데이터를 갱신한다", async () => {
+  it("복약 가능 처방은 모든 recordId를 일괄 완료 mutation으로 처리한다", async () => {
+    mockMutateAsync.mockResolvedValue([
+      { status: "fulfilled", value: {} },
+      { status: "fulfilled", value: {} },
+    ]);
     mockUseDashboardTodayMedicationSchedules.mockReturnValue({
       data: {
         date: "2026-05-19",
@@ -220,20 +222,20 @@ describe("useDashboardViewModel", () => {
       await Promise.resolve();
     });
 
-    expect(mockMutateAsync).toHaveBeenCalledTimes(2);
-    expect(mockMutateAsync).toHaveBeenNthCalledWith(1, {
-      recordId: 1,
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    expect(mockMutateAsync).toHaveBeenCalledWith({
+      recordIds: [1, 2],
       body: { status: "SUCCESS" },
     });
-    expect(mockMutateAsync).toHaveBeenNthCalledWith(2, {
-      recordId: 2,
-      body: { status: "SUCCESS" },
-    });
-    expect(mockTodayRefetch).toHaveBeenCalledTimes(1);
-    expect(mockPrescriptionsRefetch).toHaveBeenCalledTimes(1);
+    expect(mockTodayRefetch).not.toHaveBeenCalled();
+    expect(mockPrescriptionsRefetch).not.toHaveBeenCalled();
   });
 
   it("약물별 스케줄 row는 같은 시간대의 처방전 단위로 병합해 한 번에 완료 처리한다", async () => {
+    mockMutateAsync.mockResolvedValue([
+      { status: "fulfilled", value: {} },
+      { status: "fulfilled", value: {} },
+    ]);
     mockUseDashboardTodayMedicationSchedules.mockReturnValue({
       data: {
         date: "2026-05-19",
@@ -289,19 +291,18 @@ describe("useDashboardViewModel", () => {
       await Promise.resolve();
     });
 
-    expect(mockMutateAsync).toHaveBeenCalledTimes(2);
-    expect(mockMutateAsync).toHaveBeenNthCalledWith(1, {
-      recordId: 500,
-      body: { status: "SUCCESS" },
-    });
-    expect(mockMutateAsync).toHaveBeenNthCalledWith(2, {
-      recordId: 501,
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    expect(mockMutateAsync).toHaveBeenCalledWith({
+      recordIds: [500, 501],
       body: { status: "SUCCESS" },
     });
   });
 
-  it("일부 recordId만 실패하면 부분 실패 알림을 표시하고 데이터를 갱신한다", async () => {
-    mockMutateAsync.mockResolvedValueOnce({}).mockRejectedValueOnce(new Error("network error"));
+  it("일부 recordId만 실패하면 부분 실패 알림을 표시한다", async () => {
+    mockMutateAsync.mockResolvedValue([
+      { status: "fulfilled", value: {} },
+      { status: "rejected", reason: new Error("network error") },
+    ]);
     mockUseDashboardTodayMedicationSchedules.mockReturnValue({
       data: {
         date: "2026-05-19",
@@ -338,11 +339,11 @@ describe("useDashboardViewModel", () => {
       "복약 처리 일부 실패",
       "2건 중 1건은 완료되었으나 1건에서 오류가 발생했습니다.",
     );
-    expect(mockTodayRefetch).toHaveBeenCalledTimes(1);
-    expect(mockPrescriptionsRefetch).toHaveBeenCalledTimes(1);
+    expect(mockTodayRefetch).not.toHaveBeenCalled();
+    expect(mockPrescriptionsRefetch).not.toHaveBeenCalled();
   });
 
-  it("모든 recordId가 실패하면 실패 알림을 표시하고 데이터를 갱신한다", async () => {
+  it("모든 recordId가 실패하면 실패 알림을 표시한다", async () => {
     mockMutateAsync.mockRejectedValue(new Error("network error"));
     mockUseDashboardTodayMedicationSchedules.mockReturnValue({
       data: {
@@ -380,8 +381,8 @@ describe("useDashboardViewModel", () => {
       "복약 처리 실패",
       "복약 완료 처리 중 오류가 발생했습니다.",
     );
-    expect(mockTodayRefetch).toHaveBeenCalledTimes(1);
-    expect(mockPrescriptionsRefetch).toHaveBeenCalledTimes(1);
+    expect(mockTodayRefetch).not.toHaveBeenCalled();
+    expect(mockPrescriptionsRefetch).not.toHaveBeenCalled();
   });
 
   it("로딩/에러 상태를 반영하고 refetch를 병렬로 호출한다", async () => {
