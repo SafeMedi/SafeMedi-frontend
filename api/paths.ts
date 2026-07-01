@@ -29,5 +29,9 @@ export const apiPaths = {
   medicationsStatistics: "/api/v1/medications/statistics",
 
   notifications: "/api/v1/notifications",
+  notificationsUnreadCount: "/api/v1/notifications/unread-count",
+  notificationsReadAll: "/api/v1/notifications/read-all",
+  notificationRead: (notificationId: number | string) =>
+    `/api/v1/notifications/${notificationId}/read`,
   notificationsSettings: "/api/v1/notifications/settings",
 } as const;

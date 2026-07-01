@@ -38,4 +38,8 @@ export const queryKeys = {
       keyword: string,
     ) => ["map", "nearby-facilities", latitude, longitude, category, keyword] as const,
   },
+  notification: {
+    list: (page: number, size: number) => ["notification", "list", page, size] as const,
+    unreadCount: ["notification", "unread-count"] as const,
+  },
 } as const;

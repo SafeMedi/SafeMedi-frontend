@@ -40,9 +40,19 @@ export type {
   NearbyMedicalFacilitiesResponse,
 } from "./map";
 export type {
+  DeleteDeviceTokenBody,
+  DeleteDeviceTokenResponse,
+  DeviceType,
   NotificationItem,
   NotificationListResponse,
+  NotificationReadAllResponse,
+  NotificationReadResponse,
   NotificationSettings,
+  NotificationTargetType,
+  NotificationType,
+  NotificationUnreadCountResponse,
+  RegisterDeviceTokenBody,
+  RegisterDeviceTokenResponse,
 } from "./notification";
 export type {
   AnalysisRiskLevel,

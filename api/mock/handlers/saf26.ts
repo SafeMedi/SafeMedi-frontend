@@ -179,7 +179,12 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
   });
 
   registry.register("POST", apiPaths.usersDeviceToken, () => ({
+    deviceId: 15,
     message: "기기 푸시 토큰이 성공적으로 등록(갱신)되었습니다.",
+  }));
+
+  registry.register("DELETE", apiPaths.usersDeviceToken, () => ({
+    message: "기기 푸시 토큰이 성공적으로 해제되었습니다.",
   }));
 
   // --- Family: received (목록) ---
@@ -757,12 +762,56 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
 
   registry.register("GET", apiPaths.notifications, (ctx) => {
     const page = Number(ctx.searchParams.get("page") ?? "0");
+    const size = Number(ctx.searchParams.get("size") ?? "20");
     if (page < 0) {
       return Response.json(
         { code: "PAG_001", message: "페이지 번호(page)는 0 이상이어야 합니다." },
         { status: 400 },
       );
     }
+    if (size < 1 || size > 100) {
+      return Response.json(
+        { code: "PAG_002", message: "조회 개수(size)는 1 이상 100 이하이어야 합니다." },
+        { status: 400 },
+      );
+    }
     return mockState.notifications;
   });
+
+  registry.register("GET", apiPaths.notificationsUnreadCount, () => {
+    const unreadCount = mockState.notifications.content.filter((item) => !item.isRead).length;
+    return { unreadCount };
+  });
+
+  registry.register("PATCH", apiPaths.notificationsReadAll, () => {
+    let updatedCount = 0;
+    for (const item of mockState.notifications.content) {
+      if (!item.isRead) {
+        item.isRead = true;
+        updatedCount += 1;
+      }
+    }
+    return { updatedCount };
+  });
+
+  registry.registerMatch(
+    "PATCH",
+    (pathname) => /\/api\/v1\/notifications\/\d+\/read$/.test(pathname),
+    (ctx) => {
+      const match = /\/notifications\/(\d+)\/read$/.exec(ctx.url.pathname);
+      const notificationId = Number(match?.[1]);
+      const item = mockState.notifications.content.find(
+        (notification) => notification.notificationId === notificationId,
+      );
+      if (!item) {
+        return Response.json(
+          { code: "NOTI_003", message: "존재하지 않는 알림입니다." },
+          { status: 404 },
+        );
+      }
+      item.isRead = true;
+      return { notificationId: item.notificationId, isRead: true };
+    },
+    { label: "PATCH /api/v1/notifications/:id/read" },
+  );
 }

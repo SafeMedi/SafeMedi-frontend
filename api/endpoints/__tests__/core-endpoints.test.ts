@@ -1,7 +1,14 @@
 import { apiPaths } from "@/api/paths";
 import { postSocialLogin } from "../auth";
 import { fetchFamilies, fetchFamilyDetail, fetchFamilyManageOverview } from "../family";
-import { fetchNotificationSettings, patchNotificationSettings } from "../notification";
+import {
+  fetchNotificationSettings,
+  fetchNotifications,
+  fetchUnreadNotificationCount,
+  patchAllNotificationsRead,
+  patchNotificationRead,
+  patchNotificationSettings,
+} from "../notification";
 import { createPrescriptionByScan } from "../prescription-scan";
 import { postTutorialRegistration } from "../tutorial";
 import { fetchUserProfile, fetchUserProfileWithAccessToken, patchUserProfile } from "../user";
@@ -51,16 +58,30 @@ describe("api/endpoints core modules", () => {
   });
 
   it("notification endpoints를 조회/수정 호출한다", async () => {
-    mockApiGet.mockReturnValueOnce({ json: jest.fn(async () => ({ isMyReminderOn: true })) });
-    mockApiPatch.mockReturnValueOnce({ json: jest.fn(async () => ({ isMyReminderOn: false })) });
+    mockApiGet
+      .mockReturnValueOnce({ json: jest.fn(async () => ({ isMyReminderOn: true })) })
+      .mockReturnValueOnce({ json: jest.fn(async () => ({ content: [], isLast: true })) })
+      .mockReturnValueOnce({ json: jest.fn(async () => ({ unreadCount: 2 })) });
+    mockApiPatch
+      .mockReturnValueOnce({ json: jest.fn(async () => ({ isMyReminderOn: false })) })
+      .mockReturnValueOnce({ json: jest.fn(async () => ({ notificationId: 1, isRead: true })) })
+      .mockReturnValueOnce({ json: jest.fn(async () => ({ updatedCount: 2 })) });
 
     await fetchNotificationSettings();
+    await fetchNotifications({ page: 0, size: 10 });
+    await fetchUnreadNotificationCount();
     await patchNotificationSettings({ isMyReminderOn: false });
+    await patchNotificationRead(1);
+    await patchAllNotificationsRead();
 
     expect(mockApiGet).toHaveBeenCalledWith(apiPaths.notificationsSettings);
+    expect(mockApiGet).toHaveBeenCalledWith(`${apiPaths.notifications}?page=0&size=10`);
+    expect(mockApiGet).toHaveBeenCalledWith(apiPaths.notificationsUnreadCount);
     expect(mockApiPatch).toHaveBeenCalledWith(apiPaths.notificationsSettings, {
       json: { isMyReminderOn: false },
     });
+    expect(mockApiPatch).toHaveBeenCalledWith(apiPaths.notificationRead(1));
+    expect(mockApiPatch).toHaveBeenCalledWith(apiPaths.notificationsReadAll);
   });
 
   it("prescription/tutorial/user endpoints를 호출한다", async () => {
