@@ -1,6 +1,7 @@
 import type { MockRegistry } from "@/api/mock/registry";
 import { mockState } from "@/api/mock/state";
 import { apiPaths } from "@/api/paths";
+import type { UpdateUserProfileBody } from "@/api/types/user";
 
 const SUPPORTED_PROVIDERS = new Set(["kakao", "naver"]);
 
@@ -26,6 +27,13 @@ function clonePrescriptions() {
       takeTimes: [...medication.takeTimes],
     })),
   }));
+}
+
+function extractAboBloodType(
+  value: string | null | undefined,
+): NonNullable<UpdateUserProfileBody["bloodType"]> {
+  const [abo] = value?.match(/^[A-Z]+/) ?? [];
+  return abo === "A" || abo === "B" || abo === "O" || abo === "AB" ? abo : "O";
 }
 
 function addDaysToDateText(dateText: string, days: number): string {
@@ -136,16 +144,7 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
   });
 
   registry.register("PATCH", apiPaths.usersMe, async (ctx) => {
-    const patch = ctx.jsonBody as Partial<{
-      nickname: string;
-      gender: "MALE" | "FEMALE";
-      bloodType: "A" | "B" | "O" | "AB";
-      rhType: "PLUS" | "MINUS";
-      diseaseCodes: string[];
-      weight: number;
-      allergies: { type: string; value: string; name: string }[];
-      height: number;
-    }>;
+    const patch = ctx.jsonBody as UpdateUserProfileBody;
     if (patch.nickname !== undefined) {
       mockState.profile.displayName = patch.nickname;
     }
@@ -155,9 +154,10 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
     if (patch.gender !== undefined) {
       mockState.profile.gender = patch.gender === "FEMALE" ? "F" : "M";
     }
-    if (patch.bloodType !== undefined) {
-      const rhSign = patch.rhType === "MINUS" ? "-" : patch.rhType === "PLUS" ? "+" : "";
-      mockState.profile.bloodType = `${patch.bloodType}${rhSign}`;
+    if (patch.bloodType !== undefined || patch.rhType !== undefined) {
+      const abo = patch.bloodType ?? extractAboBloodType(mockState.profile.bloodType);
+      const rhSign = patch.rhType === "MINUS" ? "-" : "+";
+      mockState.profile.bloodType = `${abo}${rhSign}`;
     }
     if (patch.weight !== undefined) mockState.profile.weight = patch.weight;
     if (patch.height !== undefined) mockState.profile.height = patch.height;
