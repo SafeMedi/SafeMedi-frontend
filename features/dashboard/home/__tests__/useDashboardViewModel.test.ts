@@ -407,4 +407,33 @@ describe("useDashboardViewModel", () => {
     expect(mockTodayRefetch).toHaveBeenCalledTimes(1);
     expect(mockPrescriptionsRefetch).toHaveBeenCalledTimes(1);
   });
+
+  it("지난 미복용 스케줄은 missed tone으로 구분한다", () => {
+    mockUseDashboardTodayMedicationSchedules.mockReturnValue({
+      data: {
+        date: "2026-05-19",
+        summary: { totalCount: 1, completedCount: 0, completionRate: 0 },
+        schedules: [
+          {
+            takeTime: "08:00",
+            prescriptionTitle: "아침약",
+            prescriptionId: 1,
+            drugCount: 1,
+            drugNames: ["타이레놀"],
+            recordIds: [1],
+            displayStatus: "MISSED",
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: mockTodayRefetch,
+    } as unknown as ReturnType<typeof useDashboardTodayMedicationSchedules>);
+
+    const { result } = renderHook(() => useDashboardViewModel());
+
+    expect(result.current.scheduleCards[0]?.statusLabel).toBe("미복용");
+    expect(result.current.scheduleCards[0]?.tone).toBe("missed");
+    expect(result.current.scheduleCards[0]?.prescriptions[0]?.canMarkAsTaken).toBe(false);
+  });
 });
