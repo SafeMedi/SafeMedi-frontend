@@ -12,6 +12,7 @@ export function LogoutButton({ onPress }: LogoutButtonProps) {
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+      testID="logout-button"
     >
       <Ionicons name="log-out-outline" size={16} color={palette.red_strong} />
       <Text style={styles.label}>로그아웃</Text>
@@ -25,7 +26,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    backgroundColor: palette.gray,
+    backgroundColor: palette.white,
     borderColor: palette.red_soft,
     borderWidth: 1,
     borderRadius: 12,
