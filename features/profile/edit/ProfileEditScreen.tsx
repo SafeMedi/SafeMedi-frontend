@@ -18,9 +18,10 @@ export function ProfileEditScreen() {
   return (
     <ScrollView
       style={styles.scroll}
+      testID="profile-edit-scroll"
       contentContainerStyle={[
         styles.content,
-        { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 28 },
+        { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 16 },
       ]}
       showsVerticalScrollIndicator={false}
     >

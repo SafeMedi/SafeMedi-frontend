@@ -17,7 +17,7 @@ export function ProfileEditActionBar({
 }: ProfileEditActionBarProps) {
   return (
     <View style={styles.row}>
-      <Pressable onPress={onCancel} style={styles.cancelButton}>
+      <Pressable onPress={onCancel} style={styles.cancelButton} testID="profile-edit-cancel-button">
         <Text style={styles.cancelText}>취소</Text>
       </Pressable>
       <Pressable onPress={onSubmit} disabled={isSubmitting} style={styles.submitPressable}>
@@ -27,6 +27,7 @@ export function ProfileEditActionBar({
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.submitButton, isSubmitting && styles.disabled]}
+          testID="profile-edit-submit-button"
         >
           <Text style={styles.submitText}>{isSubmitting ? "저장 중..." : "저장하기"}</Text>
         </LinearGradient>
@@ -42,7 +43,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    height: 32,
+    height: 44,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: palette.border_muted,
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   submitButton: {
-    height: 32,
+    height: 44,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",

@@ -17,13 +17,26 @@ export type UserProfile = {
   isTutorialCompleted: boolean;
 };
 
+export type UserProfilePatchGender = "MALE" | "FEMALE";
+
+export type UserProfilePatchBloodType = "A" | "B" | "O" | "AB";
+
+export type UserProfilePatchRhType = "PLUS" | "MINUS";
+
+export type UserProfilePatchAllergyItem = {
+  type: "ATC_GROUP" | "INGREDIENT" | "CUSTOM";
+  value: string;
+  name: string;
+};
+
 /** PATCH /api/v1/users/me */
 export type UpdateUserProfileBody = Partial<{
-  displayName: string;
-  gender: "M" | "F";
-  bloodType: string;
-  diseases: string[];
-  allergies: string[];
+  nickname: string;
+  gender: UserProfilePatchGender;
+  bloodType: UserProfilePatchBloodType;
+  rhType: UserProfilePatchRhType;
+  diseaseCodes: string[];
+  allergies: UserProfilePatchAllergyItem[];
   weight: number;
   height: number;
 }>;

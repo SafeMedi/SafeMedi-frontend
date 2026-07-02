@@ -1,4 +1,6 @@
 import { fireEvent, render } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
+import { palette } from "@/constants/design-tokens";
 import { ProfileEditActionBar } from "@/features/profile/edit/components/ProfileEditActionBar";
 import { AppInfoSection } from "@/features/profile/view/components/AppInfoSection";
 import { FamilyProfileItem } from "@/features/profile/view/components/FamilyProfileItem";
@@ -35,6 +37,19 @@ describe("profile subcomponents", () => {
 
     rerender(<ProfileEditActionBar isSubmitting />);
     expect(getByText("저장 중...")).toBeTruthy();
+  });
+
+  it("ProfileEditActionBar는 로그아웃 버튼 수준의 높이를 확보한다", () => {
+    const { getByTestId } = render(<ProfileEditActionBar />);
+
+    expect(StyleSheet.flatten(getByTestId("profile-edit-cancel-button").props.style)).toMatchObject(
+      {
+        height: 44,
+      },
+    );
+    expect(StyleSheet.flatten(getByTestId("profile-edit-submit-button").props.style)).toMatchObject(
+      { height: 44 },
+    );
   });
 
   it("AppInfoSection은 리스트 항목과 trailing text를 렌더링한다", () => {
@@ -111,5 +126,13 @@ describe("profile subcomponents", () => {
     fireEvent.press(getByText("홍길동"));
     expect(onLogout).toHaveBeenCalledTimes(1);
     expect(onPressHero).toHaveBeenCalledTimes(1);
+  });
+
+  it("LogoutButton은 흰색 배경을 사용한다", () => {
+    const { getByTestId } = render(<LogoutButton />);
+
+    expect(StyleSheet.flatten(getByTestId("logout-button").props.style)).toMatchObject({
+      backgroundColor: palette.white,
+    });
   });
 });
