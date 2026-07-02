@@ -182,11 +182,15 @@ describe("프로필 수정 화면", () => {
     await waitFor(() => {
       expect(mockMutate).toHaveBeenCalledWith(
         {
-          displayName: "홍길동",
-          gender: "F",
-          bloodType: "AB-",
-          diseases: ["천식"],
-          allergies: ["N02BA01", "꽃가루"],
+          nickname: "홍길동",
+          gender: "FEMALE",
+          bloodType: "AB",
+          rhType: "MINUS",
+          diseaseCodes: ["J45"],
+          allergies: [
+            { type: "ATC_GROUP", value: "N02BA", name: "아스피린" },
+            { type: "CUSTOM", value: "꽃가루", name: "꽃가루" },
+          ],
         },
         expect.objectContaining({
           onSuccess: expect.any(Function),
