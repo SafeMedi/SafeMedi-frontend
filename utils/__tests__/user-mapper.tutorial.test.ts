@@ -1,6 +1,7 @@
 import {
   chronicConditionLabelsToDiseaseCodes,
   profileAllergyLabelsToApiCodes,
+  profileAllergyLabelsToPatchItems,
   profileAllergyLabelsToTutorialItems,
   profileToUser,
   userToTutorialRegistrationBody,
@@ -77,6 +78,21 @@ describe("튜토리얼 사용자 매핑", () => {
       ]),
     );
     expect(mapped).toHaveLength(3);
+  });
+
+  it("프로필 수정 알러지 라벨을 API 허용 객체 배열로 변환한다", () => {
+    const mapped = profileAllergyLabelsToPatchItems([
+      "페니실린",
+      "해산물",
+      "직접입력알러지",
+      "페니실린",
+    ]);
+
+    expect(mapped).toEqual([
+      { type: "ATC_GROUP", value: "J01C", name: "페니실린" },
+      { type: "CUSTOM", value: "해산물", name: "해산물" },
+      { type: "CUSTOM", value: "직접입력알러지", name: "직접입력알러지" },
+    ]);
   });
 
   it("기저질환 라벨을 diseaseCodes로 변환한다", () => {

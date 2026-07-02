@@ -171,8 +171,8 @@ describe("api/queries/user", () => {
       onSuccess: (updated: { id: string }) => Promise<void>;
     };
 
-    await mutation.mutationFn({ displayName: "새 닉네임" });
-    expect(mockPatchUserProfile).toHaveBeenCalledWith({ displayName: "새 닉네임" });
+    await mutation.mutationFn({ nickname: "새 닉네임" });
+    expect(mockPatchUserProfile).toHaveBeenCalledWith({ nickname: "새 닉네임" });
 
     await mutation.onSuccess({ id: "me" });
     expect(mockSetQueryData).toHaveBeenCalledWith(queryKeys.user.me, { id: "me" });

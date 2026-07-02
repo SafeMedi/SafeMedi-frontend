@@ -4,7 +4,7 @@ import type {
   TutorialRegistrationBody,
   TutorialRhType,
 } from "@/api/types/tutorial";
-import type { UserProfile } from "@/api/types/user";
+import type { UserProfile, UserProfilePatchAllergyItem } from "@/api/types/user";
 import type { User } from "@/stores/userStore";
 import { splitBloodTypeWithRh } from "@/utils/blood-type";
 
@@ -94,6 +94,32 @@ export function profileAllergyLabelsToApiCodes(labels: string[]): string[] {
     codes.add(code ?? label);
   }
   return [...codes];
+}
+
+export function profileAllergyLabelsToPatchItems(labels: string[]): UserProfilePatchAllergyItem[] {
+  const items = new Map<string, UserProfilePatchAllergyItem>();
+
+  for (const label of labels) {
+    if (isMedicineAllergyLabel(label)) {
+      const mapped = MEDICINE_ALLERGY_TO_TUTORIAL[label];
+      const item: UserProfilePatchAllergyItem = {
+        type: "ATC_GROUP",
+        value: mapped.value,
+        name: mapped.name,
+      };
+      items.set(`${item.type}:${item.value}`, item);
+      continue;
+    }
+
+    const item: UserProfilePatchAllergyItem = {
+      type: "CUSTOM",
+      value: label,
+      name: label,
+    };
+    items.set(`${item.type}:${item.value}`, item);
+  }
+
+  return [...items.values()];
 }
 
 export function profileAllergyLabelsToTutorialItems(labels: string[]): TutorialAllergyItem[] {

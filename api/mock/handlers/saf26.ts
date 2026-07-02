@@ -1,6 +1,7 @@
 import type { MockRegistry } from "@/api/mock/registry";
 import { mockState } from "@/api/mock/state";
 import { apiPaths } from "@/api/paths";
+import type { UpdateUserProfileBody } from "@/api/types/user";
 
 const SUPPORTED_PROVIDERS = new Set(["kakao", "naver"]);
 
@@ -26,6 +27,13 @@ function clonePrescriptions() {
       takeTimes: [...medication.takeTimes],
     })),
   }));
+}
+
+function extractAboBloodType(
+  value: string | null | undefined,
+): NonNullable<UpdateUserProfileBody["bloodType"]> {
+  const [abo] = value?.match(/^[A-Z]+/) ?? [];
+  return abo === "A" || abo === "B" || abo === "O" || abo === "AB" ? abo : "O";
 }
 
 function addDaysToDateText(dateText: string, days: number): string {
@@ -136,37 +144,32 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
   });
 
   registry.register("PATCH", apiPaths.usersMe, async (ctx) => {
-    const patch = ctx.jsonBody as Partial<{
-      displayName: string;
-      gender: "M" | "F";
-      bloodType: string;
-      diseases: string[];
-      weight: number;
-      allergies: string[];
-      height: number;
-    }>;
-    if (patch.displayName !== undefined) {
-      mockState.profile.displayName = patch.displayName;
+    const patch = ctx.jsonBody as UpdateUserProfileBody;
+    if (patch.nickname !== undefined) {
+      mockState.profile.displayName = patch.nickname;
     }
-    if (patch.diseases) {
-      mockState.profile.diseases = [...patch.diseases];
+    if (patch.diseaseCodes) {
+      mockState.profile.diseases = [...patch.diseaseCodes];
     }
     if (patch.gender !== undefined) {
-      mockState.profile.gender = patch.gender;
+      mockState.profile.gender = patch.gender === "FEMALE" ? "F" : "M";
     }
-    if (patch.bloodType !== undefined) {
-      mockState.profile.bloodType = patch.bloodType;
+    if (patch.bloodType !== undefined || patch.rhType !== undefined) {
+      const abo = patch.bloodType ?? extractAboBloodType(mockState.profile.bloodType);
+      const rhSign = patch.rhType === "MINUS" ? "-" : "+";
+      mockState.profile.bloodType = `${abo}${rhSign}`;
     }
     if (patch.weight !== undefined) mockState.profile.weight = patch.weight;
     if (patch.height !== undefined) mockState.profile.height = patch.height;
     if (patch.allergies) {
-      mockState.profile.allergies = patch.allergies.map((value) => {
+      mockState.profile.allergies = patch.allergies.map((allergy) => {
+        const value = allergy.value;
         const existing = mockState.profile.allergies.find(
-          (a) => a.code === value || a.name === value,
+          (a) => a.code === value || a.name === allergy.name,
         );
         return {
           code: existing?.code ?? value,
-          name: existing?.name ?? value,
+          name: existing?.name ?? allergy.name,
         };
       });
     }

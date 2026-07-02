@@ -7,8 +7,11 @@ import { Alert } from "react-native";
 import { useUpdateUserProfileMutation } from "@/api/queries/user";
 import { GENDERS, type GenderOptionValue } from "@/constants/health-profile-options";
 import { useUserStore } from "@/stores/userStore";
-import { combineBloodTypeWithRh, splitBloodTypeWithRhOrDefault } from "@/utils/blood-type";
-import { profileAllergyLabelsToApiCodes } from "@/utils/user-mapper";
+import { splitBloodTypeWithRhOrDefault } from "@/utils/blood-type";
+import {
+  chronicConditionLabelsToDiseaseCodes,
+  profileAllergyLabelsToPatchItems,
+} from "@/utils/user-mapper";
 import { type ProfileEditFormValues, profileEditSchema } from "./schema";
 
 function createUniqueItems(items: readonly string[]): string[] {
@@ -119,11 +122,12 @@ export function useProfileEditViewModel() {
   const handleSubmitValid = (values: ProfileEditFormValues) => {
     saveMutation.mutate(
       {
-        displayName: values.displayName.trim(),
-        gender: values.gender === "female" ? "F" : "M",
-        bloodType: combineBloodTypeWithRh(values.bloodType, values.rhFactor),
-        diseases: values.chronicConditions,
-        allergies: profileAllergyLabelsToApiCodes(values.allergies),
+        nickname: values.displayName.trim(),
+        gender: values.gender === "female" ? "FEMALE" : "MALE",
+        bloodType: values.bloodType,
+        rhType: values.rhFactor === "negative" ? "MINUS" : "PLUS",
+        diseaseCodes: chronicConditionLabelsToDiseaseCodes(values.chronicConditions),
+        allergies: profileAllergyLabelsToPatchItems(values.allergies),
       },
       {
         onSuccess: () => router.back(),

@@ -1,4 +1,5 @@
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import type { User } from "@/stores/userStore";
 import { ProfileEditScreen } from "../ProfileEditScreen";
 
@@ -174,6 +175,16 @@ describe("프로필 수정 화면", () => {
     expect(getByText("기저질환:천식")).toBeTruthy();
   });
 
+  it("하단 액션 영역 여백을 과하게 남기지 않는다", () => {
+    const { getByTestId } = render(<ProfileEditScreen />);
+
+    expect(
+      StyleSheet.flatten(getByTestId("profile-edit-scroll").props.contentContainerStyle),
+    ).toMatchObject({
+      paddingBottom: 16,
+    });
+  });
+
   it("저장 버튼을 누르면 변환된 payload로 mutate를 호출한다", async () => {
     const { getByLabelText } = render(<ProfileEditScreen />);
 
@@ -182,11 +193,15 @@ describe("프로필 수정 화면", () => {
     await waitFor(() => {
       expect(mockMutate).toHaveBeenCalledWith(
         {
-          displayName: "홍길동",
-          gender: "F",
-          bloodType: "AB-",
-          diseases: ["천식"],
-          allergies: ["N02BA01", "꽃가루"],
+          nickname: "홍길동",
+          gender: "FEMALE",
+          bloodType: "AB",
+          rhType: "MINUS",
+          diseaseCodes: ["J45"],
+          allergies: [
+            { type: "ATC_GROUP", value: "N02BA", name: "아스피린" },
+            { type: "CUSTOM", value: "꽃가루", name: "꽃가루" },
+          ],
         },
         expect.objectContaining({
           onSuccess: expect.any(Function),
