@@ -26,16 +26,16 @@ const TONE_STYLES: Record<DashboardScheduleCardItem["tone"], ToneStyle> = {
     badgeTextColor: palette.green_deep,
   },
   required: {
-    headerGradient: [palette.pending_status_bg, palette.pending_status_bg_end],
-    contentGradient: [palette.pending_status_bg, palette.pending_status_bg_end],
-    contentBorder: palette.notice_border,
-    badgeTextColor: palette.notice_description,
-  },
-  missed: {
     headerGradient: [palette.blue, palette.purple],
     contentGradient: [palette.blue, palette.purple],
     contentBorder: palette.schedule_required_border,
     badgeTextColor: palette.blue_deep,
+  },
+  missed: {
+    headerGradient: [palette.pending_status_bg, palette.pending_status_bg_end],
+    contentGradient: [palette.pending_status_bg, palette.pending_status_bg_end],
+    contentBorder: palette.notice_border,
+    badgeTextColor: palette.notice_description,
   },
   upcoming: {
     headerGradient: [palette.schedule_upcoming_start, palette.schedule_upcoming_end],
