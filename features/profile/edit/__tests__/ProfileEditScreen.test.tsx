@@ -1,4 +1,5 @@
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import type { User } from "@/stores/userStore";
 import { ProfileEditScreen } from "../ProfileEditScreen";
 
@@ -172,6 +173,16 @@ describe("프로필 수정 화면", () => {
     expect(getByText("기본정보:female:AB:negative")).toBeTruthy();
     expect(getByText("알러지:아스피린,꽃가루")).toBeTruthy();
     expect(getByText("기저질환:천식")).toBeTruthy();
+  });
+
+  it("하단 액션 영역 여백을 과하게 남기지 않는다", () => {
+    const { getByTestId } = render(<ProfileEditScreen />);
+
+    expect(
+      StyleSheet.flatten(getByTestId("profile-edit-scroll").props.contentContainerStyle),
+    ).toMatchObject({
+      paddingBottom: 16,
+    });
   });
 
   it("저장 버튼을 누르면 변환된 payload로 mutate를 호출한다", async () => {
