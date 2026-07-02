@@ -1,6 +1,22 @@
 import { fireEvent, render } from "@testing-library/react-native";
+import { palette } from "@/constants/design-tokens";
 import type { DashboardScheduleCardItem } from "../../useDashboardViewModel";
 import { TodayScheduleCard } from "../TodayScheduleCard";
+
+jest.mock("expo-linear-gradient", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  return {
+    LinearGradient: ({
+      children,
+      colors,
+      ...props
+    }: {
+      children: React.ReactNode;
+      colors: readonly string[];
+    }) => React.createElement(View, { ...props, testID: "linear-gradient", colors }, children),
+  };
+});
 
 jest.mock("tamagui", () => {
   const React = require("react");
@@ -112,5 +128,66 @@ describe("TodayScheduleCard", () => {
 
     expect(mockOnPressTake).toHaveBeenCalledWith(BASE_ITEM.prescriptions[0]);
     expect(queryByLabelText("비타민 종합 복약 완료")).toBeNull();
+  });
+
+  it("현재 복약 대상은 헤더와 처방전에 청보라 그라데이션을 적용한다", () => {
+    const { getAllByTestId } = render(
+      <TodayScheduleCard
+        item={BASE_ITEM}
+        takingPrescriptionId={null}
+        onPressTake={mockOnPressTake}
+      />,
+    );
+
+    const gradients = getAllByTestId("linear-gradient");
+
+    expect(gradients[0].props.colors).toEqual([palette.blue, palette.purple]);
+    expect(gradients[1].props.colors).toEqual([palette.blue, palette.purple]);
+  });
+
+  it("지난 미복용은 헤더와 처방전에 주황 그라데이션을 적용한다", () => {
+    const { getAllByTestId } = render(
+      <TodayScheduleCard
+        item={{
+          ...BASE_ITEM,
+          statusLabel: "미복용",
+          tone: "missed",
+          prescriptions: [BASE_ITEM.prescriptions[0]],
+        }}
+        takingPrescriptionId={null}
+        onPressTake={mockOnPressTake}
+      />,
+    );
+
+    const gradients = getAllByTestId("linear-gradient");
+
+    expect(gradients[0].props.colors).toEqual([
+      palette.pending_status_bg,
+      palette.pending_status_bg_end,
+    ]);
+    expect(gradients[1].props.colors).toEqual([
+      palette.pending_status_bg,
+      palette.pending_status_bg_end,
+    ]);
+  });
+
+  it("복약 완료 상태는 헤더와 처방전에 녹색 그라데이션을 적용한다", () => {
+    const { getAllByTestId } = render(
+      <TodayScheduleCard
+        item={{
+          ...BASE_ITEM,
+          statusLabel: "완료",
+          tone: "success",
+          prescriptions: [BASE_ITEM.prescriptions[0]],
+        }}
+        takingPrescriptionId={null}
+        onPressTake={mockOnPressTake}
+      />,
+    );
+
+    const gradients = getAllByTestId("linear-gradient");
+
+    expect(gradients[0].props.colors).toEqual([palette.green, palette.opal]);
+    expect(gradients[1].props.colors).toEqual([palette.green, palette.opal]);
   });
 });

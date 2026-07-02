@@ -26,9 +26,15 @@ const TONE_STYLES: Record<DashboardScheduleCardItem["tone"], ToneStyle> = {
     badgeTextColor: palette.green_deep,
   },
   required: {
-    headerGradient: [palette.pending_status_bg, palette.pending_status_bg_end],
+    headerGradient: [palette.blue, palette.purple],
     contentGradient: [palette.blue, palette.purple],
     contentBorder: palette.schedule_required_border,
+    badgeTextColor: palette.blue_deep,
+  },
+  missed: {
+    headerGradient: [palette.pending_status_bg, palette.pending_status_bg_end],
+    contentGradient: [palette.pending_status_bg, palette.pending_status_bg_end],
+    contentBorder: palette.notice_border,
     badgeTextColor: palette.notice_description,
   },
   upcoming: {
@@ -150,7 +156,7 @@ export function TodayScheduleCard({
                         style={[styles.takeButton, isTakeDisabled && styles.takeButtonDisabled]}
                         onPress={() => onPressTake(prescription)}
                       >
-                        <Ionicons name="checkmark" size={18} color={palette.green_deep} />
+                        <Ionicons name="checkmark" size={18} color={palette.white} />
                       </Pressable>
                     ) : null}
                     <Pressable
@@ -264,6 +270,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 4,
+    backgroundColor: palette.green_deep,
     alignItems: "center",
     justifyContent: "center",
   },

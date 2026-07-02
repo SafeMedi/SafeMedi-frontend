@@ -8,7 +8,7 @@ import {
 import { usePrescriptionsQuery } from "@/api/queries/prescriptions";
 import type { TodayMedicationScheduleItem, TodayMedicationScheduleStatus } from "@/api/types";
 
-type DashboardScheduleTone = "success" | "required" | "upcoming";
+type DashboardScheduleTone = "success" | "required" | "missed" | "upcoming";
 
 export interface DashboardSchedulePrescriptionItem {
   readonly id: string;
@@ -54,7 +54,8 @@ export interface DashboardViewModel {
 
 function resolveScheduleTone(status: TodayMedicationScheduleStatus): DashboardScheduleTone {
   if (status === "SUCCESS") return "success";
-  if (status === "NEED_TAKE" || status === "MISSED") return "required";
+  if (status === "NEED_TAKE") return "required";
+  if (status === "MISSED") return "missed";
   return "upcoming";
 }
 
