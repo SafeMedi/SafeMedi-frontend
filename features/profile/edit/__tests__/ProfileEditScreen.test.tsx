@@ -194,6 +194,32 @@ describe("프로필 수정 화면", () => {
     });
   });
 
+  it("매핑 없이 store에만 있는 비대표 알러지도 유지한다", async () => {
+    mockActiveUser = {
+      ...mockUser,
+      allergies: ["페니실린", "꽃가루"],
+      allergyMappings: undefined,
+    };
+
+    const { getByText, getByLabelText } = render(<ProfileEditScreen />);
+
+    expect(getByText("알러지:페니실린,꽃가루")).toBeTruthy();
+
+    fireEvent.press(getByLabelText("저장"));
+
+    await waitFor(() => {
+      expect(mockMutate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          allergies: expect.arrayContaining([
+            { type: "ATC_GROUP", value: "J01CA04", name: "페니실린계 항생제" },
+            { type: "FOOD", value: "꽃가루", name: "꽃가루" },
+          ]),
+        }),
+        expect.any(Object),
+      );
+    });
+  });
+
   it("저장 버튼을 누르면 변환된 payload로 mutate를 호출한다", async () => {
     const { getByLabelText } = render(<ProfileEditScreen />);
 

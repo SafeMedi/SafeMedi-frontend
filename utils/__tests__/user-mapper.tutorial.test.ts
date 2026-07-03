@@ -1,4 +1,5 @@
 import {
+  buildUserAllergyEditState,
   chronicConditionLabelsToDiseaseCodes,
   profileAllergyLabelsToApiCodes,
   profileAllergyLabelsToPatchItems,
@@ -70,6 +71,35 @@ describe("튜토리얼 사용자 매핑", () => {
     expect(user.allergies).toEqual(["페니실린", "해산물", "꽃가루"]);
     expect(user.allergyMappings).toEqual({
       꽃가루: { type: "ATC_GROUP", value: "R06AX13", name: "꽃가루" },
+    });
+  });
+
+  it("편집 화면 초기 상태를 알러지 라벨과 매핑을 함께 복원한다", () => {
+    expect(
+      buildUserAllergyEditState(["페니실린", "해산물", "꽃가루"], {
+        꽃가루: { type: "ATC_GROUP", value: "R06AX13", name: "꽃가루" },
+      }),
+    ).toEqual({
+      labels: ["페니실린", "해산물", "꽃가루"],
+      mappings: {
+        꽃가루: { type: "ATC_GROUP", value: "R06AX13", name: "꽃가루" },
+      },
+    });
+  });
+
+  it("매핑 없는 비대표 알러지도 편집 상태에 보존한다", () => {
+    expect(buildUserAllergyEditState(["페니실린", "꽃가루"], {})).toEqual({
+      labels: ["페니실린", "꽃가루"],
+      mappings: {
+        꽃가루: { type: "FOOD", value: "꽃가루", name: "꽃가루" },
+      },
+    });
+  });
+
+  it("서버 표시명 알러지를 대표 라벨로 정규화한다", () => {
+    expect(buildUserAllergyEditState(["페니실린계 항생제", "해산물"], {})).toEqual({
+      labels: ["페니실린", "해산물"],
+      mappings: {},
     });
   });
 

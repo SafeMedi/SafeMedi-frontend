@@ -11,12 +11,11 @@ import {
   chronicConditionOptions,
   GENDERS,
   type GenderOptionValue,
-  representativeFoodAllergyOptions,
-  representativeMedicineAllergyOptions,
 } from "@/constants/health-profile-options";
 import { useUserStore } from "@/stores/userStore";
 import { splitBloodTypeWithRhOrDefault } from "@/utils/blood-type";
 import {
+  buildUserAllergyEditState,
   chronicConditionLabelsToDiseaseCodes,
   profileAllergyLabelsToPatchItems,
 } from "@/utils/user-mapper";
@@ -45,40 +44,17 @@ function createKnownChronicConditions(items: readonly string[]): string[] {
   return createUniqueItems(items).filter((item) => labels.has(item));
 }
 
-function createKnownAllergies(items: readonly string[]): string[] {
-  const labels = new Set(getRepresentativeAllergyOptions().map((option) => option.label));
-  return createUniqueItems(items).filter((item) => labels.has(item));
-}
-
-function getRepresentativeAllergyOptions() {
-  return [...representativeMedicineAllergyOptions, ...representativeFoodAllergyOptions];
-}
-
-function createInitialAllergyState(
-  allergies: readonly string[],
-  allergyMappings: Readonly<Record<string, UserProfilePatchAllergyItem>>,
-): {
-  labels: string[];
-  mappings: Record<string, UserProfilePatchAllergyItem>;
-} {
-  const mappings = { ...allergyMappings };
-  return {
-    labels: createUniqueItems([...createKnownAllergies(allergies), ...Object.keys(mappings)]),
-    mappings,
-  };
-}
-
 export function useProfileEditViewModel() {
   const user = useUserStore((s) => s.user);
   const saveMutation = useUpdateUserProfileMutation();
   const [debouncedAllergyInput, setDebouncedAllergyInput] = useState("");
   const { labels: initialAllergies, mappings: initialAllergyMappings } = useMemo(
-    () => createInitialAllergyState(user?.allergies ?? [], user?.allergyMappings ?? {}),
+    () => buildUserAllergyEditState(user?.allergies ?? [], user?.allergyMappings ?? {}),
     [user?.allergies, user?.allergyMappings],
   );
   const [selectedAllergyItems, setSelectedAllergyItems] = useState<
     Record<string, UserProfilePatchAllergyItem>
-  >(() => ({ ...(user?.allergyMappings ?? {}) }));
+  >(() => buildUserAllergyEditState(user?.allergies ?? [], user?.allergyMappings ?? {}).mappings);
   const initialGender: GenderOptionValue = GENDERS.includes(
     (user?.gender ?? "male") as GenderOptionValue,
   )

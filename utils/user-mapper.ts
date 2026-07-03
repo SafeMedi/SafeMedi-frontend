@@ -60,6 +60,65 @@ function inferAllergyType(code: string, name: string): TutorialAllergyItem["type
   return "ATC_GROUP";
 }
 
+function createUniqueAllergyLabels(items: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const next: string[] = [];
+
+  for (const item of items) {
+    const normalized = item.trim();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    next.push(normalized);
+  }
+
+  return next;
+}
+
+export function buildUserAllergyEditState(
+  allergies: readonly string[],
+  allergyMappings: Readonly<Record<string, TutorialAllergyItem>> = {},
+): {
+  labels: string[];
+  mappings: Record<string, UserProfilePatchAllergyItem>;
+} {
+  const mappings: Record<string, UserProfilePatchAllergyItem> = { ...allergyMappings };
+  const seen = new Set<string>();
+  const labels: string[] = [];
+
+  const addLabel = (label: string) => {
+    if (!label || seen.has(label)) return;
+    seen.add(label);
+    labels.push(label);
+  };
+
+  for (const item of createUniqueAllergyLabels(allergies)) {
+    const representative =
+      findRepresentativeMedicineAllergy(item) ??
+      findRepresentativeFoodAllergy(item) ??
+      findRepresentativeAllergyByCodeOrName(item, item);
+
+    if (representative) {
+      addLabel(representative.label);
+      continue;
+    }
+
+    addLabel(item);
+    if (!mappings[item]) {
+      mappings[item] = {
+        type: "FOOD",
+        value: item,
+        name: item,
+      };
+    }
+  }
+
+  for (const label of Object.keys(allergyMappings)) {
+    addLabel(label);
+  }
+
+  return { labels, mappings };
+}
+
 function profileAllergiesToUserFields(
   allergies: UserProfile["allergies"],
 ): Pick<User, "allergies" | "allergyMappings"> {
@@ -67,31 +126,28 @@ function profileAllergiesToUserFields(
     return { allergies: [] };
   }
 
-  const labels: string[] = [];
-  const mappings: Record<string, TutorialAllergyItem> = {};
-  const seenLabels = new Set<string>();
+  const seedLabels: string[] = [];
+  const seedMappings: Record<string, TutorialAllergyItem> = {};
 
   for (const allergy of allergies) {
     const representative = findRepresentativeAllergyByCodeOrName(allergy.code, allergy.name);
     if (representative) {
-      if (!seenLabels.has(representative.label)) {
-        seenLabels.add(representative.label);
-        labels.push(representative.label);
-      }
+      seedLabels.push(representative.label);
       continue;
     }
 
     const label = allergy.name || allergy.code;
-    if (!label || seenLabels.has(label)) continue;
+    if (!label) continue;
 
-    seenLabels.add(label);
-    labels.push(label);
-    mappings[label] = {
+    seedLabels.push(label);
+    seedMappings[label] = {
       type: inferAllergyType(allergy.code, allergy.name),
       value: allergy.code || label,
       name: allergy.name || label,
     };
   }
+
+  const { labels, mappings } = buildUserAllergyEditState(seedLabels, seedMappings);
 
   return {
     allergies: labels,
