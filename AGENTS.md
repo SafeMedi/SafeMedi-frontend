@@ -36,9 +36,9 @@ Expo Router · React Native · Tamagui · TanStack Query · Zustand.
 - 브랜치와 커밋은 gitflow 원칙을 준수하고, 커밋도 한국어 작성을 기본으로 한다. 커밋에 linear 티켓 이름을 붙이지 않는다.
 - 브랜치는 linear에서 생성한 티켓명을 그대로 사용한다. ex) SAF-00
 - 커밋 요청 시 직접 관여한 파일만을 대상으로 한다. 작업하지 않은 파일은 제외한다.
-- PR의 제목은 티켓명 강조 뒤에 개발 내용을 작성한다. 다음과 같이 작성한다 ex) [SAF-00] feat: ~~ 
+- PR의 제목은 티켓명 괄호 뒤에 개발 내용을 작성한다. 다음과 같이 작성한다 ex) [SAF-00] feat: ~~ 
 - PR작성 시 `.github/PULL_REQUEST_TEMPLATE.md`파일의 규칙을 따른다. 
-- "관련 이슈"의 경우 github에 존재하는 이슈를 가장 우선으로 작성한다. PR에서 관련된 이슈가 해결된 경우 Closed 를 사용해 PR 종료 시 닫히도록 진행한다. 
+- PR에서 관련된 이슈가 해결된 경우 Closed 를 사용해 PR 종료 시 닫히도록 진행한다. 
 
 ### P0 / P1 — 반드시 지적 (blocking)
 
