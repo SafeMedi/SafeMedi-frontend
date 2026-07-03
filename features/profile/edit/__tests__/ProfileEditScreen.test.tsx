@@ -17,6 +17,9 @@ const mockUser: User = {
   gender: "female",
   bloodType: "AB-",
   allergies: ["페니실린", "해산물", "꽃가루"],
+  allergyMappings: {
+    꽃가루: { type: "ATC_GROUP", value: "R06AX13", name: "꽃가루" },
+  },
   chronicConditions: ["천식", "편두통"],
   isTutorial: true,
 };
@@ -177,7 +180,7 @@ describe("프로필 수정 화면", () => {
 
     expect(getByDisplayValue("홍길동")).toBeTruthy();
     expect(getByText("기본정보:female:AB:negative")).toBeTruthy();
-    expect(getByText("알러지:페니실린,해산물")).toBeTruthy();
+    expect(getByText("알러지:페니실린,해산물,꽃가루")).toBeTruthy();
     expect(getByText("기저질환:천식")).toBeTruthy();
   });
 
@@ -207,6 +210,7 @@ describe("프로필 수정 화면", () => {
           allergies: [
             { type: "ATC_GROUP", value: "J01CA04", name: "페니실린계 항생제" },
             { type: "FOOD", value: "해산물", name: "해산물" },
+            { type: "ATC_GROUP", value: "R06AX13", name: "꽃가루" },
           ],
         },
         expect.objectContaining({

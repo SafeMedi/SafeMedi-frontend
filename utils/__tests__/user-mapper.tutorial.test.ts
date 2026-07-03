@@ -50,6 +50,29 @@ describe("튜토리얼 사용자 매핑", () => {
     });
   });
 
+  it("서버 알러지를 대표 라벨과 검색 매핑으로 변환한다", () => {
+    const user = profileToUser({
+      displayName: "홍길동",
+      birthDate: "1990-01-01",
+      gender: "F",
+      height: 170,
+      weight: 65,
+      bloodType: "AB-",
+      diseases: ["천식"],
+      allergies: [
+        { code: "J01CA04", name: "페니실린계 항생제" },
+        { code: "해산물", name: "해산물" },
+        { code: "R06AX13", name: "꽃가루" },
+      ],
+      isTutorialCompleted: true,
+    });
+
+    expect(user.allergies).toEqual(["페니실린", "해산물", "꽃가루"]);
+    expect(user.allergyMappings).toEqual({
+      꽃가루: { type: "ATC_GROUP", value: "R06AX13", name: "꽃가루" },
+    });
+  });
+
   it("프로필 알러지 라벨을 중복 제거된 API 코드로 변환한다", () => {
     const mapped = profileAllergyLabelsToApiCodes([
       "페니실린",

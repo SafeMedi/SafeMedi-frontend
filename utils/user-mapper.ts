@@ -39,6 +39,66 @@ function findRepresentativeFoodAllergy(label: string): RepresentativeAllergyOpti
   return representativeFoodAllergyOptions.find((option) => option.label === label);
 }
 
+function findRepresentativeAllergyByCodeOrName(
+  code: string,
+  name: string,
+): RepresentativeAllergyOption | undefined {
+  const options = [...representativeMedicineAllergyOptions, ...representativeFoodAllergyOptions];
+  return options.find(
+    (option) =>
+      option.label === name ||
+      option.name === name ||
+      option.value === code ||
+      option.label === code,
+  );
+}
+
+function inferAllergyType(code: string, name: string): TutorialAllergyItem["type"] {
+  if (code.startsWith("M")) return "INGREDIENT";
+  if (/^[A-Z]\d/.test(code)) return "ATC_GROUP";
+  if (code === name) return "FOOD";
+  return "ATC_GROUP";
+}
+
+function profileAllergiesToUserFields(
+  allergies: UserProfile["allergies"],
+): Pick<User, "allergies" | "allergyMappings"> {
+  if (!allergies?.length) {
+    return { allergies: [] };
+  }
+
+  const labels: string[] = [];
+  const mappings: Record<string, TutorialAllergyItem> = {};
+  const seenLabels = new Set<string>();
+
+  for (const allergy of allergies) {
+    const representative = findRepresentativeAllergyByCodeOrName(allergy.code, allergy.name);
+    if (representative) {
+      if (!seenLabels.has(representative.label)) {
+        seenLabels.add(representative.label);
+        labels.push(representative.label);
+      }
+      continue;
+    }
+
+    const label = allergy.name || allergy.code;
+    if (!label || seenLabels.has(label)) continue;
+
+    seenLabels.add(label);
+    labels.push(label);
+    mappings[label] = {
+      type: inferAllergyType(allergy.code, allergy.name),
+      value: allergy.code || label,
+      name: allergy.name || label,
+    };
+  }
+
+  return {
+    allergies: labels,
+    ...(Object.keys(mappings).length > 0 ? { allergyMappings: mappings } : {}),
+  };
+}
+
 function findChronicCondition(label: string) {
   return chronicConditionOptions.find((option) => option.label === label);
 }
@@ -164,6 +224,8 @@ export function profileToUser(profile: UserProfile): User {
   const gender: User["gender"] =
     profile.gender === "M" ? "male" : profile.gender === "F" ? "female" : null;
 
+  const allergyFields = profileAllergiesToUserFields(profile.allergies);
+
   return {
     id: "me",
     displayName: profile.displayName,
@@ -173,7 +235,7 @@ export function profileToUser(profile: UserProfile): User {
     weight: profile.weight,
     gender,
     bloodType: supportedBloodType,
-    allergies: (profile.allergies ?? []).map((a) => a.name),
+    ...allergyFields,
     chronicConditions: profile.diseases ?? [],
     isTutorial: profile.isTutorialCompleted,
   };

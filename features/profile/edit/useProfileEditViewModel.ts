@@ -54,13 +54,31 @@ function getRepresentativeAllergyOptions() {
   return [...representativeMedicineAllergyOptions, ...representativeFoodAllergyOptions];
 }
 
+function createInitialAllergyState(
+  allergies: readonly string[],
+  allergyMappings: Readonly<Record<string, UserProfilePatchAllergyItem>>,
+): {
+  labels: string[];
+  mappings: Record<string, UserProfilePatchAllergyItem>;
+} {
+  const mappings = { ...allergyMappings };
+  return {
+    labels: createUniqueItems([...createKnownAllergies(allergies), ...Object.keys(mappings)]),
+    mappings,
+  };
+}
+
 export function useProfileEditViewModel() {
   const user = useUserStore((s) => s.user);
   const saveMutation = useUpdateUserProfileMutation();
   const [debouncedAllergyInput, setDebouncedAllergyInput] = useState("");
+  const { labels: initialAllergies, mappings: initialAllergyMappings } = useMemo(
+    () => createInitialAllergyState(user?.allergies ?? [], user?.allergyMappings ?? {}),
+    [user?.allergies, user?.allergyMappings],
+  );
   const [selectedAllergyItems, setSelectedAllergyItems] = useState<
     Record<string, UserProfilePatchAllergyItem>
-  >({});
+  >(() => ({ ...(user?.allergyMappings ?? {}) }));
   const initialGender: GenderOptionValue = GENDERS.includes(
     (user?.gender ?? "male") as GenderOptionValue,
   )
@@ -71,10 +89,6 @@ export function useProfileEditViewModel() {
   );
 
   const initialName = user?.displayName ?? "";
-  const initialAllergies = useMemo(
-    () => createKnownAllergies(user?.allergies ?? []),
-    [user?.allergies],
-  );
   const initialChronic = useMemo(
     () => createKnownChronicConditions(user?.chronicConditions ?? []),
     [user?.chronicConditions],
@@ -114,7 +128,7 @@ export function useProfileEditViewModel() {
     debouncedAllergyInput,
     isAllergySearchEnabled,
   );
-  const allergySearchResults = useMemo(() => {
+  const allergySearchResults = useMemo<ProfileTagSearchResult[]>(() => {
     if (!isAllergySearchEnabled) return [];
 
     return (drugSearchResults ?? [])
@@ -123,7 +137,7 @@ export function useProfileEditViewModel() {
         id: `${item.drugCode}:${item.atcCode}:${item.drugName}`,
         label: item.drugName,
         meta: item.company ? `${item.company} · ${item.atcCode}` : item.atcCode,
-        type: "ATC_GROUP",
+        type: "ATC_GROUP" as const,
         value: item.atcCode,
         name: item.drugName,
       }));
@@ -140,9 +154,10 @@ export function useProfileEditViewModel() {
       allergyInput: "",
       chronicInput: "",
     });
-    setSelectedAllergyItems({});
+    setSelectedAllergyItems({ ...initialAllergyMappings });
   }, [
     initialAllergies,
+    initialAllergyMappings,
     initialBloodType,
     initialChronic,
     initialGender,
