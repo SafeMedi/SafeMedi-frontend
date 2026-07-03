@@ -1,4 +1,5 @@
 import {
+  buildUserAllergyEditState,
   chronicConditionLabelsToDiseaseCodes,
   profileAllergyLabelsToApiCodes,
   profileAllergyLabelsToPatchItems,
@@ -50,6 +51,58 @@ describe("튜토리얼 사용자 매핑", () => {
     });
   });
 
+  it("서버 알러지를 대표 라벨과 검색 매핑으로 변환한다", () => {
+    const user = profileToUser({
+      displayName: "홍길동",
+      birthDate: "1990-01-01",
+      gender: "F",
+      height: 170,
+      weight: 65,
+      bloodType: "AB-",
+      diseases: ["천식"],
+      allergies: [
+        { code: "J01CA04", name: "페니실린계 항생제" },
+        { code: "해산물", name: "해산물" },
+        { code: "R06AX13", name: "꽃가루" },
+      ],
+      isTutorialCompleted: true,
+    });
+
+    expect(user.allergies).toEqual(["페니실린", "해산물", "꽃가루"]);
+    expect(user.allergyMappings).toEqual({
+      꽃가루: { type: "ATC_GROUP", value: "R06AX13", name: "꽃가루" },
+    });
+  });
+
+  it("편집 화면 초기 상태를 알러지 라벨과 매핑을 함께 복원한다", () => {
+    expect(
+      buildUserAllergyEditState(["페니실린", "해산물", "꽃가루"], {
+        꽃가루: { type: "ATC_GROUP", value: "R06AX13", name: "꽃가루" },
+      }),
+    ).toEqual({
+      labels: ["페니실린", "해산물", "꽃가루"],
+      mappings: {
+        꽃가루: { type: "ATC_GROUP", value: "R06AX13", name: "꽃가루" },
+      },
+    });
+  });
+
+  it("매핑 없는 비대표 알러지도 편집 상태에 보존한다", () => {
+    expect(buildUserAllergyEditState(["페니실린", "꽃가루"], {})).toEqual({
+      labels: ["페니실린", "꽃가루"],
+      mappings: {
+        꽃가루: { type: "FOOD", value: "꽃가루", name: "꽃가루" },
+      },
+    });
+  });
+
+  it("서버 표시명 알러지를 대표 라벨로 정규화한다", () => {
+    expect(buildUserAllergyEditState(["페니실린계 항생제", "해산물"], {})).toEqual({
+      labels: ["페니실린", "해산물"],
+      mappings: {},
+    });
+  });
+
   it("프로필 알러지 라벨을 중복 제거된 API 코드로 변환한다", () => {
     const mapped = profileAllergyLabelsToApiCodes([
       "페니실린",
@@ -58,8 +111,8 @@ describe("튜토리얼 사용자 매핑", () => {
       "페니실린",
     ]);
 
-    expect(mapped).toEqual(expect.arrayContaining(["J01CA", "V01AA", "직접입력알러지"]));
-    expect(mapped).toHaveLength(3);
+    expect(mapped).toEqual(expect.arrayContaining(["J01CA04", "해산물"]));
+    expect(mapped).toHaveLength(2);
   });
 
   it("튜토리얼 알러지 라벨을 type/value/name 객체 배열로 변환한다", () => {
@@ -72,12 +125,24 @@ describe("튜토리얼 사용자 매핑", () => {
 
     expect(mapped).toEqual(
       expect.arrayContaining([
-        { type: "ATC_GROUP", value: "J01C", name: "페니실린" },
+        { type: "ATC_GROUP", value: "J01CA04", name: "페니실린계 항생제" },
         { type: "FOOD", value: "해산물", name: "해산물" },
         { type: "FOOD", value: "직접입력알러지", name: "직접입력알러지" },
       ]),
     );
     expect(mapped).toHaveLength(3);
+  });
+
+  it("튜토리얼 알러지 검색 선택 매핑을 우선 사용한다", () => {
+    const mapped = profileAllergyLabelsToTutorialItems(["아목시실린캡슐"], {
+      아목시실린캡슐: {
+        type: "ATC_GROUP",
+        value: "J01CA04",
+        name: "아목시실린캡슐",
+      },
+    });
+
+    expect(mapped).toEqual([{ type: "ATC_GROUP", value: "J01CA04", name: "아목시실린캡슐" }]);
   });
 
   it("프로필 수정 알러지 라벨을 API 허용 객체 배열로 변환한다", () => {
@@ -89,9 +154,8 @@ describe("튜토리얼 사용자 매핑", () => {
     ]);
 
     expect(mapped).toEqual([
-      { type: "ATC_GROUP", value: "J01C", name: "페니실린" },
-      { type: "CUSTOM", value: "해산물", name: "해산물" },
-      { type: "CUSTOM", value: "직접입력알러지", name: "직접입력알러지" },
+      { type: "ATC_GROUP", value: "J01CA04", name: "페니실린계 항생제" },
+      { type: "FOOD", value: "해산물", name: "해산물" },
     ]);
   });
 
@@ -99,7 +163,6 @@ describe("튜토리얼 사용자 매핑", () => {
     expect(chronicConditionLabelsToDiseaseCodes(["고혈압", "당뇨병", "직접입력"])).toEqual([
       "I10",
       "E11",
-      "직접입력",
     ]);
   });
 
@@ -115,7 +178,7 @@ describe("튜토리얼 사용자 매핑", () => {
       rhType: "PLUS",
       diseaseCodes: ["J45"],
       allergies: expect.arrayContaining([
-        { type: "ATC_GROUP", value: "J01C", name: "페니실린" },
+        { type: "ATC_GROUP", value: "J01CA04", name: "페니실린계 항생제" },
         { type: "FOOD", value: "해산물", name: "해산물" },
         { type: "FOOD", value: "직접입력알러지", name: "직접입력알러지" },
       ]),

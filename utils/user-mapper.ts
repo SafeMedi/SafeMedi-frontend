@@ -5,44 +5,14 @@ import type {
   TutorialRhType,
 } from "@/api/types/tutorial";
 import type { UserProfile, UserProfilePatchAllergyItem } from "@/api/types/user";
+import {
+  chronicConditionOptions,
+  type RepresentativeAllergyOption,
+  representativeFoodAllergyOptions,
+  representativeMedicineAllergyOptions,
+} from "@/constants/health-profile-options";
 import type { User } from "@/stores/userStore";
 import { splitBloodTypeWithRh } from "@/utils/blood-type";
-
-const MEDICINE_ALLERGY_OPTIONS = ["페니실린", "아스피린", "소염진통제", "설파제"] as const;
-const FOOD_ALLERGY_OPTIONS = ["땅콩", "해산물", "유제품", "계란"] as const;
-
-/** UI 선택지·한글 라벨 → ATC 코드 (PATCH /users/me 등 레거시 경로) */
-const ALLERGY_LABEL_TO_ATC: Record<string, string> = {
-  페니실린: "J01CA",
-  아스피린: "N02BA01",
-  소염진통제: "M01A",
-  설파제: "J01E",
-  땅콩: "V01AA",
-  해산물: "V01AA",
-  유제품: "V01AA",
-  계란: "V01AA",
-};
-
-/** 튜토리얼 POST용 약물 알러지 → ATC_GROUP */
-const MEDICINE_ALLERGY_TO_TUTORIAL: Record<
-  (typeof MEDICINE_ALLERGY_OPTIONS)[number],
-  Pick<TutorialAllergyItem, "type" | "value" | "name">
-> = {
-  페니실린: { type: "ATC_GROUP", value: "J01C", name: "페니실린" },
-  아스피린: { type: "ATC_GROUP", value: "N02BA", name: "아스피린" },
-  소염진통제: { type: "ATC_GROUP", value: "M01A", name: "소염진통제" },
-  설파제: { type: "ATC_GROUP", value: "J01E", name: "설파제" },
-};
-
-/** 튜토리얼 POST용 기저질환 라벨 → ICD 코드 */
-const CHRONIC_CONDITION_TO_DISEASE_CODE: Record<string, string> = {
-  고혈압: "I10",
-  당뇨병: "E11",
-  천식: "J45",
-  신장질환: "N18",
-  간질환: "K76",
-  심장질환: "I25",
-};
 
 const SUPPORTED_BLOOD_TYPES = [
   "A",
@@ -61,12 +31,132 @@ const SUPPORTED_BLOOD_TYPES = [
 
 const TUTORIAL_BLOOD_TYPES: readonly TutorialBloodType[] = ["A", "B", "O", "AB"];
 
-function isMedicineAllergyLabel(label: string): label is (typeof MEDICINE_ALLERGY_OPTIONS)[number] {
-  return MEDICINE_ALLERGY_OPTIONS.includes(label as (typeof MEDICINE_ALLERGY_OPTIONS)[number]);
+function findRepresentativeMedicineAllergy(label: string): RepresentativeAllergyOption | undefined {
+  return representativeMedicineAllergyOptions.find((option) => option.label === label);
 }
 
-function isFoodAllergyLabel(label: string): label is (typeof FOOD_ALLERGY_OPTIONS)[number] {
-  return FOOD_ALLERGY_OPTIONS.includes(label as (typeof FOOD_ALLERGY_OPTIONS)[number]);
+function findRepresentativeFoodAllergy(label: string): RepresentativeAllergyOption | undefined {
+  return representativeFoodAllergyOptions.find((option) => option.label === label);
+}
+
+function findRepresentativeAllergyByCodeOrName(
+  code: string,
+  name: string,
+): RepresentativeAllergyOption | undefined {
+  const options = [...representativeMedicineAllergyOptions, ...representativeFoodAllergyOptions];
+  return options.find(
+    (option) =>
+      option.label === name ||
+      option.name === name ||
+      option.value === code ||
+      option.label === code,
+  );
+}
+
+function inferAllergyType(code: string, name: string): TutorialAllergyItem["type"] {
+  if (code.startsWith("M")) return "INGREDIENT";
+  if (/^[A-Z]\d/.test(code)) return "ATC_GROUP";
+  if (code === name) return "FOOD";
+  return "ATC_GROUP";
+}
+
+function createUniqueAllergyLabels(items: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const next: string[] = [];
+
+  for (const item of items) {
+    const normalized = item.trim();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    next.push(normalized);
+  }
+
+  return next;
+}
+
+export function buildUserAllergyEditState(
+  allergies: readonly string[],
+  allergyMappings: Readonly<Record<string, TutorialAllergyItem>> = {},
+): {
+  labels: string[];
+  mappings: Record<string, UserProfilePatchAllergyItem>;
+} {
+  const mappings: Record<string, UserProfilePatchAllergyItem> = { ...allergyMappings };
+  const seen = new Set<string>();
+  const labels: string[] = [];
+
+  const addLabel = (label: string) => {
+    if (!label || seen.has(label)) return;
+    seen.add(label);
+    labels.push(label);
+  };
+
+  for (const item of createUniqueAllergyLabels(allergies)) {
+    const representative =
+      findRepresentativeMedicineAllergy(item) ??
+      findRepresentativeFoodAllergy(item) ??
+      findRepresentativeAllergyByCodeOrName(item, item);
+
+    if (representative) {
+      addLabel(representative.label);
+      continue;
+    }
+
+    addLabel(item);
+    if (!mappings[item]) {
+      mappings[item] = {
+        type: "FOOD",
+        value: item,
+        name: item,
+      };
+    }
+  }
+
+  for (const label of Object.keys(allergyMappings)) {
+    addLabel(label);
+  }
+
+  return { labels, mappings };
+}
+
+function profileAllergiesToUserFields(
+  allergies: UserProfile["allergies"],
+): Pick<User, "allergies" | "allergyMappings"> {
+  if (!allergies?.length) {
+    return { allergies: [] };
+  }
+
+  const seedLabels: string[] = [];
+  const seedMappings: Record<string, TutorialAllergyItem> = {};
+
+  for (const allergy of allergies) {
+    const representative = findRepresentativeAllergyByCodeOrName(allergy.code, allergy.name);
+    if (representative) {
+      seedLabels.push(representative.label);
+      continue;
+    }
+
+    const label = allergy.name || allergy.code;
+    if (!label) continue;
+
+    seedLabels.push(label);
+    seedMappings[label] = {
+      type: inferAllergyType(allergy.code, allergy.name),
+      value: allergy.code || label,
+      name: allergy.name || label,
+    };
+  }
+
+  const { labels, mappings } = buildUserAllergyEditState(seedLabels, seedMappings);
+
+  return {
+    allergies: labels,
+    ...(Object.keys(mappings).length > 0 ? { allergyMappings: mappings } : {}),
+  };
+}
+
+function findChronicCondition(label: string) {
+  return chronicConditionOptions.find((option) => option.label === label);
 }
 
 function toTutorialBloodType(value: string | undefined): TutorialBloodType | undefined {
@@ -90,50 +180,73 @@ function toTutorialRhType(
 export function profileAllergyLabelsToApiCodes(labels: string[]): string[] {
   const codes = new Set<string>();
   for (const label of labels) {
-    const code = ALLERGY_LABEL_TO_ATC[label];
-    codes.add(code ?? label);
+    const representative =
+      findRepresentativeMedicineAllergy(label) ?? findRepresentativeFoodAllergy(label);
+    if (representative) {
+      codes.add(representative.value);
+    }
   }
   return [...codes];
 }
 
-export function profileAllergyLabelsToPatchItems(labels: string[]): UserProfilePatchAllergyItem[] {
+export function profileAllergyLabelsToPatchItems(
+  labels: string[],
+  mappedItems: Readonly<Record<string, UserProfilePatchAllergyItem>> = {},
+): UserProfilePatchAllergyItem[] {
   const items = new Map<string, UserProfilePatchAllergyItem>();
 
   for (const label of labels) {
-    if (isMedicineAllergyLabel(label)) {
-      const mapped = MEDICINE_ALLERGY_TO_TUTORIAL[label];
+    const selectedItem = mappedItems[label];
+    if (selectedItem) {
+      items.set(`${selectedItem.type}:${selectedItem.value}`, selectedItem);
+      continue;
+    }
+
+    const mapped = findRepresentativeMedicineAllergy(label) ?? findRepresentativeFoodAllergy(label);
+    if (mapped) {
       const item: UserProfilePatchAllergyItem = {
-        type: "ATC_GROUP",
+        type: mapped.type,
         value: mapped.value,
         name: mapped.name,
       };
       items.set(`${item.type}:${item.value}`, item);
-      continue;
     }
-
-    const item: UserProfilePatchAllergyItem = {
-      type: "CUSTOM",
-      value: label,
-      name: label,
-    };
-    items.set(`${item.type}:${item.value}`, item);
   }
 
   return [...items.values()];
 }
 
-export function profileAllergyLabelsToTutorialItems(labels: string[]): TutorialAllergyItem[] {
+export function profileAllergyLabelsToTutorialItems(
+  labels: string[],
+  mappedItems: Readonly<Record<string, TutorialAllergyItem>> = {},
+): TutorialAllergyItem[] {
   const items = new Map<string, TutorialAllergyItem>();
 
   for (const label of labels) {
-    if (isMedicineAllergyLabel(label)) {
-      const mapped = MEDICINE_ALLERGY_TO_TUTORIAL[label];
-      items.set(`${mapped.type}:${mapped.value}`, mapped);
+    const selectedItem = mappedItems[label];
+    if (selectedItem) {
+      items.set(`${selectedItem.type}:${selectedItem.value}`, selectedItem);
       continue;
     }
 
-    if (isFoodAllergyLabel(label)) {
-      const item: TutorialAllergyItem = { type: "FOOD", value: label, name: label };
+    const medicine = findRepresentativeMedicineAllergy(label);
+    if (medicine) {
+      const item: TutorialAllergyItem = {
+        type: medicine.type,
+        value: medicine.value,
+        name: medicine.name,
+      };
+      items.set(`${item.type}:${item.value}`, item);
+      continue;
+    }
+
+    const food = findRepresentativeFoodAllergy(label);
+    if (food) {
+      const item: TutorialAllergyItem = {
+        type: food.type,
+        value: food.value,
+        name: food.name,
+      };
       items.set(`${item.type}:${item.value}`, item);
       continue;
     }
@@ -148,7 +261,10 @@ export function profileAllergyLabelsToTutorialItems(labels: string[]): TutorialA
 export function chronicConditionLabelsToDiseaseCodes(labels: string[]): string[] {
   const codes = new Set<string>();
   for (const label of labels) {
-    codes.add(CHRONIC_CONDITION_TO_DISEASE_CODE[label] ?? label);
+    const option = findChronicCondition(label);
+    if (option) {
+      codes.add(option.code);
+    }
   }
   return [...codes];
 }
@@ -164,6 +280,8 @@ export function profileToUser(profile: UserProfile): User {
   const gender: User["gender"] =
     profile.gender === "M" ? "male" : profile.gender === "F" ? "female" : null;
 
+  const allergyFields = profileAllergiesToUserFields(profile.allergies);
+
   return {
     id: "me",
     displayName: profile.displayName,
@@ -173,7 +291,7 @@ export function profileToUser(profile: UserProfile): User {
     weight: profile.weight,
     gender,
     bloodType: supportedBloodType,
-    allergies: (profile.allergies ?? []).map((a) => a.name),
+    ...allergyFields,
     chronicConditions: profile.diseases ?? [],
     isTutorial: profile.isTutorialCompleted,
   };
@@ -187,6 +305,7 @@ export function userToTutorialRegistrationBody(user: User): TutorialRegistration
   const { bloodType: baseBloodType, rhFactor } = splitBloodTypeWithRh(user.bloodType);
   const tutorialBloodType = toTutorialBloodType(baseBloodType);
   const tutorialRhType = toTutorialRhType(user.bloodType, rhFactor);
+  const diseaseCodes = chronicConditionLabelsToDiseaseCodes(user.chronicConditions);
 
   return {
     birthDate: user.birthDate,
@@ -195,11 +314,9 @@ export function userToTutorialRegistrationBody(user: User): TutorialRegistration
     weight: user.weight != null ? Math.round(user.weight) : undefined,
     bloodType: tutorialBloodType,
     rhType: tutorialRhType,
-    diseaseCodes: user.chronicConditions.length
-      ? chronicConditionLabelsToDiseaseCodes(user.chronicConditions)
-      : undefined,
+    diseaseCodes: diseaseCodes.length ? diseaseCodes : undefined,
     allergies: user.allergies.length
-      ? profileAllergyLabelsToTutorialItems(user.allergies)
+      ? profileAllergyLabelsToTutorialItems(user.allergies, user.allergyMappings)
       : undefined,
   };
 }

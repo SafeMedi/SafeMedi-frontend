@@ -51,6 +51,10 @@ export function ProfileEditScreen() {
           onInputChange={viewModel.handleAllergyInputChange}
           onAddItem={viewModel.handleAddAllergy}
           onRemoveItem={viewModel.handleRemoveAllergy}
+          inputMode="search"
+          searchResults={viewModel.allergySearchResults}
+          isSearchFetching={viewModel.isAllergySearchFetching}
+          onSelectSearchResult={viewModel.handleSelectAllergySearchResult}
         />
         <ProfileTagEditorCard
           variant="chronic"
@@ -61,6 +65,7 @@ export function ProfileEditScreen() {
           onInputChange={viewModel.handleChronicInputChange}
           onAddItem={viewModel.handleAddChronicCondition}
           onRemoveItem={viewModel.handleRemoveChronicCondition}
+          inputMode="hidden"
         />
         <ProfileEditNoticeCard />
         <ProfileEditActionBar

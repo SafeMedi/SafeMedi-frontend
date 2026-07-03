@@ -25,14 +25,12 @@ describe("튜토리얼 Step3", () => {
     resetMockStore();
   });
 
-  it("선택 기저질환과 직접 입력 기저질환을 저장하고 submit이 성공한다", async () => {
-    setMockUser(baseUser);
+  it("선택 가능한 기저질환만 저장하고 submit이 성공한다", async () => {
+    setMockUser({ ...baseUser, chronicConditions: ["천식", "편두통"] });
     const ref = createRef<StepHandle>();
-    const { getByLabelText, getByPlaceholderText } = render(<Step3 ref={ref} />);
+    const { getByLabelText, queryByPlaceholderText } = render(<Step3 ref={ref} />);
 
     fireEvent.press(getByLabelText("고혈압"));
-    fireEvent.changeText(getByPlaceholderText("선택지에 없는 기저질환 입력"), "편두통");
-    fireEvent.press(getByLabelText("기저질환 직접 입력 추가"));
 
     let submitted = false;
     await act(async () => {
@@ -40,8 +38,9 @@ describe("튜토리얼 Step3", () => {
     });
 
     expect(submitted).toBe(true);
+    expect(queryByPlaceholderText("선택지에 없는 기저질환 입력")).toBeNull();
     expect(mockUpdateUser).toHaveBeenCalledWith({
-      chronicConditions: ["천식", "고혈압", "편두통"],
+      chronicConditions: ["천식", "고혈압"],
     });
   });
 });

@@ -5,6 +5,7 @@ import { ProfileEditScreen } from "../ProfileEditScreen";
 
 const mockBack = jest.fn();
 const mockMutate = jest.fn();
+const mockUseSearchDrugsQuery = jest.fn();
 
 const mockUser: User = {
   id: "me",
@@ -15,8 +16,11 @@ const mockUser: User = {
   weight: 65,
   gender: "female",
   bloodType: "AB-",
-  allergies: ["아스피린", "꽃가루"],
-  chronicConditions: ["천식"],
+  allergies: ["페니실린", "해산물", "꽃가루"],
+  allergyMappings: {
+    꽃가루: { type: "ATC_GROUP", value: "R06AX13", name: "꽃가루" },
+  },
+  chronicConditions: ["천식", "편두통"],
   isTutorial: true,
 };
 let mockActiveUser: User | null = mockUser;
@@ -43,6 +47,10 @@ jest.mock("@/api/queries/user", () => ({
     mutate: mockMutate,
     isPending: false,
   }),
+}));
+
+jest.mock("@/api/queries/drugs", () => ({
+  useSearchDrugsQuery: (...args: unknown[]) => mockUseSearchDrugsQuery(...args),
 }));
 
 jest.mock("tamagui", () => {
@@ -156,6 +164,7 @@ describe("프로필 수정 화면", () => {
   beforeEach(() => {
     mockActiveUser = mockUser;
     jest.clearAllMocks();
+    mockUseSearchDrugsQuery.mockReturnValue({ data: [], isFetching: false });
   });
 
   it("사용자 정보가 없으면 빈 기본값으로 편집 화면을 렌더링한다", () => {
@@ -171,7 +180,7 @@ describe("프로필 수정 화면", () => {
 
     expect(getByDisplayValue("홍길동")).toBeTruthy();
     expect(getByText("기본정보:female:AB:negative")).toBeTruthy();
-    expect(getByText("알러지:아스피린,꽃가루")).toBeTruthy();
+    expect(getByText("알러지:페니실린,해산물,꽃가루")).toBeTruthy();
     expect(getByText("기저질환:천식")).toBeTruthy();
   });
 
@@ -182,6 +191,32 @@ describe("프로필 수정 화면", () => {
       StyleSheet.flatten(getByTestId("profile-edit-scroll").props.contentContainerStyle),
     ).toMatchObject({
       paddingBottom: 16,
+    });
+  });
+
+  it("매핑 없이 store에만 있는 비대표 알러지도 유지한다", async () => {
+    mockActiveUser = {
+      ...mockUser,
+      allergies: ["페니실린", "꽃가루"],
+      allergyMappings: undefined,
+    };
+
+    const { getByText, getByLabelText } = render(<ProfileEditScreen />);
+
+    expect(getByText("알러지:페니실린,꽃가루")).toBeTruthy();
+
+    fireEvent.press(getByLabelText("저장"));
+
+    await waitFor(() => {
+      expect(mockMutate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          allergies: expect.arrayContaining([
+            { type: "ATC_GROUP", value: "J01CA04", name: "페니실린계 항생제" },
+            { type: "FOOD", value: "꽃가루", name: "꽃가루" },
+          ]),
+        }),
+        expect.any(Object),
+      );
     });
   });
 
@@ -199,8 +234,9 @@ describe("프로필 수정 화면", () => {
           rhType: "MINUS",
           diseaseCodes: ["J45"],
           allergies: [
-            { type: "ATC_GROUP", value: "N02BA", name: "아스피린" },
-            { type: "CUSTOM", value: "꽃가루", name: "꽃가루" },
+            { type: "ATC_GROUP", value: "J01CA04", name: "페니실린계 항생제" },
+            { type: "FOOD", value: "해산물", name: "해산물" },
+            { type: "ATC_GROUP", value: "R06AX13", name: "꽃가루" },
           ],
         },
         expect.objectContaining({
