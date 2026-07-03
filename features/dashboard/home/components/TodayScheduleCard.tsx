@@ -1,3 +1,4 @@
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useMemo, useState } from "react";
@@ -121,14 +122,15 @@ export function TodayScheduleCard({
           const isExpanded = expandedPrescriptionIds.has(prescription.id);
           const medicationRows = medicationRowsByPrescription.get(prescription.id) ?? [];
           const isTakeDisabled = takingPrescriptionId !== null;
+          const prescriptionToneStyle = TONE_STYLES[prescription.tone];
 
           return (
             <View
               key={prescription.id}
-              style={[styles.bottomWrap, { borderColor: toneStyle.contentBorder }]}
+              style={[styles.bottomWrap, { borderColor: prescriptionToneStyle.contentBorder }]}
             >
               <LinearGradient
-                colors={[...toneStyle.contentGradient]}
+                colors={[...prescriptionToneStyle.contentGradient]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.bottom}
@@ -156,7 +158,7 @@ export function TodayScheduleCard({
                         style={[styles.takeButton, isTakeDisabled && styles.takeButtonDisabled]}
                         onPress={() => onPressTake(prescription)}
                       >
-                        <Ionicons name="checkmark" size={18} color={palette.white} />
+                        <FontAwesome name="check" size={18} color={palette.green_deep} />
                       </Pressable>
                     ) : null}
                     <Pressable
@@ -270,7 +272,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 4,
-    backgroundColor: palette.green_deep,
+    backgroundColor: "transparent",
     alignItems: "center",
     justifyContent: "center",
   },

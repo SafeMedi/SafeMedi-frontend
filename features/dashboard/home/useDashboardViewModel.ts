@@ -18,6 +18,7 @@ export interface DashboardSchedulePrescriptionItem {
   readonly medicationNames: readonly string[];
   readonly recordIds: readonly number[];
   readonly canMarkAsTaken: boolean;
+  readonly tone: DashboardScheduleTone;
 }
 
 export interface DashboardScheduleCardItem {
@@ -57,6 +58,18 @@ function resolveScheduleTone(status: TodayMedicationScheduleStatus): DashboardSc
   if (status === "NEED_TAKE") return "required";
   if (status === "MISSED") return "missed";
   return "upcoming";
+}
+
+function resolvePrescriptionTone(
+  status: TodayMedicationScheduleStatus,
+  groupStatus: TodayMedicationScheduleStatus,
+  canMarkAsTaken: boolean,
+): DashboardScheduleTone {
+  if (groupStatus === "NEED_TAKE" && status === "NEED_TAKE" && !canMarkAsTaken) {
+    return "success";
+  }
+
+  return resolveScheduleTone(status);
 }
 
 function resolveStatusLabel(status: TodayMedicationScheduleStatus): string {
@@ -186,21 +199,29 @@ export function useDashboardViewModel(): DashboardViewModel {
         id: takeTime,
         scheduledTime: takeTime,
         prescriptionCount: prescriptionSchedules.length,
-        prescriptions: prescriptionSchedules.map((schedule) => ({
-          id: `${schedule.prescriptionId}-${schedule.takeTime}-${schedule.recordIds.join("-")}`,
-          prescriptionId: schedule.prescriptionId,
-          prescriptionTitle: schedule.prescriptionTitle,
-          medicationCount: schedule.drugCount,
-          medicationNames:
-            schedule.drugNames ??
-            prescriptions
-              .find((prescription) => prescription.prescriptionId === schedule.prescriptionId)
-              ?.medications.filter((medication) => medication.takeTimes.includes(schedule.takeTime))
-              .map((medication) => medication.drugName) ??
-            [],
-          recordIds: schedule.markableRecordIds,
-          canMarkAsTaken: schedule.status === "NEED_TAKE" && schedule.markableRecordIds.length > 0,
-        })),
+        prescriptions: prescriptionSchedules.map((schedule) => {
+          const canMarkAsTaken =
+            schedule.status === "NEED_TAKE" && schedule.markableRecordIds.length > 0;
+
+          return {
+            id: `${schedule.prescriptionId}-${schedule.takeTime}-${schedule.recordIds.join("-")}`,
+            prescriptionId: schedule.prescriptionId,
+            prescriptionTitle: schedule.prescriptionTitle,
+            medicationCount: schedule.drugCount,
+            medicationNames:
+              schedule.drugNames ??
+              prescriptions
+                .find((prescription) => prescription.prescriptionId === schedule.prescriptionId)
+                ?.medications.filter((medication) =>
+                  medication.takeTimes.includes(schedule.takeTime),
+                )
+                .map((medication) => medication.drugName) ??
+              [],
+            recordIds: schedule.markableRecordIds,
+            canMarkAsTaken,
+            tone: resolvePrescriptionTone(schedule.status, groupStatus, canMarkAsTaken),
+          };
+        }),
         statusLabel: resolveStatusLabel(groupStatus),
         tone: resolveScheduleTone(groupStatus),
       };

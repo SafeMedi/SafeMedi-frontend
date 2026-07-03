@@ -165,6 +165,7 @@ function createViewModel(overrides?: Partial<DashboardViewModel>): DashboardView
             medicationNames: ["타이레놀", "암로디핀"],
             recordIds: [1, 2],
             canMarkAsTaken: false,
+            tone: "success",
           },
         ],
         statusLabel: "완료",

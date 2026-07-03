@@ -1,4 +1,5 @@
 import { fireEvent, render } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import { palette } from "@/constants/design-tokens";
 import type { DashboardScheduleCardItem } from "../../useDashboardViewModel";
 import { TodayScheduleCard } from "../TodayScheduleCard";
@@ -44,6 +45,7 @@ const BASE_ITEM: DashboardScheduleCardItem = {
       medicationNames: ["타이레놀", "타이레놀", "아목시실린"],
       recordIds: [1, 2, 3],
       canMarkAsTaken: true,
+      tone: "required",
     },
     {
       id: "2-08:00-2",
@@ -53,6 +55,7 @@ const BASE_ITEM: DashboardScheduleCardItem = {
       medicationNames: ["비타민C"],
       recordIds: [4],
       canMarkAsTaken: false,
+      tone: "success",
     },
   ],
   statusLabel: "복용 필요",
@@ -124,13 +127,18 @@ describe("TodayScheduleCard", () => {
       />,
     );
 
-    fireEvent.press(getByLabelText("아침 복약 복약 완료"));
+    const takeButton = getByLabelText("아침 복약 복약 완료");
+    const takeButtonStyle = StyleSheet.flatten(takeButton.props.style);
+
+    expect(takeButtonStyle.backgroundColor).toBe("transparent");
+
+    fireEvent.press(takeButton);
 
     expect(mockOnPressTake).toHaveBeenCalledWith(BASE_ITEM.prescriptions[0]);
     expect(queryByLabelText("비타민 종합 복약 완료")).toBeNull();
   });
 
-  it("현재 복약 대상은 헤더와 처방전에 청보라 그라데이션을 적용한다", () => {
+  it("현재 복약 대상은 헤더와 해당 처방전에 청보라 그라데이션을 적용한다", () => {
     const { getAllByTestId } = render(
       <TodayScheduleCard
         item={BASE_ITEM}
@@ -145,6 +153,22 @@ describe("TodayScheduleCard", () => {
     expect(gradients[1].props.colors).toEqual([palette.blue, palette.purple]);
   });
 
+  it("같은 시간대의 완료된 처방전은 개별적으로 녹색 그라데이션을 적용한다", () => {
+    const { getAllByTestId } = render(
+      <TodayScheduleCard
+        item={BASE_ITEM}
+        takingPrescriptionId={null}
+        onPressTake={mockOnPressTake}
+      />,
+    );
+
+    const gradients = getAllByTestId("linear-gradient");
+
+    expect(gradients[0].props.colors).toEqual([palette.blue, palette.purple]);
+    expect(gradients[1].props.colors).toEqual([palette.blue, palette.purple]);
+    expect(gradients[2].props.colors).toEqual([palette.green, palette.opal]);
+  });
+
   it("지난 미복용은 헤더와 처방전에 주황 그라데이션을 적용한다", () => {
     const { getAllByTestId } = render(
       <TodayScheduleCard
@@ -152,7 +176,7 @@ describe("TodayScheduleCard", () => {
           ...BASE_ITEM,
           statusLabel: "미복용",
           tone: "missed",
-          prescriptions: [BASE_ITEM.prescriptions[0]],
+          prescriptions: [{ ...BASE_ITEM.prescriptions[0], tone: "missed" }],
         }}
         takingPrescriptionId={null}
         onPressTake={mockOnPressTake}
@@ -178,7 +202,7 @@ describe("TodayScheduleCard", () => {
           ...BASE_ITEM,
           statusLabel: "완료",
           tone: "success",
-          prescriptions: [BASE_ITEM.prescriptions[0]],
+          prescriptions: [{ ...BASE_ITEM.prescriptions[0], tone: "success" }],
         }}
         takingPrescriptionId={null}
         onPressTake={mockOnPressTake}
