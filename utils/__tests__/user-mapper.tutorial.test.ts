@@ -99,7 +99,6 @@ describe("튜토리얼 사용자 매핑", () => {
     expect(chronicConditionLabelsToDiseaseCodes(["고혈압", "당뇨병", "직접입력"])).toEqual([
       "I10",
       "E11",
-      "직접입력",
     ]);
   });
 

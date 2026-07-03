@@ -47,6 +47,21 @@ export const representativeFoodAllergyOptions = [
   { label: "계란", type: "FOOD", value: "계란", name: "계란" },
 ] as const satisfies readonly RepresentativeAllergyOption[];
 
+export type ChronicConditionOption = {
+  readonly emoji: string;
+  readonly label: string;
+  readonly code: string;
+};
+
+export const chronicConditionOptions = [
+  { emoji: "❤️", label: "고혈압", code: "I10" },
+  { emoji: "🩸", label: "당뇨병", code: "E11" },
+  { emoji: "🫁", label: "천식", code: "J45" },
+  { emoji: "🫘", label: "신장질환", code: "N18" },
+  { emoji: "🫀", label: "간질환", code: "K76" },
+  { emoji: "💓", label: "심장질환", code: "I25" },
+] as const satisfies readonly ChronicConditionOption[];
+
 export const profileEditQuickItems = {
   allergy: ["페니실린", "아세트아미노펜", "나프록센 진통제", "페니라민"],
   chronic: ["고혈압", "당뇨병", "천식", "신장질환", "간질환", "심장질환"],

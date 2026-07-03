@@ -6,22 +6,13 @@ import type {
 } from "@/api/types/tutorial";
 import type { UserProfile, UserProfilePatchAllergyItem } from "@/api/types/user";
 import {
+  chronicConditionOptions,
   type RepresentativeAllergyOption,
   representativeFoodAllergyOptions,
   representativeMedicineAllergyOptions,
 } from "@/constants/health-profile-options";
 import type { User } from "@/stores/userStore";
 import { splitBloodTypeWithRh } from "@/utils/blood-type";
-
-/** 튜토리얼 POST용 기저질환 라벨 → ICD 코드 */
-const CHRONIC_CONDITION_TO_DISEASE_CODE: Record<string, string> = {
-  고혈압: "I10",
-  당뇨병: "E11",
-  천식: "J45",
-  신장질환: "N18",
-  간질환: "K76",
-  심장질환: "I25",
-};
 
 const SUPPORTED_BLOOD_TYPES = [
   "A",
@@ -46,6 +37,10 @@ function findRepresentativeMedicineAllergy(label: string): RepresentativeAllergy
 
 function findRepresentativeFoodAllergy(label: string): RepresentativeAllergyOption | undefined {
   return representativeFoodAllergyOptions.find((option) => option.label === label);
+}
+
+function findChronicCondition(label: string) {
+  return chronicConditionOptions.find((option) => option.label === label);
 }
 
 function toTutorialBloodType(value: string | undefined): TutorialBloodType | undefined {
@@ -138,7 +133,10 @@ export function profileAllergyLabelsToTutorialItems(labels: string[]): TutorialA
 export function chronicConditionLabelsToDiseaseCodes(labels: string[]): string[] {
   const codes = new Set<string>();
   for (const label of labels) {
-    codes.add(CHRONIC_CONDITION_TO_DISEASE_CODE[label] ?? label);
+    const option = findChronicCondition(label);
+    if (option) {
+      codes.add(option.code);
+    }
   }
   return [...codes];
 }
@@ -177,6 +175,7 @@ export function userToTutorialRegistrationBody(user: User): TutorialRegistration
   const { bloodType: baseBloodType, rhFactor } = splitBloodTypeWithRh(user.bloodType);
   const tutorialBloodType = toTutorialBloodType(baseBloodType);
   const tutorialRhType = toTutorialRhType(user.bloodType, rhFactor);
+  const diseaseCodes = chronicConditionLabelsToDiseaseCodes(user.chronicConditions);
 
   return {
     birthDate: user.birthDate,
@@ -185,9 +184,7 @@ export function userToTutorialRegistrationBody(user: User): TutorialRegistration
     weight: user.weight != null ? Math.round(user.weight) : undefined,
     bloodType: tutorialBloodType,
     rhType: tutorialRhType,
-    diseaseCodes: user.chronicConditions.length
-      ? chronicConditionLabelsToDiseaseCodes(user.chronicConditions)
-      : undefined,
+    diseaseCodes: diseaseCodes.length ? diseaseCodes : undefined,
     allergies: user.allergies.length
       ? profileAllergyLabelsToTutorialItems(user.allergies)
       : undefined,
