@@ -26,7 +26,28 @@ export const genderOptions: readonly { value: GenderOptionValue; label: string }
   { value: "female", label: "여성" },
 ];
 
+export type RepresentativeAllergyOption = {
+  readonly label: string;
+  readonly type: "ATC_GROUP" | "INGREDIENT" | "FOOD";
+  readonly value: string;
+  readonly name: string;
+};
+
+export const representativeMedicineAllergyOptions = [
+  { label: "페니실린", type: "ATC_GROUP", value: "J01CA04", name: "페니실린계 항생제" },
+  { label: "아세트아미노펜", type: "INGREDIENT", value: "M040353", name: "아세트아미노펜" },
+  { label: "나프록센 진통제", type: "INGREDIENT", value: "M050116", name: "나프록센 진통제" },
+  { label: "페니라민", type: "ATC_GROUP", value: "R06AB04", name: "페니라민 항생제" },
+] as const satisfies readonly RepresentativeAllergyOption[];
+
+export const representativeFoodAllergyOptions = [
+  { label: "땅콩", type: "FOOD", value: "땅콩", name: "땅콩" },
+  { label: "해산물", type: "FOOD", value: "해산물", name: "해산물" },
+  { label: "유제품", type: "FOOD", value: "유제품", name: "유제품" },
+  { label: "계란", type: "FOOD", value: "계란", name: "계란" },
+] as const satisfies readonly RepresentativeAllergyOption[];
+
 export const profileEditQuickItems = {
-  allergy: ["설파제", "세파계 항생제", "이부프로펜", "조영제"],
-  chronic: ["고지혈증", "천식", "위염", "간질환", "신장질환"],
+  allergy: ["페니실린", "아세트아미노펜", "나프록센 진통제", "페니라민"],
+  chronic: ["고혈압", "당뇨병", "천식", "신장질환", "간질환", "심장질환"],
 } as const;

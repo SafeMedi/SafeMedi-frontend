@@ -58,7 +58,7 @@ describe("튜토리얼 사용자 매핑", () => {
       "페니실린",
     ]);
 
-    expect(mapped).toEqual(expect.arrayContaining(["J01CA", "V01AA", "직접입력알러지"]));
+    expect(mapped).toEqual(expect.arrayContaining(["J01CA04", "해산물", "직접입력알러지"]));
     expect(mapped).toHaveLength(3);
   });
 
@@ -72,7 +72,7 @@ describe("튜토리얼 사용자 매핑", () => {
 
     expect(mapped).toEqual(
       expect.arrayContaining([
-        { type: "ATC_GROUP", value: "J01C", name: "페니실린" },
+        { type: "ATC_GROUP", value: "J01CA04", name: "페니실린계 항생제" },
         { type: "FOOD", value: "해산물", name: "해산물" },
         { type: "FOOD", value: "직접입력알러지", name: "직접입력알러지" },
       ]),
@@ -89,7 +89,7 @@ describe("튜토리얼 사용자 매핑", () => {
     ]);
 
     expect(mapped).toEqual([
-      { type: "ATC_GROUP", value: "J01C", name: "페니실린" },
+      { type: "ATC_GROUP", value: "J01CA04", name: "페니실린계 항생제" },
       { type: "CUSTOM", value: "해산물", name: "해산물" },
       { type: "CUSTOM", value: "직접입력알러지", name: "직접입력알러지" },
     ]);
@@ -115,7 +115,7 @@ describe("튜토리얼 사용자 매핑", () => {
       rhType: "PLUS",
       diseaseCodes: ["J45"],
       allergies: expect.arrayContaining([
-        { type: "ATC_GROUP", value: "J01C", name: "페니실린" },
+        { type: "ATC_GROUP", value: "J01CA04", name: "페니실린계 항생제" },
         { type: "FOOD", value: "해산물", name: "해산물" },
         { type: "FOOD", value: "직접입력알러지", name: "직접입력알러지" },
       ]),

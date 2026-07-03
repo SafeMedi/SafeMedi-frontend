@@ -5,34 +5,13 @@ import type {
   TutorialRhType,
 } from "@/api/types/tutorial";
 import type { UserProfile, UserProfilePatchAllergyItem } from "@/api/types/user";
+import {
+  type RepresentativeAllergyOption,
+  representativeFoodAllergyOptions,
+  representativeMedicineAllergyOptions,
+} from "@/constants/health-profile-options";
 import type { User } from "@/stores/userStore";
 import { splitBloodTypeWithRh } from "@/utils/blood-type";
-
-const MEDICINE_ALLERGY_OPTIONS = ["페니실린", "아스피린", "소염진통제", "설파제"] as const;
-const FOOD_ALLERGY_OPTIONS = ["땅콩", "해산물", "유제품", "계란"] as const;
-
-/** UI 선택지·한글 라벨 → ATC 코드 (PATCH /users/me 등 레거시 경로) */
-const ALLERGY_LABEL_TO_ATC: Record<string, string> = {
-  페니실린: "J01CA",
-  아스피린: "N02BA01",
-  소염진통제: "M01A",
-  설파제: "J01E",
-  땅콩: "V01AA",
-  해산물: "V01AA",
-  유제품: "V01AA",
-  계란: "V01AA",
-};
-
-/** 튜토리얼 POST용 약물 알러지 → ATC_GROUP */
-const MEDICINE_ALLERGY_TO_TUTORIAL: Record<
-  (typeof MEDICINE_ALLERGY_OPTIONS)[number],
-  Pick<TutorialAllergyItem, "type" | "value" | "name">
-> = {
-  페니실린: { type: "ATC_GROUP", value: "J01C", name: "페니실린" },
-  아스피린: { type: "ATC_GROUP", value: "N02BA", name: "아스피린" },
-  소염진통제: { type: "ATC_GROUP", value: "M01A", name: "소염진통제" },
-  설파제: { type: "ATC_GROUP", value: "J01E", name: "설파제" },
-};
 
 /** 튜토리얼 POST용 기저질환 라벨 → ICD 코드 */
 const CHRONIC_CONDITION_TO_DISEASE_CODE: Record<string, string> = {
@@ -61,12 +40,12 @@ const SUPPORTED_BLOOD_TYPES = [
 
 const TUTORIAL_BLOOD_TYPES: readonly TutorialBloodType[] = ["A", "B", "O", "AB"];
 
-function isMedicineAllergyLabel(label: string): label is (typeof MEDICINE_ALLERGY_OPTIONS)[number] {
-  return MEDICINE_ALLERGY_OPTIONS.includes(label as (typeof MEDICINE_ALLERGY_OPTIONS)[number]);
+function findRepresentativeMedicineAllergy(label: string): RepresentativeAllergyOption | undefined {
+  return representativeMedicineAllergyOptions.find((option) => option.label === label);
 }
 
-function isFoodAllergyLabel(label: string): label is (typeof FOOD_ALLERGY_OPTIONS)[number] {
-  return FOOD_ALLERGY_OPTIONS.includes(label as (typeof FOOD_ALLERGY_OPTIONS)[number]);
+function findRepresentativeFoodAllergy(label: string): RepresentativeAllergyOption | undefined {
+  return representativeFoodAllergyOptions.find((option) => option.label === label);
 }
 
 function toTutorialBloodType(value: string | undefined): TutorialBloodType | undefined {
@@ -90,8 +69,9 @@ function toTutorialRhType(
 export function profileAllergyLabelsToApiCodes(labels: string[]): string[] {
   const codes = new Set<string>();
   for (const label of labels) {
-    const code = ALLERGY_LABEL_TO_ATC[label];
-    codes.add(code ?? label);
+    const representative =
+      findRepresentativeMedicineAllergy(label) ?? findRepresentativeFoodAllergy(label);
+    codes.add(representative?.value ?? label);
   }
   return [...codes];
 }
@@ -100,10 +80,10 @@ export function profileAllergyLabelsToPatchItems(labels: string[]): UserProfileP
   const items = new Map<string, UserProfilePatchAllergyItem>();
 
   for (const label of labels) {
-    if (isMedicineAllergyLabel(label)) {
-      const mapped = MEDICINE_ALLERGY_TO_TUTORIAL[label];
+    const mapped = findRepresentativeMedicineAllergy(label);
+    if (mapped) {
       const item: UserProfilePatchAllergyItem = {
-        type: "ATC_GROUP",
+        type: mapped.type === "INGREDIENT" ? "INGREDIENT" : "ATC_GROUP",
         value: mapped.value,
         name: mapped.name,
       };
@@ -126,14 +106,24 @@ export function profileAllergyLabelsToTutorialItems(labels: string[]): TutorialA
   const items = new Map<string, TutorialAllergyItem>();
 
   for (const label of labels) {
-    if (isMedicineAllergyLabel(label)) {
-      const mapped = MEDICINE_ALLERGY_TO_TUTORIAL[label];
-      items.set(`${mapped.type}:${mapped.value}`, mapped);
+    const medicine = findRepresentativeMedicineAllergy(label);
+    if (medicine) {
+      const item: TutorialAllergyItem = {
+        type: medicine.type,
+        value: medicine.value,
+        name: medicine.name,
+      };
+      items.set(`${item.type}:${item.value}`, item);
       continue;
     }
 
-    if (isFoodAllergyLabel(label)) {
-      const item: TutorialAllergyItem = { type: "FOOD", value: label, name: label };
+    const food = findRepresentativeFoodAllergy(label);
+    if (food) {
+      const item: TutorialAllergyItem = {
+        type: food.type,
+        value: food.value,
+        name: food.name,
+      };
       items.set(`${item.type}:${item.value}`, item);
       continue;
     }

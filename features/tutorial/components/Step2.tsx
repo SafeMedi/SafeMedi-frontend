@@ -6,33 +6,31 @@ import { Input, Text, XStack, YStack } from "tamagui";
 import { Button } from "@/components/ui/Button";
 import { SelectChip } from "@/components/ui/SelectChip";
 import { palette } from "@/constants/design-tokens";
+import {
+  representativeFoodAllergyOptions,
+  representativeMedicineAllergyOptions,
+} from "@/constants/health-profile-options";
 import type { StepHandle } from "@/features/tutorial/types";
 import { useUserStore } from "@/stores/userStore";
 import { toggleSelection } from "@/utils/array";
 
-const medicineAllergyOptions = ["페니실린", "아스피린", "소염진통제", "설파제"] as const;
-const foodAllergyOptions = ["땅콩", "해산물", "유제품", "계란"] as const;
+const medicineAllergyLabels = representativeMedicineAllergyOptions.map((option) => option.label);
+const foodAllergyLabels = representativeFoodAllergyOptions.map((option) => option.label);
 
 export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
   const user = useUserStore((s) => s.user);
   const updateUser = useUserStore((s) => s.updateUser);
 
   const [selectedMedicine, setSelectedMedicine] = useState<string[]>(() =>
-    (user?.allergies ?? []).filter((item) =>
-      medicineAllergyOptions.includes(item as (typeof medicineAllergyOptions)[number]),
-    ),
+    (user?.allergies ?? []).filter((item) => medicineAllergyLabels.includes(item)),
   );
   const [selectedFood, setSelectedFood] = useState<string[]>(() =>
-    (user?.allergies ?? []).filter((item) =>
-      foodAllergyOptions.includes(item as (typeof foodAllergyOptions)[number]),
-    ),
+    (user?.allergies ?? []).filter((item) => foodAllergyLabels.includes(item)),
   );
   const [customInput, setCustomInput] = useState("");
   const [customAllergies, setCustomAllergies] = useState<string[]>(() =>
     (user?.allergies ?? []).filter(
-      (item) =>
-        !medicineAllergyOptions.includes(item as (typeof medicineAllergyOptions)[number]) &&
-        !foodAllergyOptions.includes(item as (typeof foodAllergyOptions)[number]),
+      (item) => !medicineAllergyLabels.includes(item) && !foodAllergyLabels.includes(item),
     ),
   );
 
@@ -110,14 +108,14 @@ export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
 
         <AllergySection
           title="💊 약물 알러지"
-          options={medicineAllergyOptions}
+          options={medicineAllergyLabels}
           selectedItems={selectedMedicine}
           onToggle={(item) => setSelectedMedicine((prev) => toggleSelection(prev, item))}
         />
 
         <AllergySection
           title="🍽️ 식품 알러지"
-          options={foodAllergyOptions}
+          options={foodAllergyLabels}
           selectedItems={selectedFood}
           onToggle={(item) => setSelectedFood((prev) => toggleSelection(prev, item))}
         />

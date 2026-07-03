@@ -30,7 +30,7 @@ describe("튜토리얼 Step2", () => {
     const ref = createRef<StepHandle>();
     const { getByPlaceholderText, getByLabelText } = render(<Step2 ref={ref} />);
 
-    fireEvent.press(getByLabelText("아스피린"));
+    fireEvent.press(getByLabelText("아세트아미노펜"));
     fireEvent.changeText(getByPlaceholderText("선택지에 없는 알러지 입력"), "꽃가루");
     fireEvent.press(getByLabelText("알러지 직접 입력 추가"));
 
@@ -41,7 +41,7 @@ describe("튜토리얼 Step2", () => {
 
     expect(submitted).toBe(true);
     expect(mockUpdateUser).toHaveBeenCalledWith({
-      allergies: ["페니실린", "아스피린", "꽃가루"],
+      allergies: ["페니실린", "아세트아미노펜", "꽃가루"],
     });
   });
 });
