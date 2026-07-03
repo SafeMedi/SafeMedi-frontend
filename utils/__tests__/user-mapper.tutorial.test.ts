@@ -58,8 +58,8 @@ describe("튜토리얼 사용자 매핑", () => {
       "페니실린",
     ]);
 
-    expect(mapped).toEqual(expect.arrayContaining(["J01CA04", "해산물", "직접입력알러지"]));
-    expect(mapped).toHaveLength(3);
+    expect(mapped).toEqual(expect.arrayContaining(["J01CA04", "해산물"]));
+    expect(mapped).toHaveLength(2);
   });
 
   it("튜토리얼 알러지 라벨을 type/value/name 객체 배열로 변환한다", () => {
@@ -80,6 +80,18 @@ describe("튜토리얼 사용자 매핑", () => {
     expect(mapped).toHaveLength(3);
   });
 
+  it("튜토리얼 알러지 검색 선택 매핑을 우선 사용한다", () => {
+    const mapped = profileAllergyLabelsToTutorialItems(["아목시실린캡슐"], {
+      아목시실린캡슐: {
+        type: "ATC_GROUP",
+        value: "J01CA04",
+        name: "아목시실린캡슐",
+      },
+    });
+
+    expect(mapped).toEqual([{ type: "ATC_GROUP", value: "J01CA04", name: "아목시실린캡슐" }]);
+  });
+
   it("프로필 수정 알러지 라벨을 API 허용 객체 배열로 변환한다", () => {
     const mapped = profileAllergyLabelsToPatchItems([
       "페니실린",
@@ -90,8 +102,7 @@ describe("튜토리얼 사용자 매핑", () => {
 
     expect(mapped).toEqual([
       { type: "ATC_GROUP", value: "J01CA04", name: "페니실린계 항생제" },
-      { type: "CUSTOM", value: "해산물", name: "해산물" },
-      { type: "CUSTOM", value: "직접입력알러지", name: "직접입력알러지" },
+      { type: "FOOD", value: "해산물", name: "해산물" },
     ]);
   });
 

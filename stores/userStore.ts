@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { TutorialAllergyItem } from "@/api/types/tutorial";
 
 /** 앱 UI·튜토리얼 폼용 로컬 모델. 서버 진실은 `useUserProfile` + `UserProfile` */
 export type User = {
@@ -24,6 +25,7 @@ export type User = {
     | "AB-"
     | null;
   allergies: string[];
+  allergyMappings?: Record<string, TutorialAllergyItem>;
   chronicConditions: string[];
   isTutorial: boolean;
 };

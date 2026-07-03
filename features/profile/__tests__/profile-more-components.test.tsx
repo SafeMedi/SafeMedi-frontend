@@ -106,6 +106,77 @@ describe("profile more components", () => {
     expect(onRemoveItem).not.toHaveBeenCalled();
   });
 
+  it("ProfileTagEditorCard 기저질환은 직접 입력 없이 빠른 추가만 제공한다", () => {
+    const onInputChange = jest.fn();
+    const onAddItem = jest.fn();
+    const onRemoveItem = jest.fn();
+    const { getByText, queryByPlaceholderText } = render(
+      <ProfileTagEditorCard
+        variant="chronic"
+        title="기저질환"
+        items={["천식"]}
+        inputValue=""
+        inputPlaceholder="기저질환을 입력하세요"
+        onInputChange={onInputChange}
+        onAddItem={onAddItem}
+        onRemoveItem={onRemoveItem}
+        inputMode="hidden"
+      />,
+    );
+
+    expect(queryByPlaceholderText("기저질환을 입력하세요")).toBeNull();
+
+    fireEvent.press(getByText("+ 고혈압"));
+    expect(onAddItem).toHaveBeenCalledWith("고혈압");
+    expect(onInputChange).not.toHaveBeenCalled();
+  });
+
+  it("ProfileTagEditorCard 알러지 검색 결과를 선택해 추가한다", () => {
+    const onInputChange = jest.fn();
+    const onAddItem = jest.fn();
+    const onRemoveItem = jest.fn();
+    const onSelectSearchResult = jest.fn();
+    const { getByLabelText, getByPlaceholderText, queryByText } = render(
+      <ProfileTagEditorCard
+        variant="allergy"
+        title="알러지"
+        items={[]}
+        inputValue="페니"
+        inputPlaceholder="알러지 검색"
+        onInputChange={onInputChange}
+        onAddItem={onAddItem}
+        onRemoveItem={onRemoveItem}
+        inputMode="search"
+        searchResults={[
+          {
+            id: "D01:J01CA04:페니실린캡슐",
+            label: "페니실린캡슐",
+            meta: "제약사 · J01CA04",
+            type: "ATC_GROUP",
+            value: "J01CA04",
+            name: "페니실린캡슐",
+          },
+        ]}
+        onSelectSearchResult={onSelectSearchResult}
+      />,
+    );
+
+    fireEvent.changeText(getByPlaceholderText("알러지 검색"), "페니실린");
+    expect(onInputChange).toHaveBeenCalledWith("페니실린");
+
+    fireEvent.press(getByLabelText("페니실린캡슐 검색 결과 선택"));
+    expect(onSelectSearchResult).toHaveBeenCalledWith({
+      id: "D01:J01CA04:페니실린캡슐",
+      label: "페니실린캡슐",
+      meta: "제약사 · J01CA04",
+      type: "ATC_GROUP",
+      value: "J01CA04",
+      name: "페니실린캡슐",
+    });
+    expect(onAddItem).not.toHaveBeenCalled();
+    expect(queryByText("검색 결과가 없습니다.")).toBeNull();
+  });
+
   it("HealthInfoCard/HealthInfoSection/ProfilePageHeader 렌더링 및 이벤트 전달", () => {
     const onEdit = jest.fn();
     const onDetailPress = jest.fn();

@@ -20,19 +20,40 @@ const baseUser: User = {
   isTutorial: false,
 };
 
+const mockUseSearchDrugsQuery = jest.fn();
+
+jest.mock("@/api/queries/drugs", () => ({
+  useSearchDrugsQuery: (...args: unknown[]) => mockUseSearchDrugsQuery(...args),
+}));
+
 describe("튜토리얼 Step2", () => {
   beforeEach(() => {
+    jest.useFakeTimers();
+    jest.clearAllMocks();
     resetMockStore();
+    mockUseSearchDrugsQuery.mockReturnValue({ data: [], isFetching: false });
   });
 
-  it("선택 알러지와 직접 입력 알러지를 저장하고 submit이 성공한다", async () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("선택 알러지와 검색 선택 알러지를 저장하고 submit이 성공한다", async () => {
+    const searchedDrug = {
+      drugCode: "D01",
+      atcCode: "J01CA04",
+      drugName: "아목시실린캡슐",
+      company: "제약사",
+    };
+    mockUseSearchDrugsQuery.mockReturnValue({ data: [searchedDrug], isFetching: false });
     setMockUser(baseUser);
     const ref = createRef<StepHandle>();
     const { getByPlaceholderText, getByLabelText } = render(<Step2 ref={ref} />);
 
     fireEvent.press(getByLabelText("아세트아미노펜"));
-    fireEvent.changeText(getByPlaceholderText("선택지에 없는 알러지 입력"), "꽃가루");
-    fireEvent.press(getByLabelText("알러지 직접 입력 추가"));
+    fireEvent.changeText(getByPlaceholderText("알러지 약물명 검색"), "아목");
+    act(() => jest.advanceTimersByTime(250));
+    fireEvent.press(getByLabelText("아목시실린캡슐 검색 결과 선택"));
 
     let submitted = false;
     await act(async () => {
@@ -41,7 +62,14 @@ describe("튜토리얼 Step2", () => {
 
     expect(submitted).toBe(true);
     expect(mockUpdateUser).toHaveBeenCalledWith({
-      allergies: ["페니실린", "아세트아미노펜", "꽃가루"],
+      allergies: ["페니실린", "아세트아미노펜", "아목시실린캡슐"],
+      allergyMappings: {
+        아목시실린캡슐: {
+          type: "ATC_GROUP",
+          value: "J01CA04",
+          name: "아목시실린캡슐",
+        },
+      },
     });
   });
 });

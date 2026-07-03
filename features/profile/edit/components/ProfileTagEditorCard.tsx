@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { Text } from "tamagui";
 
 import { Badge } from "@/components/ui/Badge";
@@ -14,6 +14,15 @@ import {
   type ProfileEditSectionVariant,
 } from "../constants";
 
+export type ProfileTagSearchResult = {
+  readonly id: string;
+  readonly label: string;
+  readonly meta?: string;
+  readonly type: "ATC_GROUP" | "INGREDIENT" | "FOOD";
+  readonly value: string;
+  readonly name: string;
+};
+
 export type ProfileTagEditorCardProps = {
   variant: ProfileEditSectionVariant;
   title: string;
@@ -23,6 +32,10 @@ export type ProfileTagEditorCardProps = {
   onInputChange: (value: string) => void;
   onAddItem: (value: string) => void;
   onRemoveItem: (value: string) => void;
+  inputMode?: "custom" | "search" | "hidden";
+  searchResults?: readonly ProfileTagSearchResult[];
+  isSearchFetching?: boolean;
+  onSelectSearchResult?: (value: ProfileTagSearchResult) => void;
 };
 
 export function ProfileTagEditorCard({
@@ -34,9 +47,16 @@ export function ProfileTagEditorCard({
   onInputChange,
   onAddItem,
   onRemoveItem,
+  inputMode = "custom",
+  searchResults = [],
+  isSearchFetching = false,
+  onSelectSearchResult,
 }: ProfileTagEditorCardProps) {
   const style = PROFILE_EDIT_SECTION_STYLES[variant];
   const quickItems = PROFILE_EDIT_QUICK_ITEMS[variant];
+  const isSearchMode = inputMode === "search";
+  const shouldShowInput = inputMode !== "hidden";
+  const shouldShowSearchResults = isSearchMode && inputValue.trim().length > 0;
 
   return (
     <SurfaceCard style={styles.card}>
@@ -60,27 +80,64 @@ export function ProfileTagEditorCard({
         ))}
       </View>
 
-      <View style={styles.inputRow}>
-        <TextInput
-          value={inputValue}
-          onChangeText={onInputChange}
-          placeholder={inputPlaceholder}
-          placeholderTextColor={palette.input_placeholder}
-          style={styles.input}
-          returnKeyType="done"
-          onSubmitEditing={() => onAddItem(inputValue)}
-        />
-        <Pressable onPress={() => onAddItem(inputValue)} hitSlop={6}>
-          <LinearGradient
-            colors={[...style.addButtonGradient]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.addButton}
-          >
-            <Ionicons name="add" size={14} color={palette.white} />
-          </LinearGradient>
-        </Pressable>
-      </View>
+      {shouldShowInput ? (
+        <>
+          <View style={styles.inputRow}>
+            <TextInput
+              value={inputValue}
+              onChangeText={onInputChange}
+              placeholder={inputPlaceholder}
+              placeholderTextColor={palette.input_placeholder}
+              style={styles.input}
+              returnKeyType={isSearchMode ? "search" : "done"}
+              onSubmitEditing={() => {
+                if (!isSearchMode) {
+                  onAddItem(inputValue);
+                }
+              }}
+            />
+            {isSearchMode ? null : (
+              <Pressable onPress={() => onAddItem(inputValue)} hitSlop={6}>
+                <LinearGradient
+                  colors={[...style.addButtonGradient]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.addButton}
+                >
+                  <Ionicons name="add" size={14} color={palette.white} />
+                </LinearGradient>
+              </Pressable>
+            )}
+          </View>
+
+          {shouldShowSearchResults ? (
+            <ScrollView
+              style={styles.searchResults}
+              nestedScrollEnabled
+              keyboardShouldPersistTaps="handled"
+            >
+              {isSearchFetching ? <Text style={styles.emptySearchText}>검색 중...</Text> : null}
+              {!isSearchFetching && searchResults.length > 0 && onSelectSearchResult
+                ? searchResults.map((item) => (
+                    <Pressable
+                      key={item.id}
+                      onPress={() => onSelectSearchResult(item)}
+                      style={styles.searchResultItem}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${item.label} 검색 결과 선택`}
+                    >
+                      <Text style={styles.searchResultText}>{item.label}</Text>
+                      {item.meta ? <Text style={styles.searchResultMeta}>{item.meta}</Text> : null}
+                    </Pressable>
+                  ))
+                : null}
+              {!isSearchFetching && searchResults.length === 0 ? (
+                <Text style={styles.emptySearchText}>검색 결과가 없습니다.</Text>
+              ) : null}
+            </ScrollView>
+          ) : null}
+        </>
+      ) : null}
 
       <View style={styles.quickWrap}>
         <Text style={styles.quickLabel}>빠른 추가:</Text>
@@ -167,5 +224,38 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 6,
+  },
+  searchResults: {
+    maxHeight: 280,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.dark_gray,
+    backgroundColor: palette.white,
+    overflow: "hidden",
+  },
+  searchResultItem: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: palette.dark_gray,
+  },
+  searchResultText: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "600",
+    color: palette.black,
+  },
+  searchResultMeta: {
+    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 15,
+    color: palette.icon,
+  },
+  emptySearchText: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 12,
+    lineHeight: 17,
+    color: palette.icon,
   },
 });

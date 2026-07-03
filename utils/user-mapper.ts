@@ -66,41 +66,53 @@ export function profileAllergyLabelsToApiCodes(labels: string[]): string[] {
   for (const label of labels) {
     const representative =
       findRepresentativeMedicineAllergy(label) ?? findRepresentativeFoodAllergy(label);
-    codes.add(representative?.value ?? label);
+    if (representative) {
+      codes.add(representative.value);
+    }
   }
   return [...codes];
 }
 
-export function profileAllergyLabelsToPatchItems(labels: string[]): UserProfilePatchAllergyItem[] {
+export function profileAllergyLabelsToPatchItems(
+  labels: string[],
+  mappedItems: Readonly<Record<string, UserProfilePatchAllergyItem>> = {},
+): UserProfilePatchAllergyItem[] {
   const items = new Map<string, UserProfilePatchAllergyItem>();
 
   for (const label of labels) {
-    const mapped = findRepresentativeMedicineAllergy(label);
+    const selectedItem = mappedItems[label];
+    if (selectedItem) {
+      items.set(`${selectedItem.type}:${selectedItem.value}`, selectedItem);
+      continue;
+    }
+
+    const mapped = findRepresentativeMedicineAllergy(label) ?? findRepresentativeFoodAllergy(label);
     if (mapped) {
       const item: UserProfilePatchAllergyItem = {
-        type: mapped.type === "INGREDIENT" ? "INGREDIENT" : "ATC_GROUP",
+        type: mapped.type,
         value: mapped.value,
         name: mapped.name,
       };
       items.set(`${item.type}:${item.value}`, item);
-      continue;
     }
-
-    const item: UserProfilePatchAllergyItem = {
-      type: "CUSTOM",
-      value: label,
-      name: label,
-    };
-    items.set(`${item.type}:${item.value}`, item);
   }
 
   return [...items.values()];
 }
 
-export function profileAllergyLabelsToTutorialItems(labels: string[]): TutorialAllergyItem[] {
+export function profileAllergyLabelsToTutorialItems(
+  labels: string[],
+  mappedItems: Readonly<Record<string, TutorialAllergyItem>> = {},
+): TutorialAllergyItem[] {
   const items = new Map<string, TutorialAllergyItem>();
 
   for (const label of labels) {
+    const selectedItem = mappedItems[label];
+    if (selectedItem) {
+      items.set(`${selectedItem.type}:${selectedItem.value}`, selectedItem);
+      continue;
+    }
+
     const medicine = findRepresentativeMedicineAllergy(label);
     if (medicine) {
       const item: TutorialAllergyItem = {
@@ -186,7 +198,7 @@ export function userToTutorialRegistrationBody(user: User): TutorialRegistration
     rhType: tutorialRhType,
     diseaseCodes: diseaseCodes.length ? diseaseCodes : undefined,
     allergies: user.allergies.length
-      ? profileAllergyLabelsToTutorialItems(user.allergies)
+      ? profileAllergyLabelsToTutorialItems(user.allergies, user.allergyMappings)
       : undefined,
   };
 }

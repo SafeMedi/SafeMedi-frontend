@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from "react";
-import { ScrollView } from "react-native";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
+import { Pressable, ScrollView, StyleSheet } from "react-native";
 import { Input, Text, XStack, YStack } from "tamagui";
-import { Button } from "@/components/ui/Button";
+import { useSearchDrugsQuery } from "@/api/queries/drugs";
+import type { TutorialAllergyItem } from "@/api/types/tutorial";
 import { SelectChip } from "@/components/ui/SelectChip";
 import { palette } from "@/constants/design-tokens";
 import {
@@ -16,6 +17,8 @@ import { toggleSelection } from "@/utils/array";
 
 const medicineAllergyLabels = representativeMedicineAllergyOptions.map((option) => option.label);
 const foodAllergyLabels = representativeFoodAllergyOptions.map((option) => option.label);
+const MIN_ALLERGY_SEARCH_KEYWORD_LENGTH = 2;
+const ALLERGY_SEARCH_DEBOUNCE_DELAY_MS = 250;
 
 export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
   const user = useUserStore((s) => s.user);
@@ -27,51 +30,73 @@ export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
   const [selectedFood, setSelectedFood] = useState<string[]>(() =>
     (user?.allergies ?? []).filter((item) => foodAllergyLabels.includes(item)),
   );
-  const [customInput, setCustomInput] = useState("");
-  const [customAllergies, setCustomAllergies] = useState<string[]>(() =>
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearchInput, setDebouncedSearchInput] = useState("");
+  const [selectedSearchAllergies, setSelectedSearchAllergies] = useState<string[]>(() =>
     (user?.allergies ?? []).filter(
       (item) => !medicineAllergyLabels.includes(item) && !foodAllergyLabels.includes(item),
     ),
   );
+  const [selectedSearchAllergyItems, setSelectedSearchAllergyItems] = useState<
+    Record<string, TutorialAllergyItem>
+  >(() => user?.allergyMappings ?? {});
 
   const allSelectedAllergies = useMemo(
-    () => [...selectedMedicine, ...selectedFood, ...customAllergies],
-    [customAllergies, selectedFood, selectedMedicine],
+    () => [...selectedMedicine, ...selectedFood, ...selectedSearchAllergies],
+    [selectedFood, selectedMedicine, selectedSearchAllergies],
   );
 
-  const handleAddCustomAllergy = useCallback(() => {
-    const normalized = customInput.trim();
-    if (!normalized) return;
-    if (allSelectedAllergies.includes(normalized)) {
-      setCustomInput("");
-      return;
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchInput(searchInput.trim());
+    }, ALLERGY_SEARCH_DEBOUNCE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const isSearchEnabled = debouncedSearchInput.length >= MIN_ALLERGY_SEARCH_KEYWORD_LENGTH;
+  const { data: searchResults, isFetching } = useSearchDrugsQuery(
+    debouncedSearchInput,
+    isSearchEnabled,
+  );
+
+  const filteredSearchResults = useMemo(() => {
+    if (!isSearchEnabled) return [];
+    return (searchResults ?? []).filter((item) => !allSelectedAllergies.includes(item.drugName));
+  }, [allSelectedAllergies, isSearchEnabled, searchResults]);
+
+  const handleSelectSearchResult = (item: (typeof filteredSearchResults)[number]) => {
+    const label = item.drugName;
+    if (!allSelectedAllergies.includes(label)) {
+      setSelectedSearchAllergies((prev) => [...prev, label]);
     }
-    setCustomAllergies((prev) => [...prev, normalized]);
-    setCustomInput("");
-  }, [allSelectedAllergies, customInput]);
+    setSelectedSearchAllergyItems((prev) => ({
+      ...prev,
+      [label]: {
+        type: "ATC_GROUP",
+        value: item.atcCode,
+        name: item.drugName,
+      },
+    }));
+    setSearchInput("");
+  };
 
   useImperativeHandle(
     ref,
     () => ({
       submit: () =>
         new Promise<boolean>((resolve) => {
-          const trimmed = customInput.trim();
-          const mergedCustom =
-            trimmed && !allSelectedAllergies.includes(trimmed)
-              ? [...customAllergies, trimmed]
-              : customAllergies;
           updateUser({
-            allergies: [...selectedMedicine, ...selectedFood, ...mergedCustom],
+            allergies: [...selectedMedicine, ...selectedFood, ...selectedSearchAllergies],
+            allergyMappings: selectedSearchAllergyItems,
           });
           resolve(true);
         }),
     }),
     [
-      allSelectedAllergies,
-      customAllergies,
-      customInput,
       selectedFood,
       selectedMedicine,
+      selectedSearchAllergies,
+      selectedSearchAllergyItems,
       updateUser,
     ],
   );
@@ -122,48 +147,55 @@ export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
 
         <YStack gap={10}>
           <Text fontSize={14} fontWeight="600" color={palette.black}>
-            ✏️ 직접 입력
+            🔎 알러지 검색
           </Text>
 
-          <XStack gap={10} items="center">
-            <Input
-              value={customInput}
-              onChangeText={setCustomInput}
-              onSubmitEditing={handleAddCustomAllergy}
-              placeholder="선택지에 없는 알러지 입력"
-              bg={palette.gray}
-              fontSize={15}
-              flex={1}
-              style={{
-                color: palette.black,
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: palette.dark_gray,
-              }}
-            />
+          <Input
+            value={searchInput}
+            onChangeText={setSearchInput}
+            placeholder="알러지 약물명 검색"
+            bg={palette.gray}
+            fontSize={15}
+            style={{
+              color: palette.black,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: palette.dark_gray,
+            }}
+          />
 
-            <LinearGradient
-              colors={[palette.red, palette.orange]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{ borderRadius: 99 }}
+          {isSearchEnabled ? (
+            <ScrollView
+              style={styles.searchResults}
+              nestedScrollEnabled
+              keyboardShouldPersistTaps="handled"
             >
-              <Button
-                onPress={handleAddCustomAllergy}
-                width={44}
-                height={44}
-                borderRadius={99}
-                accessibilityRole="button"
-                accessibilityLabel="알러지 직접 입력 추가"
-              >
-                <Ionicons name="add" size={18} color={palette.background} />
-              </Button>
-            </LinearGradient>
-          </XStack>
+              {isFetching ? (
+                <Text style={styles.searchMetaText}>검색 중...</Text>
+              ) : filteredSearchResults.length > 0 ? (
+                filteredSearchResults.map((item) => (
+                  <Pressable
+                    key={`${item.drugCode}:${item.atcCode}:${item.drugName}`}
+                    onPress={() => handleSelectSearchResult(item)}
+                    style={styles.searchResultItem}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${item.drugName} 검색 결과 선택`}
+                  >
+                    <Text style={styles.searchResultTitle}>{item.drugName}</Text>
+                    <Text style={styles.searchResultMeta}>
+                      {item.company ? `${item.company} · ${item.atcCode}` : item.atcCode}
+                    </Text>
+                  </Pressable>
+                ))
+              ) : (
+                <Text style={styles.searchMetaText}>검색 결과가 없습니다.</Text>
+              )}
+            </ScrollView>
+          ) : null}
 
-          {customAllergies.length > 0 ? (
+          {selectedSearchAllergies.length > 0 ? (
             <XStack gap={8} flexWrap="wrap">
-              {customAllergies.map((item) => (
+              {selectedSearchAllergies.map((item) => (
                 <SelectChip
                   key={item}
                   label={item}
@@ -171,9 +203,14 @@ export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
                   borderWidth={0}
                   unselectedBackground={palette.dark_gray}
                   selectedBackground={palette.orange}
-                  onPress={() =>
-                    setCustomAllergies((prev) => prev.filter((value) => value !== item))
-                  }
+                  onPress={() => {
+                    setSelectedSearchAllergies((prev) => prev.filter((value) => value !== item));
+                    setSelectedSearchAllergyItems((prev) => {
+                      const next = { ...prev };
+                      delete next[item];
+                      return next;
+                    });
+                  }}
                 />
               ))}
             </XStack>
@@ -186,6 +223,42 @@ export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
       </YStack>
     </ScrollView>
   );
+});
+
+const styles = StyleSheet.create({
+  searchResults: {
+    maxHeight: 280,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.dark_gray,
+    backgroundColor: palette.white,
+    overflow: "hidden",
+  },
+  searchResultItem: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: palette.dark_gray,
+  },
+  searchResultTitle: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "600",
+    color: palette.black,
+  },
+  searchResultMeta: {
+    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 15,
+    color: palette.icon,
+  },
+  searchMetaText: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 12,
+    lineHeight: 17,
+    color: palette.icon,
+  },
 });
 
 type AllergySectionProps = {

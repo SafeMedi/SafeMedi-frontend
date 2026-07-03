@@ -24,7 +24,7 @@ export type UserProfilePatchBloodType = "A" | "B" | "O" | "AB";
 export type UserProfilePatchRhType = "PLUS" | "MINUS";
 
 export type UserProfilePatchAllergyItem = {
-  type: "ATC_GROUP" | "INGREDIENT" | "CUSTOM";
+  type: "ATC_GROUP" | "INGREDIENT" | "FOOD";
   value: string;
   name: string;
 };

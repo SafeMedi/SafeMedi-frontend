@@ -63,6 +63,9 @@ export const chronicConditionOptions = [
 ] as const satisfies readonly ChronicConditionOption[];
 
 export const profileEditQuickItems = {
-  allergy: ["페니실린", "아세트아미노펜", "나프록센 진통제", "페니라민"],
-  chronic: ["고혈압", "당뇨병", "천식", "신장질환", "간질환", "심장질환"],
+  allergy: [
+    ...representativeMedicineAllergyOptions.map((option) => option.label),
+    ...representativeFoodAllergyOptions.map((option) => option.label),
+  ],
+  chronic: chronicConditionOptions.map((option) => option.label),
 } as const;
