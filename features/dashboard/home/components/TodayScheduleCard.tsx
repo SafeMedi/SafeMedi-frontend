@@ -1,3 +1,4 @@
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useMemo, useState } from "react";
@@ -157,7 +158,7 @@ export function TodayScheduleCard({
                         style={[styles.takeButton, isTakeDisabled && styles.takeButtonDisabled]}
                         onPress={() => onPressTake(prescription)}
                       >
-                        <Ionicons name="checkmark" size={18} color={palette.green_deep} />
+                        <FontAwesome name="check" size={18} color={palette.green_deep} />
                       </Pressable>
                     ) : null}
                     <Pressable
