@@ -83,7 +83,7 @@ describe("useDashboardViewModel", () => {
             drugCount: 1,
             drugNames: ["판토프라졸"],
             recordIds: [4],
-            displayStatus: "NEED_TAKE",
+            displayStatus: "SUCCESS",
           },
           {
             takeTime: "20:00",
@@ -166,6 +166,7 @@ describe("useDashboardViewModel", () => {
         medicationNames: ["타이레놀", "오메프라졸"],
         recordIds: [1, 2],
         canMarkAsTaken: true,
+        tone: "required",
       },
       {
         id: "3-08:00-4",
@@ -173,8 +174,9 @@ describe("useDashboardViewModel", () => {
         prescriptionTitle: "위장약",
         medicationCount: 1,
         medicationNames: ["판토프라졸"],
-        recordIds: [4],
-        canMarkAsTaken: true,
+        recordIds: [],
+        canMarkAsTaken: false,
+        tone: "success",
       },
     ]);
     expect(result.current.scheduleCards[1]?.statusLabel).toBe("완료");
@@ -278,6 +280,7 @@ describe("useDashboardViewModel", () => {
         medicationNames: ["타이레놀", "코푸시럽"],
         recordIds: [500, 501],
         canMarkAsTaken: true,
+        tone: "required",
       },
     ]);
 
@@ -435,5 +438,54 @@ describe("useDashboardViewModel", () => {
     expect(result.current.scheduleCards[0]?.statusLabel).toBe("미복용");
     expect(result.current.scheduleCards[0]?.tone).toBe("missed");
     expect(result.current.scheduleCards[0]?.prescriptions[0]?.canMarkAsTaken).toBe(false);
+    expect(result.current.scheduleCards[0]?.prescriptions[0]?.tone).toBe("missed");
+  });
+
+  it("현재 복약 시간대에서 완료된 처방전은 개별 success tone으로 구분한다", () => {
+    mockUseDashboardTodayMedicationSchedules.mockReturnValue({
+      data: {
+        date: "2026-05-19",
+        summary: { totalCount: 2, completedCount: 1, completionRate: 50 },
+        schedules: [
+          {
+            takeTime: "08:00",
+            prescriptionTitle: "복용할 처방전",
+            prescriptionId: 1,
+            drugCount: 1,
+            drugNames: ["타이레놀"],
+            recordIds: [1],
+            displayStatus: "NEED_TAKE",
+          },
+          {
+            takeTime: "08:00",
+            prescriptionTitle: "완료된 처방전",
+            prescriptionId: 2,
+            drugCount: 1,
+            drugNames: ["비타민C"],
+            recordIds: [],
+            displayStatus: "NEED_TAKE",
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: mockTodayRefetch,
+    } as unknown as ReturnType<typeof useDashboardTodayMedicationSchedules>);
+
+    const { result } = renderHook(() => useDashboardViewModel());
+
+    expect(result.current.scheduleCards[0]?.tone).toBe("required");
+    expect(result.current.scheduleCards[0]?.prescriptions).toEqual([
+      expect.objectContaining({
+        prescriptionTitle: "복용할 처방전",
+        canMarkAsTaken: true,
+        tone: "required",
+      }),
+      expect.objectContaining({
+        prescriptionTitle: "완료된 처방전",
+        canMarkAsTaken: false,
+        tone: "success",
+      }),
+    ]);
   });
 });
