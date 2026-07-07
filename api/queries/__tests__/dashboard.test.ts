@@ -146,8 +146,11 @@ describe("api/queries/dashboard", () => {
     );
 
     await mutation.onSettled();
-    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+    expect(mockInvalidateQueries).toHaveBeenNthCalledWith(1, {
       queryKey: queryKeys.dashboard.todayMedicationSchedules,
+    });
+    expect(mockInvalidateQueries).toHaveBeenNthCalledWith(2, {
+      queryKey: queryKeys.medications.all,
     });
   });
 
@@ -197,8 +200,11 @@ describe("api/queries/dashboard", () => {
     );
 
     await mutation.onSettled();
-    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+    expect(mockInvalidateQueries).toHaveBeenNthCalledWith(1, {
       queryKey: queryKeys.dashboard.todayMedicationSchedules,
+    });
+    expect(mockInvalidateQueries).toHaveBeenNthCalledWith(2, {
+      queryKey: queryKeys.medications.all,
     });
   });
 

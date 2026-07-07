@@ -41,6 +41,28 @@ describe("medications endpoints", () => {
     });
   });
 
+  it("일별 복약 기록 summary가 누락돼도 기본값으로 정규화한다", async () => {
+    const wireResponse = {
+      type: "DAILY",
+      date: "2026-05-12",
+      records: [],
+    };
+    mockApiGet.mockReturnValueOnce({ json: jest.fn(async () => wireResponse) });
+
+    const result = await fetchMedicationRecords({ type: "DAILY", date: "2026-05-12" });
+
+    expect(result).toEqual({
+      date: "2026-05-12",
+      summary: {
+        totalCount: 0,
+        takenCount: 0,
+        fraction: "0/0",
+        complianceRate: 0,
+      },
+      records: [],
+    });
+  });
+
   it("월간 복약 기록 조회 시 date를 해당 월 1일로 정규화한다", async () => {
     const wireResponse = {
       type: "MONTH",

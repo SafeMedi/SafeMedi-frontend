@@ -11,6 +11,7 @@ export const queryKeys = {
       ["dashboard", "medications", "statistics", startDate, endDate] as const,
   },
   medications: {
+    all: ["medications"] as const,
     records: (type: string, date: string, familyId?: number) =>
       ["medications", "records", type, date, familyId ?? "self"] as const,
     statistics: (startDate: string, endDate: string) =>

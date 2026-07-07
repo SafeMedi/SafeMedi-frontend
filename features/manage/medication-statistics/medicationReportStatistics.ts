@@ -22,6 +22,16 @@ export interface MedicationReportPeriodSummary {
   readonly attentionDaysCount: number;
 }
 
+export type MedicationStatisticsIngredientRiskLevel = "CAUTION" | "DANGER";
+
+export interface MedicationReportCautionIngredientItem {
+  readonly id: string;
+  readonly name: string;
+  readonly monthlyIntakeCount: number;
+  readonly riskLevel: MedicationStatisticsIngredientRiskLevel;
+  readonly riskLabel: string;
+}
+
 const WEEKDAY_FULL_LABELS = [
   "월요일",
   "화요일",

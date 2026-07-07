@@ -18,6 +18,19 @@ import { useSessionStore } from "@/stores/sessionStore";
 
 const STALE_MS = 60 * 1000;
 
+async function invalidateMedicationRecordQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+): Promise<void> {
+  await Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.dashboard.todayMedicationSchedules,
+    }),
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.medications.all,
+    }),
+  ]);
+}
+
 interface UseDashboardMedicationRecordsParams {
   readonly date: string;
 }
@@ -91,9 +104,7 @@ export function useUpdateMedicationRecordMutation() {
       }
     },
     onSettled: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.dashboard.todayMedicationSchedules,
-      });
+      await invalidateMedicationRecordQueries(queryClient);
     },
   });
 }
@@ -164,9 +175,7 @@ export function useMarkMedicationRecordsMutation() {
       }
     },
     onSettled: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.dashboard.todayMedicationSchedules,
-      });
+      await invalidateMedicationRecordQueries(queryClient);
     },
   });
 }

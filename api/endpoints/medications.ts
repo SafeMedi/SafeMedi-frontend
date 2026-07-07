@@ -143,7 +143,12 @@ function normalizePeriodRecordItem(item: WirePeriodMedicationRecordItem): Medica
 function isNormalizedDailyResponse(
   response: WireMedicationRecordQueryResponse | DailyMedicationRecordsResponse,
 ): response is DailyMedicationRecordsResponse {
-  return "summary" in response && "complianceRate" in response.summary;
+  return (
+    "summary" in response &&
+    response.summary !== undefined &&
+    response.summary !== null &&
+    "complianceRate" in response.summary
+  );
 }
 
 function isNormalizedMonthlyResponse(

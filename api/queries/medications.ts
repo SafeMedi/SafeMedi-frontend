@@ -43,21 +43,29 @@ interface UseMedicationMonthlyRecordsParams {
   readonly enabled?: boolean;
 }
 
-export function useMedicationMonthlyRecords(params: UseMedicationMonthlyRecordsParams) {
+interface UseMedicationPeriodRecordsParams extends UseMedicationMonthlyRecordsParams {
+  readonly type: "MONTH" | "WEEK";
+}
+
+function useMedicationPeriodRecords(params: UseMedicationPeriodRecordsParams) {
   const accessToken = useSessionStore((state) => state.accessToken);
   const isEnabled = params.enabled !== false && !!accessToken && params.date.length > 0;
 
   return useQuery({
-    queryKey: queryKeys.medications.records("MONTH", params.date, params.familyId),
+    queryKey: queryKeys.medications.records(params.type, params.date, params.familyId),
     enabled: isEnabled,
     staleTime: STALE_MS,
     queryFn: () =>
       fetchMedicationRecords({
-        type: "MONTH",
+        type: params.type,
         date: params.date,
         familyId: params.familyId,
       }),
   });
+}
+
+export function useMedicationMonthlyRecords(params: UseMedicationMonthlyRecordsParams) {
+  return useMedicationPeriodRecords({ ...params, type: "MONTH" });
 }
 
 interface UseMedicationStatisticsParams {
@@ -92,11 +100,12 @@ export function useMedicationRecords(params: UseMedicationRecordsParams) {
     enabled: params.enabled !== false && isDaily,
   });
 
-  const monthlyQuery = useMedicationMonthlyRecords({
+  const periodQuery = useMedicationPeriodRecords({
+    type: isPeriod ? params.type : "MONTH",
     date: params.date,
     familyId: params.familyId,
     enabled: params.enabled !== false && isPeriod,
   });
 
-  return isDaily ? dailyQuery : monthlyQuery;
+  return isDaily ? dailyQuery : periodQuery;
 }

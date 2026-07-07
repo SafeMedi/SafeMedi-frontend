@@ -79,31 +79,22 @@ export function MedicationReportDailyRecordsCard({
               <YStack gap={7} p={10}>
                 {group.items.map((item) => {
                   const isTaken = item.statusTone === "taken";
-                  const isUpcoming = item.statusTone === "upcoming";
                   return (
                     <View
                       key={item.id}
                       style={[
                         styles.recordRow,
-                        isTaken
-                          ? styles.recordRowTaken
-                          : isUpcoming
-                            ? styles.recordRowUpcoming
-                            : styles.recordRowMissed,
+                        isTaken ? styles.recordRowTaken : styles.recordRowMissed,
                       ]}
                     >
                       <View
                         style={[
                           styles.statusIcon,
-                          isTaken
-                            ? styles.statusIconTaken
-                            : isUpcoming
-                              ? styles.statusIconUpcoming
-                              : styles.statusIconMissed,
+                          isTaken ? styles.statusIconTaken : styles.statusIconMissed,
                         ]}
                       >
                         <Ionicons
-                          name={isTaken ? "checkmark" : isUpcoming ? "time-outline" : "close"}
+                          name={isTaken ? "checkmark" : "close"}
                           size={16}
                           color={palette.white}
                         />
@@ -113,11 +104,7 @@ export function MedicationReportDailyRecordsCard({
                         <Text
                           style={[
                             styles.medicationName,
-                            isTaken
-                              ? styles.medicationNameTaken
-                              : isUpcoming
-                                ? styles.medicationNameUpcoming
-                                : styles.medicationNameMissed,
+                            isTaken ? styles.medicationNameTaken : styles.medicationNameMissed,
                           ]}
                         >
                           {item.medicationName}
@@ -131,11 +118,7 @@ export function MedicationReportDailyRecordsCard({
                       <View
                         style={[
                           styles.statusBadge,
-                          isTaken
-                            ? styles.statusBadgeTaken
-                            : isUpcoming
-                              ? styles.statusBadgeUpcoming
-                              : styles.statusBadgeMissed,
+                          isTaken ? styles.statusBadgeTaken : styles.statusBadgeMissed,
                         ]}
                       >
                         <Text style={styles.statusBadgeText}>{item.statusLabel}</Text>
