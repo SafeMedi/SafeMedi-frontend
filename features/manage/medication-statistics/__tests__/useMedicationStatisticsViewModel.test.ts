@@ -91,6 +91,27 @@ describe("medicationReportStatistics", () => {
       "연속 3일 완벽한 복약 달성!",
     ]);
   });
+
+  it("기간 요약의 완벽한 날은 100% 달성일만 집계한다", () => {
+    const statistics = {
+      startDate: "2026-04-01",
+      endDate: "2026-04-02",
+      totalScheduled: 11,
+      totalTaken: 10,
+      totalComplianceRate: 90.9,
+      dailyCompliance: [
+        { date: "2026-04-01", takenCount: 9, totalCount: 10, fraction: "9/10" },
+        { date: "2026-04-02", takenCount: 1, totalCount: 1, fraction: "1/1" },
+      ],
+    };
+
+    expect(buildMedicationReportPeriodSummary(statistics, new Date("2026-04-02T00:00:00"))).toEqual(
+      expect.objectContaining({
+        perfectDaysCount: 1,
+        attentionDaysCount: 1,
+      }),
+    );
+  });
 });
 
 const mockUseMedicationStatisticsQuery = useMedicationStatistics as jest.MockedFunction<

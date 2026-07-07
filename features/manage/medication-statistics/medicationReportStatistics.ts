@@ -43,7 +43,8 @@ const WEEKDAY_FULL_LABELS = [
 ] as const;
 
 const MONTHLY_COMPLIANCE_GOAL = 80;
-const PERFECT_DAY_RATE = 90;
+const WEEKLY_SUCCESS_RATE = 90;
+const PERFECT_DAY_RATE = 100;
 
 function formatDateToApiParam(date: Date): string {
   const year = date.getFullYear();
@@ -69,7 +70,7 @@ function clampRate(rate: number): number {
 }
 
 function resolveWeeklyComplianceTone(rate: number): MedicationReportWeeklyComplianceTone {
-  return rate >= PERFECT_DAY_RATE ? "success" : "warning";
+  return rate >= WEEKLY_SUCCESS_RATE ? "success" : "warning";
 }
 
 function resolveDayRate(entry: MedicationStatisticsDailyCompliance): number {
