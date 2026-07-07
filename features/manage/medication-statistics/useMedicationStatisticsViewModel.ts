@@ -1,21 +1,19 @@
 import { useMemo } from "react";
 
-import { useMedicationStatistics as useMedicationStatisticsQuery } from "@/api/queries/dashboard";
+import { useMedicationStatistics } from "@/api/queries/medications";
 import {
+  buildMedicationReportPeriodSummary,
   buildMedicationReportWeeklyCompliance,
+  deriveMedicationReportMonthlyAchievements,
   getMedicationReportMonthRange,
   getMedicationReportWeekRange,
-  type MedicationReportCautionIngredientItem,
+  type MedicationReportPeriodSummary,
   type MedicationReportWeeklyComplianceItem,
-  mapMedicationReportCautionIngredients,
-  mapMedicationReportMonthlyAchievements,
-  resolveMedicationReportConsultationMessage,
 } from "./medicationReportStatistics";
 
 export interface MedicationStatisticsViewModel {
   readonly weeklyCompliance: readonly MedicationReportWeeklyComplianceItem[];
-  readonly cautionIngredients: readonly MedicationReportCautionIngredientItem[];
-  readonly consultationMessage: string | null;
+  readonly monthlySummary: MedicationReportPeriodSummary;
   readonly monthlyAchievements: readonly string[];
   readonly isLoading: boolean;
   readonly isError: boolean;
@@ -27,11 +25,11 @@ export function useMedicationStatisticsViewModel(
 ): MedicationStatisticsViewModel {
   const weekRange = useMemo(() => getMedicationReportWeekRange(today), [today]);
   const monthRange = useMemo(() => getMedicationReportMonthRange(today), [today]);
-  const weeklyStatisticsQuery = useMedicationStatisticsQuery({
+  const weeklyStatisticsQuery = useMedicationStatistics({
     startDate: weekRange.startDate,
     endDate: weekRange.endDate,
   });
-  const monthlyStatisticsQuery = useMedicationStatisticsQuery({
+  const monthlyStatisticsQuery = useMedicationStatistics({
     startDate: monthRange.startDate,
     endDate: monthRange.endDate,
   });
@@ -46,26 +44,19 @@ export function useMedicationStatisticsViewModel(
     [today, weekRange.weekStart, weeklyStatisticsQuery.data?.dailyCompliance],
   );
 
-  const cautionIngredients = useMemo(
-    () =>
-      mapMedicationReportCautionIngredients(monthlyStatisticsQuery.data?.cautionIngredients ?? []),
-    [monthlyStatisticsQuery.data?.cautionIngredients],
-  );
-
-  const consultationMessage = useMemo(
-    () => resolveMedicationReportConsultationMessage(monthlyStatisticsQuery.data),
-    [monthlyStatisticsQuery.data],
+  const monthlySummary = useMemo(
+    () => buildMedicationReportPeriodSummary(monthlyStatisticsQuery.data, today),
+    [monthlyStatisticsQuery.data, today],
   );
 
   const monthlyAchievements = useMemo(
-    () => mapMedicationReportMonthlyAchievements(monthlyStatisticsQuery.data),
+    () => deriveMedicationReportMonthlyAchievements(monthlyStatisticsQuery.data),
     [monthlyStatisticsQuery.data],
   );
 
   return {
     weeklyCompliance,
-    cautionIngredients,
-    consultationMessage,
+    monthlySummary,
     monthlyAchievements,
     isLoading: weeklyStatisticsQuery.isLoading || monthlyStatisticsQuery.isLoading,
     isError: weeklyStatisticsQuery.isError || monthlyStatisticsQuery.isError,

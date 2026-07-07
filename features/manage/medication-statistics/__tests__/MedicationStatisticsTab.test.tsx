@@ -24,27 +24,19 @@ jest.mock("@/components/ui/PillButton", () => {
 jest.mock("../useMedicationStatisticsViewModel", () => ({
   useMedicationStatisticsViewModel: jest.fn(),
 }));
+jest.mock("../components/MedicationReportPeriodSummaryCard", () => {
+  const React = require("react");
+  const { Text } = require("react-native");
+  return {
+    MedicationReportPeriodSummaryCard: () => React.createElement(Text, null, "PERIOD_SUMMARY_CARD"),
+  };
+});
 jest.mock("../components/MedicationReportWeeklyComplianceCard", () => {
   const React = require("react");
   const { Text } = require("react-native");
   return {
     MedicationReportWeeklyComplianceCard: () =>
       React.createElement(Text, null, "WEEKLY_COMPLIANCE_CARD"),
-  };
-});
-jest.mock("../components/MedicationReportCautionIngredientsCard", () => {
-  const React = require("react");
-  const { Text } = require("react-native");
-  return {
-    MedicationReportCautionIngredientsCard: () =>
-      React.createElement(Text, null, "CAUTION_INGREDIENTS_CARD"),
-  };
-});
-jest.mock("../components/MedicationReportConsultationCard", () => {
-  const React = require("react");
-  const { Text } = require("react-native");
-  return {
-    MedicationReportConsultationCard: () => React.createElement(Text, null, "CONSULTATION_CARD"),
   };
 });
 jest.mock("../components/MedicationReportMonthlyAchievementCard", () => {
@@ -61,8 +53,15 @@ const hook = useMedicationStatisticsViewModel as jest.MockedFunction<
 const refetch = jest.fn(async () => ({}));
 const base = {
   weeklyCompliance: [],
-  cautionIngredients: [],
-  consultationMessage: null,
+  monthlySummary: {
+    complianceRate: 0,
+    periodRangeLabel: "4월 1일",
+    totalTaken: 0,
+    totalScheduled: 0,
+    fraction: "0/0",
+    perfectDaysCount: 0,
+    attentionDaysCount: 0,
+  },
   monthlyAchievements: [],
   isLoading: false,
   isError: false,
@@ -83,9 +82,8 @@ describe("MedicationStatisticsTab", () => {
     rerender(<MedicationStatisticsTab />);
     expect(queryByText("통계 분석을 불러오는 중입니다.")).toBeNull();
     expect(queryByText("통계 분석을 불러오지 못했습니다.")).toBeNull();
+    expect(getByText("PERIOD_SUMMARY_CARD")).toBeTruthy();
     expect(getByText("WEEKLY_COMPLIANCE_CARD")).toBeTruthy();
-    expect(getByText("CAUTION_INGREDIENTS_CARD")).toBeTruthy();
     expect(getByText("MONTHLY_ACHIEVEMENT_CARD")).toBeTruthy();
-    expect(queryByText("CONSULTATION_CARD")).toBeNull();
   });
 });

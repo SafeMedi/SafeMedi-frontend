@@ -1,24 +1,25 @@
 import type {
-  MedicationStatisticsCautionIngredient,
   MedicationStatisticsDailyCompliance,
-  MedicationStatisticsIngredientRiskLevel,
   MedicationStatisticsResponse,
-} from "@/api/types/dashboard";
+} from "@/api/types/medications";
 
 export type MedicationReportWeeklyComplianceTone = "success" | "warning" | "future";
 
 export interface MedicationReportWeeklyComplianceItem {
   readonly dayLabel: string;
   readonly rate: number | null;
+  readonly fraction: string | null;
   readonly tone: MedicationReportWeeklyComplianceTone;
 }
 
-export interface MedicationReportCautionIngredientItem {
-  readonly id: string;
-  readonly name: string;
-  readonly monthlyIntakeCount: number;
-  readonly riskLevel: MedicationStatisticsIngredientRiskLevel;
-  readonly riskLabel: string;
+export interface MedicationReportPeriodSummary {
+  readonly complianceRate: number;
+  readonly periodRangeLabel: string;
+  readonly totalTaken: number;
+  readonly totalScheduled: number;
+  readonly fraction: string;
+  readonly perfectDaysCount: number;
+  readonly attentionDaysCount: number;
 }
 
 const WEEKDAY_FULL_LABELS = [
@@ -31,11 +32,25 @@ const WEEKDAY_FULL_LABELS = [
   "일요일",
 ] as const;
 
+const MONTHLY_COMPLIANCE_GOAL = 80;
+const PERFECT_DAY_RATE = 90;
+
 function formatDateToApiParam(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function parseApiDate(dateText: string): Date | null {
+  const parsedDate = new Date(`${dateText}T00:00:00`);
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+}
+
+function formatKoreanMonthDay(dateText: string): string {
+  const parsedDate = parseApiDate(dateText);
+  if (!parsedDate) return dateText;
+  return `${parsedDate.getMonth() + 1}월 ${parsedDate.getDate()}일`;
 }
 
 function clampRate(rate: number): number {
@@ -44,15 +59,16 @@ function clampRate(rate: number): number {
 }
 
 function resolveWeeklyComplianceTone(rate: number): MedicationReportWeeklyComplianceTone {
-  return rate >= 90 ? "success" : "warning";
+  return rate >= PERFECT_DAY_RATE ? "success" : "warning";
 }
 
-function resolveRiskLabel(riskLevel: MedicationStatisticsIngredientRiskLevel): string {
-  return riskLevel === "DANGER" ? "위험" : "주의";
+function resolveDayRate(entry: MedicationStatisticsDailyCompliance): number {
+  if (entry.totalCount === 0) return 0;
+  return clampRate((entry.takenCount / entry.totalCount) * 100);
 }
 
-function buildCautionIngredientId(ingredient: MedicationStatisticsCautionIngredient): string {
-  return `${ingredient.ingredientName}-${ingredient.riskLevel}-${ingredient.monthlyIntakeCount}`;
+function buildPeriodFraction(takenCount: number, totalCount: number): string {
+  return `${takenCount}/${totalCount}`;
 }
 
 export function getMedicationReportWeekRange(today: Date): {
@@ -103,6 +119,7 @@ export function buildMedicationReportWeeklyCompliance(
       return {
         dayLabel,
         rate: null,
+        fraction: null,
         tone: "future" as const,
       };
     }
@@ -111,40 +128,123 @@ export function buildMedicationReportWeeklyCompliance(
       return {
         dayLabel,
         rate: 0,
+        fraction: "0/0",
         tone: "warning" as const,
       };
     }
 
-    const rate = clampRate((entry.takenCount / entry.totalCount) * 100);
+    const rate = resolveDayRate(entry);
     return {
       dayLabel,
       rate,
+      fraction: entry.fraction,
       tone: resolveWeeklyComplianceTone(rate),
     };
   });
 }
 
-export function mapMedicationReportCautionIngredients(
-  ingredients: readonly MedicationStatisticsCautionIngredient[],
-): readonly MedicationReportCautionIngredientItem[] {
-  return ingredients.map((ingredient) => ({
-    id: buildCautionIngredientId(ingredient),
-    name: ingredient.ingredientName,
-    monthlyIntakeCount: ingredient.monthlyIntakeCount,
-    riskLevel: ingredient.riskLevel,
-    riskLabel: resolveRiskLabel(ingredient.riskLevel),
-  }));
+export function buildMedicationReportPeriodSummary(
+  statistics: MedicationStatisticsResponse | undefined,
+  today: Date,
+): MedicationReportPeriodSummary {
+  const periodRangeLabel = statistics
+    ? `${formatKoreanMonthDay(statistics.startDate)} ~ ${formatKoreanMonthDay(statistics.endDate)}`
+    : `${today.getMonth() + 1}월 1일`;
+
+  const { perfectDaysCount, attentionDaysCount } = countComplianceDayBuckets(
+    statistics?.dailyCompliance ?? [],
+    today,
+  );
+
+  const totalTaken = statistics?.totalTaken ?? 0;
+  const totalScheduled = statistics?.totalScheduled ?? 0;
+
+  return {
+    complianceRate: clampRate(statistics?.totalComplianceRate ?? 0),
+    periodRangeLabel,
+    totalTaken,
+    totalScheduled,
+    fraction: buildPeriodFraction(totalTaken, totalScheduled),
+    perfectDaysCount,
+    attentionDaysCount,
+  };
 }
 
-export function mapMedicationReportMonthlyAchievements(
+export function countComplianceDayBuckets(
+  dailyCompliance: readonly MedicationStatisticsDailyCompliance[],
+  today: Date,
+): {
+  readonly perfectDaysCount: number;
+  readonly attentionDaysCount: number;
+} {
+  const todayText = formatDateToApiParam(today);
+  let perfectDaysCount = 0;
+  let attentionDaysCount = 0;
+
+  dailyCompliance.forEach((entry) => {
+    if (entry.date > todayText || entry.totalCount === 0) {
+      return;
+    }
+
+    const rate = resolveDayRate(entry);
+    if (rate >= PERFECT_DAY_RATE) {
+      perfectDaysCount += 1;
+      return;
+    }
+
+    attentionDaysCount += 1;
+  });
+
+  return { perfectDaysCount, attentionDaysCount };
+}
+
+export function deriveMedicationReportMonthlyAchievements(
   statistics: MedicationStatisticsResponse | undefined,
 ): readonly string[] {
-  return statistics?.monthlyAchievements?.map((achievement) => achievement.message) ?? [];
+  if (!statistics) {
+    return [];
+  }
+
+  const achievements: string[] = [];
+
+  if (statistics.totalComplianceRate >= MONTHLY_COMPLIANCE_GOAL) {
+    achievements.push(`이번 달 평균 이행률 목표(${MONTHLY_COMPLIANCE_GOAL}%) 초과`);
+  }
+
+  let currentStreak = 0;
+  let maxStreak = 0;
+
+  statistics.dailyCompliance.forEach((entry) => {
+    const isPerfectDay = entry.totalCount > 0 && entry.takenCount === entry.totalCount;
+    if (isPerfectDay) {
+      currentStreak += 1;
+      maxStreak = Math.max(maxStreak, currentStreak);
+      return;
+    }
+
+    currentStreak = 0;
+  });
+
+  if (maxStreak >= 3) {
+    achievements.push(`연속 ${maxStreak}일 완벽한 복약 달성!`);
+  }
+
+  return achievements;
 }
 
-export function resolveMedicationReportConsultationMessage(
-  statistics: MedicationStatisticsResponse | undefined,
-): string | null {
-  const message = statistics?.consultationMessage?.trim();
-  return message && message.length > 0 ? message : null;
+export function buildComplianceByDate(
+  dailyCompliance: readonly MedicationStatisticsDailyCompliance[],
+): ReadonlyMap<string, MedicationStatisticsDailyCompliance> {
+  return new Map(dailyCompliance.map((entry) => [entry.date, entry]));
+}
+
+export function resolveSelectedDaySummary(
+  entry: MedicationStatisticsDailyCompliance | undefined,
+): string {
+  if (!entry || entry.totalCount === 0) {
+    return "0/0 완료 (0%)";
+  }
+
+  const rate = resolveDayRate(entry);
+  return `${entry.fraction} 완료 (${rate}%)`;
 }
