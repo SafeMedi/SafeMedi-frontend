@@ -1,11 +1,14 @@
 import { renderHook } from "@testing-library/react-native";
 
-import { fetchMedicationRecords } from "@/api/endpoints/medications";
+import { fetchMedicationRecords, fetchMedicationStatistics } from "@/api/endpoints/medications";
 import { queryKeys } from "@/api/query-keys";
-import { useMedicationRecords } from "../medications";
+import { useMedicationRecords, useMedicationStatistics } from "../medications";
 
 const mockFetchMedicationRecords = fetchMedicationRecords as jest.MockedFunction<
   typeof fetchMedicationRecords
+>;
+const mockFetchMedicationStatistics = fetchMedicationStatistics as jest.MockedFunction<
+  typeof fetchMedicationStatistics
 >;
 
 let mockAccessToken: string | null = "token";
@@ -20,7 +23,14 @@ jest.mock("@/api/endpoints/medications", () => ({
     summary: { totalCount: 0, takenCount: 0, fraction: "0/0", complianceRate: 0 },
     records: [],
   })),
-  fetchMedicationStatistics: jest.fn(),
+  fetchMedicationStatistics: jest.fn(async () => ({
+    startDate: "2026-05-01",
+    endDate: "2026-05-18",
+    totalScheduled: 0,
+    totalTaken: 0,
+    totalComplianceRate: 0,
+    dailyCompliance: [],
+  })),
 }));
 
 jest.mock("@/stores/sessionStore", () => ({
@@ -50,6 +60,28 @@ describe("api/queries/medications", () => {
       type: "WEEK",
       date: "2026-05-18",
       familyId: undefined,
+    });
+  });
+
+  it("복약 통계 쿼리는 도메인 공통 staleTime을 사용한다", async () => {
+    const { result } = renderHook(() =>
+      useMedicationStatistics({ startDate: "2026-05-01", endDate: "2026-05-18" }),
+    );
+    const options = result.current as unknown as {
+      enabled: boolean;
+      queryKey: unknown;
+      staleTime: number;
+      queryFn: () => Promise<unknown>;
+    };
+
+    expect(options.enabled).toBe(true);
+    expect(options.queryKey).toEqual(queryKeys.medications.statistics("2026-05-01", "2026-05-18"));
+    expect(options.staleTime).toBe(60 * 1000);
+
+    await options.queryFn();
+    expect(mockFetchMedicationStatistics).toHaveBeenCalledWith({
+      startDate: "2026-05-01",
+      endDate: "2026-05-18",
     });
   });
 });

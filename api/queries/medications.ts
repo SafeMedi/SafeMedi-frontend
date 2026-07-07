@@ -85,6 +85,7 @@ export function useMedicationStatistics(params: UseMedicationStatisticsParams) {
   return useQuery({
     queryKey: queryKeys.medications.statistics(params.startDate, params.endDate),
     enabled: isEnabled,
+    staleTime: STALE_MS,
     queryFn: () =>
       fetchMedicationStatistics({ startDate: params.startDate, endDate: params.endDate }),
   });
