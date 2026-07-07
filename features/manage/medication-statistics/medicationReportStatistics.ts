@@ -93,11 +93,24 @@ export function getMedicationReportMonthRange(today: Date): {
   readonly startDate: string;
   readonly endDate: string;
 } {
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  return getMedicationReportMonthRangeForViewMonth(today, today);
+}
+
+export function getMedicationReportMonthRangeForViewMonth(
+  viewMonth: Date,
+  today: Date,
+): {
+  readonly startDate: string;
+  readonly endDate: string;
+} {
+  const monthStart = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
+  const monthEnd = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0);
+  const isCurrentMonth =
+    monthStart.getFullYear() === today.getFullYear() && monthStart.getMonth() === today.getMonth();
 
   return {
     startDate: formatDateToApiParam(monthStart),
-    endDate: formatDateToApiParam(today),
+    endDate: isCurrentMonth ? formatDateToApiParam(today) : formatDateToApiParam(monthEnd),
   };
 }
 

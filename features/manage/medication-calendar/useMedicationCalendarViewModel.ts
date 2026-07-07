@@ -1,11 +1,11 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { useMedicationDailyRecords, useMedicationStatistics } from "@/api/queries/medications";
 import type { MedicationRecordItem, MedicationRecordStatus } from "@/api/types/medications";
 import {
   buildComplianceByDate,
   buildMedicationReportPeriodSummary,
-  getMedicationReportMonthRange,
+  getMedicationReportMonthRangeForViewMonth,
   type MedicationReportPeriodSummary,
   resolveSelectedDaySummary,
 } from "../medication-statistics/medicationReportStatistics";
@@ -43,10 +43,14 @@ export interface MedicationCalendarViewModel {
   readonly calendarWeeks: readonly (readonly MedicationCalendarDay[])[];
   readonly selectedDate: string | null;
   readonly setSelectedDate: (date: string) => void;
+  readonly goToPreviousMonth: () => void;
+  readonly goToNextMonth: () => void;
+  readonly canGoToNextMonth: boolean;
   readonly selectedDateTitle: string;
   readonly selectedDaySummary: string;
   readonly prescriptionGroups: readonly MedicationCalendarPrescriptionGroup[];
   readonly isInitialLoading: boolean;
+  readonly isCalendarLoading: boolean;
   readonly isDailyRecordsLoading: boolean;
   readonly isError: boolean;
   readonly isDailyRecordsError: boolean;
@@ -103,8 +107,42 @@ function formatMonthLabel(date: Date): string {
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
 }
 
+function startOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function shiftMonth(date: Date, delta: number): Date {
+  return new Date(date.getFullYear(), date.getMonth() + delta, 1);
+}
+
+function isSameMonth(left: Date, right: Date): boolean {
+  return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth();
+}
+
+function isFutureMonth(monthDate: Date, today: Date): boolean {
+  return startOfMonth(monthDate).getTime() > startOfMonth(today).getTime();
+}
+
+function isDateInMonth(dateText: string, monthDate: Date): boolean {
+  const parsedDate = new Date(`${dateText}T00:00:00`);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return false;
+  }
+
+  return isSameMonth(parsedDate, monthDate);
+}
+
 function formatSelectedDateTitle(dateText: string): string {
   return `${dateText} 복약 기록`;
+}
+
+function resolveSummaryReferenceDate(viewMonth: Date, today: Date, monthEndDate: string): Date {
+  if (isSameMonth(viewMonth, today)) {
+    return today;
+  }
+
+  const parsedEndDate = new Date(`${monthEndDate}T00:00:00`);
+  return Number.isNaN(parsedEndDate.getTime()) ? today : parsedEndDate;
 }
 
 function buildRecordItem(record: MedicationRecordItem): MedicationCalendarRecordItem {
@@ -256,18 +294,54 @@ export function resolveDefaultSelectedDate(
   return sortedDates[sortedDates.length - 1] ?? todayText;
 }
 
+export function resolveDefaultSelectedDateForMonth(
+  complianceByDate: ReadonlyMap<
+    string,
+    {
+      readonly date: string;
+    }
+  >,
+  viewMonth: Date,
+  today: Date,
+): string {
+  const monthRange = getMedicationReportMonthRangeForViewMonth(viewMonth, today);
+
+  if (isSameMonth(viewMonth, today)) {
+    return resolveDefaultSelectedDate(complianceByDate, today) ?? monthRange.endDate;
+  }
+
+  const datesInMonth = [...complianceByDate.keys()]
+    .filter((dateText) => dateText >= monthRange.startDate && dateText <= monthRange.endDate)
+    .sort();
+
+  if (datesInMonth.length > 0) {
+    return datesInMonth[datesInMonth.length - 1];
+  }
+
+  return monthRange.endDate;
+}
+
 export function getMedicationCalendarWeekdayLabels(): readonly string[] {
   return WEEKDAY_LABELS;
 }
 
 export function useMedicationCalendarViewModel(today = new Date()): MedicationCalendarViewModel {
+  const [viewMonth, setViewMonth] = useState(() => startOfMonth(today));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const monthRange = useMemo(() => getMedicationReportMonthRange(today), [today]);
+  const hasLoadedStatisticsOnce = useRef(false);
+  const monthRange = useMemo(
+    () => getMedicationReportMonthRangeForViewMonth(viewMonth, today),
+    [viewMonth, today],
+  );
 
   const monthlyStatisticsQuery = useMedicationStatistics({
     startDate: monthRange.startDate,
     endDate: monthRange.endDate,
   });
+
+  if (monthlyStatisticsQuery.data) {
+    hasLoadedStatisticsOnce.current = true;
+  }
 
   const complianceByDate = useMemo(
     () => buildComplianceByDate(monthlyStatisticsQuery.data?.dailyCompliance ?? []),
@@ -275,11 +349,12 @@ export function useMedicationCalendarViewModel(today = new Date()): MedicationCa
   );
 
   const resolvedSelectedDate = useMemo(() => {
-    if (selectedDate) {
+    if (selectedDate && isDateInMonth(selectedDate, viewMonth)) {
       return selectedDate;
     }
-    return resolveDefaultSelectedDate(complianceByDate, today);
-  }, [complianceByDate, selectedDate, today]);
+
+    return resolveDefaultSelectedDateForMonth(complianceByDate, viewMonth, today);
+  }, [complianceByDate, selectedDate, viewMonth, today]);
 
   const dailyRecordsQuery = useMedicationDailyRecords({
     date: resolvedSelectedDate ?? monthRange.startDate,
@@ -289,11 +364,11 @@ export function useMedicationCalendarViewModel(today = new Date()): MedicationCa
   const calendarWeeks = useMemo(
     () =>
       buildMedicationCalendarWeeks({
-        monthDate: today,
+        monthDate: viewMonth,
         today,
         complianceByDate,
       }),
-    [complianceByDate, today],
+    [complianceByDate, today, viewMonth],
   );
 
   const selectedCompliance = resolvedSelectedDate
@@ -305,14 +380,36 @@ export function useMedicationCalendarViewModel(today = new Date()): MedicationCa
     [dailyRecordsQuery.data?.records],
   );
 
+  const summaryReferenceDate = useMemo(
+    () => resolveSummaryReferenceDate(viewMonth, today, monthRange.endDate),
+    [monthRange.endDate, today, viewMonth],
+  );
+
   const periodSummary = useMemo(
-    () => buildMedicationReportPeriodSummary(monthlyStatisticsQuery.data, today),
-    [monthlyStatisticsQuery.data, today],
+    () => buildMedicationReportPeriodSummary(monthlyStatisticsQuery.data, summaryReferenceDate),
+    [monthlyStatisticsQuery.data, summaryReferenceDate],
   );
 
   const handleSetSelectedDate = useCallback((date: string) => {
     setSelectedDate(date);
   }, []);
+
+  const goToPreviousMonth = useCallback(() => {
+    setViewMonth((current) => shiftMonth(current, -1));
+    setSelectedDate(null);
+  }, []);
+
+  const goToNextMonth = useCallback(() => {
+    setViewMonth((current) => {
+      const nextMonth = shiftMonth(current, 1);
+      if (isFutureMonth(nextMonth, today)) {
+        return current;
+      }
+
+      return nextMonth;
+    });
+    setSelectedDate(null);
+  }, [today]);
 
   const selectedDaySummary = useMemo(() => {
     if (dailyRecordsQuery.data) {
@@ -324,18 +421,27 @@ export function useMedicationCalendarViewModel(today = new Date()): MedicationCa
     return resolveSelectedDaySummary(selectedCompliance);
   }, [dailyRecordsQuery.data, selectedCompliance]);
 
+  const isCalendarLoading =
+    monthlyStatisticsQuery.isFetching &&
+    !monthlyStatisticsQuery.data &&
+    hasLoadedStatisticsOnce.current;
+
   return {
-    monthLabel: formatMonthLabel(today),
+    monthLabel: formatMonthLabel(viewMonth),
     periodSummary,
     calendarWeeks,
     selectedDate: resolvedSelectedDate,
     setSelectedDate: handleSetSelectedDate,
+    goToPreviousMonth,
+    goToNextMonth,
+    canGoToNextMonth: !isSameMonth(viewMonth, today),
     selectedDateTitle: resolvedSelectedDate
       ? formatSelectedDateTitle(resolvedSelectedDate)
       : "복약 기록",
     selectedDaySummary,
     prescriptionGroups,
-    isInitialLoading: monthlyStatisticsQuery.isLoading && !monthlyStatisticsQuery.data,
+    isInitialLoading: monthlyStatisticsQuery.isLoading && !hasLoadedStatisticsOnce.current,
+    isCalendarLoading,
     isDailyRecordsLoading:
       dailyRecordsQuery.isFetching && !dailyRecordsQuery.data && !!resolvedSelectedDate,
     isError: monthlyStatisticsQuery.isError,

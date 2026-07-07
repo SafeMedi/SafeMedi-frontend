@@ -40,6 +40,10 @@ export function MedicationCalendarTab() {
         weeks={viewModel.calendarWeeks}
         selectedDate={viewModel.selectedDate}
         onSelectDate={viewModel.setSelectedDate}
+        onPreviousMonth={viewModel.goToPreviousMonth}
+        onNextMonth={viewModel.goToNextMonth}
+        canGoToNextMonth={viewModel.canGoToNextMonth}
+        isLoading={viewModel.isCalendarLoading}
       />
 
       <MedicationReportDailyRecordsCard

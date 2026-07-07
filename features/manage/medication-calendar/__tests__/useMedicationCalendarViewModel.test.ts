@@ -5,6 +5,7 @@ import { countComplianceDayBuckets } from "../../medication-statistics/medicatio
 import {
   buildMedicationCalendarWeeks,
   resolveDefaultSelectedDate,
+  resolveDefaultSelectedDateForMonth,
   useMedicationCalendarViewModel,
 } from "../useMedicationCalendarViewModel";
 
@@ -83,6 +84,7 @@ function mockQueries(options?: {
   mockUseMedicationStatistics.mockReturnValue({
     data: options?.statisticsData,
     isLoading: options?.isStatisticsLoading ?? false,
+    isFetching: options?.isStatisticsLoading ?? false,
     isError: options?.isStatisticsError ?? false,
     refetch: mockRefetchStatistics,
   } as unknown as ReturnType<typeof useMedicationStatistics>);
@@ -160,6 +162,26 @@ describe("useMedicationCalendarViewModel helpers", () => {
       "2026-04-08",
     );
   });
+
+  it("과거 월의 기본 선택 날짜를 해당 월 마지막 기록일로 결정한다", () => {
+    const complianceByDate = new Map(mockDailyCompliance.map((entry) => [entry.date, entry]));
+
+    expect(
+      resolveDefaultSelectedDateForMonth(
+        complianceByDate,
+        new Date("2026-04-01T00:00:00"),
+        new Date("2026-04-10T00:00:00"),
+      ),
+    ).toBe("2026-04-07");
+
+    expect(
+      resolveDefaultSelectedDateForMonth(
+        new Map(),
+        new Date("2026-03-01T00:00:00"),
+        new Date("2026-04-10T00:00:00"),
+      ),
+    ).toBe("2026-03-31");
+  });
 });
 
 describe("useMedicationCalendarViewModel", () => {
@@ -180,6 +202,8 @@ describe("useMedicationCalendarViewModel", () => {
 
     expect(result.current.periodSummary.complianceRate).toBe(89);
     expect(result.current.periodSummary.attentionDaysCount).toBe(1);
+    expect(result.current.monthLabel).toBe("2026년 4월");
+    expect(result.current.canGoToNextMonth).toBe(false);
     expect(result.current.selectedDate).toBe("2026-04-06");
     expect(result.current.selectedDateTitle).toBe("2026-04-06 복약 기록");
     expect(result.current.selectedDaySummary).toBe("2/3 완료 (67%)");
@@ -256,6 +280,73 @@ describe("useMedicationCalendarViewModel", () => {
         isTaken: false,
       }),
     );
+  });
+
+  it("이전 달로 이동하면 해당 월 통계 범위로 조회한다", () => {
+    mockQueries({
+      statisticsData: mockStatisticsResponse,
+      dailyRecordsData: mockDailyRecords,
+    });
+
+    const { result } = renderHook(() =>
+      useMedicationCalendarViewModel(new Date("2026-04-10T00:00:00")),
+    );
+
+    act(() => {
+      result.current.goToPreviousMonth();
+    });
+
+    expect(result.current.monthLabel).toBe("2026년 3월");
+    expect(result.current.canGoToNextMonth).toBe(true);
+    expect(mockUseMedicationStatistics).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        startDate: "2026-03-01",
+        endDate: "2026-03-31",
+      }),
+    );
+  });
+
+  it("다음 달 이동은 현재 달까지만 허용한다", () => {
+    mockQueries({
+      statisticsData: mockStatisticsResponse,
+      dailyRecordsData: mockDailyRecords,
+    });
+
+    const { result } = renderHook(() =>
+      useMedicationCalendarViewModel(new Date("2026-04-10T00:00:00")),
+    );
+
+    act(() => {
+      result.current.goToPreviousMonth();
+    });
+
+    act(() => {
+      result.current.goToNextMonth();
+    });
+
+    expect(result.current.monthLabel).toBe("2026년 4월");
+    expect(result.current.canGoToNextMonth).toBe(false);
+  });
+
+  it("월 변경 중에는 캘린더 로딩 상태만 표시한다", () => {
+    mockQueries({
+      statisticsData: mockStatisticsResponse,
+      dailyRecordsData: mockDailyRecords,
+    });
+
+    const { result, rerender } = renderHook(() =>
+      useMedicationCalendarViewModel(new Date("2026-04-10T00:00:00")),
+    );
+
+    act(() => {
+      result.current.goToPreviousMonth();
+    });
+
+    mockQueries({ isStatisticsLoading: true });
+    rerender(undefined);
+
+    expect(result.current.isInitialLoading).toBe(false);
+    expect(result.current.isCalendarLoading).toBe(true);
   });
 
   it("초기 로딩과 일별 기록 로딩 상태를 분리해 전달한다", async () => {

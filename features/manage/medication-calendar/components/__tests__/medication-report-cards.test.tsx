@@ -19,6 +19,8 @@ jest.mock("tamagui", () => {
 describe("MedicationReportCalendarCard", () => {
   it("선택 가능한 날짜와 빈 날짜, 미래 날짜를 구분해 표시한다", () => {
     const onSelectDate = jest.fn();
+    const onPreviousMonth = jest.fn();
+    const onNextMonth = jest.fn();
     const days = [
       { id: "empty", date: null, day: null, fraction: null, rate: null, tone: "empty" as const },
       {
@@ -47,18 +49,40 @@ describe("MedicationReportCalendarCard", () => {
         tone: "future" as const,
       },
     ];
-    const { getByText } = render(
+    const { getByText, getByLabelText } = render(
       <MedicationReportCalendarCard
         monthLabel="2026년 4월"
         weeks={[days]}
         selectedDate="2026-04-01"
         onSelectDate={onSelectDate}
+        onPreviousMonth={onPreviousMonth}
+        onNextMonth={onNextMonth}
+        canGoToNextMonth={false}
       />,
     );
     fireEvent.press(getByText("1"));
     expect(onSelectDate).toHaveBeenCalledWith("2026-04-01");
+    fireEvent.press(getByLabelText("이전 달"));
+    expect(onPreviousMonth).toHaveBeenCalledTimes(1);
     expect(getByText("4")).toBeTruthy();
     expect(getByText("90% 이상")).toBeTruthy();
+  });
+
+  it("로딩 중에는 달력 스켈레톤을 표시한다", () => {
+    const { getByLabelText } = render(
+      <MedicationReportCalendarCard
+        monthLabel="2026년 4월"
+        weeks={[]}
+        selectedDate={null}
+        onSelectDate={jest.fn()}
+        onPreviousMonth={jest.fn()}
+        onNextMonth={jest.fn()}
+        canGoToNextMonth={false}
+        isLoading
+      />,
+    );
+
+    expect(getByLabelText("달력 로딩 중")).toBeTruthy();
   });
 });
 
