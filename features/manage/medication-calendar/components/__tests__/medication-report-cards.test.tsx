@@ -82,18 +82,18 @@ describe("MedicationReportDailyRecordsCard", () => {
             id: "2",
             medicationName: "미복용약",
             scheduledTime: "12:00",
-            status: "OVERDUE" as const,
+            status: "PENDING" as const,
             statusLabel: "복용 필요",
             statusTone: "missed" as const,
             isTaken: false,
           },
           {
             id: "3",
-            medicationName: "예정약",
+            medicationName: "대기약",
             scheduledTime: "18:00",
-            status: "UPCOMING" as const,
-            statusLabel: "대기중",
-            statusTone: "upcoming" as const,
+            status: "PENDING" as const,
+            statusLabel: "복용 필요",
+            statusTone: "missed" as const,
             isTaken: false,
           },
         ],
@@ -108,7 +108,7 @@ describe("MedicationReportDailyRecordsCard", () => {
     );
     expect(getByText("완료약")).toBeTruthy();
     expect(getByText("미복용약")).toBeTruthy();
-    expect(getByText("예정약")).toBeTruthy();
+    expect(getByText("대기약")).toBeTruthy();
     rerender(
       <MedicationReportDailyRecordsCard
         title="오늘 기록"
@@ -117,5 +117,19 @@ describe("MedicationReportDailyRecordsCard", () => {
       />,
     );
     expect(getByText("선택한 날짜의 복약 기록이 없습니다.")).toBeTruthy();
+  });
+
+  it("로딩 중에는 스켈레톤 UI를 표시한다", () => {
+    const { getByLabelText, queryByText } = render(
+      <MedicationReportDailyRecordsCard
+        title="2026-04-01 복약 기록"
+        summary="1/3 완료"
+        prescriptionGroups={[]}
+        isLoading
+      />,
+    );
+
+    expect(getByLabelText("복약 기록 로딩 중")).toBeTruthy();
+    expect(queryByText("선택한 날짜의 복약 기록이 없습니다.")).toBeNull();
   });
 });

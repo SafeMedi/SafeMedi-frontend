@@ -3,15 +3,15 @@ import { Text, YStack } from "tamagui";
 
 import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
+import { MedicationReportPeriodSummaryCard } from "../medication-statistics/components/MedicationReportPeriodSummaryCard";
 import { MedicationReportCalendarCard } from "./components/MedicationReportCalendarCard";
 import { MedicationReportDailyRecordsCard } from "./components/MedicationReportDailyRecordsCard";
-import { MedicationReportSummaryCard } from "./components/MedicationReportSummaryCard";
 import { useMedicationCalendarViewModel } from "./useMedicationCalendarViewModel";
 
 export function MedicationCalendarTab() {
   const viewModel = useMedicationCalendarViewModel();
 
-  if (viewModel.isLoading) {
+  if (viewModel.isInitialLoading) {
     return (
       <YStack style={styles.feedbackBox} gap={10}>
         <ActivityIndicator size="large" color={palette.green} />
@@ -33,12 +33,7 @@ export function MedicationCalendarTab() {
 
   return (
     <YStack gap={14}>
-      <MedicationReportSummaryCard
-        complianceRate={viewModel.complianceRate}
-        periodRangeLabel={viewModel.periodRangeLabel}
-        perfectDaysCount={viewModel.perfectDaysCount}
-        attentionDaysCount={viewModel.attentionDaysCount}
-      />
+      <MedicationReportPeriodSummaryCard summary={viewModel.periodSummary} />
 
       <MedicationReportCalendarCard
         monthLabel={viewModel.monthLabel}
@@ -51,6 +46,9 @@ export function MedicationCalendarTab() {
         title={viewModel.selectedDateTitle}
         summary={viewModel.selectedDaySummary}
         prescriptionGroups={viewModel.prescriptionGroups}
+        isLoading={viewModel.isDailyRecordsLoading}
+        isError={viewModel.isDailyRecordsError}
+        onRetry={() => viewModel.refetchDailyRecords()}
       />
     </YStack>
   );

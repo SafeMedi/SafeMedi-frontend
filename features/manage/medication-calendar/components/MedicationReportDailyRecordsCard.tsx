@@ -2,7 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, View } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
-
+import { PillButton } from "@/components/ui/PillButton";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
 import type { MedicationCalendarPrescriptionGroup } from "../useMedicationCalendarViewModel";
@@ -11,12 +11,32 @@ interface MedicationReportDailyRecordsCardProps {
   readonly title: string;
   readonly summary: string;
   readonly prescriptionGroups: readonly MedicationCalendarPrescriptionGroup[];
+  readonly isLoading?: boolean;
+  readonly isError?: boolean;
+  readonly onRetry?: () => void;
+}
+
+function MedicationReportDailyRecordsSkeleton() {
+  return (
+    <YStack gap={14} accessibilityLabel="복약 기록 로딩 중">
+      <View style={styles.skeletonGroupCard}>
+        <View style={styles.skeletonGroupHeader} />
+        <YStack gap={7} p={10}>
+          <View style={styles.skeletonRecordRow} />
+          <View style={styles.skeletonRecordRow} />
+        </YStack>
+      </View>
+    </YStack>
+  );
 }
 
 export function MedicationReportDailyRecordsCard({
   title,
   summary,
   prescriptionGroups,
+  isLoading = false,
+  isError = false,
+  onRetry,
 }: MedicationReportDailyRecordsCardProps) {
   return (
     <SurfaceCard style={styles.card}>
@@ -25,10 +45,25 @@ export function MedicationReportDailyRecordsCard({
           <Ionicons name="document-text-outline" size={18} color={palette.title_emphasis} />
           <Text style={styles.title}>{title}</Text>
         </XStack>
-        <Text style={styles.summary}>{summary}</Text>
+        {!isLoading ? (
+          <Text style={styles.summary}>{summary}</Text>
+        ) : (
+          <View style={styles.skeletonSummary} />
+        )}
       </YStack>
 
-      {prescriptionGroups.length > 0 ? (
+      {isLoading ? (
+        <MedicationReportDailyRecordsSkeleton />
+      ) : isError ? (
+        <YStack style={styles.errorBox} gap={10}>
+          <Text style={styles.errorText}>선택한 날짜의 복약 기록을 불러오지 못했습니다.</Text>
+          {onRetry ? (
+            <PillButton variant="outline" onPress={onRetry} flex={0}>
+              <Text style={styles.retryText}>다시 시도</Text>
+            </PillButton>
+          ) : null}
+        </YStack>
+      ) : prescriptionGroups.length > 0 ? (
         <YStack gap={14}>
           {prescriptionGroups.map((group) => (
             <View key={group.id} style={styles.groupCard}>
@@ -236,5 +271,44 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     textAlign: "center",
     fontWeight: "500",
+  },
+  skeletonSummary: {
+    width: 120,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: palette.surface_neutral,
+  },
+  skeletonGroupCard: {
+    borderWidth: 1,
+    borderColor: palette.dark_gray,
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: "rgba(255,255,255,0.5)",
+  },
+  skeletonGroupHeader: {
+    height: 36,
+    backgroundColor: palette.surface_neutral,
+  },
+  skeletonRecordRow: {
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: palette.surface_neutral,
+  },
+  errorBox: {
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  errorText: {
+    color: palette.icon,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
+    fontWeight: "500",
+  },
+  retryText: {
+    color: palette.green_deep,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "700",
   },
 });
