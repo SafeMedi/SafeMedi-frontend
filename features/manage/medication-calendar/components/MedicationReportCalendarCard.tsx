@@ -15,6 +15,10 @@ interface MedicationReportCalendarCardProps {
   readonly weeks: readonly (readonly MedicationCalendarDay[])[];
   readonly selectedDate: string | null;
   readonly onSelectDate: (date: string) => void;
+  readonly onPreviousMonth: () => void;
+  readonly onNextMonth: () => void;
+  readonly canGoToNextMonth: boolean;
+  readonly isLoading?: boolean;
 }
 
 interface DayCellStyle {
@@ -62,21 +66,14 @@ function resolveDayCellStyle(tone: MedicationCalendarDayTone): DayCellStyle | nu
   return DAY_TONE_STYLES[tone];
 }
 
-export function MedicationReportCalendarCard({
-  monthLabel,
-  weeks,
-  selectedDate,
-  onSelectDate,
-}: MedicationReportCalendarCardProps) {
+const CALENDAR_SKELETON_WEEKS = ["w1", "w2", "w3", "w4", "w5"] as const;
+const CALENDAR_SKELETON_DAYS = ["d1", "d2", "d3", "d4", "d5", "d6", "d7"] as const;
+
+function MedicationReportCalendarSkeleton() {
   const weekdayLabels = getMedicationCalendarWeekdayLabels();
 
   return (
-    <SurfaceCard style={styles.card}>
-      <XStack items="center" gap={8} mb={14}>
-        <Ionicons name="calendar-outline" size={18} color={palette.title_emphasis} />
-        <Text style={styles.monthLabel}>{monthLabel}</Text>
-      </XStack>
-
+    <YStack gap={8} accessibilityLabel="달력 로딩 중">
       <XStack mb={8}>
         {weekdayLabels.map((label) => (
           <View key={label} style={styles.weekdayCell}>
@@ -85,56 +82,131 @@ export function MedicationReportCalendarCard({
         ))}
       </XStack>
 
-      <YStack gap={8}>
-        {weeks.map((week) => (
-          <XStack key={week.map((day) => day.id).join("-")} items="stretch">
-            {week.map((day) => {
-              if (day.day === null || day.date === null) {
-                return <View key={day.id} style={styles.dayCellSlot} />;
-              }
+      {CALENDAR_SKELETON_WEEKS.map((weekId) => (
+        <XStack key={weekId} items="stretch">
+          {CALENDAR_SKELETON_DAYS.map((dayId) => (
+            <View key={`${weekId}-${dayId}`} style={[styles.dayCellSlot, styles.skeletonDayCell]} />
+          ))}
+        </XStack>
+      ))}
+    </YStack>
+  );
+}
 
-              const toneStyle = resolveDayCellStyle(day.tone);
-              const isSelected = day.date === selectedDate;
-              const isSelectable = day.tone !== "future";
+export function MedicationReportCalendarCard({
+  monthLabel,
+  weeks,
+  selectedDate,
+  onSelectDate,
+  onPreviousMonth,
+  onNextMonth,
+  canGoToNextMonth,
+  isLoading = false,
+}: MedicationReportCalendarCardProps) {
+  const weekdayLabels = getMedicationCalendarWeekdayLabels();
 
-              if (!toneStyle) {
-                return (
-                  <View key={day.id} style={styles.dayCellSlot}>
-                    <Text style={styles.futureDayText}>{day.day}</Text>
-                  </View>
-                );
-              }
+  return (
+    <SurfaceCard style={styles.card}>
+      <XStack items="center" justify="space-between" mb={14}>
+        <XStack items="center" gap={8} flex={1}>
+          <Ionicons name="calendar-outline" size={18} color={palette.title_emphasis} />
+          <Text style={styles.monthLabel}>{monthLabel}</Text>
+        </XStack>
 
-              return (
-                <Pressable
-                  key={day.id}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: isSelected }}
-                  disabled={!isSelectable}
-                  onPress={() => {
-                    if (day.date) onSelectDate(day.date);
-                  }}
-                  style={[
-                    styles.dayCell,
-                    {
-                      backgroundColor: toneStyle.backgroundColor,
-                      borderColor: toneStyle.borderColor,
-                    },
-                    isSelected ? styles.selectedDayCell : null,
-                  ]}
-                >
-                  <Text style={[styles.dayNumber, { color: toneStyle.textColor }]}>{day.day}</Text>
-                  {day.fraction ? (
-                    <Text style={[styles.dayFraction, { color: toneStyle.textColor }]}>
-                      {day.fraction}
-                    </Text>
-                  ) : null}
-                </Pressable>
-              );
-            })}
+        <XStack items="center" gap={4}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="이전 달"
+            onPress={onPreviousMonth}
+            style={styles.monthNavButton}
+          >
+            <Ionicons name="chevron-back" size={18} color={palette.title_emphasis} />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="다음 달"
+            disabled={!canGoToNextMonth}
+            onPress={onNextMonth}
+            style={[
+              styles.monthNavButton,
+              !canGoToNextMonth ? styles.monthNavButtonDisabled : null,
+            ]}
+          >
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={canGoToNextMonth ? palette.title_emphasis : palette.input_placeholder}
+            />
+          </Pressable>
+        </XStack>
+      </XStack>
+
+      {isLoading ? (
+        <MedicationReportCalendarSkeleton />
+      ) : (
+        <>
+          <XStack mb={8}>
+            {weekdayLabels.map((label) => (
+              <View key={label} style={styles.weekdayCell}>
+                <Text style={styles.weekdayLabel}>{label}</Text>
+              </View>
+            ))}
           </XStack>
-        ))}
-      </YStack>
+
+          <YStack gap={8}>
+            {weeks.map((week) => (
+              <XStack key={week.map((day) => day.id).join("-")} items="stretch">
+                {week.map((day) => {
+                  if (day.day === null || day.date === null) {
+                    return <View key={day.id} style={styles.dayCellSlot} />;
+                  }
+
+                  const toneStyle = resolveDayCellStyle(day.tone);
+                  const isSelected = day.date === selectedDate;
+                  const isSelectable = day.tone !== "future";
+
+                  if (!toneStyle) {
+                    return (
+                      <View key={day.id} style={styles.dayCellSlot}>
+                        <Text style={styles.futureDayText}>{day.day}</Text>
+                      </View>
+                    );
+                  }
+
+                  return (
+                    <Pressable
+                      key={day.id}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isSelected }}
+                      disabled={!isSelectable}
+                      onPress={() => {
+                        if (day.date) onSelectDate(day.date);
+                      }}
+                      style={[
+                        styles.dayCell,
+                        {
+                          backgroundColor: toneStyle.backgroundColor,
+                          borderColor: toneStyle.borderColor,
+                        },
+                        isSelected ? styles.selectedDayCell : null,
+                      ]}
+                    >
+                      <Text style={[styles.dayNumber, { color: toneStyle.textColor }]}>
+                        {day.day}
+                      </Text>
+                      {day.fraction ? (
+                        <Text style={[styles.dayFraction, { color: toneStyle.textColor }]}>
+                          {day.fraction}
+                        </Text>
+                      ) : null}
+                    </Pressable>
+                  );
+                })}
+              </XStack>
+            ))}
+          </YStack>
+        </>
+      )}
 
       <View style={styles.legendDivider} />
       <XStack justify="center" gap={14} pt={14}>
@@ -159,6 +231,17 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     fontWeight: "600",
   },
+  monthNavButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: palette.surface_neutral,
+  },
+  monthNavButtonDisabled: {
+    opacity: 0.5,
+  },
   weekdayCell: {
     flex: 1,
     alignItems: "center",
@@ -178,6 +261,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
     alignItems: "center",
     justifyContent: "center",
+  },
+  skeletonDayCell: {
+    borderRadius: 14,
+    backgroundColor: palette.surface_neutral,
   },
   futureDayText: {
     color: palette.input_placeholder,

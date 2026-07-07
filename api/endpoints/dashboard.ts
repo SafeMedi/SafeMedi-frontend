@@ -1,14 +1,17 @@
 import { api } from "@/api/client";
+import { fetchMedicationRecords, fetchMedicationStatistics } from "@/api/endpoints/medications";
 import { apiPaths } from "@/api/paths";
 import type {
-  DailyMedicationRecordsResponse,
   MedicationHistoryRecordsResponse,
-  MedicationStatisticsResponse,
-  MonthlyMedicationRecordsResponse,
   TodayMedicationSchedulesResponse,
   UpdateMedicationRecordRequest,
   UpdateMedicationRecordResponse,
 } from "@/api/types/dashboard";
+import type {
+  DailyMedicationRecordsResponse,
+  MedicationStatisticsResponse,
+  MonthlyMedicationRecordsResponse,
+} from "@/api/types/medications";
 
 interface FetchMedicationRecordsParams {
   readonly date: string;
@@ -17,11 +20,7 @@ interface FetchMedicationRecordsParams {
 export async function fetchDailyMedicationRecords(
   params: FetchMedicationRecordsParams,
 ): Promise<DailyMedicationRecordsResponse> {
-  return api
-    .get(apiPaths.medicationRecords, {
-      searchParams: { type: "DAILY", date: params.date },
-    })
-    .json<DailyMedicationRecordsResponse>();
+  return fetchMedicationRecords({ type: "DAILY", date: params.date });
 }
 
 export async function fetchTodayMedicationSchedules(): Promise<TodayMedicationSchedulesResponse> {
@@ -40,17 +39,13 @@ export async function updateMedicationRecord(
 export async function fetchMonthlyMedicationRecords(
   params: FetchMedicationRecordsParams,
 ): Promise<MonthlyMedicationRecordsResponse> {
-  return api
-    .get(apiPaths.medicationRecords, {
-      searchParams: { type: "MONTH", date: params.date },
-    })
-    .json<MonthlyMedicationRecordsResponse>();
+  return fetchMedicationRecords({ type: "MONTH", date: params.date });
 }
 
 export async function fetchMedicationHistoryRecords(
   params: FetchMedicationRecordsParams,
 ): Promise<MedicationHistoryRecordsResponse> {
-  const monthlyRecords = await fetchMonthlyMedicationRecords(params);
+  const monthlyRecords = await fetchMedicationRecords({ type: "MONTH", date: params.date });
   const selectedGroup = monthlyRecords.records.find((group) => group.date === params.date);
 
   return {
@@ -59,17 +54,5 @@ export async function fetchMedicationHistoryRecords(
   };
 }
 
-interface FetchMedicationStatisticsParams {
-  readonly startDate: string;
-  readonly endDate: string;
-}
-
-export async function fetchMedicationStatistics(
-  params: FetchMedicationStatisticsParams,
-): Promise<MedicationStatisticsResponse> {
-  return api
-    .get(apiPaths.medicationsStatistics, {
-      searchParams: { startDate: params.startDate, endDate: params.endDate },
-    })
-    .json<MedicationStatisticsResponse>();
-}
+export type { MedicationStatisticsResponse };
+export { fetchMedicationStatistics };

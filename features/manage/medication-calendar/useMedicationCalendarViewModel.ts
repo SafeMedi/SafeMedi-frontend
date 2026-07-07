@@ -1,11 +1,14 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
-import { useDashboardMonthlyMedicationRecords } from "@/api/queries/dashboard";
-import type {
-  MedicationRecordStatus,
-  MonthlyMedicationRecordGroup,
-  MonthlyMedicationRecordItem,
-} from "@/api/types/dashboard";
+import { useMedicationDailyRecords, useMedicationStatistics } from "@/api/queries/medications";
+import type { MedicationRecordItem, MedicationRecordStatus } from "@/api/types/medications";
+import {
+  buildComplianceByDate,
+  buildMedicationReportPeriodSummary,
+  getMedicationReportMonthRangeForViewMonth,
+  type MedicationReportPeriodSummary,
+  resolveSelectedDaySummary,
+} from "../medication-statistics/medicationReportStatistics";
 
 export type MedicationCalendarDayTone = "empty" | "future" | "green" | "yellow" | "red";
 
@@ -24,7 +27,7 @@ export interface MedicationCalendarRecordItem {
   readonly scheduledTime: string;
   readonly status: MedicationRecordStatus;
   readonly statusLabel: string;
-  readonly statusTone: "taken" | "missed" | "upcoming";
+  readonly statusTone: "taken" | "missed";
   readonly isTaken: boolean;
 }
 
@@ -36,19 +39,23 @@ export interface MedicationCalendarPrescriptionGroup {
 
 export interface MedicationCalendarViewModel {
   readonly monthLabel: string;
-  readonly periodRangeLabel: string;
-  readonly complianceRate: number;
-  readonly perfectDaysCount: number;
-  readonly attentionDaysCount: number;
+  readonly periodSummary: MedicationReportPeriodSummary;
   readonly calendarWeeks: readonly (readonly MedicationCalendarDay[])[];
   readonly selectedDate: string | null;
   readonly setSelectedDate: (date: string) => void;
+  readonly goToPreviousMonth: () => void;
+  readonly goToNextMonth: () => void;
+  readonly canGoToNextMonth: boolean;
   readonly selectedDateTitle: string;
   readonly selectedDaySummary: string;
   readonly prescriptionGroups: readonly MedicationCalendarPrescriptionGroup[];
-  readonly isLoading: boolean;
+  readonly isInitialLoading: boolean;
+  readonly isCalendarLoading: boolean;
+  readonly isDailyRecordsLoading: boolean;
   readonly isError: boolean;
+  readonly isDailyRecordsError: boolean;
   readonly refetch: () => Promise<unknown>;
+  readonly refetchDailyRecords: () => Promise<unknown>;
 }
 
 const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"] as const;
@@ -58,11 +65,6 @@ function formatDateToApiParam(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
-}
-
-function parseApiDate(dateText: string): Date | null {
-  const parsedDate = new Date(`${dateText}T00:00:00`);
-  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
 }
 
 function clampRate(rate: number): number {
@@ -77,13 +79,20 @@ function resolveDayTone(rate: number | null): MedicationCalendarDayTone {
   return "red";
 }
 
+function resolveDayRate(entry: {
+  readonly takenCount: number;
+  readonly totalCount: number;
+}): number {
+  if (entry.totalCount === 0) return 0;
+  return clampRate((entry.takenCount / entry.totalCount) * 100);
+}
+
 function isMedicationTaken(status: MedicationRecordStatus): boolean {
   return status === "SUCCESS";
 }
 
 function resolveStatusLabel(status: MedicationRecordStatus): string {
   if (status === "SUCCESS") return "완료";
-  if (status === "UPCOMING") return "대기중";
   return "복용 필요";
 }
 
@@ -91,47 +100,52 @@ function resolveStatusTone(
   status: MedicationRecordStatus,
 ): MedicationCalendarRecordItem["statusTone"] {
   if (status === "SUCCESS") return "taken";
-  if (status === "UPCOMING") return "upcoming";
   return "missed";
-}
-
-function computeDayCompliance(items: readonly MonthlyMedicationRecordItem[]): {
-  readonly takenCount: number;
-  readonly totalCount: number;
-  readonly fraction: string;
-  readonly rate: number;
-} {
-  const totalCount = items.length;
-  const takenCount = items.filter((item) => isMedicationTaken(item.status)).length;
-  const rate = totalCount > 0 ? clampRate((takenCount / totalCount) * 100) : 0;
-
-  return {
-    takenCount,
-    totalCount,
-    fraction: `${takenCount}/${totalCount}`,
-    rate,
-  };
 }
 
 function formatMonthLabel(date: Date): string {
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
 }
 
-function formatKoreanMonthDay(dateText: string): string {
-  const parsedDate = parseApiDate(dateText);
-  if (!parsedDate) return dateText;
-  return `${parsedDate.getMonth() + 1}월 ${parsedDate.getDate()}일`;
+function startOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function shiftMonth(date: Date, delta: number): Date {
+  return new Date(date.getFullYear(), date.getMonth() + delta, 1);
+}
+
+function isSameMonth(left: Date, right: Date): boolean {
+  return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth();
+}
+
+function isFutureMonth(monthDate: Date, today: Date): boolean {
+  return startOfMonth(monthDate).getTime() > startOfMonth(today).getTime();
+}
+
+function isDateInMonth(dateText: string, monthDate: Date): boolean {
+  const parsedDate = new Date(`${dateText}T00:00:00`);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return false;
+  }
+
+  return isSameMonth(parsedDate, monthDate);
 }
 
 function formatSelectedDateTitle(dateText: string): string {
   return `${dateText} 복약 기록`;
 }
 
-function formatSelectedDaySummary(takenCount: number, totalCount: number, rate: number): string {
-  return `${takenCount}/${totalCount} 완료 (${rate}%)`;
+function resolveSummaryReferenceDate(viewMonth: Date, today: Date, monthEndDate: string): Date {
+  if (isSameMonth(viewMonth, today)) {
+    return today;
+  }
+
+  const parsedEndDate = new Date(`${monthEndDate}T00:00:00`);
+  return Number.isNaN(parsedEndDate.getTime()) ? today : parsedEndDate;
 }
 
-function buildRecordItem(record: MonthlyMedicationRecordItem): MedicationCalendarRecordItem {
+function buildRecordItem(record: MedicationRecordItem): MedicationCalendarRecordItem {
   return {
     id: String(record.recordId),
     medicationName: record.medicationNames[0] ?? record.prescriptionTitle,
@@ -143,8 +157,8 @@ function buildRecordItem(record: MonthlyMedicationRecordItem): MedicationCalenda
   };
 }
 
-function groupPrescriptions(
-  items: readonly MonthlyMedicationRecordItem[],
+export function groupMedicationRecordsByPrescription(
+  items: readonly MedicationRecordItem[],
 ): readonly MedicationCalendarPrescriptionGroup[] {
   const groups = new Map<string, MedicationCalendarPrescriptionGroup>();
 
@@ -170,35 +184,20 @@ function groupPrescriptions(
   return Array.from(groups.values());
 }
 
-function buildPeriodRangeLabel(
-  recordDates: readonly string[],
-  monthDate: Date,
-  today: Date,
-): string {
-  if (recordDates.length === 0) {
-    return `${monthDate.getMonth() + 1}월 1일`;
-  }
-
-  const sortedDates = [...recordDates].sort();
-  const monthStart = formatDateToApiParam(
-    new Date(monthDate.getFullYear(), monthDate.getMonth(), 1),
-  );
-  const isCurrentMonth =
-    monthDate.getFullYear() === today.getFullYear() && monthDate.getMonth() === today.getMonth();
-  const endDate = isCurrentMonth
-    ? formatDateToApiParam(today)
-    : (sortedDates[sortedDates.length - 1] ?? monthStart);
-
-  const startDate = sortedDates[0] ?? monthStart;
-  return `${formatKoreanMonthDay(startDate)} ~ ${formatKoreanMonthDay(endDate)}`;
-}
-
 export function buildMedicationCalendarWeeks(params: {
   readonly monthDate: Date;
   readonly today: Date;
-  readonly recordsByDate: ReadonlyMap<string, MonthlyMedicationRecordGroup>;
+  readonly complianceByDate: ReadonlyMap<
+    string,
+    {
+      readonly date: string;
+      readonly takenCount: number;
+      readonly totalCount: number;
+      readonly fraction: string;
+    }
+  >;
 }): readonly (readonly MedicationCalendarDay[])[] {
-  const { monthDate, today, recordsByDate } = params;
+  const { monthDate, today, complianceByDate } = params;
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -220,30 +219,41 @@ export function buildMedicationCalendarWeeks(params: {
 
   for (let day = 1; day <= daysInMonth; day += 1) {
     const dateText = formatDateToApiParam(new Date(year, month, day));
-    const recordGroup = recordsByDate.get(dateText);
+    const entry = complianceByDate.get(dateText);
     const isFutureDate = dateText > todayText;
 
-    if (!recordGroup || isFutureDate) {
-      const tone: MedicationCalendarDayTone = isFutureDate ? "future" : "empty";
+    if (isFutureDate) {
       cells.push({
         id: dateText,
         date: dateText,
         day,
-        fraction: isFutureDate ? null : null,
-        rate: isFutureDate ? null : null,
-        tone,
+        fraction: null,
+        rate: null,
+        tone: "future",
       });
       continue;
     }
 
-    const compliance = computeDayCompliance(recordGroup.items);
+    if (!entry || entry.totalCount === 0) {
+      cells.push({
+        id: dateText,
+        date: dateText,
+        day,
+        fraction: null,
+        rate: null,
+        tone: "empty",
+      });
+      continue;
+    }
+
+    const rate = resolveDayRate(entry);
     cells.push({
       id: dateText,
       date: dateText,
       day,
-      fraction: compliance.fraction,
-      rate: compliance.rate,
-      tone: resolveDayTone(compliance.rate),
+      fraction: entry.fraction,
+      rate,
+      tone: resolveDayTone(rate),
     });
   }
 
@@ -266,44 +276,49 @@ export function buildMedicationCalendarWeeks(params: {
   return weeks;
 }
 
-export function countMedicationCalendarDayBuckets(
-  records: readonly MonthlyMedicationRecordGroup[],
-): {
-  readonly perfectDaysCount: number;
-  readonly attentionDaysCount: number;
-} {
-  const todayText = formatDateToApiParam(new Date());
-  let perfectDaysCount = 0;
-  let attentionDaysCount = 0;
-
-  records.forEach((group) => {
-    if (group.date > todayText) {
-      return;
-    }
-    const { rate } = computeDayCompliance(group.items);
-    if (rate >= 90) {
-      perfectDaysCount += 1;
-      return;
-    }
-    if (group.items.length > 0) {
-      attentionDaysCount += 1;
-    }
-  });
-
-  return { perfectDaysCount, attentionDaysCount };
-}
-
 export function resolveDefaultSelectedDate(
-  records: readonly MonthlyMedicationRecordGroup[],
+  complianceByDate: ReadonlyMap<
+    string,
+    {
+      readonly date: string;
+    }
+  >,
   today: Date,
 ): string | null {
   const todayText = formatDateToApiParam(today);
-  if (records.some((group) => group.date === todayText)) {
+  if (complianceByDate.has(todayText)) {
     return todayText;
   }
 
-  const sortedDates = [...records].map((group) => group.date).sort();
-  return sortedDates[sortedDates.length - 1] ?? null;
+  const sortedDates = [...complianceByDate.keys()].sort();
+  return sortedDates[sortedDates.length - 1] ?? todayText;
+}
+
+export function resolveDefaultSelectedDateForMonth(
+  complianceByDate: ReadonlyMap<
+    string,
+    {
+      readonly date: string;
+    }
+  >,
+  viewMonth: Date,
+  today: Date,
+): string {
+  const monthRange = getMedicationReportMonthRangeForViewMonth(viewMonth, today);
+
+  if (isSameMonth(viewMonth, today)) {
+    return resolveDefaultSelectedDate(complianceByDate, today) ?? monthRange.endDate;
+  }
+
+  const datesInMonth = [...complianceByDate.keys()]
+    .filter((dateText) => dateText >= monthRange.startDate && dateText <= monthRange.endDate)
+    .sort();
+
+  if (datesInMonth.length > 0) {
+    return datesInMonth[datesInMonth.length - 1];
+  }
+
+  return monthRange.endDate;
 }
 
 export function getMedicationCalendarWeekdayLabels(): readonly string[] {
@@ -311,79 +326,131 @@ export function getMedicationCalendarWeekdayLabels(): readonly string[] {
 }
 
 export function useMedicationCalendarViewModel(today = new Date()): MedicationCalendarViewModel {
+  const [viewMonth, setViewMonth] = useState(() => startOfMonth(today));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const hasLoadedStatisticsOnce = useRef(false);
+  const monthRange = useMemo(
+    () => getMedicationReportMonthRangeForViewMonth(viewMonth, today),
+    [viewMonth, today],
+  );
 
-  const monthQueryDate = formatDateToApiParam(today);
-  const monthlyQuery = useDashboardMonthlyMedicationRecords({ date: monthQueryDate });
+  const monthlyStatisticsQuery = useMedicationStatistics({
+    startDate: monthRange.startDate,
+    endDate: monthRange.endDate,
+  });
 
-  const recordsByDate = useMemo(() => {
-    const map = new Map<string, MonthlyMedicationRecordGroup>();
-    monthlyQuery.data?.records.forEach((group) => {
-      map.set(group.date, group);
-    });
-    return map;
-  }, [monthlyQuery.data?.records]);
+  if (monthlyStatisticsQuery.data) {
+    hasLoadedStatisticsOnce.current = true;
+  }
+
+  const complianceByDate = useMemo(
+    () => buildComplianceByDate(monthlyStatisticsQuery.data?.dailyCompliance ?? []),
+    [monthlyStatisticsQuery.data?.dailyCompliance],
+  );
+
+  const resolvedSelectedDate = useMemo(() => {
+    if (selectedDate && isDateInMonth(selectedDate, viewMonth)) {
+      return selectedDate;
+    }
+
+    return resolveDefaultSelectedDateForMonth(complianceByDate, viewMonth, today);
+  }, [complianceByDate, selectedDate, viewMonth, today]);
+
+  const dailyRecordsQuery = useMedicationDailyRecords({
+    date: resolvedSelectedDate ?? monthRange.startDate,
+    enabled: !!resolvedSelectedDate,
+  });
 
   const calendarWeeks = useMemo(
     () =>
       buildMedicationCalendarWeeks({
-        monthDate: today,
+        monthDate: viewMonth,
         today,
-        recordsByDate,
+        complianceByDate,
       }),
-    [recordsByDate, today],
+    [complianceByDate, today, viewMonth],
   );
 
-  const resolvedSelectedDate = useMemo(() => {
-    if (selectedDate) {
-      return selectedDate;
-    }
-    return resolveDefaultSelectedDate(monthlyQuery.data?.records ?? [], today);
-  }, [monthlyQuery.data?.records, selectedDate, today]);
-
-  const selectedGroup = resolvedSelectedDate ? recordsByDate.get(resolvedSelectedDate) : undefined;
-  const selectedCompliance = selectedGroup
-    ? computeDayCompliance(selectedGroup.items)
-    : { takenCount: 0, totalCount: 0, fraction: "0/0", rate: 0 };
-
-  const { perfectDaysCount, attentionDaysCount } = useMemo(
-    () => countMedicationCalendarDayBuckets(monthlyQuery.data?.records ?? []),
-    [monthlyQuery.data?.records],
-  );
+  const selectedCompliance = resolvedSelectedDate
+    ? complianceByDate.get(resolvedSelectedDate)
+    : undefined;
 
   const prescriptionGroups = useMemo(
-    () => groupPrescriptions(selectedGroup?.items ?? []),
-    [selectedGroup?.items],
+    () => groupMedicationRecordsByPrescription(dailyRecordsQuery.data?.records ?? []),
+    [dailyRecordsQuery.data?.records],
+  );
+
+  const summaryReferenceDate = useMemo(
+    () => resolveSummaryReferenceDate(viewMonth, today, monthRange.endDate),
+    [monthRange.endDate, today, viewMonth],
+  );
+
+  const periodSummary = useMemo(
+    () => buildMedicationReportPeriodSummary(monthlyStatisticsQuery.data, summaryReferenceDate),
+    [monthlyStatisticsQuery.data, summaryReferenceDate],
   );
 
   const handleSetSelectedDate = useCallback((date: string) => {
     setSelectedDate(date);
   }, []);
 
+  const goToPreviousMonth = useCallback(() => {
+    setViewMonth((current) => shiftMonth(current, -1));
+    setSelectedDate(null);
+  }, []);
+
+  const goToNextMonth = useCallback(() => {
+    setViewMonth((current) => {
+      const nextMonth = shiftMonth(current, 1);
+      if (isFutureMonth(nextMonth, today)) {
+        return current;
+      }
+
+      return nextMonth;
+    });
+    setSelectedDate(null);
+  }, [today]);
+
+  const selectedDaySummary = useMemo(() => {
+    if (dailyRecordsQuery.data) {
+      const summary = dailyRecordsQuery.data.summary;
+      const rate = clampRate(summary.complianceRate);
+      return `${summary.fraction} 완료 (${rate}%)`;
+    }
+
+    return resolveSelectedDaySummary(selectedCompliance);
+  }, [dailyRecordsQuery.data, selectedCompliance]);
+
+  const isCalendarLoading =
+    monthlyStatisticsQuery.isFetching &&
+    !monthlyStatisticsQuery.data &&
+    hasLoadedStatisticsOnce.current;
+
   return {
-    monthLabel: formatMonthLabel(today),
-    periodRangeLabel: buildPeriodRangeLabel(
-      monthlyQuery.data?.records.map((group) => group.date) ?? [],
-      today,
-      today,
-    ),
-    complianceRate: clampRate(monthlyQuery.data?.summary.successRate ?? 0),
-    perfectDaysCount,
-    attentionDaysCount,
+    monthLabel: formatMonthLabel(viewMonth),
+    periodSummary,
     calendarWeeks,
     selectedDate: resolvedSelectedDate,
     setSelectedDate: handleSetSelectedDate,
+    goToPreviousMonth,
+    goToNextMonth,
+    canGoToNextMonth: !isSameMonth(viewMonth, today),
     selectedDateTitle: resolvedSelectedDate
       ? formatSelectedDateTitle(resolvedSelectedDate)
       : "복약 기록",
-    selectedDaySummary: formatSelectedDaySummary(
-      selectedCompliance.takenCount,
-      selectedCompliance.totalCount,
-      selectedCompliance.rate,
-    ),
+    selectedDaySummary,
     prescriptionGroups,
-    isLoading: monthlyQuery.isLoading,
-    isError: monthlyQuery.isError,
-    refetch: () => monthlyQuery.refetch(),
+    isInitialLoading: monthlyStatisticsQuery.isLoading && !hasLoadedStatisticsOnce.current,
+    isCalendarLoading,
+    isDailyRecordsLoading:
+      dailyRecordsQuery.isFetching && !dailyRecordsQuery.data && !!resolvedSelectedDate,
+    isError: monthlyStatisticsQuery.isError,
+    isDailyRecordsError: dailyRecordsQuery.isError,
+    refetch: async () => {
+      await Promise.all([monthlyStatisticsQuery.refetch(), dailyRecordsQuery.refetch()]);
+    },
+    refetchDailyRecords: async () => {
+      await dailyRecordsQuery.refetch();
+    },
   };
 }

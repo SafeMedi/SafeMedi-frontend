@@ -45,8 +45,8 @@ function addDaysToDateText(dateText: string, days: number): string {
   return `${year}-${month}-${day}`;
 }
 
-function buildMockWeeklyDailyCompliance(startDate: string) {
-  const weeklyRates = [
+function buildMockDailyCompliance(startDate: string, endDate: string) {
+  const dailyRates = [
     { takenCount: 17, totalCount: 20 },
     { takenCount: 9, totalCount: 10 },
     { takenCount: 3, totalCount: 4 },
@@ -56,15 +56,21 @@ function buildMockWeeklyDailyCompliance(startDate: string) {
     { takenCount: 9, totalCount: 10 },
   ];
 
-  return weeklyRates.map((entry, index) => {
-    const date = addDaysToDateText(startDate, index);
-    return {
-      date,
-      takenCount: entry.takenCount,
-      totalCount: entry.totalCount,
-      fraction: `${entry.takenCount}/${entry.totalCount}`,
-    };
-  });
+  const entries = [];
+  let currentDate = startDate;
+
+  while (currentDate <= endDate) {
+    const rate = dailyRates[entries.length % dailyRates.length];
+    entries.push({
+      date: currentDate,
+      takenCount: rate.takenCount,
+      totalCount: rate.totalCount,
+      fraction: `${rate.takenCount}/${rate.totalCount}`,
+    });
+    currentDate = addDaysToDateText(currentDate, 1);
+  }
+
+  return entries;
 }
 
 export function registerSaf26Mocks(registry: MockRegistry): void {
@@ -611,41 +617,38 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
     }
     if (type === "MONTH") {
       return {
-        period: "2026-04",
+        type: "MONTH",
+        periodStartDate: "2026-04-01",
+        periodEndDate: "2026-04-30",
         summary: {
           totalCount: 9,
           takenCount: 8,
           fraction: "8/9",
-          successRate: 88.8,
         },
-        records: [
+        dailyRecords: [
           {
             date: "2026-04-06",
+            totalCount: 3,
+            takenCount: 2,
+            fraction: "2/3",
             items: [
               {
                 recordId: 500,
                 prescriptionTitle: "두통/해열 약물 관리",
-                medicationNames: ["타이레놀정 500mg", "아세트아미노펜"],
                 scheduledTime: "08:00",
-                takenTime: "08:05",
                 status: "SUCCESS",
               },
               {
                 recordId: 501,
                 prescriptionTitle: "위장 약물 관리",
-                medicationNames: ["오메프라졸캡슐 20mg", "오메프라졸"],
                 scheduledTime: "08:00",
-                takenTime: "08:10",
                 status: "SUCCESS",
               },
               {
                 recordId: 502,
                 prescriptionTitle: "혈압 약물 관리",
-                medicationNames: ["암로디핀정 5mg", "암로디핀베실산염"],
                 scheduledTime: "14:00",
-                takenTime: null,
-                status: "OVERDUE",
-                warningMessages: ["설파제 알러지 - 교차 반응 가능성", "자몽주스와 함께 복용 금지"],
+                status: "PENDING",
               },
             ],
           },
@@ -654,19 +657,20 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
     }
     if (type === "WEEK") {
       return {
-        period: `2026-W14`,
+        type: "WEEK",
+        periodStartDate: "2026-04-06",
+        periodEndDate: "2026-04-12",
         summary: {
           totalCount: 21,
           takenCount: 18,
           fraction: "18/21",
-          successRate: 85.7,
         },
-        records: [],
+        dailyRecords: [],
       };
     }
     return {
+      type: "DAILY",
       date,
-      currentTime: "12:30:00",
       summary: { totalCount: 3, takenCount: 1, fraction: "1/3" },
       records: [
         {
@@ -684,7 +688,7 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
           medicationNames: ["플루티카손 (스프레이)", "타이레놀 500mg"],
           scheduledTime: "13:00",
           takenTime: null,
-          status: "DUE",
+          status: "PENDING",
           isGoldenTime: true,
         },
         {
@@ -693,7 +697,7 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
           medicationNames: ["플루티카손 (스프레이)", "타이레놀 500mg"],
           scheduledTime: "19:00",
           takenTime: null,
-          status: "UPCOMING",
+          status: "PENDING",
           isGoldenTime: false,
         },
       ],
@@ -711,42 +715,17 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
       );
     }
 
-    const dailyCompliance = buildMockWeeklyDailyCompliance(start);
-    const totalScheduled = dailyCompliance.reduce((sum, day) => sum + day.totalCount, 0);
-    const totalTaken = dailyCompliance.reduce((sum, day) => sum + day.takenCount, 0);
-    const totalComplianceRate =
-      totalScheduled > 0 ? Math.round((totalTaken / totalScheduled) * 1000) / 10 : 0;
+    const dailyCompliance = buildMockDailyCompliance(start, end);
+    const totalCount = dailyCompliance.reduce((sum, day) => sum + day.totalCount, 0);
+    const takenCount = dailyCompliance.reduce((sum, day) => sum + day.takenCount, 0);
 
     return {
       startDate: start,
       endDate: end,
-      totalScheduled,
-      totalTaken,
-      totalComplianceRate,
+      totalCount,
+      takenCount,
+      fraction: `${takenCount}/${totalCount}`,
       dailyCompliance,
-      cautionIngredients: [
-        {
-          ingredientName: "아세트아미노펜",
-          monthlyIntakeCount: 12,
-          riskLevel: "CAUTION",
-        },
-        {
-          ingredientName: "이부프로펜",
-          monthlyIntakeCount: 8,
-          riskLevel: "DANGER",
-        },
-        {
-          ingredientName: "카페인",
-          monthlyIntakeCount: 15,
-          riskLevel: "CAUTION",
-        },
-      ],
-      consultationMessage:
-        "일부 성분의 섭취 빈도가 높습니다. 정기 검진 시 복용 중인 약물 목록을 의사에게 알려주세요.",
-      monthlyAchievements: [
-        { message: "연속 7일 완벽한 복약 달성!" },
-        { message: "이번 달 평균 이행률 목표(80%) 초과" },
-      ],
     };
   });
 

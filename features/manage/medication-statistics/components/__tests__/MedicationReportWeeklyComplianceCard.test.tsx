@@ -16,18 +16,18 @@ jest.mock("tamagui", () => {
 });
 
 describe("MedicationReportWeeklyComplianceCard", () => {
-  it("성공, 주의, 미래 이행률을 표시한다", () => {
+  it("fraction과 이행률, 미래 일정을 표시한다", () => {
     const { getByText } = render(
       <MedicationReportWeeklyComplianceCard
         items={[
-          { dayLabel: "월", rate: 100, tone: "success" },
-          { dayLabel: "화", rate: 65, tone: "warning" },
-          { dayLabel: "수", rate: null, tone: "future" },
+          { dayLabel: "월", rate: 100, fraction: "5/5", tone: "success" },
+          { dayLabel: "화", rate: 65, fraction: "13/20", tone: "warning" },
+          { dayLabel: "수", rate: null, fraction: null, tone: "future" },
         ]}
       />,
     );
-    expect(getByText("100%")).toBeTruthy();
-    expect(getByText("65%")).toBeTruthy();
+    expect(getByText("5/5 (100%)")).toBeTruthy();
+    expect(getByText("13/20 (65%)")).toBeTruthy();
     expect(getByText("예정")).toBeTruthy();
   });
 });

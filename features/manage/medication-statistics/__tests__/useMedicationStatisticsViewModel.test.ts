@@ -1,13 +1,12 @@
 import { renderHook } from "@testing-library/react-native";
 
-import { useMedicationStatistics as useMedicationStatisticsQuery } from "@/api/queries/dashboard";
+import { useMedicationStatistics } from "@/api/queries/medications";
 import {
+  buildMedicationReportPeriodSummary,
   buildMedicationReportWeeklyCompliance,
+  deriveMedicationReportMonthlyAchievements,
   getMedicationReportMonthRange,
   getMedicationReportWeekRange,
-  mapMedicationReportCautionIngredients,
-  mapMedicationReportMonthlyAchievements,
-  resolveMedicationReportConsultationMessage,
 } from "../medicationReportStatistics";
 import { useMedicationStatisticsViewModel } from "../useMedicationStatisticsViewModel";
 
@@ -27,7 +26,7 @@ describe("medicationReportStatistics", () => {
     });
   });
 
-  it("주간 복약 이행률 행을 요일 순서로 변환한다", () => {
+  it("주간 복약 이행률 행을 요일 순서와 fraction으로 변환한다", () => {
     const weekRange = getMedicationReportWeekRange(new Date("2026-04-08T00:00:00"));
 
     const rows = buildMedicationReportWeeklyCompliance(
@@ -42,66 +41,85 @@ describe("medicationReportStatistics", () => {
     expect(rows[0]).toEqual({
       dayLabel: "월요일",
       rate: 85,
+      fraction: "17/20",
       tone: "warning",
     });
     expect(rows[1]).toEqual({
       dayLabel: "화요일",
       rate: 90,
+      fraction: "9/10",
       tone: "success",
     });
     expect(rows[2]).toEqual({
       dayLabel: "수요일",
       rate: 0,
+      fraction: "0/0",
       tone: "warning",
     });
     expect(rows[3]).toEqual({
       dayLabel: "목요일",
       rate: null,
+      fraction: null,
       tone: "future",
     });
   });
 
-  it("주의 성분과 상담/성과 메시지를 화면 모델로 변환한다", () => {
+  it("통계 API 응답으로 기간 요약과 성과 메시지를 생성한다", () => {
     const statistics = {
-      startDate: "2026-04-06",
-      endDate: "2026-04-12",
-      totalScheduled: 10,
-      totalTaken: 8,
-      totalComplianceRate: 80,
-      dailyCompliance: [],
-      cautionIngredients: [
-        {
-          ingredientName: "아세트아미노펜",
-          monthlyIntakeCount: 12,
-          riskLevel: "CAUTION" as const,
-        },
+      startDate: "2026-04-01",
+      endDate: "2026-04-08",
+      totalScheduled: 74,
+      totalTaken: 66,
+      totalComplianceRate: 89.2,
+      dailyCompliance: [
+        { date: "2026-04-06", takenCount: 5, totalCount: 5, fraction: "5/5" },
+        { date: "2026-04-07", takenCount: 4, totalCount: 4, fraction: "4/4" },
+        { date: "2026-04-08", takenCount: 3, totalCount: 3, fraction: "3/3" },
       ],
-      consultationMessage: "의사 상담이 필요합니다.",
-      monthlyAchievements: [{ message: "연속 7일 완벽한 복약 달성!" }],
     };
 
-    expect(mapMedicationReportCautionIngredients(statistics.cautionIngredients)).toEqual([
-      {
-        id: "아세트아미노펜-CAUTION-12",
-        name: "아세트아미노펜",
-        monthlyIntakeCount: 12,
-        riskLevel: "CAUTION",
-        riskLabel: "주의",
-      },
+    expect(buildMedicationReportPeriodSummary(statistics, new Date("2026-04-08T00:00:00"))).toEqual(
+      expect.objectContaining({
+        complianceRate: 89,
+        fraction: "66/74",
+        perfectDaysCount: 3,
+        attentionDaysCount: 0,
+      }),
+    );
+    expect(deriveMedicationReportMonthlyAchievements(statistics)).toEqual([
+      "이번 달 평균 이행률 목표(80%) 초과",
+      "연속 3일 완벽한 복약 달성!",
     ]);
-    expect(resolveMedicationReportConsultationMessage(statistics)).toBe("의사 상담이 필요합니다.");
-    expect(mapMedicationReportMonthlyAchievements(statistics)).toEqual([
-      "연속 7일 완벽한 복약 달성!",
-    ]);
+  });
+
+  it("기간 요약의 완벽한 날은 100% 달성일만 집계한다", () => {
+    const statistics = {
+      startDate: "2026-04-01",
+      endDate: "2026-04-02",
+      totalScheduled: 11,
+      totalTaken: 10,
+      totalComplianceRate: 90.9,
+      dailyCompliance: [
+        { date: "2026-04-01", takenCount: 9, totalCount: 10, fraction: "9/10" },
+        { date: "2026-04-02", takenCount: 1, totalCount: 1, fraction: "1/1" },
+      ],
+    };
+
+    expect(buildMedicationReportPeriodSummary(statistics, new Date("2026-04-02T00:00:00"))).toEqual(
+      expect.objectContaining({
+        perfectDaysCount: 1,
+        attentionDaysCount: 1,
+      }),
+    );
   });
 });
 
-const mockUseMedicationStatisticsQuery = useMedicationStatisticsQuery as jest.MockedFunction<
-  typeof useMedicationStatisticsQuery
+const mockUseMedicationStatisticsQuery = useMedicationStatistics as jest.MockedFunction<
+  typeof useMedicationStatistics
 >;
 const mockRefetchStatistics = jest.fn(async () => ({}));
 
-jest.mock("@/api/queries/dashboard", () => ({
+jest.mock("@/api/queries/medications", () => ({
   useMedicationStatistics: jest.fn(),
 }));
 
@@ -113,14 +131,14 @@ describe("useMedicationStatisticsViewModel", () => {
       isLoading: false,
       isError: false,
       refetch: mockRefetchStatistics,
-    } as unknown as ReturnType<typeof useMedicationStatisticsQuery>);
+    } as unknown as ReturnType<typeof useMedicationStatistics>);
   });
 
   it("통계 탭 데이터를 API 응답에서 변환한다", () => {
     mockUseMedicationStatisticsQuery.mockReturnValue({
       data: {
-        startDate: "2026-04-06",
-        endDate: "2026-04-12",
+        startDate: "2026-04-01",
+        endDate: "2026-04-08",
         totalScheduled: 74,
         totalTaken: 66,
         totalComplianceRate: 89.2,
@@ -128,20 +146,11 @@ describe("useMedicationStatisticsViewModel", () => {
           { date: "2026-04-06", takenCount: 17, totalCount: 20, fraction: "17/20" },
           { date: "2026-04-07", takenCount: 9, totalCount: 10, fraction: "9/10" },
         ],
-        cautionIngredients: [
-          {
-            ingredientName: "이부프로펜",
-            monthlyIntakeCount: 8,
-            riskLevel: "DANGER",
-          },
-        ],
-        consultationMessage: "정기 검진 시 복용 중인 약물 목록을 의사에게 알려주세요.",
-        monthlyAchievements: [{ message: "이번 달 평균 이행률 목표(80%) 초과" }],
       },
       isLoading: false,
       isError: false,
       refetch: mockRefetchStatistics,
-    } as unknown as ReturnType<typeof useMedicationStatisticsQuery>);
+    } as unknown as ReturnType<typeof useMedicationStatistics>);
 
     const { result } = renderHook(() =>
       useMedicationStatisticsViewModel(new Date("2026-04-08T00:00:00")),
@@ -150,17 +159,14 @@ describe("useMedicationStatisticsViewModel", () => {
     expect(result.current.weeklyCompliance[0]).toEqual({
       dayLabel: "월요일",
       rate: 85,
+      fraction: "17/20",
       tone: "warning",
     });
-    expect(result.current.cautionIngredients[0]).toEqual(
+    expect(result.current.monthlySummary).toEqual(
       expect.objectContaining({
-        name: "이부프로펜",
-        monthlyIntakeCount: 8,
-        riskLabel: "위험",
+        complianceRate: 89,
+        fraction: "66/74",
       }),
-    );
-    expect(result.current.consultationMessage).toBe(
-      "정기 검진 시 복용 중인 약물 목록을 의사에게 알려주세요.",
     );
     expect(result.current.monthlyAchievements).toEqual(["이번 달 평균 이행률 목표(80%) 초과"]);
   });
@@ -171,7 +177,7 @@ describe("useMedicationStatisticsViewModel", () => {
       isLoading: true,
       isError: true,
       refetch: mockRefetchStatistics,
-    } as unknown as ReturnType<typeof useMedicationStatisticsQuery>);
+    } as unknown as ReturnType<typeof useMedicationStatistics>);
 
     const { result } = renderHook(() => useMedicationStatisticsViewModel());
 

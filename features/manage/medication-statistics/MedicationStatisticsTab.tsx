@@ -3,9 +3,8 @@ import { Text, YStack } from "tamagui";
 
 import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
-import { MedicationReportCautionIngredientsCard } from "./components/MedicationReportCautionIngredientsCard";
-import { MedicationReportConsultationCard } from "./components/MedicationReportConsultationCard";
 import { MedicationReportMonthlyAchievementCard } from "./components/MedicationReportMonthlyAchievementCard";
+import { MedicationReportPeriodSummaryCard } from "./components/MedicationReportPeriodSummaryCard";
 import { MedicationReportWeeklyComplianceCard } from "./components/MedicationReportWeeklyComplianceCard";
 import { useMedicationStatisticsViewModel } from "./useMedicationStatisticsViewModel";
 
@@ -34,11 +33,8 @@ export function MedicationStatisticsTab() {
 
   return (
     <YStack gap={14}>
+      <MedicationReportPeriodSummaryCard summary={viewModel.monthlySummary} />
       <MedicationReportWeeklyComplianceCard items={viewModel.weeklyCompliance} />
-      <MedicationReportCautionIngredientsCard items={viewModel.cautionIngredients} />
-      {viewModel.consultationMessage ? (
-        <MedicationReportConsultationCard message={viewModel.consultationMessage} />
-      ) : null}
       <MedicationReportMonthlyAchievementCard achievements={viewModel.monthlyAchievements} />
     </YStack>
   );

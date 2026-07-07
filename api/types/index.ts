@@ -1,19 +1,6 @@
 export type { SocialLoginResponse } from "./auth";
 export type {
-  DailyMedicationRecordItem,
-  DailyMedicationRecordsResponse,
-  DailyMedicationSummary,
   MedicationHistoryRecordsResponse,
-  MedicationRecordStatus,
-  MedicationStatisticsCautionIngredient,
-  MedicationStatisticsDailyCompliance,
-  MedicationStatisticsIngredientRiskLevel,
-  MedicationStatisticsMonthlyAchievement,
-  MedicationStatisticsResponse,
-  MonthlyMedicationRecordGroup,
-  MonthlyMedicationRecordItem,
-  MonthlyMedicationRecordsResponse,
-  MonthlyMedicationSummary,
   TodayMedicationScheduleItem,
   TodayMedicationScheduleStatus,
   TodayMedicationScheduleSummary,
@@ -39,6 +26,17 @@ export type {
   MedicalFacilityStatus,
   NearbyMedicalFacilitiesResponse,
 } from "./map";
+export type {
+  DailyMedicationRecordsResponse,
+  MedicationRecordItem,
+  MedicationRecordStatus,
+  MedicationRecordsQueryType,
+  MedicationRecordsSummary,
+  MedicationStatisticsDailyCompliance,
+  MedicationStatisticsResponse,
+  MonthlyMedicationRecordGroup,
+  MonthlyMedicationRecordsResponse,
+} from "./medications";
 export type {
   DeleteDeviceTokenBody,
   DeleteDeviceTokenResponse,
