@@ -18,6 +18,8 @@ export interface UseDrugSearchResult {
   readonly items: readonly DrugSearchItem[];
   readonly isFetching: boolean;
   readonly isFetchingNextPage: boolean;
+  readonly isError: boolean;
+  readonly error: Error | null;
   readonly hasNextPage: boolean;
   /** debounce 된 키워드가 최소 길이를 만족해 검색이 활성화된 상태 */
   readonly isSearchEnabled: boolean;
@@ -41,6 +43,8 @@ export function useDrugSearch({
     items = [],
     isFetching = false,
     isFetchingNextPage = false,
+    isError = false,
+    error = null,
     hasNextPage = false,
     fetchNextPage = () => undefined,
   } = useSearchDrugsQuery(debouncedKeyword, isSearchEnabled);
@@ -87,6 +91,8 @@ export function useDrugSearch({
     items: filteredItems,
     isFetching,
     isFetchingNextPage,
+    isError,
+    error,
     hasNextPage,
     isSearchEnabled,
     loadMore: () => {

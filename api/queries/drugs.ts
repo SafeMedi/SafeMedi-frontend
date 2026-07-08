@@ -10,6 +10,8 @@ export interface SearchDrugsQueryResult {
   readonly items: readonly DrugSearchItem[];
   readonly isFetching: boolean;
   readonly isFetchingNextPage: boolean;
+  readonly isError: boolean;
+  readonly error: Error | null;
   readonly hasNextPage: boolean;
   readonly fetchNextPage: () => void;
 }
@@ -34,6 +36,8 @@ export function useSearchDrugsQuery(keyword: string, enabled: boolean): SearchDr
     items,
     isFetching: query.isFetching && !query.isFetchingNextPage,
     isFetchingNextPage: query.isFetchingNextPage,
+    isError: query.isError,
+    error: query.error,
     hasNextPage: query.hasNextPage,
     fetchNextPage: () => {
       void query.fetchNextPage();

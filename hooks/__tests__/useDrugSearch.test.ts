@@ -5,6 +5,16 @@ import { useDrugSearch } from "@/hooks/useDrugSearch";
 const mockUseSearchDrugsQuery = jest.fn();
 const mockFetchNextPage = jest.fn();
 
+interface MockSearchDrugsQueryResult {
+  readonly items: readonly DrugSearchItem[];
+  readonly isFetching: boolean;
+  readonly isFetchingNextPage: boolean;
+  readonly isError: boolean;
+  readonly error: Error | null;
+  readonly hasNextPage: boolean;
+  readonly fetchNextPage: jest.Mock;
+}
+
 jest.mock("@/api/queries/drugs", () => ({
   useSearchDrugsQuery: (...args: unknown[]) => mockUseSearchDrugsQuery(...args),
 }));
@@ -16,15 +26,18 @@ const drug: DrugSearchItem = {
   company: "한국얀센",
 };
 
-function setQueryResult(overrides: Partial<ReturnType<typeof mockUseSearchDrugsQuery>> = {}) {
-  mockUseSearchDrugsQuery.mockReturnValue({
+function setQueryResult(overrides: Partial<MockSearchDrugsQueryResult> = {}) {
+  const result: MockSearchDrugsQueryResult = {
     items: [drug],
     isFetching: false,
     isFetchingNextPage: false,
+    isError: false,
+    error: null,
     hasNextPage: false,
     fetchNextPage: mockFetchNextPage,
     ...overrides,
-  });
+  };
+  mockUseSearchDrugsQuery.mockReturnValue(result);
 }
 
 describe("useDrugSearch", () => {

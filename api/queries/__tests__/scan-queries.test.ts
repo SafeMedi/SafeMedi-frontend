@@ -37,6 +37,8 @@ describe("api/queries scan modules", () => {
       data: { pages: [{ content: [drugItem], page: 0, size: 10, isLast: false }] },
       isFetching: false,
       isFetchingNextPage: false,
+      isError: false,
+      error: null,
       hasNextPage: true,
       fetchNextPage: jest.fn(),
     });
@@ -64,6 +66,8 @@ describe("api/queries scan modules", () => {
 
     expect(result.current.items).toEqual([drugItem]);
     expect(result.current.hasNextPage).toBe(true);
+    expect(result.current.isError).toBe(false);
+    expect(result.current.error).toBeNull();
   });
 
   it("처방전 생성 mutation 옵션을 올바르게 구성한다", async () => {
