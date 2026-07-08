@@ -164,7 +164,13 @@ describe("프로필 수정 화면", () => {
   beforeEach(() => {
     mockActiveUser = mockUser;
     jest.clearAllMocks();
-    mockUseSearchDrugsQuery.mockReturnValue({ data: [], isFetching: false });
+    mockUseSearchDrugsQuery.mockReturnValue({
+      items: [],
+      isFetching: false,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
   });
 
   it("사용자 정보가 없으면 빈 기본값으로 편집 화면을 렌더링한다", () => {

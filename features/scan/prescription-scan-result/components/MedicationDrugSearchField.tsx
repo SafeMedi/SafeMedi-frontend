@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { type Control, Controller } from "react-hook-form";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { Text, YStack } from "tamagui";
 import { useSearchDrugsQuery } from "@/api/queries/drugs";
 import type { DrugSearchItem } from "@/api/types";
 import { palette } from "@/constants/design-tokens";
+import { isCloseToScrollEnd } from "@/utils/scroll";
 import type { PrescriptionScanResultFormValues } from "../usePrescriptionScanResultViewModel";
 
 interface MedicationDrugSearchFieldProps {
@@ -16,6 +17,9 @@ interface MedicationDrugSearchFieldProps {
 
 const MIN_KEYWORD_LENGTH = 2;
 const DEBOUNCE_DELAY_MS = 250;
+const MAX_VISIBLE_SUGGESTIONS = 5;
+const SUGGESTION_ITEM_HEIGHT = 52;
+const SUGGESTION_LIST_MAX_HEIGHT = SUGGESTION_ITEM_HEIGHT * MAX_VISIBLE_SUGGESTIONS;
 
 export function MedicationDrugSearchField({
   index,
@@ -35,7 +39,7 @@ export function MedicationDrugSearchField({
   }, [keyword]);
 
   const isSearchEnabled = debouncedKeyword.length >= MIN_KEYWORD_LENGTH;
-  const { data: searchResults, isFetching } = useSearchDrugsQuery(
+  const { items, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } = useSearchDrugsQuery(
     debouncedKeyword,
     isSearchEnabled,
   );
@@ -49,6 +53,12 @@ export function MedicationDrugSearchField({
     setDebouncedKeyword(item.drugName);
     onSelectMedicationDrug(index, item);
     setIsInputFocused(false);
+  };
+
+  const handleEndReached = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
   };
 
   return (
@@ -89,21 +99,36 @@ export function MedicationDrugSearchField({
       {shouldShowSuggestions ? (
         <View style={styles.suggestionContainer}>
           {isFetching ? <Text style={styles.metaText}>검색 중...</Text> : null}
-          {!isFetching && (searchResults?.length ?? 0) === 0 ? (
+          {!isFetching && items.length === 0 ? (
             <Text style={styles.metaText}>검색 결과가 없습니다.</Text>
           ) : null}
-          {(searchResults ?? []).map((item) => (
-            <Pressable
-              key={`${item.atcCode}-${item.drugName}`}
-              onPressIn={() => handlePressSuggestion(item)}
-              style={({ pressed }) => [styles.suggestionItem, pressed ? styles.pressed : null]}
+          {items.length > 0 ? (
+            <ScrollView
+              style={styles.suggestionList}
+              nestedScrollEnabled
+              keyboardShouldPersistTaps="handled"
+              scrollEventThrottle={16}
+              onScroll={(event) => {
+                if (isCloseToScrollEnd(event.nativeEvent)) {
+                  handleEndReached();
+                }
+              }}
             >
-              <Text style={styles.suggestionTitle}>{item.drugName}</Text>
-              <Text style={styles.suggestionMeta}>
-                {item.company} · {item.atcCode}
-              </Text>
-            </Pressable>
-          ))}
+              {items.map((item) => (
+                <Pressable
+                  key={`${item.drugCode}-${item.atcCode}-${item.drugName}`}
+                  onPressIn={() => handlePressSuggestion(item)}
+                  style={({ pressed }) => [styles.suggestionItem, pressed ? styles.pressed : null]}
+                >
+                  <Text style={styles.suggestionTitle}>{item.drugName}</Text>
+                  <Text style={styles.suggestionMeta}>
+                    {item.company} · {item.atcCode}
+                  </Text>
+                </Pressable>
+              ))}
+              {isFetchingNextPage ? <Text style={styles.metaText}>불러오는 중...</Text> : null}
+            </ScrollView>
+          ) : null}
         </View>
       ) : null}
     </YStack>
@@ -146,6 +171,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 4,
     gap: 2,
+  },
+  suggestionList: {
+    maxHeight: SUGGESTION_LIST_MAX_HEIGHT,
   },
   suggestionItem: {
     paddingHorizontal: 10,

@@ -14,11 +14,19 @@ import {
 import type { StepHandle } from "@/features/tutorial/types";
 import { useUserStore } from "@/stores/userStore";
 import { toggleSelection } from "@/utils/array";
+import { isCloseToScrollEnd } from "@/utils/scroll";
 
-const medicineAllergyLabels = representativeMedicineAllergyOptions.map((option) => option.label);
-const foodAllergyLabels = representativeFoodAllergyOptions.map((option) => option.label);
+const medicineAllergyLabels: readonly string[] = representativeMedicineAllergyOptions.map(
+  (option) => option.label,
+);
+const foodAllergyLabels: readonly string[] = representativeFoodAllergyOptions.map(
+  (option) => option.label,
+);
 const MIN_ALLERGY_SEARCH_KEYWORD_LENGTH = 2;
 const ALLERGY_SEARCH_DEBOUNCE_DELAY_MS = 250;
+const MAX_VISIBLE_SEARCH_RESULTS = 5;
+const SEARCH_RESULT_ITEM_HEIGHT = 54;
+const SEARCH_RESULT_LIST_MAX_HEIGHT = SEARCH_RESULT_ITEM_HEIGHT * MAX_VISIBLE_SEARCH_RESULTS;
 
 export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
   const user = useUserStore((s) => s.user);
@@ -54,15 +62,24 @@ export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
   }, [searchInput]);
 
   const isSearchEnabled = debouncedSearchInput.length >= MIN_ALLERGY_SEARCH_KEYWORD_LENGTH;
-  const { data: searchResults, isFetching } = useSearchDrugsQuery(
-    debouncedSearchInput,
-    isSearchEnabled,
-  );
+  const {
+    items: searchResults,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useSearchDrugsQuery(debouncedSearchInput, isSearchEnabled);
 
   const filteredSearchResults = useMemo(() => {
     if (!isSearchEnabled) return [];
-    return (searchResults ?? []).filter((item) => !allSelectedAllergies.includes(item.drugName));
+    return searchResults.filter((item) => !allSelectedAllergies.includes(item.drugName));
   }, [allSelectedAllergies, isSearchEnabled, searchResults]);
+
+  const handleEndReached = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
 
   const handleSelectSearchResult = (item: (typeof filteredSearchResults)[number]) => {
     const label = item.drugName;
@@ -169,24 +186,35 @@ export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
               style={styles.searchResults}
               nestedScrollEnabled
               keyboardShouldPersistTaps="handled"
+              scrollEventThrottle={16}
+              onScroll={(event) => {
+                if (isCloseToScrollEnd(event.nativeEvent)) {
+                  handleEndReached();
+                }
+              }}
             >
               {isFetching ? (
                 <Text style={styles.searchMetaText}>검색 중...</Text>
               ) : filteredSearchResults.length > 0 ? (
-                filteredSearchResults.map((item) => (
-                  <Pressable
-                    key={`${item.drugCode}:${item.atcCode}:${item.drugName}`}
-                    onPress={() => handleSelectSearchResult(item)}
-                    style={styles.searchResultItem}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${item.drugName} 검색 결과 선택`}
-                  >
-                    <Text style={styles.searchResultTitle}>{item.drugName}</Text>
-                    <Text style={styles.searchResultMeta}>
-                      {item.company ? `${item.company} · ${item.atcCode}` : item.atcCode}
-                    </Text>
-                  </Pressable>
-                ))
+                <>
+                  {filteredSearchResults.map((item) => (
+                    <Pressable
+                      key={`${item.drugCode}:${item.atcCode}:${item.drugName}`}
+                      onPress={() => handleSelectSearchResult(item)}
+                      style={styles.searchResultItem}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${item.drugName} 검색 결과 선택`}
+                    >
+                      <Text style={styles.searchResultTitle}>{item.drugName}</Text>
+                      <Text style={styles.searchResultMeta}>
+                        {item.company ? `${item.company} · ${item.atcCode}` : item.atcCode}
+                      </Text>
+                    </Pressable>
+                  ))}
+                  {isFetchingNextPage ? (
+                    <Text style={styles.searchMetaText}>불러오는 중...</Text>
+                  ) : null}
+                </>
               ) : (
                 <Text style={styles.searchMetaText}>검색 결과가 없습니다.</Text>
               )}
@@ -227,7 +255,7 @@ export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
 
 const styles = StyleSheet.create({
   searchResults: {
-    maxHeight: 280,
+    maxHeight: SEARCH_RESULT_LIST_MAX_HEIGHT,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: palette.dark_gray,

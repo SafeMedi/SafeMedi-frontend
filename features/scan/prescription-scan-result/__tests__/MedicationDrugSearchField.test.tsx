@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { useForm } from "react-hook-form";
 import { MedicationDrugSearchField } from "../components/MedicationDrugSearchField";
+import type { PrescriptionScanResultFormValues } from "../usePrescriptionScanResultViewModel";
 
 const mockUseSearchDrugsQuery = jest.fn();
 
@@ -23,7 +24,7 @@ function TestField(props?: {
   readonly onChange?: (index: number, name: string) => void;
   readonly onSelect?: (index: number, item: unknown) => void;
 }) {
-  const { control } = useForm({
+  const { control } = useForm<PrescriptionScanResultFormValues>({
     defaultValues: { medications: [{ drugName: "", atcCode: "" }] },
   });
   return (
@@ -40,7 +41,13 @@ describe("MedicationDrugSearchField", () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.clearAllMocks();
-    mockUseSearchDrugsQuery.mockReturnValue({ data: [], isFetching: false });
+    mockUseSearchDrugsQuery.mockReturnValue({
+      items: [],
+      isFetching: false,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
   });
 
   afterEach(() => {
@@ -70,12 +77,24 @@ describe("MedicationDrugSearchField", () => {
     expect(mockUseSearchDrugsQuery).toHaveBeenLastCalledWith("타이", true);
     expect(screen.getByText("검색 결과가 없습니다.")).toBeTruthy();
 
-    mockUseSearchDrugsQuery.mockReturnValue({ data: [], isFetching: true });
+    mockUseSearchDrugsQuery.mockReturnValue({
+      items: [],
+      isFetching: true,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
     rerender(<TestField onChange={onChange} onSelect={onSelect} />);
     expect(screen.getByText("검색 중...")).toBeTruthy();
 
     const item = { drugCode: "D01", atcCode: "N02BE01", drugName: "타이레놀정", company: "한미" };
-    mockUseSearchDrugsQuery.mockReturnValue({ data: [item], isFetching: false });
+    mockUseSearchDrugsQuery.mockReturnValue({
+      items: [item],
+      isFetching: false,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
     rerender(<TestField onChange={onChange} onSelect={onSelect} />);
     fireEvent(screen.getByText("타이레놀정"), "pressIn");
     expect(onSelect).toHaveBeenCalledWith(0, item);

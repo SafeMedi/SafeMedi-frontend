@@ -31,7 +31,13 @@ describe("튜토리얼 Step2", () => {
     jest.useFakeTimers();
     jest.clearAllMocks();
     resetMockStore();
-    mockUseSearchDrugsQuery.mockReturnValue({ data: [], isFetching: false });
+    mockUseSearchDrugsQuery.mockReturnValue({
+      items: [],
+      isFetching: false,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
   });
 
   afterEach(() => {
@@ -45,7 +51,13 @@ describe("튜토리얼 Step2", () => {
       drugName: "아목시실린캡슐",
       company: "제약사",
     };
-    mockUseSearchDrugsQuery.mockReturnValue({ data: [searchedDrug], isFetching: false });
+    mockUseSearchDrugsQuery.mockReturnValue({
+      items: [searchedDrug],
+      isFetching: false,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
     setMockUser(baseUser);
     const ref = createRef<StepHandle>();
     const { getByPlaceholderText, getByLabelText } = render(<Step2 ref={ref} />);

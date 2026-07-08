@@ -100,14 +100,17 @@ export function useProfileEditViewModel() {
   }, [allergyInput]);
 
   const isAllergySearchEnabled = debouncedAllergyInput.length >= MIN_ALLERGY_SEARCH_KEYWORD_LENGTH;
-  const { data: drugSearchResults, isFetching: isAllergySearchFetching } = useSearchDrugsQuery(
-    debouncedAllergyInput,
-    isAllergySearchEnabled,
-  );
+  const {
+    items: drugSearchResults,
+    isFetching: isAllergySearchFetching,
+    isFetchingNextPage: isAllergySearchFetchingNextPage,
+    hasNextPage: hasMoreAllergyResults,
+    fetchNextPage: fetchMoreAllergyResults,
+  } = useSearchDrugsQuery(debouncedAllergyInput, isAllergySearchEnabled);
   const allergySearchResults = useMemo<ProfileTagSearchResult[]>(() => {
     if (!isAllergySearchEnabled) return [];
 
-    return (drugSearchResults ?? [])
+    return drugSearchResults
       .filter((item) => !allergies.includes(item.drugName))
       .map((item) => ({
         id: `${item.drugCode}:${item.atcCode}:${item.drugName}`,
@@ -237,5 +240,8 @@ export function useProfileEditViewModel() {
     handleSubmit: handleSubmit(handleSubmitValid, onInvalid),
     allergySearchResults,
     isAllergySearchFetching,
+    isAllergySearchFetchingNextPage,
+    hasMoreAllergyResults,
+    handleLoadMoreAllergyResults: fetchMoreAllergyResults,
   };
 }

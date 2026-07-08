@@ -54,7 +54,10 @@ export function ProfileEditScreen() {
           inputMode="search"
           searchResults={viewModel.allergySearchResults}
           isSearchFetching={viewModel.isAllergySearchFetching}
+          isSearchFetchingNextPage={viewModel.isAllergySearchFetchingNextPage}
+          hasMoreSearchResults={viewModel.hasMoreAllergyResults}
           onSelectSearchResult={viewModel.handleSelectAllergySearchResult}
+          onLoadMoreSearchResults={viewModel.handleLoadMoreAllergyResults}
         />
         <ProfileTagEditorCard
           variant="chronic"
