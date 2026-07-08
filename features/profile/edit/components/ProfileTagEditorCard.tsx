@@ -24,24 +24,24 @@ export type ProfileTagSearchResult = {
   readonly name: string;
 };
 
-export type ProfileTagEditorCardProps = {
-  variant: ProfileEditSectionVariant;
-  title: string;
-  items: readonly string[];
-  inputValue: string;
-  inputPlaceholder: string;
-  onInputChange: (value: string) => void;
-  onAddItem: (value: string) => void;
-  onRemoveItem: (value: string) => void;
-  inputMode?: "custom" | "search" | "hidden";
-  searchResults?: readonly ProfileTagSearchResult[];
-  isSearchEnabled?: boolean;
-  isSearchFetching?: boolean;
-  isSearchFetchingNextPage?: boolean;
-  hasMoreSearchResults?: boolean;
-  onSelectSearchResult?: (value: ProfileTagSearchResult) => void;
-  onLoadMoreSearchResults?: () => void;
-};
+export interface ProfileTagEditorCardProps {
+  readonly variant: ProfileEditSectionVariant;
+  readonly title: string;
+  readonly items: readonly string[];
+  readonly inputValue: string;
+  readonly inputPlaceholder: string;
+  readonly onInputChange: (value: string) => void;
+  readonly onAddItem: (value: string) => void;
+  readonly onRemoveItem: (value: string) => void;
+  readonly inputMode?: "custom" | "search" | "hidden";
+  readonly searchResults?: readonly ProfileTagSearchResult[];
+  readonly isSearchEnabled?: boolean;
+  readonly isSearchFetching?: boolean;
+  readonly isSearchFetchingNextPage?: boolean;
+  readonly hasMoreSearchResults?: boolean;
+  readonly onSelectSearchResult?: (value: ProfileTagSearchResult) => void;
+  readonly onLoadMoreSearchResults?: () => void;
+}
 
 export function ProfileTagEditorCard({
   variant,

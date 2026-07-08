@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { type BaseSyntheticEvent, useEffect, useMemo, useState } from "react";
+import { type Control, useForm, useWatch } from "react-hook-form";
 import { Alert } from "react-native";
 
 import { useUpdateUserProfileMutation } from "@/api/queries/user";
@@ -22,6 +22,36 @@ import {
 import type { ProfileTagSearchResult } from "./components/ProfileTagEditorCard";
 import { type ProfileEditFormValues, profileEditSchema } from "./schema";
 
+export interface ProfileEditViewModel {
+  readonly control: Control<ProfileEditFormValues>;
+  readonly gender: ProfileEditFormValues["gender"];
+  readonly bloodType: ProfileEditFormValues["bloodType"];
+  readonly rhFactor: ProfileEditFormValues["rhFactor"];
+  readonly allergyInput: string;
+  readonly allergies: readonly string[];
+  readonly chronicInput: string;
+  readonly chronicConditions: readonly string[];
+  readonly isSubmitting: boolean;
+  readonly handleBack: () => void;
+  readonly handleGenderChange: (value: GenderOptionValue) => void;
+  readonly handleBloodTypeChange: (value: ProfileEditFormValues["bloodType"]) => void;
+  readonly handleRhFactorChange: (value: ProfileEditFormValues["rhFactor"]) => void;
+  readonly handleAllergyInputChange: (value: string) => void;
+  readonly handleChronicInputChange: () => void;
+  readonly handleAddAllergy: (value: string) => void;
+  readonly handleSelectAllergySearchResult: (result: ProfileTagSearchResult) => void;
+  readonly handleRemoveAllergy: (value: string) => void;
+  readonly handleAddChronicCondition: (value: string) => void;
+  readonly handleRemoveChronicCondition: (value: string) => void;
+  readonly handleSubmit: (event?: BaseSyntheticEvent) => Promise<void>;
+  readonly allergySearchResults: readonly ProfileTagSearchResult[];
+  readonly isAllergySearchEnabled: boolean;
+  readonly isAllergySearchFetching: boolean;
+  readonly isAllergySearchFetchingNextPage: boolean;
+  readonly hasMoreAllergyResults: boolean;
+  readonly handleLoadMoreAllergyResults: () => void;
+}
+
 function createUniqueItems(items: readonly string[]): string[] {
   const seen = new Set<string>();
   const next: string[] = [];
@@ -41,7 +71,7 @@ function createKnownChronicConditions(items: readonly string[]): string[] {
   return createUniqueItems(items).filter((item) => labels.has(item));
 }
 
-export function useProfileEditViewModel() {
+export function useProfileEditViewModel(): ProfileEditViewModel {
   const user = useUserStore((s) => s.user);
   const saveMutation = useUpdateUserProfileMutation();
   const { labels: initialAllergies, mappings: initialAllergyMappings } = useMemo(
