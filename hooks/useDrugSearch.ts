@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useSearchDrugsQuery } from "@/api/queries/drugs";
 import type { DrugSearchItem } from "@/api/types";
 import { useDebouncedValue } from "./useDebouncedValue";
@@ -37,16 +37,51 @@ export function useDrugSearch({
   const debouncedKeyword = useDebouncedValue(keyword.trim(), debounceMs);
   const isSearchEnabled = debouncedKeyword.length >= minKeywordLength;
 
-  const { items, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } = useSearchDrugsQuery(
-    debouncedKeyword,
-    isSearchEnabled,
-  );
+  const {
+    items = [],
+    isFetching = false,
+    isFetchingNextPage = false,
+    hasNextPage = false,
+    fetchNextPage = () => undefined,
+  } = useSearchDrugsQuery(debouncedKeyword, isSearchEnabled);
 
   const filteredItems = useMemo<readonly DrugSearchItem[]>(() => {
     if (!excludeNames || excludeNames.length === 0) return items;
     const excludeSet = new Set(excludeNames);
     return items.filter((item) => !excludeSet.has(item.drugName));
   }, [items, excludeNames]);
+  const autoLoadKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (
+      !isSearchEnabled ||
+      !hasNextPage ||
+      isFetching ||
+      isFetchingNextPage ||
+      items.length === 0 ||
+      filteredItems.length > 0
+    ) {
+      return;
+    }
+
+    const autoLoadKey = `${debouncedKeyword}:${items.length}:${excludeNames?.join("|") ?? ""}`;
+    if (autoLoadKeyRef.current === autoLoadKey) {
+      return;
+    }
+
+    autoLoadKeyRef.current = autoLoadKey;
+    fetchNextPage();
+  }, [
+    debouncedKeyword,
+    excludeNames,
+    fetchNextPage,
+    filteredItems.length,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    isSearchEnabled,
+    items.length,
+  ]);
 
   return {
     items: filteredItems,
