@@ -1,6 +1,7 @@
 import { act, fireEvent, render } from "@testing-library/react-native";
 import { createRef } from "react";
 import "@/tests/test-utils/test-mocks";
+import type { useSearchDrugsQuery } from "@/api/queries/drugs";
 import { Step2 } from "@/features/tutorial/components/Step2";
 import type { StepHandle } from "@/features/tutorial/types";
 import type { User } from "@/stores/userStore";
@@ -35,9 +36,11 @@ describe("튜토리얼 Step2", () => {
       items: [],
       isFetching: false,
       isFetchingNextPage: false,
+      isError: false,
+      error: null,
       hasNextPage: false,
       fetchNextPage: jest.fn(),
-    });
+    } as unknown as ReturnType<typeof useSearchDrugsQuery>);
   });
 
   afterEach(() => {
@@ -55,9 +58,11 @@ describe("튜토리얼 Step2", () => {
       items: [searchedDrug],
       isFetching: false,
       isFetchingNextPage: false,
+      isError: false,
+      error: null,
       hasNextPage: false,
       fetchNextPage: jest.fn(),
-    });
+    } as unknown as ReturnType<typeof useSearchDrugsQuery>);
     setMockUser(baseUser);
     const ref = createRef<StepHandle>();
     const { getByPlaceholderText, getByLabelText } = render(<Step2 ref={ref} />);

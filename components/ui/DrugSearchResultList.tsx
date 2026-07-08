@@ -55,6 +55,7 @@ export function DrugSearchResultList<TItem>({
   return (
     <View style={styles.container}>
       <ScrollView
+        testID="drug-search-result-list"
         style={[styles.list, { maxHeight: itemHeight * maxVisibleItems }]}
         nestedScrollEnabled
         keyboardShouldPersistTaps="handled"

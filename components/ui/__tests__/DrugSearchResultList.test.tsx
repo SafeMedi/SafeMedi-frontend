@@ -37,9 +37,9 @@ describe("DrugSearchResultList", () => {
     expect(onSelect).toHaveBeenCalledWith(items[0]);
   });
 
-  it("meta 가 없는 항목은 meta 텍스트를 렌더링하지 않는다", () => {
-    const { queryByText } = renderList();
-    expect(queryByText("한국얀센 · N02BE01")).toBeTruthy();
+  it("meta 가 있는 항목은 meta 텍스트를 렌더링한다", () => {
+    const { getByText } = renderList();
+    expect(getByText("한국얀센 · N02BE01")).toBeTruthy();
   });
 
   it("빈 결과에서 fetching 여부에 따라 문구를 전환한다", () => {
@@ -73,5 +73,19 @@ describe("DrugSearchResultList", () => {
 
     fireEvent(getByLabelText("아목시실린캡슐 검색 결과 선택"), "pressIn");
     expect(onSelect).toHaveBeenCalledWith(items[1]);
+  });
+
+  it("스크롤이 끝에 가까워지면 추가 조회를 요청한다", () => {
+    const { getByTestId, onEndReached } = renderList();
+
+    fireEvent.scroll(getByTestId("drug-search-result-list"), {
+      nativeEvent: {
+        contentOffset: { x: 0, y: 80 },
+        contentSize: { width: 120, height: 160 },
+        layoutMeasurement: { width: 120, height: 100 },
+      },
+    });
+
+    expect(onEndReached).toHaveBeenCalledTimes(1);
   });
 });

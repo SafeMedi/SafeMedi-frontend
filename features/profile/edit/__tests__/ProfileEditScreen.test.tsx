@@ -1,5 +1,6 @@
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
+import type { useSearchDrugsQuery } from "@/api/queries/drugs";
 import type { User } from "@/stores/userStore";
 import { ProfileEditScreen } from "../ProfileEditScreen";
 
@@ -168,9 +169,11 @@ describe("프로필 수정 화면", () => {
       items: [],
       isFetching: false,
       isFetchingNextPage: false,
+      isError: false,
+      error: null,
       hasNextPage: false,
       fetchNextPage: jest.fn(),
-    });
+    } as unknown as ReturnType<typeof useSearchDrugsQuery>);
   });
 
   it("사용자 정보가 없으면 빈 기본값으로 편집 화면을 렌더링한다", () => {
