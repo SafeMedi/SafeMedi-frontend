@@ -16,9 +16,10 @@ describe("useDebouncedValue", () => {
   });
 
   it("지연 시간이 지난 후에 최신 값을 반영한다", () => {
-    const { result, rerender } = renderHook(({ value }) => useDebouncedValue(value, 250), {
-      initialProps: { value: "a" },
-    });
+    const { result, rerender } = renderHook(
+      ({ value }: { value: string }) => useDebouncedValue(value, 250),
+      { initialProps: { value: "a" } },
+    );
 
     rerender({ value: "ab" });
     expect(result.current).toBe("a");
@@ -28,9 +29,10 @@ describe("useDebouncedValue", () => {
   });
 
   it("지연 시간 내 연속 변경은 마지막 값만 반영한다", () => {
-    const { result, rerender } = renderHook(({ value }) => useDebouncedValue(value, 250), {
-      initialProps: { value: "a" },
-    });
+    const { result, rerender } = renderHook(
+      ({ value }: { value: string }) => useDebouncedValue(value, 250),
+      { initialProps: { value: "a" } },
+    );
 
     rerender({ value: "ab" });
     act(() => jest.advanceTimersByTime(100));
