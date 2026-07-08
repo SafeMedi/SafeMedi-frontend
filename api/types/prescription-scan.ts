@@ -35,6 +35,14 @@ export interface DrugSearchItem {
   readonly company?: string;
 }
 
+/** GET /api/v1/drugs/search 페이지네이션 응답 */
+export interface DrugSearchPage {
+  readonly content: readonly DrugSearchItem[];
+  readonly page: number;
+  readonly size: number;
+  readonly isLast: boolean;
+}
+
 export type AnalysisRiskLevel = "SAFE" | "CAUTION" | "DANGER";
 
 export type AnalysisWarningType = "ALLERGY" | "INTERACTION";

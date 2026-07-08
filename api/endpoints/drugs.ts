@@ -1,9 +1,12 @@
 import { api } from "@/api/client";
 import { apiPaths } from "@/api/paths";
-import type { DrugSearchItem } from "@/api/types";
+import type { DrugSearchItem, DrugSearchPage } from "@/api/types";
 import { apiConfig } from "@/constants/api-config";
 
 const MIN_SEARCH_KEYWORD_LENGTH = 2;
+
+/** 무한스크롤 한 페이지 조회 개수 */
+export const DRUG_SEARCH_PAGE_SIZE = 10;
 
 const DRUG_SEARCH_FALLBACK_MOCKS: readonly DrugSearchItem[] = [
   {
@@ -28,6 +31,16 @@ const DRUG_SEARCH_FALLBACK_MOCKS: readonly DrugSearchItem[] = [
   },
 ] as const;
 
+export interface SearchDrugsParams {
+  readonly keyword: string;
+  readonly page?: number;
+  readonly size?: number;
+}
+
+function buildEmptyPage(page: number, size: number): DrugSearchPage {
+  return { content: [], page, size, isLast: true };
+}
+
 function filterDrugSearchMocks(keyword: string): readonly DrugSearchItem[] {
   const normalizedKeyword = keyword.trim().toLowerCase();
   if (normalizedKeyword.length < MIN_SEARCH_KEYWORD_LENGTH) {
@@ -38,19 +51,31 @@ function filterDrugSearchMocks(keyword: string): readonly DrugSearchItem[] {
   );
 }
 
-export async function searchDrugs(keyword: string): Promise<readonly DrugSearchItem[]> {
-  const normalizedKeyword = keyword.trim();
-  if (normalizedKeyword.length < MIN_SEARCH_KEYWORD_LENGTH) {
-    return [];
+function buildDrugSearchMockPage(keyword: string, page: number, size: number): DrugSearchPage {
+  const matched = filterDrugSearchMocks(keyword);
+  const start = page * size;
+  const content = matched.slice(start, start + size);
+  return { content, page, size, isLast: start + size >= matched.length };
+}
+
+export async function searchDrugs(params: SearchDrugsParams): Promise<DrugSearchPage> {
+  const keyword = params.keyword.trim();
+  const page = params.page ?? 0;
+  const size = params.size ?? DRUG_SEARCH_PAGE_SIZE;
+
+  if (keyword.length < MIN_SEARCH_KEYWORD_LENGTH) {
+    return buildEmptyPage(page, size);
   }
 
   try {
     return await api
-      .get(apiPaths.drugsSearch, { searchParams: { keyword: normalizedKeyword } })
-      .json<DrugSearchItem[]>();
+      .get(apiPaths.drugsSearch, {
+        searchParams: { keyword, page: String(page), size: String(size) },
+      })
+      .json<DrugSearchPage>();
   } catch (error) {
     if (apiConfig.useMock) {
-      return filterDrugSearchMocks(normalizedKeyword);
+      return buildDrugSearchMockPage(keyword, page, size);
     }
     throw error;
   }
