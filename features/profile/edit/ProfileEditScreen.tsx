@@ -53,6 +53,7 @@ export function ProfileEditScreen() {
           onRemoveItem={viewModel.handleRemoveAllergy}
           inputMode="search"
           searchResults={viewModel.allergySearchResults}
+          isSearchEnabled={viewModel.isAllergySearchEnabled}
           isSearchFetching={viewModel.isAllergySearchFetching}
           isSearchFetchingNextPage={viewModel.isAllergySearchFetchingNextPage}
           hasMoreSearchResults={viewModel.hasMoreAllergyResults}

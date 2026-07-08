@@ -35,6 +35,7 @@ export type ProfileTagEditorCardProps = {
   onRemoveItem: (value: string) => void;
   inputMode?: "custom" | "search" | "hidden";
   searchResults?: readonly ProfileTagSearchResult[];
+  isSearchEnabled?: boolean;
   isSearchFetching?: boolean;
   isSearchFetchingNextPage?: boolean;
   hasMoreSearchResults?: boolean;
@@ -53,6 +54,7 @@ export function ProfileTagEditorCard({
   onRemoveItem,
   inputMode = "custom",
   searchResults = [],
+  isSearchEnabled = false,
   isSearchFetching = false,
   isSearchFetchingNextPage = false,
   hasMoreSearchResults = false,
@@ -63,7 +65,7 @@ export function ProfileTagEditorCard({
   const quickItems = PROFILE_EDIT_QUICK_ITEMS[variant];
   const isSearchMode = inputMode === "search";
   const shouldShowInput = inputMode !== "hidden";
-  const shouldShowSearchResults = isSearchMode && inputValue.trim().length > 0;
+  const shouldShowSearchResults = isSearchMode && inputValue.trim().length > 0 && isSearchEnabled;
 
   const handleEndReached = () => {
     if (hasMoreSearchResults && !isSearchFetchingNextPage) {

@@ -161,7 +161,7 @@ export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
             }}
           />
 
-          {isSearchEnabled ? (
+          {searchInput.trim().length > 0 && isSearchEnabled ? (
             <DrugSearchResultList<DrugSearchItem>
               items={searchResults}
               keyExtractor={(item) => `${item.drugCode}:${item.atcCode}:${item.drugName}`}

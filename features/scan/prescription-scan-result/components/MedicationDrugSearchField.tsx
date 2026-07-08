@@ -31,7 +31,7 @@ export function MedicationDrugSearchField({
   const { items, isFetching, isFetchingNextPage, isSearchEnabled, loadMore } = useDrugSearch({
     keyword,
   });
-  const shouldShowSuggestions = isInputFocused && isSearchEnabled;
+  const shouldShowSuggestions = isInputFocused && keyword.trim().length > 0 && isSearchEnabled;
 
   const handleSelectSuggestion = (item: DrugSearchItem) => {
     setKeyword(item.drugName);

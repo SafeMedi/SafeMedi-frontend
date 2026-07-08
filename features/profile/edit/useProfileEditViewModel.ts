@@ -93,6 +93,7 @@ export function useProfileEditViewModel() {
     isFetching: isAllergySearchFetching,
     isFetchingNextPage: isAllergySearchFetchingNextPage,
     hasNextPage: hasMoreAllergyResults,
+    isSearchEnabled: isAllergySearchEnabled,
     loadMore: fetchMoreAllergyResults,
   } = useDrugSearch({ keyword: allergyInput, excludeNames: allergies });
   const allergySearchResults = useMemo<ProfileTagSearchResult[]>(
@@ -225,6 +226,7 @@ export function useProfileEditViewModel() {
     handleRemoveChronicCondition: (value: string) => removeItem(value, "chronicConditions"),
     handleSubmit: handleSubmit(handleSubmitValid, onInvalid),
     allergySearchResults,
+    isAllergySearchEnabled,
     isAllergySearchFetching,
     isAllergySearchFetchingNextPage,
     hasMoreAllergyResults,
