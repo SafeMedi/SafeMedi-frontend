@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { type Control, Controller } from "react-hook-form";
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
+import { StyleSheet, TextInput } from "react-native";
 import { Text, YStack } from "tamagui";
-import { useSearchDrugsQuery } from "@/api/queries/drugs";
 import type { DrugSearchItem } from "@/api/types";
+import { DrugSearchResultList } from "@/components/ui/DrugSearchResultList";
 import { palette } from "@/constants/design-tokens";
-import { isCloseToScrollEnd } from "@/utils/scroll";
+import { useDrugSearch } from "@/hooks/useDrugSearch";
 import type { PrescriptionScanResultFormValues } from "../usePrescriptionScanResultViewModel";
 
 interface MedicationDrugSearchFieldProps {
@@ -15,11 +15,9 @@ interface MedicationDrugSearchFieldProps {
   readonly onSelectMedicationDrug: (index: number, item: DrugSearchItem) => void;
 }
 
-const MIN_KEYWORD_LENGTH = 2;
-const DEBOUNCE_DELAY_MS = 250;
-const MAX_VISIBLE_SUGGESTIONS = 5;
-const SUGGESTION_ITEM_HEIGHT = 52;
-const SUGGESTION_LIST_MAX_HEIGHT = SUGGESTION_ITEM_HEIGHT * MAX_VISIBLE_SUGGESTIONS;
+function formatDrugMeta(item: DrugSearchItem): string {
+  return item.company ? `${item.company} · ${item.atcCode}` : item.atcCode;
+}
 
 export function MedicationDrugSearchField({
   index,
@@ -28,37 +26,17 @@ export function MedicationDrugSearchField({
   onSelectMedicationDrug,
 }: MedicationDrugSearchFieldProps) {
   const [keyword, setKeyword] = useState<string>("");
-  const [debouncedKeyword, setDebouncedKeyword] = useState<string>("");
   const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedKeyword(keyword.trim());
-    }, DEBOUNCE_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [keyword]);
+  const { items, isFetching, isFetchingNextPage, isSearchEnabled, loadMore } = useDrugSearch({
+    keyword,
+  });
+  const shouldShowSuggestions = isInputFocused && isSearchEnabled;
 
-  const isSearchEnabled = debouncedKeyword.length >= MIN_KEYWORD_LENGTH;
-  const { items, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } = useSearchDrugsQuery(
-    debouncedKeyword,
-    isSearchEnabled,
-  );
-
-  const shouldShowSuggestions = useMemo(() => {
-    return isInputFocused && isSearchEnabled;
-  }, [isInputFocused, isSearchEnabled]);
-
-  const handlePressSuggestion = (item: DrugSearchItem) => {
+  const handleSelectSuggestion = (item: DrugSearchItem) => {
     setKeyword(item.drugName);
-    setDebouncedKeyword(item.drugName);
     onSelectMedicationDrug(index, item);
     setIsInputFocused(false);
-  };
-
-  const handleEndReached = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
   };
 
   return (
@@ -72,6 +50,7 @@ export function MedicationDrugSearchField({
             value={value}
             onChangeText={(nextValue) => {
               setKeyword(nextValue);
+              setIsInputFocused(true);
               onChangeMedicationName(index, nextValue);
             }}
             onFocus={() => {
@@ -97,39 +76,18 @@ export function MedicationDrugSearchField({
         )}
       />
       {shouldShowSuggestions ? (
-        <View style={styles.suggestionContainer}>
-          {isFetching ? <Text style={styles.metaText}>검색 중...</Text> : null}
-          {!isFetching && items.length === 0 ? (
-            <Text style={styles.metaText}>검색 결과가 없습니다.</Text>
-          ) : null}
-          {items.length > 0 ? (
-            <ScrollView
-              style={styles.suggestionList}
-              nestedScrollEnabled
-              keyboardShouldPersistTaps="handled"
-              scrollEventThrottle={16}
-              onScroll={(event) => {
-                if (isCloseToScrollEnd(event.nativeEvent)) {
-                  handleEndReached();
-                }
-              }}
-            >
-              {items.map((item) => (
-                <Pressable
-                  key={`${item.drugCode}-${item.atcCode}-${item.drugName}`}
-                  onPressIn={() => handlePressSuggestion(item)}
-                  style={({ pressed }) => [styles.suggestionItem, pressed ? styles.pressed : null]}
-                >
-                  <Text style={styles.suggestionTitle}>{item.drugName}</Text>
-                  <Text style={styles.suggestionMeta}>
-                    {item.company} · {item.atcCode}
-                  </Text>
-                </Pressable>
-              ))}
-              {isFetchingNextPage ? <Text style={styles.metaText}>불러오는 중...</Text> : null}
-            </ScrollView>
-          ) : null}
-        </View>
+        <DrugSearchResultList<DrugSearchItem>
+          items={items}
+          keyExtractor={(item) => `${item.drugCode}-${item.atcCode}-${item.drugName}`}
+          getTitle={(item) => item.drugName}
+          getMeta={formatDrugMeta}
+          onSelect={handleSelectSuggestion}
+          onEndReached={loadMore}
+          isFetching={isFetching}
+          isFetchingNextPage={isFetchingNextPage}
+          selectTrigger="pressIn"
+          itemHeight={52}
+        />
       ) : null}
     </YStack>
   );
@@ -163,35 +121,5 @@ const styles = StyleSheet.create({
   },
   unverifiedText: {
     color: palette.red_medium,
-  },
-  suggestionContainer: {
-    borderWidth: 1,
-    borderColor: palette.border_muted,
-    backgroundColor: palette.white,
-    borderRadius: 10,
-    paddingVertical: 4,
-    gap: 2,
-  },
-  suggestionList: {
-    maxHeight: SUGGESTION_LIST_MAX_HEIGHT,
-  },
-  suggestionItem: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    gap: 2,
-  },
-  suggestionTitle: {
-    color: palette.black,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "600",
-  },
-  suggestionMeta: {
-    color: palette.icon,
-    fontSize: 11,
-    lineHeight: 15,
-  },
-  pressed: {
-    opacity: 0.8,
   },
 });
