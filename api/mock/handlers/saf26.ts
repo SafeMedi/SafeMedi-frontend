@@ -346,7 +346,10 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
         { status: 400 },
       );
     }
-    return [
+    const page = Number(ctx.searchParams.get("page") ?? "0");
+    const size = Number(ctx.searchParams.get("size") ?? "10");
+    const normalizedKeyword = keyword.trim().toLowerCase();
+    const allResults = [
       {
         drugCode: "202000123",
         atcCode: "J01CA04",
@@ -366,6 +369,16 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
         company: "유한양행",
       },
     ];
+    const matched = allResults.filter((item) =>
+      item.drugName.toLowerCase().includes(normalizedKeyword),
+    );
+    const start = page * size;
+    return {
+      content: matched.slice(start, start + size),
+      page,
+      size,
+      isLast: start + size >= matched.length,
+    };
   });
 
   // --- Prescriptions ---

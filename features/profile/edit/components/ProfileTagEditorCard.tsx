@@ -1,9 +1,10 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { Text } from "tamagui";
 
 import { Badge } from "@/components/ui/Badge";
+import { DrugSearchResultList } from "@/components/ui/DrugSearchResultList";
 import { SelectChip } from "@/components/ui/SelectChip";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
@@ -23,20 +24,24 @@ export type ProfileTagSearchResult = {
   readonly name: string;
 };
 
-export type ProfileTagEditorCardProps = {
-  variant: ProfileEditSectionVariant;
-  title: string;
-  items: readonly string[];
-  inputValue: string;
-  inputPlaceholder: string;
-  onInputChange: (value: string) => void;
-  onAddItem: (value: string) => void;
-  onRemoveItem: (value: string) => void;
-  inputMode?: "custom" | "search" | "hidden";
-  searchResults?: readonly ProfileTagSearchResult[];
-  isSearchFetching?: boolean;
-  onSelectSearchResult?: (value: ProfileTagSearchResult) => void;
-};
+export interface ProfileTagEditorCardProps {
+  readonly variant: ProfileEditSectionVariant;
+  readonly title: string;
+  readonly items: readonly string[];
+  readonly inputValue: string;
+  readonly inputPlaceholder: string;
+  readonly onInputChange: (value: string) => void;
+  readonly onAddItem: (value: string) => void;
+  readonly onRemoveItem: (value: string) => void;
+  readonly inputMode?: "custom" | "search" | "hidden";
+  readonly searchResults?: readonly ProfileTagSearchResult[];
+  readonly isSearchEnabled?: boolean;
+  readonly isSearchFetching?: boolean;
+  readonly isSearchFetchingNextPage?: boolean;
+  readonly hasMoreSearchResults?: boolean;
+  readonly onSelectSearchResult?: (value: ProfileTagSearchResult) => void;
+  readonly onLoadMoreSearchResults?: () => void;
+}
 
 export function ProfileTagEditorCard({
   variant,
@@ -49,14 +54,24 @@ export function ProfileTagEditorCard({
   onRemoveItem,
   inputMode = "custom",
   searchResults = [],
+  isSearchEnabled = false,
   isSearchFetching = false,
+  isSearchFetchingNextPage = false,
+  hasMoreSearchResults = false,
   onSelectSearchResult,
+  onLoadMoreSearchResults,
 }: ProfileTagEditorCardProps) {
   const style = PROFILE_EDIT_SECTION_STYLES[variant];
   const quickItems = PROFILE_EDIT_QUICK_ITEMS[variant];
   const isSearchMode = inputMode === "search";
   const shouldShowInput = inputMode !== "hidden";
-  const shouldShowSearchResults = isSearchMode && inputValue.trim().length > 0;
+  const shouldShowSearchResults = isSearchMode && inputValue.trim().length > 0 && isSearchEnabled;
+
+  const handleEndReached = () => {
+    if (hasMoreSearchResults && !isSearchFetchingNextPage) {
+      onLoadMoreSearchResults?.();
+    }
+  };
 
   return (
     <SurfaceCard style={styles.card}>
@@ -110,31 +125,17 @@ export function ProfileTagEditorCard({
             )}
           </View>
 
-          {shouldShowSearchResults ? (
-            <ScrollView
-              style={styles.searchResults}
-              nestedScrollEnabled
-              keyboardShouldPersistTaps="handled"
-            >
-              {isSearchFetching ? <Text style={styles.emptySearchText}>검색 중...</Text> : null}
-              {!isSearchFetching && searchResults.length > 0 && onSelectSearchResult
-                ? searchResults.map((item) => (
-                    <Pressable
-                      key={item.id}
-                      onPress={() => onSelectSearchResult(item)}
-                      style={styles.searchResultItem}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${item.label} 검색 결과 선택`}
-                    >
-                      <Text style={styles.searchResultText}>{item.label}</Text>
-                      {item.meta ? <Text style={styles.searchResultMeta}>{item.meta}</Text> : null}
-                    </Pressable>
-                  ))
-                : null}
-              {!isSearchFetching && searchResults.length === 0 ? (
-                <Text style={styles.emptySearchText}>검색 결과가 없습니다.</Text>
-              ) : null}
-            </ScrollView>
+          {shouldShowSearchResults && onSelectSearchResult ? (
+            <DrugSearchResultList<ProfileTagSearchResult>
+              items={searchResults}
+              keyExtractor={(item) => item.id}
+              getTitle={(item) => item.label}
+              getMeta={(item) => item.meta}
+              onSelect={onSelectSearchResult}
+              onEndReached={handleEndReached}
+              isFetching={isSearchFetching}
+              isFetchingNextPage={isSearchFetchingNextPage}
+            />
           ) : null}
         </>
       ) : null}
@@ -224,38 +225,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 6,
-  },
-  searchResults: {
-    maxHeight: 280,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: palette.dark_gray,
-    backgroundColor: palette.white,
-    overflow: "hidden",
-  },
-  searchResultItem: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: palette.dark_gray,
-  },
-  searchResultText: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "600",
-    color: palette.black,
-  },
-  searchResultMeta: {
-    marginTop: 2,
-    fontSize: 11,
-    lineHeight: 15,
-    color: palette.icon,
-  },
-  emptySearchText: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 12,
-    lineHeight: 17,
-    color: palette.icon,
   },
 });

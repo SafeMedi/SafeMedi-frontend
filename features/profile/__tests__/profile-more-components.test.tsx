@@ -147,6 +147,7 @@ describe("profile more components", () => {
         onAddItem={onAddItem}
         onRemoveItem={onRemoveItem}
         inputMode="search"
+        isSearchEnabled={true}
         searchResults={[
           {
             id: "D01:J01CA04:페니실린캡슐",

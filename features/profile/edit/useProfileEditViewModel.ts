@@ -1,10 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { type BaseSyntheticEvent, useEffect, useMemo, useState } from "react";
+import { type Control, useForm, useWatch } from "react-hook-form";
 import { Alert } from "react-native";
 
-import { useSearchDrugsQuery } from "@/api/queries/drugs";
 import { useUpdateUserProfileMutation } from "@/api/queries/user";
 import type { UserProfilePatchAllergyItem } from "@/api/types/user";
 import {
@@ -12,6 +11,7 @@ import {
   GENDERS,
   type GenderOptionValue,
 } from "@/constants/health-profile-options";
+import { useDrugSearch } from "@/hooks/useDrugSearch";
 import { useUserStore } from "@/stores/userStore";
 import { splitBloodTypeWithRhOrDefault } from "@/utils/blood-type";
 import {
@@ -22,8 +22,35 @@ import {
 import type { ProfileTagSearchResult } from "./components/ProfileTagEditorCard";
 import { type ProfileEditFormValues, profileEditSchema } from "./schema";
 
-const MIN_ALLERGY_SEARCH_KEYWORD_LENGTH = 2;
-const ALLERGY_SEARCH_DEBOUNCE_DELAY_MS = 250;
+export interface ProfileEditViewModel {
+  readonly control: Control<ProfileEditFormValues>;
+  readonly gender: ProfileEditFormValues["gender"];
+  readonly bloodType: ProfileEditFormValues["bloodType"];
+  readonly rhFactor: ProfileEditFormValues["rhFactor"];
+  readonly allergyInput: string;
+  readonly allergies: readonly string[];
+  readonly chronicInput: string;
+  readonly chronicConditions: readonly string[];
+  readonly isSubmitting: boolean;
+  readonly handleBack: () => void;
+  readonly handleGenderChange: (value: GenderOptionValue) => void;
+  readonly handleBloodTypeChange: (value: ProfileEditFormValues["bloodType"]) => void;
+  readonly handleRhFactorChange: (value: ProfileEditFormValues["rhFactor"]) => void;
+  readonly handleAllergyInputChange: (value: string) => void;
+  readonly handleChronicInputChange: () => void;
+  readonly handleAddAllergy: (value: string) => void;
+  readonly handleSelectAllergySearchResult: (result: ProfileTagSearchResult) => void;
+  readonly handleRemoveAllergy: (value: string) => void;
+  readonly handleAddChronicCondition: (value: string) => void;
+  readonly handleRemoveChronicCondition: (value: string) => void;
+  readonly handleSubmit: (event?: BaseSyntheticEvent) => Promise<void>;
+  readonly allergySearchResults: readonly ProfileTagSearchResult[];
+  readonly isAllergySearchEnabled: boolean;
+  readonly isAllergySearchFetching: boolean;
+  readonly isAllergySearchFetchingNextPage: boolean;
+  readonly hasMoreAllergyResults: boolean;
+  readonly handleLoadMoreAllergyResults: () => void;
+}
 
 function createUniqueItems(items: readonly string[]): string[] {
   const seen = new Set<string>();
@@ -44,10 +71,9 @@ function createKnownChronicConditions(items: readonly string[]): string[] {
   return createUniqueItems(items).filter((item) => labels.has(item));
 }
 
-export function useProfileEditViewModel() {
+export function useProfileEditViewModel(): ProfileEditViewModel {
   const user = useUserStore((s) => s.user);
   const saveMutation = useUpdateUserProfileMutation();
-  const [debouncedAllergyInput, setDebouncedAllergyInput] = useState("");
   const { labels: initialAllergies, mappings: initialAllergyMappings } = useMemo(
     () => buildUserAllergyEditState(user?.allergies ?? [], user?.allergyMappings ?? {}),
     [user?.allergies, user?.allergyMappings],
@@ -92,32 +118,26 @@ export function useProfileEditViewModel() {
   const chronicInput = useWatch({ control, name: "chronicInput" });
   const chronicConditions = useWatch({ control, name: "chronicConditions" });
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedAllergyInput(allergyInput.trim());
-    }, ALLERGY_SEARCH_DEBOUNCE_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [allergyInput]);
-
-  const isAllergySearchEnabled = debouncedAllergyInput.length >= MIN_ALLERGY_SEARCH_KEYWORD_LENGTH;
-  const { data: drugSearchResults, isFetching: isAllergySearchFetching } = useSearchDrugsQuery(
-    debouncedAllergyInput,
-    isAllergySearchEnabled,
-  );
-  const allergySearchResults = useMemo<ProfileTagSearchResult[]>(() => {
-    if (!isAllergySearchEnabled) return [];
-
-    return (drugSearchResults ?? [])
-      .filter((item) => !allergies.includes(item.drugName))
-      .map((item) => ({
+  const {
+    items: drugSearchResults,
+    isFetching: isAllergySearchFetching,
+    isFetchingNextPage: isAllergySearchFetchingNextPage,
+    hasNextPage: hasMoreAllergyResults,
+    isSearchEnabled: isAllergySearchEnabled,
+    loadMore: fetchMoreAllergyResults,
+  } = useDrugSearch({ keyword: allergyInput, excludeNames: allergies });
+  const allergySearchResults = useMemo<ProfileTagSearchResult[]>(
+    () =>
+      drugSearchResults.map((item) => ({
         id: `${item.drugCode}:${item.atcCode}:${item.drugName}`,
         label: item.drugName,
         meta: item.company ? `${item.company} · ${item.atcCode}` : item.atcCode,
         type: "ATC_GROUP" as const,
         value: item.atcCode,
         name: item.drugName,
-      }));
-  }, [allergies, drugSearchResults, isAllergySearchEnabled]);
+      })),
+    [drugSearchResults],
+  );
 
   useEffect(() => {
     reset({
@@ -236,6 +256,10 @@ export function useProfileEditViewModel() {
     handleRemoveChronicCondition: (value: string) => removeItem(value, "chronicConditions"),
     handleSubmit: handleSubmit(handleSubmitValid, onInvalid),
     allergySearchResults,
+    isAllergySearchEnabled,
     isAllergySearchFetching,
+    isAllergySearchFetchingNextPage,
+    hasMoreAllergyResults,
+    handleLoadMoreAllergyResults: fetchMoreAllergyResults,
   };
 }

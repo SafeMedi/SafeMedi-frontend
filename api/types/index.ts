@@ -63,6 +63,7 @@ export type {
   CreatePrescriptionRequest,
   CreatePrescriptionResponse,
   DrugSearchItem,
+  DrugSearchPage,
   PrescriptionAllergyWarning,
 } from "./prescription-scan";
 export type {
