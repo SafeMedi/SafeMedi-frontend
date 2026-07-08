@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { Alert } from "react-native";
 
-import { useSearchDrugsQuery } from "@/api/queries/drugs";
 import { useUpdateUserProfileMutation } from "@/api/queries/user";
 import type { UserProfilePatchAllergyItem } from "@/api/types/user";
 import {
@@ -12,6 +11,7 @@ import {
   GENDERS,
   type GenderOptionValue,
 } from "@/constants/health-profile-options";
+import { useDrugSearch } from "@/hooks/useDrugSearch";
 import { useUserStore } from "@/stores/userStore";
 import { splitBloodTypeWithRhOrDefault } from "@/utils/blood-type";
 import {
@@ -21,9 +21,6 @@ import {
 } from "@/utils/user-mapper";
 import type { ProfileTagSearchResult } from "./components/ProfileTagEditorCard";
 import { type ProfileEditFormValues, profileEditSchema } from "./schema";
-
-const MIN_ALLERGY_SEARCH_KEYWORD_LENGTH = 2;
-const ALLERGY_SEARCH_DEBOUNCE_DELAY_MS = 250;
 
 function createUniqueItems(items: readonly string[]): string[] {
   const seen = new Set<string>();
@@ -47,7 +44,6 @@ function createKnownChronicConditions(items: readonly string[]): string[] {
 export function useProfileEditViewModel() {
   const user = useUserStore((s) => s.user);
   const saveMutation = useUpdateUserProfileMutation();
-  const [debouncedAllergyInput, setDebouncedAllergyInput] = useState("");
   const { labels: initialAllergies, mappings: initialAllergyMappings } = useMemo(
     () => buildUserAllergyEditState(user?.allergies ?? [], user?.allergyMappings ?? {}),
     [user?.allergies, user?.allergyMappings],
@@ -92,35 +88,25 @@ export function useProfileEditViewModel() {
   const chronicInput = useWatch({ control, name: "chronicInput" });
   const chronicConditions = useWatch({ control, name: "chronicConditions" });
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedAllergyInput(allergyInput.trim());
-    }, ALLERGY_SEARCH_DEBOUNCE_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [allergyInput]);
-
-  const isAllergySearchEnabled = debouncedAllergyInput.length >= MIN_ALLERGY_SEARCH_KEYWORD_LENGTH;
   const {
     items: drugSearchResults,
     isFetching: isAllergySearchFetching,
     isFetchingNextPage: isAllergySearchFetchingNextPage,
     hasNextPage: hasMoreAllergyResults,
-    fetchNextPage: fetchMoreAllergyResults,
-  } = useSearchDrugsQuery(debouncedAllergyInput, isAllergySearchEnabled);
-  const allergySearchResults = useMemo<ProfileTagSearchResult[]>(() => {
-    if (!isAllergySearchEnabled) return [];
-
-    return drugSearchResults
-      .filter((item) => !allergies.includes(item.drugName))
-      .map((item) => ({
+    loadMore: fetchMoreAllergyResults,
+  } = useDrugSearch({ keyword: allergyInput, excludeNames: allergies });
+  const allergySearchResults = useMemo<ProfileTagSearchResult[]>(
+    () =>
+      drugSearchResults.map((item) => ({
         id: `${item.drugCode}:${item.atcCode}:${item.drugName}`,
         label: item.drugName,
         meta: item.company ? `${item.company} · ${item.atcCode}` : item.atcCode,
         type: "ATC_GROUP" as const,
         value: item.atcCode,
         name: item.drugName,
-      }));
-  }, [allergies, drugSearchResults, isAllergySearchEnabled]);
+      })),
+    [drugSearchResults],
+  );
 
   useEffect(() => {
     reset({

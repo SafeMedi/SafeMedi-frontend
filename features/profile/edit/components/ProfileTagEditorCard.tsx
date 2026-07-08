@@ -1,23 +1,19 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { Text } from "tamagui";
 
 import { Badge } from "@/components/ui/Badge";
+import { DrugSearchResultList } from "@/components/ui/DrugSearchResultList";
 import { SelectChip } from "@/components/ui/SelectChip";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
-import { isCloseToScrollEnd } from "@/utils/scroll";
 
 import {
   PROFILE_EDIT_QUICK_ITEMS,
   PROFILE_EDIT_SECTION_STYLES,
   type ProfileEditSectionVariant,
 } from "../constants";
-
-const MAX_VISIBLE_SEARCH_RESULTS = 5;
-const SEARCH_RESULT_ITEM_HEIGHT = 54;
-const SEARCH_RESULT_LIST_MAX_HEIGHT = SEARCH_RESULT_ITEM_HEIGHT * MAX_VISIBLE_SEARCH_RESULTS;
 
 export type ProfileTagSearchResult = {
   readonly id: string;
@@ -127,44 +123,17 @@ export function ProfileTagEditorCard({
             )}
           </View>
 
-          {shouldShowSearchResults ? (
-            <View style={styles.searchResults}>
-              {isSearchFetching && searchResults.length === 0 ? (
-                <Text style={styles.emptySearchText}>검색 중...</Text>
-              ) : null}
-              {!isSearchFetching && searchResults.length === 0 ? (
-                <Text style={styles.emptySearchText}>검색 결과가 없습니다.</Text>
-              ) : null}
-              {searchResults.length > 0 && onSelectSearchResult ? (
-                <ScrollView
-                  style={styles.searchResultsList}
-                  nestedScrollEnabled
-                  keyboardShouldPersistTaps="handled"
-                  scrollEventThrottle={16}
-                  onScroll={(event) => {
-                    if (isCloseToScrollEnd(event.nativeEvent)) {
-                      handleEndReached();
-                    }
-                  }}
-                >
-                  {searchResults.map((item) => (
-                    <Pressable
-                      key={item.id}
-                      onPress={() => onSelectSearchResult(item)}
-                      style={styles.searchResultItem}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${item.label} 검색 결과 선택`}
-                    >
-                      <Text style={styles.searchResultText}>{item.label}</Text>
-                      {item.meta ? <Text style={styles.searchResultMeta}>{item.meta}</Text> : null}
-                    </Pressable>
-                  ))}
-                  {isSearchFetchingNextPage ? (
-                    <Text style={styles.emptySearchText}>불러오는 중...</Text>
-                  ) : null}
-                </ScrollView>
-              ) : null}
-            </View>
+          {shouldShowSearchResults && onSelectSearchResult ? (
+            <DrugSearchResultList<ProfileTagSearchResult>
+              items={searchResults}
+              keyExtractor={(item) => item.id}
+              getTitle={(item) => item.label}
+              getMeta={(item) => item.meta}
+              onSelect={onSelectSearchResult}
+              onEndReached={handleEndReached}
+              isFetching={isSearchFetching}
+              isFetchingNextPage={isSearchFetchingNextPage}
+            />
           ) : null}
         </>
       ) : null}
@@ -254,40 +223,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 6,
-  },
-  searchResults: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: palette.dark_gray,
-    backgroundColor: palette.white,
-    overflow: "hidden",
-  },
-  searchResultsList: {
-    maxHeight: SEARCH_RESULT_LIST_MAX_HEIGHT,
-  },
-  searchResultItem: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: palette.dark_gray,
-  },
-  searchResultText: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "600",
-    color: palette.black,
-  },
-  searchResultMeta: {
-    marginTop: 2,
-    fontSize: 11,
-    lineHeight: 15,
-    color: palette.icon,
-  },
-  emptySearchText: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 12,
-    lineHeight: 17,
-    color: palette.icon,
   },
 });
