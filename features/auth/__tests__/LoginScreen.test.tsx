@@ -55,9 +55,11 @@ jest.mock("@/hooks/use-auth-route-state", () => ({
   useAuthRouteState: () => mockAuthState,
 }));
 
+let mockIsLoggingIn = false;
+
 jest.mock("../useLoginViewModel", () => ({
   useLoginViewModel: () => ({
-    isLoggingIn: false,
+    isLoggingIn: mockIsLoggingIn,
     handleKakaoLogin: mockHandleKakaoLogin,
   }),
 }));
@@ -66,6 +68,7 @@ describe("LoginScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockAuthState = { kind: "redirect", href: "/(auth)/login" };
+    mockIsLoggingIn = false;
   });
 
   it("loading 상태에서는 AuthGateView를 렌더링한다", () => {
@@ -91,5 +94,12 @@ describe("LoginScreen", () => {
     const { getByLabelText } = render(<LoginScreen />);
     fireEvent.press(getByLabelText("카카오 소셜로그인"));
     expect(mockHandleKakaoLogin).toHaveBeenCalledTimes(1);
+  });
+
+  it("로그인 진행 중에는 버튼 대신 로딩 스피너를 표시한다", () => {
+    mockIsLoggingIn = true;
+    const { getByLabelText, queryByLabelText } = render(<LoginScreen />);
+    expect(getByLabelText("로그인 진행 중")).toBeTruthy();
+    expect(queryByLabelText("카카오 소셜로그인")).toBeNull();
   });
 });

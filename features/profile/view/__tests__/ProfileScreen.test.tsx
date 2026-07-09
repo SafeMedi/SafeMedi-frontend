@@ -25,10 +25,15 @@ jest.mock("@tanstack/react-query", () => ({
 }));
 
 jest.mock("@/stores/sessionStore", () => ({
-  useSessionStore: (selector: (state: { clearSession: () => void }) => unknown) =>
-    selector({
-      clearSession: mockClearSession,
-    }),
+  useSessionStore: Object.assign(
+    (selector: (state: { clearSession: () => void }) => unknown) =>
+      selector({
+        clearSession: mockClearSession,
+      }),
+    {
+      getState: () => ({ accessToken: "mock-access-token" }),
+    },
+  ),
 }));
 
 jest.mock("@/stores/userStore", () => ({

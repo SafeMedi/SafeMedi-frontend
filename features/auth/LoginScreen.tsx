@@ -1,6 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { Redirect } from "expo-router";
-import { Image, Pressable, useWindowDimensions, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, useWindowDimensions, View } from "react-native";
 import { YStack } from "tamagui";
 
 import IntroContentImage from "@/assets/images/introContent.png";
@@ -66,14 +66,27 @@ export function LoginScreen() {
               marginTop: introImageMarginTop,
             }}
           />
-          <Pressable
-            onPress={handleLogin}
-            disabled={isLoggingIn}
-            accessibilityLabel="카카오 소셜로그인"
-            style={{ marginTop: -20 }}
+          <View
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              marginTop: -20,
+              width: 183,
+              height: 45,
+            }}
           >
-            <Image source={KakaoButtonImage} style={{ width: 183, height: 45 }} />
-          </Pressable>
+            {isLoggingIn ? (
+              <ActivityIndicator
+                size="large"
+                color={palette.blue}
+                accessibilityLabel="로그인 진행 중"
+              />
+            ) : (
+              <Pressable onPress={handleLogin} accessibilityLabel="카카오 소셜로그인">
+                <Image source={KakaoButtonImage} style={{ width: 183, height: 45 }} />
+              </Pressable>
+            )}
+          </View>
         </View>
       </LinearGradient>
     </YStack>
