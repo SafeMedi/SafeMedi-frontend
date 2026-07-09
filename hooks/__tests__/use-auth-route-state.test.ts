@@ -134,7 +134,7 @@ describe("useAuthRouteState", () => {
     const { result } = renderHook(() => useAuthRouteState());
 
     await waitFor(() => {
-      expect(mockLogout).toHaveBeenCalledTimes(1);
+      expect(mockLogout).toHaveBeenCalledWith({ skipDeviceTokenDeletion: true });
     });
     expect(mockClearSession).not.toHaveBeenCalled();
     expect(mockRemoveQueries).not.toHaveBeenCalled();

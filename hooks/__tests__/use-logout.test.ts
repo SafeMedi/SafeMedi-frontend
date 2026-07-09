@@ -5,6 +5,9 @@ const mockRemoveQueries = jest.fn();
 const mockClearSession = jest.fn();
 const mockClearUser = jest.fn();
 const mockDeleteDeviceToken = jest.fn();
+const mockClearRegisteredDeviceToken = jest.fn();
+
+let mockAccessToken: string | null = "mock-access-token";
 
 jest.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({
@@ -18,12 +21,17 @@ jest.mock("@/api/endpoints/device-token", () => ({
 
 jest.mock("@/hooks/push-notification-token-store", () => ({
   getRegisteredDeviceToken: () => "mock-device-token",
-  clearRegisteredDeviceToken: jest.fn(),
+  clearRegisteredDeviceToken: (...args: unknown[]) => mockClearRegisteredDeviceToken(...args),
 }));
 
 jest.mock("@/stores/sessionStore", () => ({
-  useSessionStore: (selector: (state: { clearSession: () => void }) => unknown) =>
-    selector({ clearSession: mockClearSession }),
+  useSessionStore: Object.assign(
+    (selector: (state: { clearSession: () => void }) => unknown) =>
+      selector({ clearSession: mockClearSession }),
+    {
+      getState: () => ({ accessToken: mockAccessToken }),
+    },
+  ),
 }));
 
 jest.mock("@/stores/userStore", () => ({
@@ -34,6 +42,7 @@ jest.mock("@/stores/userStore", () => ({
 describe("useLogout", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockAccessToken = "mock-access-token";
     mockDeleteDeviceToken.mockResolvedValue({ message: "ok" });
   });
 
@@ -45,6 +54,7 @@ describe("useLogout", () => {
     });
 
     expect(mockDeleteDeviceToken).toHaveBeenCalledWith({ deviceToken: "mock-device-token" });
+    expect(mockClearRegisteredDeviceToken).toHaveBeenCalledTimes(1);
     expect(mockClearSession).toHaveBeenCalledTimes(1);
     expect(mockClearUser).toHaveBeenCalledTimes(1);
     expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["user", "me"] });
@@ -56,5 +66,31 @@ describe("useLogout", () => {
     expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["map"] });
     expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["notification"] });
     expect(mockRemoveQueries).toHaveBeenCalledTimes(8);
+  });
+
+  it("accessToken이 없으면 디바이스 토큰 해제 API를 호출하지 않는다", async () => {
+    mockAccessToken = null;
+
+    const { result } = renderHook(() => useLogout());
+
+    await act(async () => {
+      await result.current();
+    });
+
+    expect(mockDeleteDeviceToken).not.toHaveBeenCalled();
+    expect(mockClearRegisteredDeviceToken).toHaveBeenCalledTimes(1);
+    expect(mockClearSession).toHaveBeenCalledTimes(1);
+  });
+
+  it("skipDeviceTokenDeletion이면 디바이스 토큰 해제 API를 호출하지 않는다", async () => {
+    const { result } = renderHook(() => useLogout());
+
+    await act(async () => {
+      await result.current({ skipDeviceTokenDeletion: true });
+    });
+
+    expect(mockDeleteDeviceToken).not.toHaveBeenCalled();
+    expect(mockClearRegisteredDeviceToken).toHaveBeenCalledTimes(1);
+    expect(mockClearSession).toHaveBeenCalledTimes(1);
   });
 });

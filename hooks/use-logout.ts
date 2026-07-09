@@ -21,29 +21,44 @@ const AUTH_SCOPED_QUERY_KEY_PREFIXES = [
   ["notification"],
 ] as const;
 
+export type LogoutOptions = {
+  /** 인증 토큰 만료·무효 등으로 서버 디바이스 토큰 해제 API를 호출하지 않습니다. */
+  skipDeviceTokenDeletion?: boolean;
+};
+
 export function useLogout() {
   const queryClient = useQueryClient();
   const clearSession = useSessionStore((s) => s.clearSession);
   const clearUser = useUserStore((s) => s.clearUser);
 
-  return useCallback(async () => {
-    const deviceToken = getRegisteredDeviceToken();
-    if (deviceToken) {
-      try {
-        await deleteDeviceToken({ deviceToken });
-      } catch (error) {
-        // 토큰 해제 실패는 로그아웃 진행을 막지 않음
-        if (__DEV__) {
-          console.error("토큰 해제 실패", error);
+  return useCallback(
+    async (options?: LogoutOptions) => {
+      const accessToken = useSessionStore.getState().accessToken;
+      const deviceToken = getRegisteredDeviceToken();
+      const shouldDeleteDeviceTokenOnServer =
+        Boolean(deviceToken && accessToken) && !options?.skipDeviceTokenDeletion;
+
+      if (shouldDeleteDeviceTokenOnServer && deviceToken) {
+        try {
+          await deleteDeviceToken({ deviceToken });
+        } catch (error) {
+          // 토큰 해제 실패는 로그아웃 진행을 막지 않음
+          if (__DEV__) {
+            console.error("토큰 해제 실패", error);
+          }
         }
       }
-      clearRegisteredDeviceToken();
-    }
 
-    clearSession();
-    clearUser();
-    for (const queryKey of AUTH_SCOPED_QUERY_KEY_PREFIXES) {
-      queryClient.removeQueries({ queryKey });
-    }
-  }, [clearSession, clearUser, queryClient]);
+      if (deviceToken) {
+        clearRegisteredDeviceToken();
+      }
+
+      clearSession();
+      clearUser();
+      for (const queryKey of AUTH_SCOPED_QUERY_KEY_PREFIXES) {
+        queryClient.removeQueries({ queryKey });
+      }
+    },
+    [clearSession, clearUser, queryClient],
+  );
 }
