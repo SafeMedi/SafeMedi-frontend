@@ -11,17 +11,24 @@ import {
 } from "../notification";
 import { createPrescriptionByScan } from "../prescription-scan";
 import { postTutorialRegistration } from "../tutorial";
-import { fetchUserProfile, fetchUserProfileWithAccessToken, patchUserProfile } from "../user";
+import {
+  deleteUserAccount,
+  fetchUserProfile,
+  fetchUserProfileWithAccessToken,
+  patchUserProfile,
+} from "../user";
 
 const mockApiGet = jest.fn();
 const mockApiPost = jest.fn();
 const mockApiPatch = jest.fn();
+const mockApiDelete = jest.fn();
 
 jest.mock("@/api/client", () => ({
   api: {
     get: (...args: unknown[]) => mockApiGet(...args),
     post: (...args: unknown[]) => mockApiPost(...args),
     patch: (...args: unknown[]) => mockApiPatch(...args),
+    delete: (...args: unknown[]) => mockApiDelete(...args),
   },
 }));
 
@@ -121,5 +128,15 @@ describe("api/endpoints core modules", () => {
       headers: { Authorization: "Bearer token-123" },
     });
     expect(mockApiPatch).toHaveBeenCalledWith(apiPaths.usersMe, { json: {} });
+  });
+
+  it("user account delete endpoint를 호출한다", async () => {
+    const expected = { message: "회원 탈퇴가 정상적으로 완료되었습니다." };
+    mockApiDelete.mockReturnValueOnce({ json: jest.fn(async () => expected) });
+
+    const result = await deleteUserAccount();
+
+    expect(mockApiDelete).toHaveBeenCalledWith(apiPaths.usersMe);
+    expect(result).toEqual(expected);
   });
 });

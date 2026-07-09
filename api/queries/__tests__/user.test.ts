@@ -3,6 +3,7 @@ import { renderHook } from "@testing-library/react-native";
 import { queryKeys } from "@/api/query-keys";
 import {
   useCompleteTutorialMutation,
+  useDeleteUserAccountMutation,
   useLoginMutation,
   useUpdateUserProfileMutation,
   useUserProfile,
@@ -14,6 +15,7 @@ const mockFetchUserProfile = jest.fn<Promise<unknown>, []>();
 const mockFetchUserProfileWithAccessToken = jest.fn<Promise<unknown>, [unknown]>();
 const mockPostTutorialRegistration = jest.fn<Promise<unknown>, [unknown]>();
 const mockPatchUserProfile = jest.fn<Promise<unknown>, [unknown]>();
+const mockDeleteUserAccount = jest.fn<Promise<unknown>, []>();
 const mockProfileToUser = jest.fn<unknown, [unknown]>();
 const mockSetAccessToken = jest.fn();
 const mockSetTutorialCompleted = jest.fn();
@@ -43,6 +45,7 @@ jest.mock("@/api/endpoints/user", () => ({
   fetchUserProfileWithAccessToken: (accessToken: unknown) =>
     mockFetchUserProfileWithAccessToken(accessToken),
   patchUserProfile: (body: unknown) => mockPatchUserProfile(body),
+  deleteUserAccount: () => mockDeleteUserAccount(),
 }));
 
 jest.mock("@/stores/sessionStore", () => ({
@@ -177,5 +180,22 @@ describe("api/queries/user", () => {
     await mutation.onSuccess({ id: "me" });
     expect(mockSetQueryData).toHaveBeenCalledWith(queryKeys.user.me, { id: "me" });
     expect(mockSetUser).toHaveBeenCalledWith({ id: "me" });
+  });
+
+  it("useDeleteUserAccountMutation은 deleteUserAccount를 호출한다", async () => {
+    const onSuccess = jest.fn();
+    mockDeleteUserAccount.mockResolvedValue({ message: "ok" });
+    const { result } = renderHook(() => useDeleteUserAccountMutation({ onSuccess }));
+    const mutation = result.current as unknown as {
+      mutationKey: unknown;
+      mutationFn: () => Promise<unknown>;
+      onSuccess: () => void;
+    };
+
+    expect(mutation.mutationKey).toEqual(queryKeys.user.deleteAccount);
+    await mutation.mutationFn();
+    expect(mockDeleteUserAccount).toHaveBeenCalledTimes(1);
+    mutation.onSuccess();
+    expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 });

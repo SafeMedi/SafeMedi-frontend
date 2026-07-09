@@ -1,13 +1,18 @@
 import { type Href, router } from "expo-router";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { Alert } from "react-native";
 
+import { parseApiError } from "@/api/error";
 import { useFamilyProfiles } from "@/api/queries/profile";
+import { useDeleteUserAccountMutation } from "@/api/queries/user";
 import { useLogout } from "@/hooks/use-logout";
 import { useHealthInfo, useProfileUser } from "@/stores/userStore";
 import type { FamilyProfile } from "./components/FamilyProfileSection";
 import { FAMILY_AVATAR_GRADIENTS } from "./constants";
 
 const APP_VERSION = "v1.0.0";
+const WITHDRAW_CONFIRM_MESSAGE =
+  "탈퇴 시 계정과 연관된 모든 데이터가 삭제되며 복구할 수 없습니다. 정말 탈퇴하시겠습니까?";
 const AVATAR_GRADIENT_POOL = [
   FAMILY_AVATAR_GRADIENTS.purple,
   FAMILY_AVATAR_GRADIENTS.green,
@@ -15,6 +20,9 @@ const AVATAR_GRADIENT_POOL = [
 
 export function useProfileViewModel() {
   const handleLogout = useLogout();
+  const deleteUserAccountMutation = useDeleteUserAccountMutation({
+    onSuccess: handleLogout,
+  });
 
   const profileUser = useProfileUser();
   const { data: familySummaries = [] } = useFamilyProfiles();
@@ -70,6 +78,24 @@ export function useProfileViewModel() {
     router.push(familyDetailHref);
   };
 
+  const handleWithdrawAccount = useCallback(() => {
+    Alert.alert("회원 탈퇴", WITHDRAW_CONFIRM_MESSAGE, [
+      { text: "취소", style: "cancel" },
+      {
+        text: "탈퇴",
+        style: "destructive",
+        onPress: () => {
+          deleteUserAccountMutation.mutate(undefined, {
+            onError: async (error) => {
+              const parsedError = await parseApiError(error);
+              Alert.alert("탈퇴 실패", parsedError.message);
+            },
+          });
+        },
+      },
+    ]);
+  }, [deleteUserAccountMutation]);
+
   return {
     profileUser,
     familyProfiles,
@@ -77,6 +103,8 @@ export function useProfileViewModel() {
     chronicConditions,
     appInfoItems,
     handleLogout,
+    handleWithdrawAccount,
+    isWithdrawing: deleteUserAccountMutation.isPending,
     handleOpenProfileEdit,
     handleOpenFamilyManage,
     handleOpenHealthInfoDetail,

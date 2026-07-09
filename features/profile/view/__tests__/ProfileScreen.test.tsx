@@ -1,11 +1,9 @@
 import { fireEvent, render } from "@testing-library/react-native";
-import { router } from "expo-router";
-import { queryKeys } from "@/api/query-keys";
 import ProfileScreen from "@/app/(tabs)/profile";
 
-const mockRemoveQueries = jest.fn();
-const mockClearSession = jest.fn();
-const mockClearUser = jest.fn();
+const mockHandleLogout = jest.fn();
+const mockHandleWithdrawAccount = jest.fn();
+const mockHandleOpenHealthInfoDetail = jest.fn();
 
 jest.mock("expo-router", () => ({
   __esModule: true,
@@ -18,44 +16,21 @@ jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
-jest.mock("@tanstack/react-query", () => ({
-  useQueryClient: () => ({
-    removeQueries: mockRemoveQueries,
+jest.mock("@/features/profile/view/useProfileViewModel", () => ({
+  useProfileViewModel: () => ({
+    profileUser: { name: "홍길동", role: "주 사용자" },
+    familyProfiles: [],
+    allergies: ["아스피린"],
+    chronicConditions: ["천식"],
+    appInfoItems: [],
+    handleLogout: mockHandleLogout,
+    handleWithdrawAccount: mockHandleWithdrawAccount,
+    isWithdrawing: false,
+    handleOpenProfileEdit: jest.fn(),
+    handleOpenFamilyManage: jest.fn(),
+    handleOpenHealthInfoDetail: mockHandleOpenHealthInfoDetail,
+    handleSelectFamilyProfile: jest.fn(),
   }),
-}));
-
-jest.mock("@/stores/sessionStore", () => ({
-  useSessionStore: Object.assign(
-    (selector: (state: { clearSession: () => void }) => unknown) =>
-      selector({
-        clearSession: mockClearSession,
-      }),
-    {
-      getState: () => ({ accessToken: "mock-access-token" }),
-    },
-  ),
-}));
-
-jest.mock("@/stores/userStore", () => ({
-  useUserStore: (selector: (state: { clearUser: () => void }) => unknown) =>
-    selector({
-      clearUser: mockClearUser,
-    }),
-  useProfileUser: () => ({ name: "홍길동", role: "주 사용자" }),
-  useHealthInfo: () => ({ allergies: ["아스피린"], chronicConditions: ["천식"] }),
-}));
-
-jest.mock("@/api/endpoints/device-token", () => ({
-  deleteDeviceToken: jest.fn(async () => ({ message: "ok" })),
-}));
-
-jest.mock("@/hooks/push-notification-token-store", () => ({
-  getRegisteredDeviceToken: () => null,
-  clearRegisteredDeviceToken: jest.fn(),
-}));
-
-jest.mock("@/api/queries/profile", () => ({
-  useFamilyProfiles: () => ({ data: [] }),
 }));
 
 jest.mock("tamagui", () => {
@@ -134,9 +109,20 @@ jest.mock("@/features/profile/view/components/LogoutButton", () => {
   };
 });
 
-describe("프로필 기본 화면", () => {
-  const mockRouterPush = router.push as jest.MockedFunction<typeof router.push>;
+jest.mock("@/features/profile/view/components/WithdrawAccountButton", () => {
+  const React = require("react");
+  const { Pressable, Text } = require("react-native");
+  return {
+    WithdrawAccountButton: ({ onPress }: { onPress: () => void }) =>
+      React.createElement(
+        Pressable,
+        { onPress, accessibilityRole: "button", accessibilityLabel: "회원 탈퇴" },
+        React.createElement(Text, null, "회원 탈퇴"),
+      ),
+  };
+});
 
+describe("프로필 기본 화면", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -155,17 +141,15 @@ describe("프로필 기본 화면", () => {
 
     fireEvent.press(getByLabelText("로그아웃"));
 
-    expect(mockClearSession).toHaveBeenCalledTimes(1);
-    expect(mockClearUser).toHaveBeenCalledTimes(1);
-    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: queryKeys.user.me });
-    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["dashboard"] });
-    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["family"] });
-    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["profile"] });
-    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["prescriptions"] });
-    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["scan"] });
-    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["map"] });
-    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ["notification"] });
-    expect(mockRemoveQueries).toHaveBeenCalledTimes(8);
+    expect(mockHandleLogout).toHaveBeenCalledTimes(1);
+  });
+
+  it("회원 탈퇴 버튼을 누르면 탈퇴 핸들러를 호출한다", () => {
+    const { getByLabelText } = render(<ProfileScreen />);
+
+    fireEvent.press(getByLabelText("회원 탈퇴"));
+
+    expect(mockHandleWithdrawAccount).toHaveBeenCalledTimes(1);
   });
 
   it("건강 정보 상세보기 클릭 시 건강정보 상세 페이지로 이동한다", () => {
@@ -173,6 +157,6 @@ describe("프로필 기본 화면", () => {
 
     fireEvent.press(getByLabelText("건강 정보 상세보기"));
 
-    expect(mockRouterPush).toHaveBeenCalledWith("/profile/health-info");
+    expect(mockHandleOpenHealthInfoDetail).toHaveBeenCalledTimes(1);
   });
 });

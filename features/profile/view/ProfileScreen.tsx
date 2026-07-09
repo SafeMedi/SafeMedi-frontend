@@ -9,6 +9,7 @@ import { LogoutButton } from "./components/LogoutButton";
 import { ProfilePageHeader } from "./components/ProfilePageHeader";
 import { SettingsSection } from "./components/SettingsSection";
 import { UserHeroCard } from "./components/UserHeroCard";
+import { WithdrawAccountButton } from "./components/WithdrawAccountButton";
 import { useProfileViewModel } from "./useProfileViewModel";
 
 export function ProfileScreen() {
@@ -42,7 +43,14 @@ export function ProfileScreen() {
         />
         <SettingsSection />
         <AppInfoSection items={viewModel.appInfoItems} />
-        <LogoutButton onPress={viewModel.handleLogout} />
+        <YStack gap={8}>
+          <LogoutButton onPress={viewModel.handleLogout} disabled={viewModel.isWithdrawing} />
+          <WithdrawAccountButton
+            onPress={viewModel.handleWithdrawAccount}
+            disabled={viewModel.isWithdrawing}
+            isLoading={viewModel.isWithdrawing}
+          />
+        </YStack>
       </YStack>
     </ScrollView>
   );

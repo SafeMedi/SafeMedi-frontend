@@ -1,7 +1,11 @@
 import { api } from "@/api/client";
 import { normalizeUserProfile } from "@/api/normalize/user-profile";
 import { apiPaths } from "@/api/paths";
-import type { UpdateUserProfileBody, UserProfile } from "@/api/types/user";
+import type {
+  DeleteUserAccountResponse,
+  UpdateUserProfileBody,
+  UserProfile,
+} from "@/api/types/user";
 
 export async function fetchUserProfile(): Promise<UserProfile> {
   const raw = await api.get(apiPaths.usersMe).json<Parameters<typeof normalizeUserProfile>[0]>();
@@ -23,4 +27,8 @@ export async function patchUserProfile(body: UpdateUserProfileBody): Promise<Use
     .patch(apiPaths.usersMe, { json: body })
     .json<Parameters<typeof normalizeUserProfile>[0]>();
   return normalizeUserProfile(raw);
+}
+
+export async function deleteUserAccount(): Promise<DeleteUserAccountResponse> {
+  return api.delete(apiPaths.usersMe).json<DeleteUserAccountResponse>();
 }

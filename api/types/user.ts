@@ -29,6 +29,11 @@ export type UserProfilePatchAllergyItem = {
   name: string;
 };
 
+/** DELETE /api/v1/users/me 응답 */
+export type DeleteUserAccountResponse = {
+  message: string;
+};
+
 /** PATCH /api/v1/users/me */
 export type UpdateUserProfileBody = Partial<{
   nickname: string;

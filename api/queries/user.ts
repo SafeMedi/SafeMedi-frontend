@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { postSocialLogin } from "@/api/endpoints/auth";
 import { postTutorialRegistration } from "@/api/endpoints/tutorial";
 import {
+  deleteUserAccount,
   fetchUserProfile,
   fetchUserProfileWithAccessToken,
   patchUserProfile,
@@ -91,5 +92,15 @@ export function useUpdateUserProfileMutation() {
       useUserStore.getState().setUser(profileToUser(updatedProfile));
       await queryClient.invalidateQueries({ queryKey: queryKeys.user.me });
     },
+  });
+}
+
+export function useDeleteUserAccountMutation(options?: {
+  readonly onSuccess?: () => void | Promise<void>;
+}) {
+  return useMutation({
+    mutationKey: queryKeys.user.deleteAccount,
+    mutationFn: deleteUserAccount,
+    onSuccess: options?.onSuccess,
   });
 }
