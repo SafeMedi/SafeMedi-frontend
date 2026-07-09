@@ -19,6 +19,7 @@ export const queryKeys = {
   },
   user: {
     me: ["user", "me"] as const,
+    deleteAccount: ["user", "delete-account"] as const,
   },
   family: {
     manageOverview: ["family", "manage-overview"] as const,

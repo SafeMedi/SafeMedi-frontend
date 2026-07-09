@@ -186,9 +186,11 @@ describe("api/queries/user", () => {
     mockDeleteUserAccount.mockResolvedValue({ message: "ok" });
     const { result } = renderHook(() => useDeleteUserAccountMutation());
     const mutation = result.current as unknown as {
+      mutationKey: unknown;
       mutationFn: () => Promise<unknown>;
     };
 
+    expect(mutation.mutationKey).toEqual(queryKeys.user.deleteAccount);
     await mutation.mutationFn();
     expect(mockDeleteUserAccount).toHaveBeenCalledTimes(1);
   });

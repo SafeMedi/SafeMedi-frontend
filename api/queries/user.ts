@@ -97,6 +97,7 @@ export function useUpdateUserProfileMutation() {
 
 export function useDeleteUserAccountMutation() {
   return useMutation({
+    mutationKey: queryKeys.user.deleteAccount,
     mutationFn: deleteUserAccount,
   });
 }
