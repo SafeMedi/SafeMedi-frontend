@@ -95,4 +95,33 @@ describe("useLoginViewModel", () => {
 
     expect(mockAlert).toHaveBeenCalledWith("로그인 실패", "서버 오류");
   });
+
+  it("로그인 진행 중에는 isLoggingIn이 true이다", async () => {
+    let resolveLogin: (value: KakaoOAuthToken) => void = () => {};
+    mockLogin.mockImplementation(
+      () =>
+        new Promise<KakaoOAuthToken>((resolve) => {
+          resolveLogin = resolve;
+        }),
+    );
+    mockMutateAsync.mockResolvedValue({
+      accessToken: "app-access-token",
+      profile: { isTutorialCompleted: false },
+    });
+
+    const { result } = renderHook(() => useLoginViewModel());
+
+    act(() => {
+      void result.current.handleKakaoLogin();
+    });
+
+    expect(result.current.isLoggingIn).toBe(true);
+
+    await act(async () => {
+      resolveLogin(mockKakaoOAuthToken);
+      await Promise.resolve();
+    });
+
+    expect(result.current.isLoggingIn).toBe(false);
+  });
 });
