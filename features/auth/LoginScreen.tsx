@@ -1,11 +1,12 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { Redirect } from "expo-router";
-import { ActivityIndicator, Image, Pressable, useWindowDimensions, View } from "react-native";
+import { Image, Pressable, useWindowDimensions, View } from "react-native";
 import { YStack } from "tamagui";
 
 import IntroContentImage from "@/assets/images/introContent.png";
 import KakaoButtonImage from "@/assets/images/kakaoLoginButton.png";
 import { AuthGateView } from "@/components/AuthGateView";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { palette } from "@/constants/design-tokens";
 import { useAuthRouteState } from "@/hooks/use-auth-route-state";
 
@@ -76,11 +77,7 @@ export function LoginScreen() {
             }}
           >
             {isLoggingIn ? (
-              <ActivityIndicator
-                size="large"
-                color={palette.blue}
-                accessibilityLabel="로그인 진행 중"
-              />
+              <LoadingSpinner accessibilityLabel="로그인 진행 중" />
             ) : (
               <Pressable onPress={handleLogin} accessibilityLabel="카카오 소셜로그인">
                 <Image source={KakaoButtonImage} style={{ width: 183, height: 45 }} />

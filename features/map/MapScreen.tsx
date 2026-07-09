@@ -1,16 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Linking,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { SelectChip } from "@/components/ui/SelectChip";
 import { palette } from "@/constants/design-tokens";
 import { BaseKakaoMap } from "./components/BaseKakaoMap";
@@ -127,7 +119,7 @@ export function MapScreen() {
   if (viewModel.isLoadingLocation) {
     return (
       <View style={styles.centeredContainer}>
-        <ActivityIndicator size="small" />
+        <LoadingSpinner size="small" accessibilityLabel="현재 위치 로딩 중" />
         <Text style={styles.loadingText}>현재 위치를 불러오는 중이에요.</Text>
       </View>
     );
@@ -164,7 +156,7 @@ export function MapScreen() {
             </>
           ) : (
             <>
-              <ActivityIndicator size="small" />
+              <LoadingSpinner size="small" accessibilityLabel="주변 의료기관 지도 로딩 중" />
               <Text style={styles.loadingText}>주변 의료기관 지도를 불러오는 중이에요.</Text>
             </>
           )}
@@ -231,7 +223,9 @@ export function MapScreen() {
           <View style={styles.listHeaderRow}>
             <Text style={styles.listHeaderText}>{viewModel.facilities.length}개 의료기관</Text>
           </View>
-          {showFacilitiesLoading ? <ActivityIndicator size="small" color={palette.green} /> : null}
+          {showFacilitiesLoading ? (
+            <LoadingSpinner size="small" accessibilityLabel="의료기관 목록 로딩 중" />
+          ) : null}
           {viewModel.facilitiesError ? (
             <Text style={styles.errorText}>
               목록을 가져오지 못했어요. 잠시 후 다시 시도해 주세요.

@@ -1,6 +1,7 @@
-import { ActivityIndicator, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import { Text, YStack } from "tamagui";
 
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
 import { MedicationManagementSectionHeader } from "./components/MedicationManagementSectionHeader";
@@ -14,7 +15,7 @@ export function MedicationManagementTab() {
   if (viewModel.isLoading) {
     return (
       <YStack style={styles.feedbackBox} gap={10}>
-        <ActivityIndicator size="large" color={palette.green} />
+        <LoadingSpinner accessibilityLabel="복약 관리 정보 로딩 중" />
         <Text style={styles.feedbackText}>복약 관리 정보를 불러오는 중입니다.</Text>
       </YStack>
     );

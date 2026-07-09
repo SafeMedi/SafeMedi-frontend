@@ -2,19 +2,12 @@ import * as Clipboard from "expo-clipboard";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useCallback } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  Share,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Alert, Pressable, ScrollView, Share, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
 
 import { useFamilyManageOverview } from "@/api/queries/family";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { palette } from "@/constants/design-tokens";
 import { FamilyFeatureBanner } from "./components/FamilyFeatureBanner";
 import { FamilyInviteCard } from "./components/FamilyInviteCard";
@@ -68,7 +61,7 @@ export function FamilyManageScreen() {
           <FamilyManageHeader onBack={() => router.back()} />
           {isLoading ? (
             <View style={styles.feedbackContainer}>
-              <ActivityIndicator size="large" color={palette.green} />
+              <LoadingSpinner accessibilityLabel="가족 정보 로딩 중" />
               <Text style={styles.feedbackText}>가족 정보를 불러오는 중입니다.</Text>
             </View>
           ) : null}
