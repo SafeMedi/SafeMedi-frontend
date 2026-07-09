@@ -1,5 +1,6 @@
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Text } from "tamagui";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { palette } from "@/constants/design-tokens";
 
 type AuthGateViewProps = {
@@ -12,7 +13,7 @@ export function AuthGateView({ kind, onRetry, onLogout }: AuthGateViewProps) {
   if (kind === "loading") {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" />
+        <LoadingSpinner accessibilityLabel="사용자 정보 로딩 중" />
       </View>
     );
   }

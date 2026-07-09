@@ -2,6 +2,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type LayoutChangeEvent, Platform, StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
+import { palette } from "@/constants/design-tokens";
 import type { MapCoordinate, MapFacilityMarker, MapRegion } from "../types";
 import { buildKakaoMapHtml, regionToKakaoMapLevel } from "./kakaoMapHtml";
 
@@ -286,6 +287,6 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: palette.map_webview_background,
   },
 });

@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   cardRead: {
-    backgroundColor: "rgba(255,255,255,0.7)",
+    backgroundColor: palette.overlay_white_70,
     borderColor: palette.dark_gray,
   },
   pressed: {

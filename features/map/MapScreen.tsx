@@ -1,16 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Linking,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { SelectChip } from "@/components/ui/SelectChip";
 import { palette } from "@/constants/design-tokens";
 import { BaseKakaoMap } from "./components/BaseKakaoMap";
@@ -127,7 +119,7 @@ export function MapScreen() {
   if (viewModel.isLoadingLocation) {
     return (
       <View style={styles.centeredContainer}>
-        <ActivityIndicator size="small" />
+        <LoadingSpinner size="small" accessibilityLabel="현재 위치 로딩 중" />
         <Text style={styles.loadingText}>현재 위치를 불러오는 중이에요.</Text>
       </View>
     );
@@ -147,8 +139,9 @@ export function MapScreen() {
     );
   }
 
-  const isContentReady = mapLoadState === "ready" && !viewModel.isLoadingFacilities;
+  const isContentReady = mapLoadState === "ready";
   const showBlockingOverlay = !isContentReady;
+  const showFacilitiesLoading = viewModel.isLoadingFacilities || viewModel.isRefreshingFacilities;
 
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
@@ -163,7 +156,7 @@ export function MapScreen() {
             </>
           ) : (
             <>
-              <ActivityIndicator size="small" />
+              <LoadingSpinner size="small" accessibilityLabel="주변 의료기관 지도 로딩 중" />
               <Text style={styles.loadingText}>주변 의료기관 지도를 불러오는 중이에요.</Text>
             </>
           )}
@@ -181,10 +174,12 @@ export function MapScreen() {
           <View style={styles.searchWrapper}>
             <Ionicons name="search" size={18} color={palette.input_placeholder} />
             <TextInput
-              value={viewModel.searchKeyword}
-              onChangeText={viewModel.setSearchKeyword}
+              value={viewModel.inputKeyword}
+              onChangeText={viewModel.setInputKeyword}
+              onSubmitEditing={viewModel.submitSearch}
               placeholder="약국, 병원 검색..."
               placeholderTextColor={palette.input_placeholder}
+              returnKeyType="search"
               style={styles.searchInput}
             />
           </View>
@@ -228,8 +223,8 @@ export function MapScreen() {
           <View style={styles.listHeaderRow}>
             <Text style={styles.listHeaderText}>{viewModel.facilities.length}개 의료기관</Text>
           </View>
-          {viewModel.isRefreshingFacilities ? (
-            <ActivityIndicator size="small" color={palette.green} />
+          {showFacilitiesLoading ? (
+            <LoadingSpinner size="small" accessibilityLabel="의료기관 목록 로딩 중" />
           ) : null}
           {viewModel.facilitiesError ? (
             <Text style={styles.errorText}>
@@ -251,7 +246,7 @@ export function MapScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "transparent" },
+  screen: { flex: 1, backgroundColor: palette.transparent },
   blockingOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
@@ -278,7 +273,7 @@ const styles = StyleSheet.create({
   retryButtonText: { color: palette.white, fontSize: 14, fontWeight: "600" },
   devFallbackText: { fontSize: 12, color: palette.icon, lineHeight: 18 },
   topSection: {
-    backgroundColor: "transparent",
+    backgroundColor: palette.transparent,
     borderBottomWidth: 1,
     borderBottomColor: palette.map_search_border,
     paddingHorizontal: 16,
@@ -307,7 +302,7 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 14, color: palette.title_emphasis },
   categoryRow: { flexDirection: "row", gap: 8 },
   mapSection: { height: 210, overflow: "hidden" },
-  listSection: { flex: 1, backgroundColor: "transparent" },
+  listSection: { flex: 1, backgroundColor: palette.transparent },
   listContent: { paddingHorizontal: 14, paddingTop: 14, paddingBottom: 24, gap: 12 },
   listHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   listHeaderText: { fontSize: 20, fontWeight: "700", color: palette.black },

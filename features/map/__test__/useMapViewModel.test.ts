@@ -13,6 +13,10 @@ jest.mock("@/api/queries/map", () => ({
 }));
 
 describe("useMapViewModel", () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockResolveMapLocation.mockResolvedValue({
@@ -81,6 +85,79 @@ describe("useMapViewModel", () => {
 
     await waitFor(() => {
       expect(mockResolveMapLocation).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it("검색어 입력 중에는 조회 키워드를 바꾸지 않고 입력이 멈추면 반영한다", async () => {
+    const { result } = renderHook(() => useMapViewModel());
+
+    await waitFor(() => {
+      expect(result.current.isLoadingLocation).toBe(false);
+    });
+
+    jest.useFakeTimers();
+
+    act(() => {
+      result.current.setInputKeyword(" 강남 ");
+    });
+
+    expect(result.current.inputKeyword).toBe(" 강남 ");
+    expect(result.current.searchKeyword).toBe("");
+    expect(mockUseNearbyMedicalFacilitiesQuery).toHaveBeenLastCalledWith({
+      latitude: 37.5,
+      longitude: 127,
+      category: "all",
+      keyword: "",
+    });
+
+    act(() => {
+      jest.advanceTimersByTime(399);
+    });
+
+    expect(result.current.searchKeyword).toBe("");
+    expect(mockUseNearbyMedicalFacilitiesQuery).toHaveBeenLastCalledWith({
+      latitude: 37.5,
+      longitude: 127,
+      category: "all",
+      keyword: "",
+    });
+
+    act(() => {
+      jest.advanceTimersByTime(1);
+    });
+
+    expect(result.current.searchKeyword).toBe("강남");
+    expect(mockUseNearbyMedicalFacilitiesQuery).toHaveBeenLastCalledWith({
+      latitude: 37.5,
+      longitude: 127,
+      category: "all",
+      keyword: "강남",
+    });
+  });
+
+  it("검색어 제출 시에는 디바운스 대기 없이 즉시 조회 키워드를 반영한다", async () => {
+    const { result } = renderHook(() => useMapViewModel());
+
+    await waitFor(() => {
+      expect(result.current.isLoadingLocation).toBe(false);
+    });
+
+    act(() => {
+      result.current.setInputKeyword("약국");
+    });
+
+    expect(result.current.searchKeyword).toBe("");
+
+    act(() => {
+      result.current.submitSearch();
+    });
+
+    expect(result.current.searchKeyword).toBe("약국");
+    expect(mockUseNearbyMedicalFacilitiesQuery).toHaveBeenLastCalledWith({
+      latitude: 37.5,
+      longitude: 127,
+      category: "all",
+      keyword: "약국",
     });
   });
 });

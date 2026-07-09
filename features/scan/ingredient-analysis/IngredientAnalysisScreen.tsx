@@ -1,7 +1,8 @@
-import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
 import { GradientCard } from "@/components/ui/GradientCard";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
 import { PrescriptionScanHeader } from "@/features/scan/prescription-scan/components/PrescriptionScanHeader";
@@ -53,7 +54,7 @@ export function IngredientAnalysisScreen() {
         <YStack gap={12}>
           {viewModel.isAnalyzing ? (
             <View style={styles.loadingCard}>
-              <ActivityIndicator size="large" color={palette.green} />
+              <LoadingSpinner accessibilityLabel="약물 성분 분석 중" />
               <Text style={styles.loadingText}>약물 성분을 분석하는 중입니다.</Text>
             </View>
           ) : null}

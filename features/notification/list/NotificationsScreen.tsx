@@ -1,8 +1,9 @@
-import { ActivityIndicator, FlatList, StyleSheet } from "react-native";
+import { FlatList, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
 
 import type { NotificationItem } from "@/api/types";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { PillButton } from "@/components/ui/PillButton";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
@@ -39,7 +40,7 @@ export function NotificationsScreen() {
 
           {viewModel.isLoading ? (
             <YStack style={styles.feedbackBox} gap={10}>
-              <ActivityIndicator size="large" color={palette.green} />
+              <LoadingSpinner accessibilityLabel="알림 로딩 중" />
               <Text style={styles.feedbackText}>알림을 불러오는 중입니다.</Text>
             </YStack>
           ) : null}

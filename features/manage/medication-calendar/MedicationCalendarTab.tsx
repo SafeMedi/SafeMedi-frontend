@@ -1,6 +1,7 @@
-import { ActivityIndicator, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import { Text, YStack } from "tamagui";
 
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
 import { MedicationReportPeriodSummaryCard } from "../medication-statistics/components/MedicationReportPeriodSummaryCard";
@@ -14,7 +15,7 @@ export function MedicationCalendarTab() {
   if (viewModel.isInitialLoading) {
     return (
       <YStack style={styles.feedbackBox} gap={10}>
-        <ActivityIndicator size="large" color={palette.green} />
+        <LoadingSpinner accessibilityLabel="복약 리포트 로딩 중" />
         <Text style={styles.feedbackText}>복약 리포트를 불러오는 중입니다.</Text>
       </YStack>
     );

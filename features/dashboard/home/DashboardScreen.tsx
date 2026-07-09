@@ -1,9 +1,10 @@
 import { router } from "expo-router";
-import { ActivityIndicator, ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
 
 import { useUnreadNotificationCount } from "@/api/queries/notification";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
 import { AdherenceSummaryCard } from "./components/AdherenceSummaryCard";
@@ -50,7 +51,7 @@ export function DashboardScreen() {
 
         {viewModel.isLoading ? (
           <YStack style={styles.feedbackBox} gap={10}>
-            <ActivityIndicator size="large" color={palette.green} />
+            <LoadingSpinner accessibilityLabel="대시보드 정보 로딩 중" />
             <Text style={styles.feedbackText}>대시보드 정보를 불러오는 중입니다.</Text>
           </YStack>
         ) : null}

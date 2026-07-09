@@ -44,7 +44,7 @@ const DAY_TONE_STYLES: Record<
   },
   yellow: {
     backgroundColor: palette.risk_caution_badge_bg,
-    borderColor: "#FFDF20",
+    borderColor: palette.warning_interaction_border_strong,
     textColor: palette.warning_interaction_message,
   },
   red: {
@@ -56,7 +56,7 @@ const DAY_TONE_STYLES: Record<
 
 const LEGEND_ITEMS = [
   { label: "90% 이상", color: palette.green },
-  { label: "70-89%", color: "#F0B100" },
+  { label: "70-89%", color: palette.risk_caution_start },
   { label: "70% 미만", color: palette.red_medium },
 ] as const;
 
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     minHeight: 28,
   },
   weekdayLabel: {
-    color: "#6A7282",
+    color: palette.text_muted,
     fontSize: 10,
     lineHeight: 14,
     fontWeight: "600",

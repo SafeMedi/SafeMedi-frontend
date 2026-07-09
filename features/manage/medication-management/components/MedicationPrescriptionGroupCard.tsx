@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   body: {
-    backgroundColor: "rgba(255,255,255,0.5)",
+    backgroundColor: palette.overlay_white_50,
   },
   titleEditor: {
     borderWidth: 1,

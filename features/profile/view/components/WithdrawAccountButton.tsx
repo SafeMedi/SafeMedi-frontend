@@ -1,6 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet, Text } from "react-native";
 
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { palette } from "@/constants/design-tokens";
 
 export type WithdrawAccountButtonProps = {
@@ -30,7 +31,7 @@ export function WithdrawAccountButton({
       accessibilityState={{ disabled: isDisabled, busy: isLoading }}
     >
       {isLoading ? (
-        <ActivityIndicator size="small" color={palette.red_deep} />
+        <LoadingSpinner size="small" accessibilityLabel="회원 탈퇴 처리 중" />
       ) : (
         <Ionicons name="person-remove-outline" size={16} color={palette.red_deep} />
       )}

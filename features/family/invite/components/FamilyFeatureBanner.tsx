@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 18,
     borderWidth: 0,
-    backgroundColor: "transparent",
+    backgroundColor: palette.transparent,
   },
   gradient: {
     paddingHorizontal: 14,

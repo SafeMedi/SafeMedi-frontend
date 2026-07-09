@@ -1,8 +1,9 @@
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { palette } from "@/constants/design-tokens";
 import { PrescriptionFrameCard } from "./components/PrescriptionFrameCard";
 import { PrescriptionScanActions } from "./components/PrescriptionScanActions";
@@ -54,7 +55,7 @@ export function PrescriptionScanScreen() {
       {viewModel.isExtracting ? (
         <View style={styles.extractingOverlay}>
           <YStack style={styles.extractingDialog} gap={10}>
-            <ActivityIndicator size="large" color={palette.green} />
+            <LoadingSpinner accessibilityLabel="OCR 텍스트 추출 중" />
             <Text style={styles.feedbackText}>OCR로 텍스트를 추출하는 중입니다.</Text>
           </YStack>
         </View>

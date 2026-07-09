@@ -1,21 +1,14 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import {
-  ActivityIndicator,
-  Alert,
-  type DimensionValue,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Alert, type DimensionValue, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, XStack, YStack } from "tamagui";
 
 import { useFamilyDetail } from "@/api/queries/family";
 import type { FamilyMedicationScheduleItem, FamilyTodayMedicationSummary } from "@/api/types";
 import { Badge } from "@/components/ui/Badge";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { PillButton } from "@/components/ui/PillButton";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
@@ -83,7 +76,7 @@ export function FamilyDetailScreen({ familyId }: FamilyDetailScreenProps) {
 
           {isLoading ? (
             <View style={styles.feedbackContainer}>
-              <ActivityIndicator size="large" color={palette.green} />
+              <LoadingSpinner accessibilityLabel="가족 정보 로딩 중" />
               <Text style={styles.feedbackText}>가족 정보를 불러오는 중입니다.</Text>
             </View>
           ) : null}

@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     borderColor: palette.dark_gray,
     borderRadius: 14,
     overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.5)",
+    backgroundColor: palette.overlay_white_50,
   },
   groupHeader: {
     paddingHorizontal: 14,
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   recordRowTaken: {
-    backgroundColor: "#F0FDF4",
+    backgroundColor: palette.bg_achievement_card[0],
     borderColor: palette.light_green,
   },
   recordRowMissed: {
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   medicationNameTaken: {
-    color: "#016630",
+    color: palette.achievement_card_title,
   },
   medicationNameMissed: {
     color: palette.red_deep,
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     borderColor: palette.dark_gray,
     borderRadius: 14,
     overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.5)",
+    backgroundColor: palette.overlay_white_50,
   },
   skeletonGroupHeader: {
     height: 36,
