@@ -11,6 +11,7 @@ export const palette = {
   link: "#0a7ea4",
 
   // color 설정
+  transparent: "transparent",
   white: "#ffffff",
   black: "#364153",
   green: "#00C950",
@@ -55,6 +56,8 @@ export const palette = {
   surface_card_border: "rgba(255,255,255,0.3)",
   overlay_white_20: "rgba(255,255,255,0.2)",
   overlay_white_25: "rgba(255,255,255,0.25)",
+  overlay_white_50: "rgba(255,255,255,0.5)",
+  overlay_white_70: "rgba(255,255,255,0.7)",
   overlay_white_90: "rgba(255,255,255,0.9)",
   overlay_white_92: "rgba(255,255,255,0.92)",
   overlay_blue_20: "rgba(59,130,246,0.2)",
@@ -69,6 +72,7 @@ export const palette = {
   warning_allergy_bg: "#FEF2F2",
   warning_interaction_bg: "#FEFCE8",
   warning_interaction_border: "#FFF085",
+  warning_interaction_border_strong: "#FFDF20",
   warning_interaction_title: "#894B00",
   warning_interaction_message: "#A65F00",
   pending_badge_bg: "#FFEDD4",
@@ -83,6 +87,7 @@ export const palette = {
   risk_caution_badge_bg: "#FEF9C2",
   risk_danger_badge_bg: "#FFE2E2",
   title_emphasis: "#1E2939",
+  text_muted: "#6A7282",
   schedule_required_border: "#8EC5FF",
   schedule_upcoming_border: "#BFC7D5",
   schedule_upcoming_start: "#9CA3AF",
@@ -95,6 +100,7 @@ export const palette = {
   map_marker_current: "#155DFC",
   map_marker_pharmacy: "#00A63E",
   map_marker_emergency: "#FB2C36",
+  map_webview_background: "#F5F5F5",
   map_data_source_text: "#9810FA",
 
   // linearGradient 3중첩 설정

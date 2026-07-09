@@ -36,7 +36,7 @@ export function MedicationManagementItemCard({
   const cardStyle = medication.hasWarning ? styles.warningCard : styles.normalCard;
   const cardBackground = medication.hasWarning ? (
     <LinearGradient
-      colors={[palette.warning_allergy_bg, "#FDF2F8"]}
+      colors={[...palette.bg_allergy_card]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={StyleSheet.absoluteFillObject}

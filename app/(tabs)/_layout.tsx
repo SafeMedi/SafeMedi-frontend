@@ -47,7 +47,7 @@ export default function TabLayout() {
           tabBarActiveTintColor: palette.green,
           tabBarInactiveTintColor: palette.icon,
           headerShown: false,
-          sceneStyle: { backgroundColor: "transparent" },
+          sceneStyle: { backgroundColor: palette.transparent },
           tabBarLabelStyle: {
             fontSize: 14,
           },

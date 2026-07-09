@@ -17,7 +17,10 @@ export default function DetailLayout() {
         style={StyleSheet.absoluteFill}
       />
       <Stack
-        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "transparent" } }}
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: palette.transparent },
+        }}
       />
     </View>
   );

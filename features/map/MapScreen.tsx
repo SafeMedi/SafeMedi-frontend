@@ -246,7 +246,7 @@ export function MapScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "transparent" },
+  screen: { flex: 1, backgroundColor: palette.transparent },
   blockingOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   retryButtonText: { color: palette.white, fontSize: 14, fontWeight: "600" },
   devFallbackText: { fontSize: 12, color: palette.icon, lineHeight: 18 },
   topSection: {
-    backgroundColor: "transparent",
+    backgroundColor: palette.transparent,
     borderBottomWidth: 1,
     borderBottomColor: palette.map_search_border,
     paddingHorizontal: 16,
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 14, color: palette.title_emphasis },
   categoryRow: { flexDirection: "row", gap: 8 },
   mapSection: { height: 210, overflow: "hidden" },
-  listSection: { flex: 1, backgroundColor: "transparent" },
+  listSection: { flex: 1, backgroundColor: palette.transparent },
   listContent: { paddingHorizontal: 14, paddingTop: 14, paddingBottom: 24, gap: 12 },
   listHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   listHeaderText: { fontSize: 20, fontWeight: "700", color: palette.black },
