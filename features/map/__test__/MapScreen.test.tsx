@@ -114,11 +114,13 @@ const BASE_VIEW_MODEL: MapViewModel = {
   },
   isUsingDevFallbackLocation: false,
   category: "all",
+  inputKeyword: "",
   searchKeyword: "",
   selectedFacilityId: "facility-1",
   facilities: [BASE_FACILITY],
   setCategory: jest.fn(),
-  setSearchKeyword: jest.fn(),
+  setInputKeyword: jest.fn(),
+  submitSearch: jest.fn(),
   setSelectedFacilityId: jest.fn(),
   retryLocation: jest.fn(),
   refetchFacilities: jest.fn(async () => {}),
@@ -164,7 +166,6 @@ describe("MapScreen", () => {
     });
     mockUseMapViewModel.mockReturnValue({
       ...BASE_VIEW_MODEL,
-      isLoadingFacilities: true,
       facilities: [],
     });
 
@@ -173,6 +174,21 @@ describe("MapScreen", () => {
     expect(screen.getByText("주변 의료기관 지도를 불러오는 중이에요.")).toBeTruthy();
     expect(screen.queryByText("주변 의료기관")).toBeNull();
     expect(screen.queryByText("0개 의료기관")).toBeNull();
+  });
+
+  it("목록 조회 중에는 기존 본문을 유지하고 목록 로딩만 표시한다", async () => {
+    mockUseMapViewModel.mockReturnValue({
+      ...BASE_VIEW_MODEL,
+      isLoadingFacilities: true,
+    });
+
+    render(<MapScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("주변 의료기관")).toBeTruthy();
+    });
+    expect(screen.getByText("1개 의료기관")).toBeTruthy();
+    expect(screen.queryByText("주변 의료기관 지도를 불러오는 중이에요.")).toBeNull();
   });
 
   it("지도 로딩에 실패하면 에러 메시지를 렌더링한다", () => {
@@ -200,8 +216,12 @@ describe("MapScreen", () => {
     });
     expect(screen.getByText("1개 의료기관")).toBeTruthy();
 
-    fireEvent.changeText(screen.getByPlaceholderText("약국, 병원 검색..."), "강남");
-    expect(BASE_VIEW_MODEL.setSearchKeyword).toHaveBeenCalledWith("강남");
+    const searchInput = screen.getByPlaceholderText("약국, 병원 검색...");
+    fireEvent.changeText(searchInput, "강남");
+    expect(BASE_VIEW_MODEL.setInputKeyword).toHaveBeenCalledWith("강남");
+
+    fireEvent(searchInput, "submitEditing");
+    expect(BASE_VIEW_MODEL.submitSearch).toHaveBeenCalledTimes(1);
 
     fireEvent.press(screen.getByText("응급실"));
     expect(BASE_VIEW_MODEL.setCategory).toHaveBeenCalledWith("emergency");

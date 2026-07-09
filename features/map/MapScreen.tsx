@@ -147,8 +147,9 @@ export function MapScreen() {
     );
   }
 
-  const isContentReady = mapLoadState === "ready" && !viewModel.isLoadingFacilities;
+  const isContentReady = mapLoadState === "ready";
   const showBlockingOverlay = !isContentReady;
+  const showFacilitiesLoading = viewModel.isLoadingFacilities || viewModel.isRefreshingFacilities;
 
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
@@ -181,10 +182,12 @@ export function MapScreen() {
           <View style={styles.searchWrapper}>
             <Ionicons name="search" size={18} color={palette.input_placeholder} />
             <TextInput
-              value={viewModel.searchKeyword}
-              onChangeText={viewModel.setSearchKeyword}
+              value={viewModel.inputKeyword}
+              onChangeText={viewModel.setInputKeyword}
+              onSubmitEditing={viewModel.submitSearch}
               placeholder="약국, 병원 검색..."
               placeholderTextColor={palette.input_placeholder}
+              returnKeyType="search"
               style={styles.searchInput}
             />
           </View>
@@ -228,9 +231,7 @@ export function MapScreen() {
           <View style={styles.listHeaderRow}>
             <Text style={styles.listHeaderText}>{viewModel.facilities.length}개 의료기관</Text>
           </View>
-          {viewModel.isRefreshingFacilities ? (
-            <ActivityIndicator size="small" color={palette.green} />
-          ) : null}
+          {showFacilitiesLoading ? <ActivityIndicator size="small" color={palette.green} /> : null}
           {viewModel.facilitiesError ? (
             <Text style={styles.errorText}>
               목록을 가져오지 못했어요. 잠시 후 다시 시도해 주세요.

@@ -3,6 +3,8 @@ import { useNearbyMedicalFacilitiesQuery } from "@/api/queries/map";
 import { resolveMapLocation } from "./resolveMapLocation";
 import type { MapCoordinate, MapRegion, MedicalFacility, MedicalFacilityCategory } from "./types";
 
+const SEARCH_DEBOUNCE_MS = 400;
+
 interface MapLocationState {
   readonly isLoadingLocation: boolean;
   readonly locationError: string | null;
@@ -24,11 +26,13 @@ export interface MapViewModel {
   readonly initialRegion: MapRegion | null;
   readonly isUsingDevFallbackLocation: boolean;
   readonly category: MedicalFacilityCategory;
+  readonly inputKeyword: string;
   readonly searchKeyword: string;
   readonly selectedFacilityId: string | null;
   readonly facilities: readonly MedicalFacility[];
   readonly setCategory: (category: MedicalFacilityCategory) => void;
-  readonly setSearchKeyword: (keyword: string) => void;
+  readonly setInputKeyword: (keyword: string) => void;
+  readonly submitSearch: () => void;
   readonly setSelectedFacilityId: (facilityId: string | null) => void;
   readonly retryLocation: () => void;
   readonly refetchFacilities: () => Promise<void>;
@@ -44,6 +48,7 @@ export function useMapViewModel(): MapViewModel {
     isUsingDevFallbackLocation: false,
   });
   const [category, setCategory] = useState<MedicalFacilityCategory>("all");
+  const [inputKeyword, setInputKeyword] = useState<string>("");
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>(null);
 
@@ -92,6 +97,19 @@ export function useMapViewModel(): MapViewModel {
     keyword: searchKeyword,
   });
 
+  useEffect(() => {
+    const nextSearchKeyword = inputKeyword.trim();
+    const debounceTimer = setTimeout(() => {
+      setSearchKeyword((previous) =>
+        previous === nextSearchKeyword ? previous : nextSearchKeyword,
+      );
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      clearTimeout(debounceTimer);
+    };
+  }, [inputKeyword]);
+
   const facilities = useMemo(
     () => nearbyFacilitiesQuery.data?.facilities ?? [],
     [nearbyFacilitiesQuery.data?.facilities],
@@ -111,6 +129,10 @@ export function useMapViewModel(): MapViewModel {
     await nearbyFacilitiesQuery.refetch();
   }, [nearbyFacilitiesQuery]);
 
+  const submitSearch = useCallback(() => {
+    setSearchKeyword(inputKeyword.trim());
+  }, [inputKeyword]);
+
   return {
     isLoadingLocation: locationState.isLoadingLocation,
     isLoadingFacilities: nearbyFacilitiesQuery.isLoading,
@@ -124,11 +146,13 @@ export function useMapViewModel(): MapViewModel {
     initialRegion: locationState.initialRegion,
     isUsingDevFallbackLocation: locationState.isUsingDevFallbackLocation,
     category,
+    inputKeyword,
     searchKeyword,
     selectedFacilityId,
     facilities,
     setCategory,
-    setSearchKeyword,
+    setInputKeyword,
+    submitSearch,
     setSelectedFacilityId,
     retryLocation,
     refetchFacilities,
