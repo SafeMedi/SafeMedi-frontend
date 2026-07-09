@@ -10,6 +10,7 @@ import {
 } from "@/features/profile/view/components/FamilyProfileSection";
 import { LogoutButton } from "@/features/profile/view/components/LogoutButton";
 import { UserHeroCard } from "@/features/profile/view/components/UserHeroCard";
+import { WithdrawAccountButton } from "@/features/profile/view/components/WithdrawAccountButton";
 
 jest.mock("tamagui", () => {
   const React = require("react");
@@ -134,5 +135,22 @@ describe("profile subcomponents", () => {
     expect(StyleSheet.flatten(getByTestId("logout-button").props.style)).toMatchObject({
       backgroundColor: palette.white,
     });
+  });
+
+  it("WithdrawAccountButton은 로그아웃보다 강조된 위험 톤을 사용한다", () => {
+    const { getByTestId } = render(<WithdrawAccountButton />);
+
+    expect(StyleSheet.flatten(getByTestId("withdraw-account-button").props.style)).toMatchObject({
+      backgroundColor: palette.warning_allergy_bg,
+      borderColor: palette.red_medium,
+    });
+  });
+
+  it("WithdrawAccountButton은 클릭 이벤트를 전달한다", () => {
+    const onPress = jest.fn();
+    const { getByText } = render(<WithdrawAccountButton onPress={onPress} />);
+
+    fireEvent.press(getByText("회원 탈퇴"));
+    expect(onPress).toHaveBeenCalledTimes(1);
   });
 });

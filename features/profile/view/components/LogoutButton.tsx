@@ -5,14 +5,21 @@ import { palette } from "@/constants/design-tokens";
 
 export type LogoutButtonProps = {
   onPress?: () => void;
+  disabled?: boolean;
 };
 
-export function LogoutButton({ onPress }: LogoutButtonProps) {
+export function LogoutButton({ onPress, disabled = false }: LogoutButtonProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+      disabled={disabled}
+      style={({ pressed }) => [
+        styles.button,
+        disabled && styles.disabled,
+        pressed && !disabled && styles.pressed,
+      ]}
       testID="logout-button"
+      accessibilityState={{ disabled }}
     >
       <Ionicons name="log-out-outline" size={16} color={palette.red_strong} />
       <Text style={styles.label}>로그아웃</Text>
@@ -39,6 +46,9 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
+  },
+  disabled: {
+    opacity: 0.6,
   },
   label: {
     fontSize: 13,
