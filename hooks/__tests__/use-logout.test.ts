@@ -53,7 +53,7 @@ describe("useLogout", () => {
       await result.current();
     });
 
-    expect(mockDeleteDeviceToken).toHaveBeenCalledWith({ deviceToken: "mock-device-token" });
+    expect(mockDeleteDeviceToken).not.toHaveBeenCalled();
     expect(mockClearRegisteredDeviceToken).toHaveBeenCalledTimes(1);
     expect(mockClearSession).toHaveBeenCalledTimes(1);
     expect(mockClearUser).toHaveBeenCalledTimes(1);
