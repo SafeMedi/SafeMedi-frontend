@@ -95,9 +95,12 @@ export function useUpdateUserProfileMutation() {
   });
 }
 
-export function useDeleteUserAccountMutation() {
+export function useDeleteUserAccountMutation(options?: {
+  readonly onSuccess?: () => void | Promise<void>;
+}) {
   return useMutation({
     mutationKey: queryKeys.user.deleteAccount,
     mutationFn: deleteUserAccount,
+    onSuccess: options?.onSuccess,
   });
 }

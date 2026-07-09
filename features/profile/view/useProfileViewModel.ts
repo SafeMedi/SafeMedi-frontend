@@ -20,7 +20,9 @@ const AVATAR_GRADIENT_POOL = [
 
 export function useProfileViewModel() {
   const handleLogout = useLogout();
-  const deleteUserAccountMutation = useDeleteUserAccountMutation();
+  const deleteUserAccountMutation = useDeleteUserAccountMutation({
+    onSuccess: handleLogout,
+  });
 
   const profileUser = useProfileUser();
   const { data: familySummaries = [] } = useFamilyProfiles();
@@ -84,9 +86,6 @@ export function useProfileViewModel() {
         style: "destructive",
         onPress: () => {
           deleteUserAccountMutation.mutate(undefined, {
-            onSuccess: async () => {
-              await handleLogout();
-            },
             onError: async (error) => {
               const parsedError = await parseApiError(error);
               Alert.alert("탈퇴 실패", parsedError.message);
@@ -95,7 +94,7 @@ export function useProfileViewModel() {
         },
       },
     ]);
-  }, [deleteUserAccountMutation, handleLogout]);
+  }, [deleteUserAccountMutation]);
 
   return {
     profileUser,

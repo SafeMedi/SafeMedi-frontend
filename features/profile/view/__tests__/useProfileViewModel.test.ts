@@ -5,16 +5,17 @@ import { useProfileViewModel } from "../useProfileViewModel";
 
 const mockMutate = jest.fn();
 const mockHandleLogout = jest.fn(async () => {});
+const mockUseDeleteUserAccountMutation = jest.fn(() => ({
+  mutate: mockMutate,
+  isPending: false,
+}));
 
 jest.mock("@/api/queries/profile", () => ({
   useFamilyProfiles: () => ({ data: [] }),
 }));
 
 jest.mock("@/api/queries/user", () => ({
-  useDeleteUserAccountMutation: () => ({
-    mutate: mockMutate,
-    isPending: false,
-  }),
+  useDeleteUserAccountMutation: (options: unknown) => mockUseDeleteUserAccountMutation(options),
 }));
 
 jest.mock("@/hooks/use-logout", () => ({
@@ -62,6 +63,11 @@ describe("useProfileViewModel", () => {
       withdrawButton?.onPress?.();
     });
 
+    expect(mockUseDeleteUserAccountMutation).toHaveBeenCalledWith({ onSuccess: mockHandleLogout });
     expect(mockMutate).toHaveBeenCalledTimes(1);
+    expect(mockMutate).toHaveBeenCalledWith(
+      undefined,
+      expect.not.objectContaining({ onSuccess: expect.anything() }),
+    );
   });
 });

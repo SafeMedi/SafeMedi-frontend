@@ -183,15 +183,19 @@ describe("api/queries/user", () => {
   });
 
   it("useDeleteUserAccountMutation은 deleteUserAccount를 호출한다", async () => {
+    const onSuccess = jest.fn();
     mockDeleteUserAccount.mockResolvedValue({ message: "ok" });
-    const { result } = renderHook(() => useDeleteUserAccountMutation());
+    const { result } = renderHook(() => useDeleteUserAccountMutation({ onSuccess }));
     const mutation = result.current as unknown as {
       mutationKey: unknown;
       mutationFn: () => Promise<unknown>;
+      onSuccess: () => void;
     };
 
     expect(mutation.mutationKey).toEqual(queryKeys.user.deleteAccount);
     await mutation.mutationFn();
     expect(mockDeleteUserAccount).toHaveBeenCalledTimes(1);
+    mutation.onSuccess();
+    expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 });
