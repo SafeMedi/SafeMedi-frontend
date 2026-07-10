@@ -83,17 +83,17 @@ describe("api/error", () => {
     );
   });
 
-  it("서버 오류(5xx)는 서버 오류 기본 메시지를 사용한다", async () => {
+  it("fallback 메시지가 없으면 공통 기본 메시지를 사용한다", async () => {
     const error = createHttpErrorMock(500, {});
     const parsed = await parseApiError(error);
 
-    expect(parsed.message).toBe("서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+    expect(parsed.message).toBe("요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
   });
 
-  it("JSON 파싱 실패 시 상태 코드 기반 기본 메시지로 대체한다", async () => {
+  it("JSON 파싱 실패 시 fallback 메시지로 대체한다", async () => {
     const error = createHttpErrorMock(401, null, true);
-    const parsed = await parseApiError(error);
+    const parsed = await parseApiError(error, "요청을 완료하지 못했습니다.");
 
-    expect(parsed.message).toBe("로그인이 만료되었습니다. 다시 로그인해 주세요.");
+    expect(parsed.message).toBe("요청을 완료하지 못했습니다.");
   });
 });
