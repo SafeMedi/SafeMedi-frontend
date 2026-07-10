@@ -108,29 +108,13 @@ describe("app.config", () => {
     expect(result.ios?.infoPlist).toEqual(
       expect.objectContaining({
         ExistingFlag: "keep",
-        NSAppTransportSecurity: {
-          NSAllowsLocalNetworking: true,
-          NSExceptionDomains: {
-            "t1.daumcdn.net": {
-              NSIncludesSubdomains: true,
-              NSExceptionAllowsInsecureHTTPLoads: true,
-            },
-            "map.daumcdn.net": {
-              NSIncludesSubdomains: true,
-              NSExceptionAllowsInsecureHTTPLoads: true,
-            },
-            "mts.daumcdn.net": {
-              NSIncludesSubdomains: true,
-              NSExceptionAllowsInsecureHTTPLoads: true,
-            },
-          },
-        },
         NSLocationWhenInUseUsageDescription:
           "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
         NSLocationAlwaysAndWhenInUseUsageDescription:
           "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
       }),
     );
+    expect(result.ios?.infoPlist).not.toHaveProperty("NSAppTransportSecurity");
   });
 
   it("name/slug/infoPlist 값이 없으면 기본값을 채운다", () => {
@@ -155,7 +139,7 @@ describe("app.config", () => {
     );
   });
 
-  it("API HTTPS 전환 이후 cleartext·API host ATS 예외를 넣지 않는다", () => {
+  it("HTTP ATS 예외를 주입하지 않는다", () => {
     process.env.EXPO_PUBLIC_API_BASE_URL = "https://api.example.com";
     const configFactory = loadAppConfigModule().default;
 
@@ -165,26 +149,7 @@ describe("app.config", () => {
       } as unknown as ExpoConfig),
     );
 
-    expect(result.ios?.infoPlist?.NSAppTransportSecurity).toEqual({
-      NSAllowsLocalNetworking: true,
-      NSExceptionDomains: {
-        "t1.daumcdn.net": {
-          NSIncludesSubdomains: true,
-          NSExceptionAllowsInsecureHTTPLoads: true,
-        },
-        "map.daumcdn.net": {
-          NSIncludesSubdomains: true,
-          NSExceptionAllowsInsecureHTTPLoads: true,
-        },
-        "mts.daumcdn.net": {
-          NSIncludesSubdomains: true,
-          NSExceptionAllowsInsecureHTTPLoads: true,
-        },
-      },
-    });
-    expect(result.ios?.infoPlist?.NSAppTransportSecurity).not.toHaveProperty(
-      "NSAllowsArbitraryLoads",
-    );
+    expect(result.ios?.infoPlist).not.toHaveProperty("NSAppTransportSecurity");
     expect(result.plugins).toEqual(
       expect.arrayContaining([
         [

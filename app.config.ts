@@ -27,21 +27,6 @@ function stripManagedPlugins(plugins: readonly PluginEntry[]): PluginEntry[] {
   });
 }
 
-const KAKAO_MAP_ATS_EXCEPTION_DOMAINS = {
-  "t1.daumcdn.net": {
-    NSIncludesSubdomains: true,
-    NSExceptionAllowsInsecureHTTPLoads: true,
-  },
-  "map.daumcdn.net": {
-    NSIncludesSubdomains: true,
-    NSExceptionAllowsInsecureHTTPLoads: true,
-  },
-  "mts.daumcdn.net": {
-    NSIncludesSubdomains: true,
-    NSExceptionAllowsInsecureHTTPLoads: true,
-  },
-} as const;
-
 export default ({ config }: ConfigContext): ExpoConfig => {
   const existingPlugins = stripManagedPlugins((config.plugins ?? []) as PluginEntry[]);
   const existingInfoPlist = config.ios?.infoPlist ?? {};
@@ -54,17 +39,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ...config.ios,
       infoPlist: {
         ...existingInfoPlist,
-        NSAppTransportSecurity: {
-          NSAllowsLocalNetworking: true,
-          NSExceptionDomains: {
-            ...KAKAO_MAP_ATS_EXCEPTION_DOMAINS,
-          },
-        },
-        NSLocationWhenInUseUsageDescription:
-          existingInfoPlist.NSLocationWhenInUseUsageDescription ?? LOCATION_USAGE_DESCRIPTION,
-        NSLocationAlwaysAndWhenInUseUsageDescription:
-          existingInfoPlist.NSLocationAlwaysAndWhenInUseUsageDescription ??
-          LOCATION_USAGE_DESCRIPTION,
       },
     },
     plugins: [
