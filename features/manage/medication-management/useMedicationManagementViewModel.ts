@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Alert } from "react-native";
 
+import { getApiErrorMessage } from "@/api/error";
 import {
   useDeletePrescriptionMutation,
   usePrescriptionsQuery,
@@ -140,8 +141,12 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
         onSuccess: () => {
           handleCancelEditPrescriptionTitle();
         },
-        onError: () => {
-          Alert.alert("저장 실패", "처방전 이름 수정에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        onError: async (error) => {
+          const message = await getApiErrorMessage(
+            error,
+            "처방전 이름 수정에 실패했습니다. 잠시 후 다시 시도해주세요.",
+          );
+          Alert.alert("저장 실패", message);
         },
       },
     );
@@ -215,8 +220,12 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
           setEditingMedicationKey(null);
           setEditDraft(null);
         },
-        onError: () => {
-          Alert.alert("저장 실패", "약물 수정에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        onError: async (error) => {
+          const message = await getApiErrorMessage(
+            error,
+            "약물 수정에 실패했습니다. 잠시 후 다시 시도해주세요.",
+          );
+          Alert.alert("저장 실패", message);
         },
       },
     );
@@ -238,8 +247,12 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
           style: "destructive",
           onPress: () => {
             deletePrescriptionMutation.mutate(prescriptionId, {
-              onError: () => {
-                Alert.alert("삭제 실패", "처방전 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.");
+              onError: async (error) => {
+                const message = await getApiErrorMessage(
+                  error,
+                  "처방전 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.",
+                );
+                Alert.alert("삭제 실패", message);
               },
             });
           },

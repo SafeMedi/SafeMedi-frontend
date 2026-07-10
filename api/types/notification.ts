@@ -68,13 +68,3 @@ export type RegisterDeviceTokenResponse = {
   deviceId: number;
   message: string;
 };
-
-/** DELETE /api/v1/users/device-token 요청 */
-export type DeleteDeviceTokenBody = {
-  deviceToken: string;
-};
-
-/** DELETE /api/v1/users/device-token 응답 */
-export type DeleteDeviceTokenResponse = {
-  message: string;
-};

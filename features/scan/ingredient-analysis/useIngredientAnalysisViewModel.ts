@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "react-native";
-import { parseApiError } from "@/api/error";
+import { getApiErrorMessage } from "@/api/error";
 import { useAnalyzeIngredientsMutation } from "@/api/queries/ingredient-analysis";
 import { useCreatePrescriptionByScanMutation } from "@/api/queries/prescription-scan";
 import type { AnalyzeIngredientsResponse } from "@/api/types";
@@ -31,8 +31,8 @@ export function useIngredientAnalysisViewModel(): IngredientAnalysisViewModel {
       setResult(response);
       setErrorMessage(null);
     } catch (error) {
-      const parsedError = await parseApiError(error);
-      setErrorMessage(parsedError.message);
+      const message = await getApiErrorMessage(error, "성분 분석 결과를 불러오지 못했습니다.");
+      setErrorMessage(message);
     }
   }, [analyzeMutation, request]);
 
@@ -98,8 +98,11 @@ export function useIngredientAnalysisViewModel(): IngredientAnalysisViewModel {
         },
       ]);
     } catch (error) {
-      const parsedError = await parseApiError(error);
-      Alert.alert("복약 등록 실패", parsedError.message);
+      const message = await getApiErrorMessage(
+        error,
+        "복약 등록에 실패했습니다. 잠시 후 다시 시도해주세요.",
+      );
+      Alert.alert("복약 등록 실패", message);
     }
   }, [clearOcrResult, clearRequest, createMutation, request]);
 

@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react-native";
 import { router } from "expo-router";
-import { parseApiError } from "@/api/error";
+import { getApiErrorMessage } from "@/api/error";
 import { useCreatePrescriptionByScanMutation } from "@/api/queries/prescription-scan";
 import type { ScanPrescriptionDraft } from "../types";
 import { usePrescriptionScanViewModel } from "../usePrescriptionScanViewModel";
@@ -41,7 +41,7 @@ jest.mock("../usePrescriptionOcrResultStore", () => ({
 }));
 
 jest.mock("@/api/error", () => ({
-  parseApiError: jest.fn(),
+  getApiErrorMessage: jest.fn(),
 }));
 
 jest.mock("@/api/queries/prescription-scan", () => ({
@@ -53,9 +53,9 @@ describe("usePrescriptionScanViewModel", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (parseApiError as jest.MockedFunction<typeof parseApiError>).mockResolvedValue({
-      message: "서버 오류",
-    });
+    (getApiErrorMessage as jest.MockedFunction<typeof getApiErrorMessage>).mockResolvedValue(
+      "서버 오류",
+    );
     (
       useCreatePrescriptionByScanMutation as jest.MockedFunction<
         typeof useCreatePrescriptionByScanMutation

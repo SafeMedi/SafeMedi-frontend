@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { parseApiError } from "@/api/error";
+import { getApiErrorMessage } from "@/api/error";
 import { useCreatePrescriptionByScanMutation } from "@/api/queries/prescription-scan";
 import type { CreatePrescriptionRequest } from "@/api/types";
 import { extractDraftFromImageSource, extractDraftFromImageUri } from "./device-ocr";
@@ -120,8 +120,11 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
         message,
       });
     } catch (submitError) {
-      const parsedError = await parseApiError(submitError);
-      setError(new Error(parsedError.message));
+      const message = await getApiErrorMessage(
+        submitError,
+        "처방전 등록에 실패했습니다. 잠시 후 다시 시도해주세요.",
+      );
+      setError(new Error(message));
     }
   }, [createMutation, draft]);
 

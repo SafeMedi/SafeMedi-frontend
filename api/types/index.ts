@@ -1,6 +1,5 @@
 export type { SocialLoginResponse } from "./auth";
 export type {
-  MedicationHistoryRecordsResponse,
   TodayMedicationScheduleItem,
   TodayMedicationScheduleStatus,
   TodayMedicationScheduleSummary,
@@ -38,8 +37,6 @@ export type {
   MonthlyMedicationRecordsResponse,
 } from "./medications";
 export type {
-  DeleteDeviceTokenBody,
-  DeleteDeviceTokenResponse,
   DeviceType,
   NotificationItem,
   NotificationListResponse,

@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { Alert } from "react-native";
-import { parseApiError } from "@/api/error";
+import { getApiErrorMessage } from "@/api/error";
 import { useAnalyzeIngredientsMutation } from "@/api/queries/ingredient-analysis";
 import { useCreatePrescriptionByScanMutation } from "@/api/queries/prescription-scan";
 import type { AnalyzeIngredientsRequest, AnalyzeIngredientsResponse } from "@/api/types";
@@ -67,7 +67,7 @@ jest.mock("expo-router", () => ({
 }));
 
 jest.mock("@/api/error", () => ({
-  parseApiError: jest.fn(),
+  getApiErrorMessage: jest.fn(),
 }));
 
 jest.mock("@/api/queries/ingredient-analysis", () => ({
@@ -123,9 +123,9 @@ describe("useIngredientAnalysisViewModel", () => {
       isPending: false,
     } as unknown as ReturnType<typeof useCreatePrescriptionByScanMutation>);
 
-    (parseApiError as jest.MockedFunction<typeof parseApiError>).mockResolvedValue({
-      message: "네트워크 오류",
-    });
+    (getApiErrorMessage as jest.MockedFunction<typeof getApiErrorMessage>).mockResolvedValue(
+      "네트워크 오류",
+    );
   });
 
   afterAll(() => {
@@ -262,9 +262,9 @@ describe("useIngredientAnalysisViewModel", () => {
   it("복약 등록 실패 시 오류 알림을 노출한다", async () => {
     mockAnalyzeMutateAsync.mockResolvedValueOnce(BASE_ANALYSIS_RESPONSE);
     mockCreateMutateAsync.mockRejectedValueOnce(new Error("submit failed"));
-    (parseApiError as jest.MockedFunction<typeof parseApiError>).mockResolvedValueOnce({
-      message: "등록 중 오류가 발생했습니다.",
-    });
+    (getApiErrorMessage as jest.MockedFunction<typeof getApiErrorMessage>).mockResolvedValueOnce(
+      "등록 중 오류가 발생했습니다.",
+    );
 
     const { result } = renderHook(() => useIngredientAnalysisViewModel());
 

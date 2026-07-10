@@ -4,6 +4,7 @@ import { type BaseSyntheticEvent, useEffect, useMemo, useState } from "react";
 import { type Control, useForm, useWatch } from "react-hook-form";
 import { Alert } from "react-native";
 
+import { getApiErrorMessage } from "@/api/error";
 import { useUpdateUserProfileMutation } from "@/api/queries/user";
 import type { UserProfilePatchAllergyItem } from "@/api/types/user";
 import {
@@ -67,7 +68,7 @@ function createUniqueItems(items: readonly string[]): string[] {
 }
 
 function createKnownChronicConditions(items: readonly string[]): string[] {
-  const labels = new Set(chronicConditionOptions.map((option) => option.label));
+  const labels = new Set<string>(chronicConditionOptions.map((option) => option.label));
   return createUniqueItems(items).filter((item) => labels.has(item));
 }
 
@@ -200,8 +201,12 @@ export function useProfileEditViewModel(): ProfileEditViewModel {
       },
       {
         onSuccess: () => router.back(),
-        onError: () => {
-          Alert.alert("저장 실패", "프로필 저장에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        onError: async (error) => {
+          const message = await getApiErrorMessage(
+            error,
+            "프로필 저장에 실패했습니다. 잠시 후 다시 시도해주세요.",
+          );
+          Alert.alert("저장 실패", message);
         },
       },
     );
