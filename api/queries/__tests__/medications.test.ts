@@ -2,7 +2,7 @@ import { renderHook } from "@testing-library/react-native";
 
 import { fetchMedicationRecords, fetchMedicationStatistics } from "@/api/endpoints/medications";
 import { queryKeys } from "@/api/query-keys";
-import { useMedicationRecords, useMedicationStatistics } from "../medications";
+import { useMedicationDailyRecords, useMedicationStatistics } from "../medications";
 
 const mockFetchMedicationRecords = fetchMedicationRecords as jest.MockedFunction<
   typeof fetchMedicationRecords
@@ -44,8 +44,8 @@ describe("api/queries/medications", () => {
     mockAccessToken = "token";
   });
 
-  it("주간 복약 기록 쿼리는 WEEK 타입을 그대로 전달한다", async () => {
-    const { result } = renderHook(() => useMedicationRecords({ type: "WEEK", date: "2026-05-18" }));
+  it("일별 복약 기록 쿼리는 DAILY 타입을 전달한다", async () => {
+    const { result } = renderHook(() => useMedicationDailyRecords({ date: "2026-05-18" }));
     const options = result.current as unknown as {
       enabled: boolean;
       queryKey: unknown;
@@ -53,11 +53,11 @@ describe("api/queries/medications", () => {
     };
 
     expect(options.enabled).toBe(true);
-    expect(options.queryKey).toEqual(queryKeys.medications.records("WEEK", "2026-05-18"));
+    expect(options.queryKey).toEqual(queryKeys.medications.records("DAILY", "2026-05-18"));
 
     await options.queryFn();
     expect(mockFetchMedicationRecords).toHaveBeenCalledWith({
-      type: "WEEK",
+      type: "DAILY",
       date: "2026-05-18",
       familyId: undefined,
     });

@@ -46,8 +46,3 @@ export interface UpdateMedicationRecordResponse {
   readonly takenAt: string | null;
   readonly status: TodayMedicationScheduleStatus;
 }
-
-export interface MedicationHistoryRecordsResponse {
-  readonly date: string;
-  readonly items: readonly import("./medications").MedicationRecordItem[];
-}

@@ -29,7 +29,7 @@ export function useAuthRouteState(): AuthRouteState {
     if (!hydrated || !accessToken || !isError || !isUnauthorizedError(error)) {
       return;
     }
-    logout({ skipDeviceTokenDeletion: true });
+    logout();
   }, [hydrated, accessToken, isError, error, logout]);
 
   useEffect(() => {

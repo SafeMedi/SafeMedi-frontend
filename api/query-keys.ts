@@ -1,14 +1,6 @@
 export const queryKeys = {
   dashboard: {
     todayMedicationSchedules: ["dashboard", "medication-records", "today"] as const,
-    dailyMedicationRecords: (date: string) =>
-      ["dashboard", "medication-records", "daily", date] as const,
-    monthlyMedicationRecords: (date: string) =>
-      ["dashboard", "medication-records", "monthly", date] as const,
-    medicationHistoryRecords: (date: string) =>
-      ["dashboard", "medication-records", "history", date] as const,
-    medicationStatistics: (startDate: string, endDate: string) =>
-      ["dashboard", "medications", "statistics", startDate, endDate] as const,
   },
   medications: {
     all: ["medications"] as const,
