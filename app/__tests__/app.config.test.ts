@@ -108,16 +108,12 @@ describe("app.config", () => {
     expect(result.ios?.infoPlist).toEqual(
       expect.objectContaining({
         ExistingFlag: "keep",
-        NSLocationWhenInUseUsageDescription:
-          "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
-        NSLocationAlwaysAndWhenInUseUsageDescription:
-          "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
       }),
     );
     expect(result.ios?.infoPlist).not.toHaveProperty("NSAppTransportSecurity");
   });
 
-  it("name/slug/infoPlist 값이 없으면 기본값을 채운다", () => {
+  it("name/slug가 없으면 기본값을 채운다", () => {
     process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY = "";
     const configFactory = loadAppConfigModule().default;
 
@@ -129,13 +125,19 @@ describe("app.config", () => {
 
     expect(result.name).toBe("safeMedi");
     expect(result.slug).toBe("safeMedi");
-    expect(result.ios?.infoPlist).toEqual(
-      expect.objectContaining({
-        NSLocationWhenInUseUsageDescription:
-          "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
-        NSLocationAlwaysAndWhenInUseUsageDescription:
-          "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
-      }),
+    expect(result.ios?.infoPlist).toEqual({});
+    expect(result.plugins).toEqual(
+      expect.arrayContaining([
+        [
+          "expo-location",
+          {
+            locationAlwaysAndWhenInUsePermission:
+              "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
+            locationWhenInUsePermission:
+              "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
+          },
+        ],
+      ]),
     );
   });
 
