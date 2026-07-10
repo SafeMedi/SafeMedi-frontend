@@ -6,7 +6,7 @@ import { palette } from "@/constants/design-tokens";
 import type { MapCoordinate, MapFacilityMarker, MapRegion } from "../types";
 import { buildKakaoMapHtml, regionToKakaoMapLevel } from "./kakaoMapHtml";
 
-const MAP_WEBVIEW_BASE_URL = Platform.OS === "ios" ? "http://127.0.0.1" : "http://localhost";
+const MAP_WEBVIEW_BASE_URL = "https://127.0.0.1";
 
 const RELAYOUT_INJECT_SCRIPT = `
   (function () {

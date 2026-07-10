@@ -108,32 +108,12 @@ describe("app.config", () => {
     expect(result.ios?.infoPlist).toEqual(
       expect.objectContaining({
         ExistingFlag: "keep",
-        NSAppTransportSecurity: {
-          NSAllowsLocalNetworking: true,
-          NSExceptionDomains: {
-            "t1.daumcdn.net": {
-              NSIncludesSubdomains: true,
-              NSExceptionAllowsInsecureHTTPLoads: true,
-            },
-            "map.daumcdn.net": {
-              NSIncludesSubdomains: true,
-              NSExceptionAllowsInsecureHTTPLoads: true,
-            },
-            "mts.daumcdn.net": {
-              NSIncludesSubdomains: true,
-              NSExceptionAllowsInsecureHTTPLoads: true,
-            },
-          },
-        },
-        NSLocationWhenInUseUsageDescription:
-          "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
-        NSLocationAlwaysAndWhenInUseUsageDescription:
-          "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
       }),
     );
+    expect(result.ios?.infoPlist).not.toHaveProperty("NSAppTransportSecurity");
   });
 
-  it("name/slug/infoPlist 값이 없으면 기본값을 채운다", () => {
+  it("name/slug가 없으면 기본값을 채운다", () => {
     process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY = "";
     const configFactory = loadAppConfigModule().default;
 
@@ -145,18 +125,24 @@ describe("app.config", () => {
 
     expect(result.name).toBe("safeMedi");
     expect(result.slug).toBe("safeMedi");
-    expect(result.ios?.infoPlist).toEqual(
-      expect.objectContaining({
-        NSLocationWhenInUseUsageDescription:
-          "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
-        NSLocationAlwaysAndWhenInUseUsageDescription:
-          "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
-      }),
+    expect(result.ios?.infoPlist).toEqual({});
+    expect(result.plugins).toEqual(
+      expect.arrayContaining([
+        [
+          "expo-location",
+          {
+            locationAlwaysAndWhenInUsePermission:
+              "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
+            locationWhenInUsePermission:
+              "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.",
+          },
+        ],
+      ]),
     );
   });
 
-  it("http API base URL은 host별 ATS 예외만 추가하고 전역 cleartext는 허용하지 않는다", () => {
-    process.env.EXPO_PUBLIC_API_BASE_URL = "http://localhost:8080";
+  it("HTTP ATS 예외를 주입하지 않는다", () => {
+    process.env.EXPO_PUBLIC_API_BASE_URL = "https://api.example.com";
     const configFactory = loadAppConfigModule().default;
 
     const result = configFactory(
@@ -165,44 +151,18 @@ describe("app.config", () => {
       } as unknown as ExpoConfig),
     );
 
-    expect(result.ios?.infoPlist?.NSAppTransportSecurity).toEqual(
-      expect.objectContaining({
-        NSAllowsLocalNetworking: true,
-        NSExceptionDomains: expect.objectContaining({
-          localhost: {
-            NSExceptionAllowsInsecureHTTPLoads: true,
-          },
-        }),
-      }),
-    );
-    expect(result.ios?.infoPlist?.NSAppTransportSecurity).not.toHaveProperty(
-      "NSAllowsArbitraryLoads",
-    );
+    expect(result.ios?.infoPlist).not.toHaveProperty("NSAppTransportSecurity");
     expect(result.plugins).toEqual(
       expect.arrayContaining([
         [
           "expo-build-properties",
           {
             android: {
-              usesCleartextTraffic: true,
               extraMavenRepos: ["https://devrepo.kakao.com/nexus/content/groups/public/"],
             },
           },
         ],
       ]),
     );
-  });
-
-  it("http API base URL이 잘못되면 config 생성에 실패한다", () => {
-    process.env.EXPO_PUBLIC_API_BASE_URL = "http://";
-    const configFactory = loadAppConfigModule().default;
-
-    expect(() =>
-      configFactory(
-        createConfigContext({
-          plugins: [],
-        } as unknown as ExpoConfig),
-      ),
-    ).toThrow();
   });
 });

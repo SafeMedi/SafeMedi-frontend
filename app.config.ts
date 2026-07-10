@@ -27,44 +27,9 @@ function stripManagedPlugins(plugins: readonly PluginEntry[]): PluginEntry[] {
   });
 }
 
-const KAKAO_MAP_ATS_EXCEPTION_DOMAINS = {
-  "t1.daumcdn.net": {
-    NSIncludesSubdomains: true,
-    NSExceptionAllowsInsecureHTTPLoads: true,
-  },
-  "map.daumcdn.net": {
-    NSIncludesSubdomains: true,
-    NSExceptionAllowsInsecureHTTPLoads: true,
-  },
-  "mts.daumcdn.net": {
-    NSIncludesSubdomains: true,
-    NSExceptionAllowsInsecureHTTPLoads: true,
-  },
-} as const;
-
-function getApiHostAtsException(): Record<string, { NSExceptionAllowsInsecureHTTPLoads: true }> {
-  const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
-  if (!baseUrl?.startsWith("http://")) {
-    return {};
-  }
-
-  const host = new URL(baseUrl).hostname;
-  if (!host) {
-    throw new Error("[app.config] EXPO_PUBLIC_API_BASE_URL must include a host for http:// URLs");
-  }
-
-  return {
-    [host]: {
-      NSExceptionAllowsInsecureHTTPLoads: true,
-    },
-  };
-}
-
 export default ({ config }: ConfigContext): ExpoConfig => {
   const existingPlugins = stripManagedPlugins((config.plugins ?? []) as PluginEntry[]);
   const existingInfoPlist = config.ios?.infoPlist ?? {};
-  const apiHostAtsException = getApiHostAtsException();
-  const apiHostAllowsInsecureHttp = Object.keys(apiHostAtsException).length > 0;
 
   return {
     ...config,
@@ -74,18 +39,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ...config.ios,
       infoPlist: {
         ...existingInfoPlist,
-        NSAppTransportSecurity: {
-          NSAllowsLocalNetworking: true,
-          NSExceptionDomains: {
-            ...KAKAO_MAP_ATS_EXCEPTION_DOMAINS,
-            ...apiHostAtsException,
-          },
-        },
-        NSLocationWhenInUseUsageDescription:
-          existingInfoPlist.NSLocationWhenInUseUsageDescription ?? LOCATION_USAGE_DESCRIPTION,
-        NSLocationAlwaysAndWhenInUseUsageDescription:
-          existingInfoPlist.NSLocationAlwaysAndWhenInUseUsageDescription ??
-          LOCATION_USAGE_DESCRIPTION,
       },
     },
     plugins: [
@@ -104,7 +57,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         EXPO_BUILD_PROPERTIES_PLUGIN_NAME,
         {
           android: {
-            ...(apiHostAllowsInsecureHttp ? { usesCleartextTraffic: true } : {}),
             extraMavenRepos: [KAKAO_MAVEN_REPOSITORY],
           },
         },
