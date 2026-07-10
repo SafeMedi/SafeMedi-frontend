@@ -2,7 +2,7 @@ import { login } from "@react-native-seoul/kakao-login";
 import { useCallback, useState } from "react";
 import { Alert } from "react-native";
 
-import { parseApiError } from "@/api/error";
+import { getApiErrorMessage } from "@/api/error";
 import { useLoginMutation } from "@/api/queries/user";
 
 export interface LoginViewModel {
@@ -40,8 +40,8 @@ export function useLoginViewModel(): LoginViewModel {
         return;
       }
 
-      const parsedError = await parseApiError(error);
-      Alert.alert("로그인 실패", parsedError.message);
+      const message = await getApiErrorMessage(error, "로그인 처리 중 오류가 발생했습니다.");
+      Alert.alert("로그인 실패", message);
     } finally {
       setIsKakaoLoggingIn(false);
     }

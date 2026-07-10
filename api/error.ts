@@ -1,19 +1,32 @@
 import { isHTTPError } from "ky";
 
-type ErrorResponseBody = {
-  code?: string;
-  message?: string;
-};
+export type ApiErrorCodePrefix =
+  | "AUTH"
+  | "FAMILY"
+  | "MEDICATION"
+  | "NOTIFICATION"
+  | "PRESCRIPTION"
+  | "SYS"
+  | "TOKEN"
+  | "USER"
+  | "VAL";
+
+export type ApiErrorCode = `${ApiErrorCodePrefix}_${string}` | (string & {});
+
+export interface ApiErrorResponseBody {
+  readonly code?: ApiErrorCode;
+  readonly message?: string;
+}
 
 export type ApiErrorInfo = {
   status?: number;
-  code?: string;
+  code?: ApiErrorCode;
   message: string;
 };
 
 const FALLBACK_MESSAGE = "요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
 
-function toErrorResponseBody(value: unknown): ErrorResponseBody {
+function toErrorResponseBody(value: unknown): ApiErrorResponseBody {
   if (!value || typeof value !== "object") return {};
   const record = value as Record<string, unknown>;
   return {
@@ -31,13 +44,16 @@ export function isUnauthorizedError(error: unknown): boolean {
   return getHttpStatus(error) === 401;
 }
 
-export async function parseApiError(error: unknown): Promise<ApiErrorInfo> {
+export async function parseApiError(
+  error: unknown,
+  fallbackMessage?: string,
+): Promise<ApiErrorInfo> {
   if (!isHTTPError(error)) {
-    return { message: FALLBACK_MESSAGE };
+    return { message: fallbackMessage ?? FALLBACK_MESSAGE };
   }
 
   const status = error.response.status;
-  let code: string | undefined;
+  let code: ApiErrorCode | undefined;
   let message: string | undefined;
 
   try {
@@ -49,7 +65,9 @@ export async function parseApiError(error: unknown): Promise<ApiErrorInfo> {
   }
 
   if (!message) {
-    if (status >= 500) {
+    if (fallbackMessage) {
+      message = fallbackMessage;
+    } else if (status >= 500) {
       message = "서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.";
     } else if (status === 401) {
       message = "로그인이 만료되었습니다. 다시 로그인해 주세요.";
@@ -59,4 +77,9 @@ export async function parseApiError(error: unknown): Promise<ApiErrorInfo> {
   }
 
   return { status, code, message };
+}
+
+export async function getApiErrorMessage(error: unknown, fallbackMessage: string): Promise<string> {
+  const parsedError = await parseApiError(error, fallbackMessage);
+  return parsedError.message;
 }

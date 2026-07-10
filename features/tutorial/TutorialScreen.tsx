@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import { Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, XStack, YStack } from "tamagui";
-import { parseApiError } from "@/api/error";
+import { getApiErrorMessage } from "@/api/error";
 import { useCompleteTutorialMutation } from "@/api/queries/user";
 import { AuthGateView } from "@/components/AuthGateView";
 import { PillButton } from "@/components/ui/PillButton";
@@ -63,8 +63,8 @@ export function TutorialScreen() {
       await completeTutorial.mutateAsync(userToTutorialRegistrationBody(latest));
       router.replace("/(tabs)/dashboard");
     } catch (error) {
-      const parsedError = await parseApiError(error);
-      Alert.alert("오류", parsedError.message);
+      const message = await getApiErrorMessage(error, "튜토리얼 저장에 실패했습니다.");
+      Alert.alert("오류", message);
     }
   };
 

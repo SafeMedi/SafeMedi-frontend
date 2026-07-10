@@ -2,7 +2,7 @@ import { type KakaoOAuthToken, login } from "@react-native-seoul/kakao-login";
 import { act, renderHook } from "@testing-library/react-native";
 import { Alert } from "react-native";
 
-import { parseApiError } from "@/api/error";
+import { getApiErrorMessage } from "@/api/error";
 import { useLoginMutation } from "@/api/queries/user";
 
 import { useLoginViewModel } from "../useLoginViewModel";
@@ -12,7 +12,7 @@ jest.mock("@react-native-seoul/kakao-login", () => ({
 }));
 
 jest.mock("@/api/error", () => ({
-  parseApiError: jest.fn(),
+  getApiErrorMessage: jest.fn(),
 }));
 
 jest.mock("@/api/queries/user", () => ({
@@ -29,7 +29,7 @@ const mockKakaoOAuthToken: KakaoOAuthToken = {
   refreshTokenExpiresAt: new Date(),
   scopes: [],
 };
-const mockParseApiError = parseApiError as jest.MockedFunction<typeof parseApiError>;
+const mockGetApiErrorMessage = getApiErrorMessage as jest.MockedFunction<typeof getApiErrorMessage>;
 const mockUseLoginMutation = useLoginMutation as jest.MockedFunction<typeof useLoginMutation>;
 
 describe("useLoginViewModel", () => {
@@ -85,7 +85,7 @@ describe("useLoginViewModel", () => {
   it("백엔드 로그인 실패 시 Alert를 표시한다", async () => {
     mockLogin.mockResolvedValue(mockKakaoOAuthToken);
     mockMutateAsync.mockRejectedValue(new Error("network error"));
-    mockParseApiError.mockResolvedValue({ message: "서버 오류" });
+    mockGetApiErrorMessage.mockResolvedValue("서버 오류");
 
     const { result } = renderHook(() => useLoginViewModel());
 
@@ -94,6 +94,10 @@ describe("useLoginViewModel", () => {
     });
 
     expect(mockAlert).toHaveBeenCalledWith("로그인 실패", "서버 오류");
+    expect(mockGetApiErrorMessage).toHaveBeenCalledWith(
+      expect.any(Error),
+      "로그인 처리 중 오류가 발생했습니다.",
+    );
   });
 
   it("로그인 진행 중에는 isLoggingIn이 true이다", async () => {

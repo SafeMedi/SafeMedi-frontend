@@ -2,7 +2,7 @@ import { type Href, router } from "expo-router";
 import { useCallback, useMemo } from "react";
 import { Alert } from "react-native";
 
-import { parseApiError } from "@/api/error";
+import { getApiErrorMessage } from "@/api/error";
 import { useFamilyProfiles } from "@/api/queries/profile";
 import { useDeleteUserAccountMutation } from "@/api/queries/user";
 import { useLogout } from "@/hooks/use-logout";
@@ -87,8 +87,11 @@ export function useProfileViewModel() {
         onPress: () => {
           deleteUserAccountMutation.mutate(undefined, {
             onError: async (error) => {
-              const parsedError = await parseApiError(error);
-              Alert.alert("탈퇴 실패", parsedError.message);
+              const message = await getApiErrorMessage(
+                error,
+                "회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해주세요.",
+              );
+              Alert.alert("탈퇴 실패", message);
             },
           });
         },

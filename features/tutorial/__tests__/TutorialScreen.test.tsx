@@ -140,7 +140,7 @@ jest.mock("@/utils/user-mapper", () => ({
 }));
 
 jest.mock("@/api/error", () => ({
-  parseApiError: (...args: unknown[]) => mockParseApiError(...args),
+  getApiErrorMessage: (...args: unknown[]) => mockParseApiError(...args),
 }));
 
 function mockCreateStep(label: "Step1" | "Step2" | "Step3" | "Step4") {
@@ -179,7 +179,7 @@ describe("TutorialScreen", () => {
     stepSubmitByLabel.Step3 = async () => true;
     stepSubmitByLabel.Step4 = async () => true;
     mockMutateAsync.mockResolvedValue({});
-    mockParseApiError.mockResolvedValue({ message: "튜토리얼 저장 실패" });
+    mockParseApiError.mockResolvedValue("튜토리얼 저장 실패");
   });
 
   it("auth loading 상태면 AuthGateView를 표시한다", () => {

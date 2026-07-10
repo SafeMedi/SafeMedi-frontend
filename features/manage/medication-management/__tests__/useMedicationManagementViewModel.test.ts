@@ -220,12 +220,14 @@ describe("데이터가 있으면 데이터를 반환한다.", () => {
     expect(result.current.editDraft).toBeNull();
   });
 
-  it("약물 수정 실패 시 편집 상태를 유지하고 오류를 안내한다", () => {
+  it("약물 수정 실패 시 편집 상태를 유지하고 오류를 안내한다", async () => {
     const { result } = renderHook(() => useMedicationManagementViewModel());
     act(() => result.current.startEditMedication(11, 101));
     act(() => result.current.saveEditMedication());
-    const options = mockUpdateMutate.mock.calls[0]?.[1] as { onError?: () => void };
-    act(() => options.onError?.());
+    const options = mockUpdateMutate.mock.calls[0]?.[1] as { onError?: (error: unknown) => void };
+    await act(async () => {
+      await options.onError?.(new Error("failed"));
+    });
     expect(result.current.editDraft).not.toBeNull();
     expect(Alert.alert).toHaveBeenCalledWith("저장 실패", expect.any(String));
   });

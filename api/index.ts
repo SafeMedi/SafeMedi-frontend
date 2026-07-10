@@ -1,7 +1,7 @@
 export { apiConfig } from "@/constants/api-config";
 export { api } from "./client";
-export type { ApiErrorInfo } from "./error";
-export { getHttpStatus, isUnauthorizedError, parseApiError } from "./error";
+export type { ApiErrorCode, ApiErrorInfo, ApiErrorResponseBody } from "./error";
+export { getApiErrorMessage, getHttpStatus, isUnauthorizedError, parseApiError } from "./error";
 export {
   type HttpMethod,
   type MockHandler,
