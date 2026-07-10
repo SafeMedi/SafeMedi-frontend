@@ -256,22 +256,15 @@ export function useDashboardViewModel(): DashboardViewModel {
         recordIds: prescription.recordIds,
         body: { status: "SUCCESS" },
       })
-      .then(async (results) => {
+      .then((results) => {
         const fulfilledCount = results.filter((result) => result.status === "fulfilled").length;
         const rejectedCount = results.length - fulfilledCount;
-        const firstRejected = results.find((result) => result.status === "rejected");
 
-        if (rejectedCount > 0 && fulfilledCount > 0) {
+        if (rejectedCount > 0) {
           Alert.alert(
             "복약 처리 일부 실패",
             `${results.length}건 중 ${fulfilledCount}건은 완료되었으나 ${rejectedCount}건에서 오류가 발생했습니다.`,
           );
-        } else if (rejectedCount > 0) {
-          const message = await getApiErrorMessage(
-            firstRejected?.reason,
-            "복약 완료 처리 중 오류가 발생했습니다.",
-          );
-          Alert.alert("복약 처리 실패", message);
         }
       })
       .catch(async (error) => {

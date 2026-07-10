@@ -44,6 +44,12 @@ interface MarkMedicationRecordsMutationContext {
   readonly previousData: TodayMedicationSchedulesResponse | undefined;
 }
 
+function isPromiseRejectedResult<T>(
+  result: PromiseSettledResult<T>,
+): result is PromiseRejectedResult {
+  return result.status === "rejected";
+}
+
 export function useMarkMedicationRecordsMutation() {
   const queryClient = useQueryClient();
 
@@ -55,7 +61,7 @@ export function useMarkMedicationRecordsMutation() {
 
       const isAllRejected = results.every((result) => result.status === "rejected");
       if (isAllRejected) {
-        const firstRejected = results.find((result) => result.status === "rejected");
+        const firstRejected = results.find(isPromiseRejectedResult);
         throw firstRejected?.reason ?? new Error("복약 완료 처리에 실패했습니다.");
       }
 

@@ -65,13 +65,7 @@ export async function parseApiError(
   }
 
   if (!message) {
-    if (status === 401) {
-      message = "로그인이 만료되었습니다. 다시 로그인해 주세요.";
-    } else if (status === 500) {
-      message = "서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.";
-    } else {
-      message = FALLBACK_MESSAGE;
-    }
+    message = fallbackMessage ?? FALLBACK_MESSAGE;
   }
 
   return { status, code, message };
