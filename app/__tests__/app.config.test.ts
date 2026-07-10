@@ -155,8 +155,8 @@ describe("app.config", () => {
     );
   });
 
-  it("http API base URL은 host별 ATS 예외만 추가하고 전역 cleartext는 허용하지 않는다", () => {
-    process.env.EXPO_PUBLIC_API_BASE_URL = "http://localhost:8080";
+  it("API HTTPS 전환 이후 cleartext·API host ATS 예외를 넣지 않는다", () => {
+    process.env.EXPO_PUBLIC_API_BASE_URL = "https://api.example.com";
     const configFactory = loadAppConfigModule().default;
 
     const result = configFactory(
@@ -165,16 +165,23 @@ describe("app.config", () => {
       } as unknown as ExpoConfig),
     );
 
-    expect(result.ios?.infoPlist?.NSAppTransportSecurity).toEqual(
-      expect.objectContaining({
-        NSAllowsLocalNetworking: true,
-        NSExceptionDomains: expect.objectContaining({
-          localhost: {
-            NSExceptionAllowsInsecureHTTPLoads: true,
-          },
-        }),
-      }),
-    );
+    expect(result.ios?.infoPlist?.NSAppTransportSecurity).toEqual({
+      NSAllowsLocalNetworking: true,
+      NSExceptionDomains: {
+        "t1.daumcdn.net": {
+          NSIncludesSubdomains: true,
+          NSExceptionAllowsInsecureHTTPLoads: true,
+        },
+        "map.daumcdn.net": {
+          NSIncludesSubdomains: true,
+          NSExceptionAllowsInsecureHTTPLoads: true,
+        },
+        "mts.daumcdn.net": {
+          NSIncludesSubdomains: true,
+          NSExceptionAllowsInsecureHTTPLoads: true,
+        },
+      },
+    });
     expect(result.ios?.infoPlist?.NSAppTransportSecurity).not.toHaveProperty(
       "NSAllowsArbitraryLoads",
     );
@@ -184,25 +191,11 @@ describe("app.config", () => {
           "expo-build-properties",
           {
             android: {
-              usesCleartextTraffic: true,
               extraMavenRepos: ["https://devrepo.kakao.com/nexus/content/groups/public/"],
             },
           },
         ],
       ]),
     );
-  });
-
-  it("http API base URL이 잘못되면 config 생성에 실패한다", () => {
-    process.env.EXPO_PUBLIC_API_BASE_URL = "http://";
-    const configFactory = loadAppConfigModule().default;
-
-    expect(() =>
-      configFactory(
-        createConfigContext({
-          plugins: [],
-        } as unknown as ExpoConfig),
-      ),
-    ).toThrow();
   });
 });
