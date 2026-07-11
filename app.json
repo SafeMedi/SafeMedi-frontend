@@ -4,7 +4,7 @@
     "slug": "safeMedi",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/android/android-icon.png",
     "scheme": "safemedi",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -19,8 +19,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android/android-icon.png"
+        "backgroundColor": "#6FAFBD",
+        "foregroundImage": "./assets/android/android-icon-foreground.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -52,7 +52,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/icon.png",
+          "icon": "./assets/android/android-icon.png",
           "color": "#00C950"
         }
       ],
