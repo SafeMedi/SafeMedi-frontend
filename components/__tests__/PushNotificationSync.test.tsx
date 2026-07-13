@@ -1,4 +1,5 @@
 import { render, waitFor } from "@testing-library/react-native";
+import { queryKeys } from "@/api/query-keys";
 import { PushNotificationSync } from "../PushNotificationSync";
 
 const mockPostDeviceToken = jest.fn();
@@ -83,7 +84,7 @@ describe("PushNotificationSync", () => {
     expect(mockRegisterPushTokenWithBackend).not.toHaveBeenCalled();
   });
 
-  it("로그인 상태면 디바이스 토큰을 등록하고 푸시 수신 시 알림 쿼리를 무효화한다", async () => {
+  it("로그인 상태면 디바이스 토큰을 등록하고 푸시 수신 시 알림/대시보드 쿼리를 무효화한다", async () => {
     const { unmount } = render(<PushNotificationSync />);
 
     await waitFor(() =>
@@ -97,7 +98,10 @@ describe("PushNotificationSync", () => {
     responseListener?.();
 
     expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ["notification"] });
-    expect(mockInvalidateQueries).toHaveBeenCalledTimes(2);
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: queryKeys.dashboard.todayMedicationSchedules,
+    });
+    expect(mockInvalidateQueries).toHaveBeenCalledTimes(4);
 
     unmount();
     expect(mockReceivedRemove).toHaveBeenCalledTimes(1);
