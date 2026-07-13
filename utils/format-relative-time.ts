@@ -1,11 +1,9 @@
 const MINUTE_MS = 60 * 1000;
 const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;
-const TIMEZONE_SUFFIX_PATTERN = /(Z|[+-]\d{2}:?\d{2})$/i;
 
 function parseDateTime(value: string): Date | null {
-  const normalized = TIMEZONE_SUFFIX_PATTERN.test(value) ? value : `${value}Z`;
-  const parsed = new Date(normalized);
+  const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
