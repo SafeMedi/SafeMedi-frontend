@@ -14,12 +14,12 @@ export type SettingsSectionProps = {
 
 export function SettingsSection({ onPrivacyPress }: SettingsSectionProps) {
   const { data: settings } = useNotificationSettings();
-  const { mutate: updateSettings, isPending: isUpdatingSettings } = useUpdateNotificationSettings();
+  const { mutate: updateSettings } = useUpdateNotificationSettings();
   const isSettingsReady = !!settings;
   const medicationAlarm = settings?.isMyReminderOn ?? true;
   const familyAlarm = settings?.isFamilyReminderOn ?? true;
   const missedAlarm = settings?.isMissedAlertOn ?? true;
-  const isToggleDisabled = isUpdatingSettings || !isSettingsReady;
+  const isToggleDisabled = !isSettingsReady;
 
   const handleToggleSetting = (
     key: "isMyReminderOn" | "isFamilyReminderOn" | "isMissedAlertOn",

@@ -117,7 +117,7 @@ describe("SettingsSection", () => {
     expect(mockPrivacyPress).toHaveBeenCalledTimes(1);
   });
 
-  it("설정 데이터가 없거나 업데이트 중이면 토글이 비활성화된다", () => {
+  it("설정 데이터가 없을 때만 토글을 비활성화한다", () => {
     mockSettings = undefined;
     const { getByLabelText, rerender } = render(<SettingsSection />);
     fireEvent.press(getByLabelText("복약 알림 토글"));
@@ -127,6 +127,6 @@ describe("SettingsSection", () => {
     mockIsPending = true;
     rerender(<SettingsSection />);
     fireEvent.press(getByLabelText("복약 알림 토글"));
-    expect(mockMutate).not.toHaveBeenCalled();
+    expect(mockMutate).toHaveBeenCalledWith({ isMyReminderOn: false });
   });
 });
