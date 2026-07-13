@@ -86,15 +86,17 @@ describe("튜토리얼 사용자 매핑", () => {
       bloodType: "AB-",
       diseases: [
         { code: "COND002", name: "고혈압" },
+        { code: "J45", name: "천식" },
         { code: "G43", name: "편두통" },
       ],
       allergies: [],
       isTutorialCompleted: true,
     });
 
-    expect(user.chronicConditions).toEqual(["고혈압", "편두통"]);
+    expect(user.chronicConditions).toEqual(["고혈압", "천식", "편두통"]);
     expect(user.chronicConditionMappings).toEqual({
       고혈압: "COND002",
+      천식: "J45",
       편두통: "G43",
     });
   });

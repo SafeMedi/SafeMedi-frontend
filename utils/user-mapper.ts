@@ -179,7 +179,7 @@ function profileDiseasesToUserFields(
   for (const disease of diseases) {
     const representative = findChronicConditionByCodeOrName(disease.code, disease.name);
     const label = representative?.label ?? disease.name ?? disease.code;
-    const code = representative?.code ?? disease.code ?? label;
+    const code = disease.code ?? representative?.code ?? label;
 
     if (!label || seen.has(label)) continue;
     seen.add(label);
