@@ -381,6 +381,67 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
     };
   });
 
+  registry.register("GET", apiPaths.drugAllergiesSearch, (ctx) => {
+    const keyword = ctx.searchParams.get("keyword") ?? "";
+    if (keyword.trim().length < 1) {
+      return Response.json(
+        { code: "VAL_007", message: "약물 알러지 검색어를 입력해야 합니다." },
+        { status: 400 },
+      );
+    }
+    const page = Number(ctx.searchParams.get("page") ?? "0");
+    const size = Number(ctx.searchParams.get("size") ?? "10");
+    const normalizedKeyword = keyword.trim().toLowerCase();
+    const allResults = [
+      {
+        allergyType: "ATC_GROUP",
+        allergyValue: "J01C",
+        allergyName: "페니실린류 베타락탐계 항박테리아제",
+      },
+      { allergyType: "ATC_GROUP", allergyValue: "N02", allergyName: "진통제" },
+      { allergyType: "ATC_GROUP", allergyValue: "N02B", allergyName: "기타 진통제 및 해열제" },
+    ];
+    const matched = allResults.filter((item) =>
+      item.allergyName.toLowerCase().includes(normalizedKeyword),
+    );
+    const start = page * size;
+    return {
+      content: matched.slice(start, start + size),
+      page,
+      size,
+      isLast: start + size >= matched.length,
+    };
+  });
+
+  registry.register("GET", apiPaths.diseasesSearch, (ctx) => {
+    const keyword = ctx.searchParams.get("keyword") ?? "";
+    if (keyword.trim().length < 2) {
+      return Response.json(
+        { code: "VAL_006", message: "기저질환 검색어는 최소 2글자 이상 입력해야 합니다." },
+        { status: 400 },
+      );
+    }
+    const page = Number(ctx.searchParams.get("page") ?? "0");
+    const size = Number(ctx.searchParams.get("size") ?? "10");
+    const normalizedKeyword = keyword.trim().toLowerCase();
+    const allResults = [
+      { diseaseCode: "I10", diseaseName: "본태성(원발성) 고혈압" },
+      { diseaseCode: "I11", diseaseName: "고혈압성 심장병" },
+      { diseaseCode: "E11", diseaseName: "2형 당뇨병" },
+      { diseaseCode: "J45", diseaseName: "천식" },
+    ];
+    const matched = allResults.filter((item) =>
+      item.diseaseName.toLowerCase().includes(normalizedKeyword),
+    );
+    const start = page * size;
+    return {
+      content: matched.slice(start, start + size),
+      page,
+      size,
+      isLast: start + size >= matched.length,
+    };
+  });
+
   // --- Prescriptions ---
   registry.register("GET", apiPaths.prescriptions, () => ({
     content: clonePrescriptions().map((prescription) => ({

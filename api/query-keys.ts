@@ -20,6 +20,9 @@ export const queryKeys = {
   profile: {
     families: ["profile", "families"] as const,
     notificationSettings: ["profile", "notification-settings"] as const,
+    searchDrugAllergies: (keyword: string) =>
+      ["profile", "drug-allergies", "search", keyword] as const,
+    searchDiseases: (keyword: string) => ["profile", "diseases", "search", keyword] as const,
   },
   prescriptions: {
     list: ["prescriptions", "list"] as const,

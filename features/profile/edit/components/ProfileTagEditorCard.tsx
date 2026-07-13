@@ -19,7 +19,7 @@ export type ProfileTagSearchResult = {
   readonly id: string;
   readonly label: string;
   readonly meta?: string;
-  readonly type: "ATC_GROUP" | "INGREDIENT" | "FOOD";
+  readonly type: "ATC_GROUP" | "INGREDIENT" | "FOOD" | "DISEASE";
   readonly value: string;
   readonly name: string;
 };

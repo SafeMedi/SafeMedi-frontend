@@ -34,10 +34,38 @@ export type RepresentativeAllergyOption = {
 };
 
 export const representativeMedicineAllergyOptions = [
-  { label: "페니실린", type: "ATC_GROUP", value: "J01CA04", name: "페니실린계 항생제" },
-  { label: "아세트아미노펜", type: "INGREDIENT", value: "M040353", name: "아세트아미노펜" },
-  { label: "나프록센 진통제", type: "INGREDIENT", value: "M050116", name: "나프록센 진통제" },
-  { label: "페니라민", type: "ATC_GROUP", value: "R06AB04", name: "페니라민 항생제" },
+  {
+    label: "기타 진통제 및 해열제",
+    type: "ATC_GROUP",
+    value: "N02B",
+    name: "기타 진통제 및 해열제",
+  },
+  { label: "국소용 항생제", type: "ATC_GROUP", value: "D06A", name: "국소용 항생제" },
+  {
+    label: "페니실린류 베타릭탐계 항박테리아제",
+    type: "ATC_GROUP",
+    value: "J01C",
+    name: "페니실린류 베타릭탐계 항박테리아제",
+  },
+  { label: "기침 및 감기 치료제", type: "ATC_GROUP", value: "R05", name: "기침 및 감기 치료제" },
+  {
+    label: "요오드화 방사선 조영제",
+    type: "ATC_GROUP",
+    value: "V08A",
+    name: "요오드화 방사선 조영제",
+  },
+  {
+    label: "항경련제",
+    type: "ATC_GROUP",
+    value: "N03",
+    name: "항경련제",
+  },
+  {
+    label: "통풍 치료제",
+    type: "ATC_GROUP",
+    value: "M04",
+    name: "통풍 치료제",
+  },
 ] as const satisfies readonly RepresentativeAllergyOption[];
 
 export const representativeFoodAllergyOptions = [
@@ -54,12 +82,12 @@ export type ChronicConditionOption = {
 };
 
 export const chronicConditionOptions = [
-  { emoji: "❤️", label: "고혈압", code: "I10" },
-  { emoji: "🩸", label: "당뇨병", code: "E11" },
-  { emoji: "🫁", label: "천식", code: "J45" },
-  { emoji: "🫘", label: "신장질환", code: "N18" },
-  { emoji: "🫀", label: "간질환", code: "K76" },
-  { emoji: "💓", label: "심장질환", code: "I25" },
+  { emoji: "❤️", label: "당뇨병", code: "COND001" },
+  { emoji: "🩸", label: "고혈압", code: "COND002" },
+  { emoji: "🫁", label: "천식", code: "COND010" },
+  { emoji: "🫘", label: "신장질환", code: "COND013" },
+  { emoji: "🫀", label: "간질환", code: "COND012" },
+  { emoji: "💓", label: "심장질환", code: "COND004" },
 ] as const satisfies readonly ChronicConditionOption[];
 
 export const profileEditQuickItems = {

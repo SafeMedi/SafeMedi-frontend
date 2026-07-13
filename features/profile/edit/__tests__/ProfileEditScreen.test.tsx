@@ -1,12 +1,16 @@
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
-import type { useSearchDrugsQuery } from "@/api/queries/drugs";
+import type {
+  useSearchDiseasesQuery,
+  useSearchDrugAllergiesQuery,
+} from "@/api/queries/health-profile";
 import type { User } from "@/stores/userStore";
 import { ProfileEditScreen } from "../ProfileEditScreen";
 
 const mockBack = jest.fn();
 const mockMutate = jest.fn();
-const mockUseSearchDrugsQuery = jest.fn();
+const mockUseSearchDrugAllergiesQuery = jest.fn();
+const mockUseSearchDiseasesQuery = jest.fn();
 
 const mockUser: User = {
   id: "me",
@@ -50,8 +54,9 @@ jest.mock("@/api/queries/user", () => ({
   }),
 }));
 
-jest.mock("@/api/queries/drugs", () => ({
-  useSearchDrugsQuery: (...args: unknown[]) => mockUseSearchDrugsQuery(...args),
+jest.mock("@/api/queries/health-profile", () => ({
+  useSearchDrugAllergiesQuery: (...args: unknown[]) => mockUseSearchDrugAllergiesQuery(...args),
+  useSearchDiseasesQuery: (...args: unknown[]) => mockUseSearchDiseasesQuery(...args),
 }));
 
 jest.mock("tamagui", () => {
@@ -115,11 +120,47 @@ jest.mock("../components/ProfileBasicInfoCard", () => {
 
 jest.mock("../components/ProfileTagEditorCard", () => {
   const React = require("react");
-  const { Text } = require("react-native");
+  const { Pressable, Text, TextInput, View } = require("react-native");
 
   return {
-    ProfileTagEditorCard: ({ title, items }: { title: string; items: string[] }) =>
-      React.createElement(Text, null, `${title}:${items.join(",")}`),
+    ProfileTagEditorCard: ({
+      title,
+      items,
+      inputValue,
+      inputPlaceholder,
+      onInputChange,
+      searchResults = [],
+      onSelectSearchResult,
+    }: {
+      title: string;
+      items: string[];
+      inputValue: string;
+      inputPlaceholder: string;
+      onInputChange: (value: string) => void;
+      searchResults?: { id: string; label: string }[];
+      onSelectSearchResult?: (value: { id: string; label: string }) => void;
+    }) =>
+      React.createElement(
+        View,
+        null,
+        React.createElement(Text, null, `${title}:${items.join(",")}`),
+        React.createElement(TextInput, {
+          value: inputValue,
+          onChangeText: onInputChange,
+          placeholder: inputPlaceholder,
+        }),
+        searchResults.map((result) =>
+          React.createElement(
+            Pressable,
+            {
+              key: result.id,
+              accessibilityLabel: `${result.label} 검색 결과 선택`,
+              onPress: () => onSelectSearchResult?.(result),
+            },
+            React.createElement(Text, null, result.label),
+          ),
+        ),
+      ),
   };
 });
 
@@ -165,7 +206,7 @@ describe("프로필 수정 화면", () => {
   beforeEach(() => {
     mockActiveUser = mockUser;
     jest.clearAllMocks();
-    mockUseSearchDrugsQuery.mockReturnValue({
+    const emptySearchResult = {
       items: [],
       isFetching: false,
       isFetchingNextPage: false,
@@ -173,15 +214,21 @@ describe("프로필 수정 화면", () => {
       error: null,
       hasNextPage: false,
       fetchNextPage: jest.fn(),
-    } as unknown as ReturnType<typeof useSearchDrugsQuery>);
+    };
+    mockUseSearchDrugAllergiesQuery.mockReturnValue(
+      emptySearchResult as unknown as ReturnType<typeof useSearchDrugAllergiesQuery>,
+    );
+    mockUseSearchDiseasesQuery.mockReturnValue(
+      emptySearchResult as unknown as ReturnType<typeof useSearchDiseasesQuery>,
+    );
   });
 
   it("사용자 정보가 없으면 빈 기본값으로 편집 화면을 렌더링한다", () => {
     mockActiveUser = null;
 
-    const { getByDisplayValue } = render(<ProfileEditScreen />);
+    const { getAllByDisplayValue } = render(<ProfileEditScreen />);
 
-    expect(getByDisplayValue("")).toBeTruthy();
+    expect(getAllByDisplayValue("").length).toBeGreaterThan(0);
   });
 
   it("유저 기본값을 폼에 표시한다", () => {
@@ -190,7 +237,7 @@ describe("프로필 수정 화면", () => {
     expect(getByDisplayValue("홍길동")).toBeTruthy();
     expect(getByText("기본정보:female:AB:negative")).toBeTruthy();
     expect(getByText("알러지:페니실린,해산물,꽃가루")).toBeTruthy();
-    expect(getByText("기저질환:천식")).toBeTruthy();
+    expect(getByText("기저질환:천식,편두통")).toBeTruthy();
   });
 
   it("하단 액션 영역 여백을 과하게 남기지 않는다", () => {
@@ -220,7 +267,7 @@ describe("프로필 수정 화면", () => {
       expect(mockMutate).toHaveBeenCalledWith(
         expect.objectContaining({
           allergies: expect.arrayContaining([
-            { type: "ATC_GROUP", value: "J01CA04", name: "페니실린계 항생제" },
+            { type: "FOOD", value: "페니실린", name: "페니실린" },
             { type: "FOOD", value: "꽃가루", name: "꽃가루" },
           ]),
         }),
@@ -241,9 +288,9 @@ describe("프로필 수정 화면", () => {
           gender: "FEMALE",
           bloodType: "AB",
           rhType: "MINUS",
-          diseaseCodes: ["J45"],
+          diseaseCodes: ["COND010"],
           allergies: [
-            { type: "ATC_GROUP", value: "J01CA04", name: "페니실린계 항생제" },
+            { type: "FOOD", value: "페니실린", name: "페니실린" },
             { type: "FOOD", value: "해산물", name: "해산물" },
             { type: "ATC_GROUP", value: "R06AX13", name: "꽃가루" },
           ],
@@ -252,6 +299,37 @@ describe("프로필 수정 화면", () => {
           onSuccess: expect.any(Function),
           onError: expect.any(Function),
         }),
+      );
+    });
+  });
+
+  it("검색으로 선택한 기저질환은 diseaseCode로 저장한다", async () => {
+    mockUseSearchDiseasesQuery.mockReturnValue({
+      items: [{ diseaseCode: "G43", diseaseName: "편두통" }],
+      isFetching: false,
+      isFetchingNextPage: false,
+      isError: false,
+      error: null,
+      hasNextPage: false,
+      fetchNextPage: jest.fn(),
+    } as unknown as ReturnType<typeof useSearchDiseasesQuery>);
+    mockActiveUser = {
+      ...mockUser,
+      chronicConditions: ["천식"],
+    };
+
+    const { getByPlaceholderText, getByLabelText } = render(<ProfileEditScreen />);
+
+    fireEvent.changeText(getByPlaceholderText("새 기저질환 입력"), "편두");
+    fireEvent.press(getByLabelText("편두통 검색 결과 선택"));
+    fireEvent.press(getByLabelText("저장"));
+
+    await waitFor(() => {
+      expect(mockMutate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          diseaseCodes: ["COND010", "G43"],
+        }),
+        expect.any(Object),
       );
     });
   });

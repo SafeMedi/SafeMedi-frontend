@@ -69,7 +69,14 @@ export function ProfileEditScreen() {
           onInputChange={viewModel.handleChronicInputChange}
           onAddItem={viewModel.handleAddChronicCondition}
           onRemoveItem={viewModel.handleRemoveChronicCondition}
-          inputMode="hidden"
+          inputMode="search"
+          searchResults={viewModel.chronicSearchResults}
+          isSearchEnabled={viewModel.isChronicSearchEnabled}
+          isSearchFetching={viewModel.isChronicSearchFetching}
+          isSearchFetchingNextPage={viewModel.isChronicSearchFetchingNextPage}
+          hasMoreSearchResults={viewModel.hasMoreChronicResults}
+          onSelectSearchResult={viewModel.handleSelectChronicSearchResult}
+          onLoadMoreSearchResults={viewModel.handleLoadMoreChronicResults}
         />
         <ProfileEditNoticeCard />
         <ProfileEditActionBar

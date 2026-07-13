@@ -27,6 +27,7 @@ export type User = {
   allergies: string[];
   allergyMappings?: Record<string, TutorialAllergyItem>;
   chronicConditions: string[];
+  chronicConditionMappings?: Record<string, string>;
   isTutorial: boolean;
 };
 

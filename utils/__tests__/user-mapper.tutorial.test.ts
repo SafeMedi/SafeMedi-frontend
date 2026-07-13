@@ -166,6 +166,13 @@ describe("튜토리얼 사용자 매핑", () => {
     ]);
   });
 
+  it("검색으로 선택한 기저질환은 매핑된 diseaseCode로 변환한다", () => {
+    expect(chronicConditionLabelsToDiseaseCodes(["천식", "편두통"], { 편두통: "G43" })).toEqual([
+      "J45",
+      "G43",
+    ]);
+  });
+
   it("백엔드가 기대하는 튜토리얼 요청 바디 형태로 변환한다", () => {
     const body = userToTutorialRegistrationBody(baseUser);
 

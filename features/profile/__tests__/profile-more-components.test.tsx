@@ -101,7 +101,7 @@ describe("profile more components", () => {
     fireEvent(getByPlaceholderText("알러지를 입력하세요"), "submitEditing");
     expect(onAddItem).toHaveBeenCalledWith("견과류");
 
-    fireEvent.press(getByText("+ 페니라민"));
+    fireEvent.press(getByText("+ 땅콩"));
     expect(onAddItem).toHaveBeenCalled();
     expect(onRemoveItem).not.toHaveBeenCalled();
   });

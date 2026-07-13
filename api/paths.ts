@@ -17,6 +17,8 @@ export const apiPaths = {
   familySettings: (familyId: number | string) => `/api/v1/families/${familyId}/settings`,
 
   drugsSearch: "/api/v1/drugs/search",
+  drugAllergiesSearch: "/api/v1/allergies/drugs/search",
+  diseasesSearch: "/api/v1/diseases/search",
 
   prescriptions: "/api/v1/prescriptions",
   prescriptionsAnalysis: "/api/v1/prescriptions/analyze",

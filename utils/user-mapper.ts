@@ -258,9 +258,18 @@ export function profileAllergyLabelsToTutorialItems(
   return [...items.values()];
 }
 
-export function chronicConditionLabelsToDiseaseCodes(labels: string[]): string[] {
+export function chronicConditionLabelsToDiseaseCodes(
+  labels: string[],
+  mappedCodes: Readonly<Record<string, string>> = {},
+): string[] {
   const codes = new Set<string>();
   for (const label of labels) {
+    const mappedCode = mappedCodes[label];
+    if (mappedCode) {
+      codes.add(mappedCode);
+      continue;
+    }
+
     const option = findChronicCondition(label);
     if (option) {
       codes.add(option.code);
@@ -305,7 +314,10 @@ export function userToTutorialRegistrationBody(user: User): TutorialRegistration
   const { bloodType: baseBloodType, rhFactor } = splitBloodTypeWithRh(user.bloodType);
   const tutorialBloodType = toTutorialBloodType(baseBloodType);
   const tutorialRhType = toTutorialRhType(user.bloodType, rhFactor);
-  const diseaseCodes = chronicConditionLabelsToDiseaseCodes(user.chronicConditions);
+  const diseaseCodes = chronicConditionLabelsToDiseaseCodes(
+    user.chronicConditions,
+    user.chronicConditionMappings,
+  );
 
   return {
     birthDate: user.birthDate,
