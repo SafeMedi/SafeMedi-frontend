@@ -13,13 +13,13 @@ const mockFetchFamilies = jest.fn<Promise<Array<{ familyId: number; name: string
   async () => [{ familyId: 10, name: "가족A" }],
 );
 const mockFetchNotificationSettings = jest.fn<
-  Promise<{ isMyReminderOn: boolean; isFamilyReminderOn: boolean }>,
+  Promise<{ isMyReminderOn: boolean; isFamilyReminderOn: boolean; isMissedAlertOn: boolean }>,
   []
->(async () => ({ isMyReminderOn: true, isFamilyReminderOn: false }));
+>(async () => ({ isMyReminderOn: true, isFamilyReminderOn: false, isMissedAlertOn: true }));
 const mockPatchNotificationSettings = jest.fn<
-  Promise<{ isMyReminderOn: boolean; isFamilyReminderOn: boolean }>,
+  Promise<{ isMyReminderOn: boolean; isFamilyReminderOn: boolean; isMissedAlertOn: boolean }>,
   [unknown]
->(async () => ({ isMyReminderOn: false, isFamilyReminderOn: true }));
+>(async () => ({ isMyReminderOn: false, isFamilyReminderOn: true, isMissedAlertOn: true }));
 
 const mockCancelQueries = jest.fn(async () => {});
 const mockGetQueryData = jest.fn();
@@ -85,16 +85,46 @@ describe("api/queries/profile", () => {
     await query.queryFn();
     expect(mockFetchNotificationSettings).toHaveBeenCalledTimes(1);
 
-    mockGetQueryData.mockReturnValue({ isMyReminderOn: true, isFamilyReminderOn: false });
+    mockGetQueryData.mockReturnValue({
+      isMyReminderOn: true,
+      isFamilyReminderOn: false,
+      isMissedAlertOn: true,
+    });
     const { result: mutationResult } = renderHook(() => useUpdateNotificationSettings());
     const mutation = mutationResult.current as unknown as {
       mutationFn: (body: unknown) => Promise<unknown>;
       onMutate: (patch: {
         isMyReminderOn?: boolean;
         isFamilyReminderOn?: boolean;
+        isMissedAlertOn?: boolean;
       }) => Promise<{ previous: unknown }>;
-      onError: (_error: unknown, _patch: unknown, context: { previous?: unknown }) => void;
-      onSuccess: (updated: unknown) => void;
+      onError: (
+        _error: unknown,
+        _patch: {
+          isMyReminderOn?: boolean;
+          isFamilyReminderOn?: boolean;
+          isMissedAlertOn?: boolean;
+        },
+        context: {
+          previous?: {
+            isMyReminderOn: boolean;
+            isFamilyReminderOn: boolean;
+            isMissedAlertOn: boolean;
+          };
+        },
+      ) => void;
+      onSuccess: (
+        updated: {
+          isMyReminderOn: boolean;
+          isFamilyReminderOn: boolean;
+          isMissedAlertOn: boolean;
+        },
+        patch: {
+          isMyReminderOn?: boolean;
+          isFamilyReminderOn?: boolean;
+          isMissedAlertOn?: boolean;
+        },
+      ) => void;
       onSettled: () => Promise<void>;
     };
 
@@ -102,18 +132,79 @@ describe("api/queries/profile", () => {
     expect(mockPatchNotificationSettings).toHaveBeenCalledWith({ isMyReminderOn: false });
 
     const context = await mutation.onMutate({ isMyReminderOn: false });
-    expect(context.previous).toEqual({ isMyReminderOn: true, isFamilyReminderOn: false });
-    expect(mockSetQueryData).toHaveBeenCalled();
-
-    mutation.onError(new Error("x"), {}, { previous: { isMyReminderOn: true } });
-    expect(mockSetQueryData).toHaveBeenCalledWith(queryKeys.profile.notificationSettings, {
+    expect(context.previous).toEqual({
       isMyReminderOn: true,
+      isFamilyReminderOn: false,
+      isMissedAlertOn: true,
     });
-
-    mutation.onSuccess({ isMyReminderOn: false, isFamilyReminderOn: true });
     expect(mockSetQueryData).toHaveBeenCalledWith(queryKeys.profile.notificationSettings, {
       isMyReminderOn: false,
+      isFamilyReminderOn: false,
+      isMissedAlertOn: true,
+    });
+
+    mockSetQueryData.mockClear();
+    mutation.onError(
+      new Error("x"),
+      { isMyReminderOn: false },
+      {
+        previous: {
+          isMyReminderOn: true,
+          isFamilyReminderOn: false,
+          isMissedAlertOn: true,
+        },
+      },
+    );
+    const errorUpdater = mockSetQueryData.mock.calls[0]?.[1] as (current: {
+      isMyReminderOn: boolean;
+      isFamilyReminderOn: boolean;
+      isMissedAlertOn: boolean;
+    }) => unknown;
+    expect(mockSetQueryData.mock.calls[0]?.[0]).toEqual(queryKeys.profile.notificationSettings);
+    expect(
+      errorUpdater({
+        isMyReminderOn: false,
+        isFamilyReminderOn: true,
+        isMissedAlertOn: true,
+      }),
+    ).toEqual({
+      isMyReminderOn: true,
       isFamilyReminderOn: true,
+      isMissedAlertOn: true,
+    });
+
+    mockSetQueryData.mockClear();
+    mutation.onSuccess(
+      { isMyReminderOn: false, isFamilyReminderOn: false, isMissedAlertOn: true },
+      { isMyReminderOn: false },
+    );
+    const successUpdater = mockSetQueryData.mock.calls[0]?.[1] as (current: {
+      isMyReminderOn: boolean;
+      isFamilyReminderOn: boolean;
+      isMissedAlertOn: boolean;
+    }) => unknown;
+    expect(
+      successUpdater({
+        isMyReminderOn: false,
+        isFamilyReminderOn: true,
+        isMissedAlertOn: true,
+      }),
+    ).toEqual({
+      isMyReminderOn: false,
+      isFamilyReminderOn: true,
+      isMissedAlertOn: true,
+    });
+
+    expect(
+      successUpdater({
+        isMyReminderOn: true,
+        isFamilyReminderOn: true,
+        isMissedAlertOn: true,
+      }),
+    ).toEqual({
+      isMyReminderOn: true,
+      isFamilyReminderOn: true,
+      isMissedAlertOn: true,
     });
 
     await mutation.onSettled();

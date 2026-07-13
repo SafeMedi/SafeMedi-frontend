@@ -78,6 +78,35 @@ describe("normalizeUserProfile", () => {
     });
   });
 
+  it("기저질환 객체 배열은 code/value/name 우선순위로 정규화하고 빈 객체는 제외한다", () => {
+    expect(
+      normalizeUserProfile({
+        diseases: [
+          { code: "COND002", name: "고혈압" },
+          { value: "COND013" },
+          { name: "천식" },
+          {},
+          null,
+        ],
+        allergies: [],
+      }),
+    ).toEqual({
+      displayName: null,
+      birthDate: null,
+      gender: null,
+      height: null,
+      weight: null,
+      bloodType: null,
+      diseases: [
+        { code: "COND002", name: "고혈압" },
+        { code: "COND013", name: "COND013" },
+        { code: "천식", name: "천식" },
+      ],
+      allergies: [],
+      isTutorialCompleted: false,
+    });
+  });
+
   it("비어 있거나 알 수 없는 프로필 값은 null/기본값으로 정규화한다", () => {
     expect(
       normalizeUserProfile({

@@ -8,6 +8,7 @@ import { DrugSearchResultList } from "@/components/ui/DrugSearchResultList";
 import { SelectChip } from "@/components/ui/SelectChip";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
+import { representativeFoodAllergyOptions } from "@/constants/health-profile-options";
 
 import {
   PROFILE_EDIT_QUICK_ITEMS,
@@ -19,7 +20,7 @@ export type ProfileTagSearchResult = {
   readonly id: string;
   readonly label: string;
   readonly meta?: string;
-  readonly type: "ATC_GROUP" | "INGREDIENT" | "FOOD";
+  readonly type: "ATC_GROUP" | "INGREDIENT" | "FOOD" | "DISEASE";
   readonly value: string;
   readonly name: string;
 };
@@ -63,6 +64,19 @@ export function ProfileTagEditorCard({
 }: ProfileTagEditorCardProps) {
   const style = PROFILE_EDIT_SECTION_STYLES[variant];
   const quickItems = PROFILE_EDIT_QUICK_ITEMS[variant];
+  const foodAllergyLabels = new Set<string>(
+    representativeFoodAllergyOptions.map((option) => option.label),
+  );
+  const quickItemGroups =
+    variant === "allergy"
+      ? [
+          {
+            key: "medicine-allergy",
+            items: quickItems.filter((item) => !foodAllergyLabels.has(item)),
+          },
+          { key: "food-allergy", items: quickItems.filter((item) => foodAllergyLabels.has(item)) },
+        ].filter((group) => group.items.length > 0)
+      : [{ key: variant, items: quickItems }];
   const isSearchMode = inputMode === "search";
   const shouldShowInput = inputMode !== "hidden";
   const shouldShowSearchResults = isSearchMode && inputValue.trim().length > 0 && isSearchEnabled;
@@ -142,22 +156,26 @@ export function ProfileTagEditorCard({
 
       <View style={styles.quickWrap}>
         <Text style={styles.quickLabel}>빠른 추가:</Text>
-        <View style={styles.quickItems}>
-          {quickItems.map((item) => (
-            <SelectChip
-              key={item}
-              label={`+ ${item}`}
-              selected={false}
-              onPress={() => onAddItem(item)}
-              height={27}
-              px={10}
-              borderWidth={1}
-              unselectedBackground={style.quickTagBackground}
-              unselectedBorderColor={style.quickTagBorder}
-              unselectedTextColor={style.quickTagText}
-              textFontSize={11}
-              textFontWeight="400"
-            />
+        <View style={styles.quickGroups}>
+          {quickItemGroups.map((group) => (
+            <View key={group.key} style={styles.quickItems}>
+              {group.items.map((item) => (
+                <SelectChip
+                  key={item}
+                  label={`+ ${item}`}
+                  selected={false}
+                  onPress={() => onAddItem(item)}
+                  height={27}
+                  px={10}
+                  borderWidth={1}
+                  unselectedBackground={style.quickTagBackground}
+                  unselectedBorderColor={style.quickTagBorder}
+                  unselectedTextColor={style.quickTagText}
+                  textFontSize={11}
+                  textFontWeight="400"
+                />
+              ))}
+            </View>
           ))}
         </View>
       </View>
@@ -220,6 +238,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 14,
     color: palette.icon,
+  },
+  quickGroups: {
+    gap: 6,
   },
   quickItems: {
     flexDirection: "row",

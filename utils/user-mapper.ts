@@ -159,6 +159,43 @@ function findChronicCondition(label: string) {
   return chronicConditionOptions.find((option) => option.label === label);
 }
 
+function findChronicConditionByCodeOrName(code: string, name: string) {
+  return chronicConditionOptions.find(
+    (option) => option.code === code || option.label === name || option.label === code,
+  );
+}
+
+function profileDiseasesToUserFields(
+  diseases: UserProfile["diseases"],
+): Pick<User, "chronicConditions" | "chronicConditionMappings"> {
+  if (!diseases?.length) {
+    return { chronicConditions: [] };
+  }
+
+  const labels: string[] = [];
+  const mappings: Record<string, string> = {};
+  const seen = new Set<string>();
+
+  for (const disease of diseases) {
+    const representative = findChronicConditionByCodeOrName(disease.code, disease.name);
+    const label = representative?.label ?? disease.name ?? disease.code;
+    const code = disease.code ?? representative?.code ?? label;
+
+    if (!label || seen.has(label)) continue;
+    seen.add(label);
+    labels.push(label);
+
+    if (code) {
+      mappings[label] = code;
+    }
+  }
+
+  return {
+    chronicConditions: labels,
+    ...(Object.keys(mappings).length > 0 ? { chronicConditionMappings: mappings } : {}),
+  };
+}
+
 function toTutorialBloodType(value: string | undefined): TutorialBloodType | undefined {
   if (!value) return undefined;
   return TUTORIAL_BLOOD_TYPES.includes(value as TutorialBloodType)
@@ -258,9 +295,18 @@ export function profileAllergyLabelsToTutorialItems(
   return [...items.values()];
 }
 
-export function chronicConditionLabelsToDiseaseCodes(labels: string[]): string[] {
+export function chronicConditionLabelsToDiseaseCodes(
+  labels: string[],
+  mappedCodes: Readonly<Record<string, string>> = {},
+): string[] {
   const codes = new Set<string>();
   for (const label of labels) {
+    const mappedCode = mappedCodes[label];
+    if (mappedCode) {
+      codes.add(mappedCode);
+      continue;
+    }
+
     const option = findChronicCondition(label);
     if (option) {
       codes.add(option.code);
@@ -281,6 +327,7 @@ export function profileToUser(profile: UserProfile): User {
     profile.gender === "M" ? "male" : profile.gender === "F" ? "female" : null;
 
   const allergyFields = profileAllergiesToUserFields(profile.allergies);
+  const diseaseFields = profileDiseasesToUserFields(profile.diseases);
 
   return {
     id: "me",
@@ -292,7 +339,7 @@ export function profileToUser(profile: UserProfile): User {
     gender,
     bloodType: supportedBloodType,
     ...allergyFields,
-    chronicConditions: profile.diseases ?? [],
+    ...diseaseFields,
     isTutorial: profile.isTutorialCompleted,
   };
 }
@@ -305,7 +352,10 @@ export function userToTutorialRegistrationBody(user: User): TutorialRegistration
   const { bloodType: baseBloodType, rhFactor } = splitBloodTypeWithRh(user.bloodType);
   const tutorialBloodType = toTutorialBloodType(baseBloodType);
   const tutorialRhType = toTutorialRhType(user.bloodType, rhFactor);
-  const diseaseCodes = chronicConditionLabelsToDiseaseCodes(user.chronicConditions);
+  const diseaseCodes = chronicConditionLabelsToDiseaseCodes(
+    user.chronicConditions,
+    user.chronicConditionMappings,
+  );
 
   return {
     birthDate: user.birthDate,

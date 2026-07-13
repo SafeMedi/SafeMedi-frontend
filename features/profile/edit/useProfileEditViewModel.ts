@@ -12,7 +12,7 @@ import {
   GENDERS,
   type GenderOptionValue,
 } from "@/constants/health-profile-options";
-import { useDrugSearch } from "@/hooks/useDrugSearch";
+import { useDiseaseSearch, useDrugAllergySearch } from "@/hooks/useHealthProfileSearch";
 import { useUserStore } from "@/stores/userStore";
 import { splitBloodTypeWithRhOrDefault } from "@/utils/blood-type";
 import {
@@ -38,11 +38,12 @@ export interface ProfileEditViewModel {
   readonly handleBloodTypeChange: (value: ProfileEditFormValues["bloodType"]) => void;
   readonly handleRhFactorChange: (value: ProfileEditFormValues["rhFactor"]) => void;
   readonly handleAllergyInputChange: (value: string) => void;
-  readonly handleChronicInputChange: () => void;
+  readonly handleChronicInputChange: (value: string) => void;
   readonly handleAddAllergy: (value: string) => void;
   readonly handleSelectAllergySearchResult: (result: ProfileTagSearchResult) => void;
   readonly handleRemoveAllergy: (value: string) => void;
   readonly handleAddChronicCondition: (value: string) => void;
+  readonly handleSelectChronicSearchResult: (result: ProfileTagSearchResult) => void;
   readonly handleRemoveChronicCondition: (value: string) => void;
   readonly handleSubmit: (event?: BaseSyntheticEvent) => Promise<void>;
   readonly allergySearchResults: readonly ProfileTagSearchResult[];
@@ -51,6 +52,12 @@ export interface ProfileEditViewModel {
   readonly isAllergySearchFetchingNextPage: boolean;
   readonly hasMoreAllergyResults: boolean;
   readonly handleLoadMoreAllergyResults: () => void;
+  readonly chronicSearchResults: readonly ProfileTagSearchResult[];
+  readonly isChronicSearchEnabled: boolean;
+  readonly isChronicSearchFetching: boolean;
+  readonly isChronicSearchFetchingNextPage: boolean;
+  readonly hasMoreChronicResults: boolean;
+  readonly handleLoadMoreChronicResults: () => void;
 }
 
 function createUniqueItems(items: readonly string[]): string[] {
@@ -67,9 +74,18 @@ function createUniqueItems(items: readonly string[]): string[] {
   return next;
 }
 
-function createKnownChronicConditions(items: readonly string[]): string[] {
-  const labels = new Set<string>(chronicConditionOptions.map((option) => option.label));
-  return createUniqueItems(items).filter((item) => labels.has(item));
+function createInitialChronicConditionCodes(
+  items: readonly string[],
+  mappedCodes: Readonly<Record<string, string>> = {},
+): Record<string, string> {
+  const next: Record<string, string> = { ...mappedCodes };
+  for (const item of items) {
+    const option = chronicConditionOptions.find((entry) => entry.label === item);
+    if (option) {
+      next[item] = option.code;
+    }
+  }
+  return next;
 }
 
 export function useProfileEditViewModel(): ProfileEditViewModel {
@@ -82,6 +98,14 @@ export function useProfileEditViewModel(): ProfileEditViewModel {
   const [selectedAllergyItems, setSelectedAllergyItems] = useState<
     Record<string, UserProfilePatchAllergyItem>
   >(() => buildUserAllergyEditState(user?.allergies ?? [], user?.allergyMappings ?? {}).mappings);
+  const [selectedChronicConditionCodes, setSelectedChronicConditionCodes] = useState<
+    Record<string, string>
+  >(() =>
+    createInitialChronicConditionCodes(
+      user?.chronicConditions ?? [],
+      user?.chronicConditionMappings ?? {},
+    ),
+  );
   const initialGender: GenderOptionValue = GENDERS.includes(
     (user?.gender ?? "male") as GenderOptionValue,
   )
@@ -93,7 +117,7 @@ export function useProfileEditViewModel(): ProfileEditViewModel {
 
   const initialName = user?.displayName ?? "";
   const initialChronic = useMemo(
-    () => createKnownChronicConditions(user?.chronicConditions ?? []),
+    () => createUniqueItems(user?.chronicConditions ?? []),
     [user?.chronicConditions],
   );
 
@@ -120,24 +144,44 @@ export function useProfileEditViewModel(): ProfileEditViewModel {
   const chronicConditions = useWatch({ control, name: "chronicConditions" });
 
   const {
-    items: drugSearchResults,
+    items: drugAllergySearchResults,
     isFetching: isAllergySearchFetching,
     isFetchingNextPage: isAllergySearchFetchingNextPage,
     hasNextPage: hasMoreAllergyResults,
     isSearchEnabled: isAllergySearchEnabled,
     loadMore: fetchMoreAllergyResults,
-  } = useDrugSearch({ keyword: allergyInput, excludeNames: allergies });
+  } = useDrugAllergySearch({ keyword: allergyInput, excludeNames: allergies });
   const allergySearchResults = useMemo<ProfileTagSearchResult[]>(
     () =>
-      drugSearchResults.map((item) => ({
-        id: `${item.drugCode}:${item.atcCode}:${item.drugName}`,
-        label: item.drugName,
-        meta: item.company ? `${item.company} · ${item.atcCode}` : item.atcCode,
-        type: "ATC_GROUP" as const,
-        value: item.atcCode,
-        name: item.drugName,
+      drugAllergySearchResults.map((item) => ({
+        id: `${item.allergyType}:${item.allergyValue}:${item.allergyName}`,
+        label: item.allergyName,
+        meta: item.allergyValue,
+        type: item.allergyType,
+        value: item.allergyValue,
+        name: item.allergyName,
       })),
-    [drugSearchResults],
+    [drugAllergySearchResults],
+  );
+  const {
+    items: diseaseSearchResults,
+    isFetching: isChronicSearchFetching,
+    isFetchingNextPage: isChronicSearchFetchingNextPage,
+    hasNextPage: hasMoreChronicResults,
+    isSearchEnabled: isChronicSearchEnabled,
+    loadMore: fetchMoreChronicResults,
+  } = useDiseaseSearch({ keyword: chronicInput, excludeNames: chronicConditions });
+  const chronicSearchResults = useMemo<ProfileTagSearchResult[]>(
+    () =>
+      diseaseSearchResults.map((item) => ({
+        id: `${item.diseaseCode}:${item.diseaseName}`,
+        label: item.diseaseName,
+        meta: item.diseaseCode,
+        type: "DISEASE" as const,
+        value: item.diseaseCode,
+        name: item.diseaseName,
+      })),
+    [diseaseSearchResults],
   );
 
   useEffect(() => {
@@ -152,6 +196,9 @@ export function useProfileEditViewModel(): ProfileEditViewModel {
       chronicInput: "",
     });
     setSelectedAllergyItems({ ...initialAllergyMappings });
+    setSelectedChronicConditionCodes(
+      createInitialChronicConditionCodes(initialChronic, user?.chronicConditionMappings ?? {}),
+    );
   }, [
     initialAllergies,
     initialAllergyMappings,
@@ -161,6 +208,7 @@ export function useProfileEditViewModel(): ProfileEditViewModel {
     initialName,
     initialRhFactor,
     reset,
+    user?.chronicConditionMappings,
   ]);
 
   const addItem = (
@@ -196,7 +244,10 @@ export function useProfileEditViewModel(): ProfileEditViewModel {
         gender: values.gender === "female" ? "FEMALE" : "MALE",
         bloodType: values.bloodType,
         rhType: values.rhFactor === "negative" ? "MINUS" : "PLUS",
-        diseaseCodes: chronicConditionLabelsToDiseaseCodes(values.chronicConditions),
+        diseaseCodes: chronicConditionLabelsToDiseaseCodes(
+          values.chronicConditions,
+          selectedChronicConditionCodes,
+        ),
         allergies: profileAllergyLabelsToPatchItems(values.allergies, selectedAllergyItems),
       },
       {
@@ -235,16 +286,22 @@ export function useProfileEditViewModel(): ProfileEditViewModel {
       setValue("rhFactor", value, { shouldDirty: true }),
     handleAllergyInputChange: (value: string) =>
       setValue("allergyInput", value, { shouldDirty: true }),
-    handleChronicInputChange: () => undefined,
+    handleChronicInputChange: (value: string) =>
+      setValue("chronicInput", value, { shouldDirty: true }),
     handleAddAllergy: (value: string) => addItem(value, "allergies"),
     handleSelectAllergySearchResult: (result: ProfileTagSearchResult) => {
+      if (result.type === "DISEASE") {
+        return;
+      }
+
+      const selectedItem: UserProfilePatchAllergyItem = {
+        type: result.type,
+        value: result.value,
+        name: result.name,
+      };
       setSelectedAllergyItems((prev) => ({
         ...prev,
-        [result.label]: {
-          type: result.type,
-          value: result.value,
-          name: result.name,
-        },
+        [result.label]: selectedItem,
       }));
       addItem(result.label, "allergies");
       setValue("allergyInput", "", { shouldDirty: true });
@@ -257,8 +314,29 @@ export function useProfileEditViewModel(): ProfileEditViewModel {
         return next;
       });
     },
-    handleAddChronicCondition: (value: string) => addItem(value, "chronicConditions"),
-    handleRemoveChronicCondition: (value: string) => removeItem(value, "chronicConditions"),
+    handleAddChronicCondition: (value: string) => {
+      addItem(value, "chronicConditions");
+      const option = chronicConditionOptions.find((item) => item.label === value);
+      if (option) {
+        setSelectedChronicConditionCodes((prev) => ({ ...prev, [value]: option.code }));
+      }
+    },
+    handleSelectChronicSearchResult: (result: ProfileTagSearchResult) => {
+      setSelectedChronicConditionCodes((prev) => ({
+        ...prev,
+        [result.label]: result.value,
+      }));
+      addItem(result.label, "chronicConditions");
+      setValue("chronicInput", "", { shouldDirty: true });
+    },
+    handleRemoveChronicCondition: (value: string) => {
+      removeItem(value, "chronicConditions");
+      setSelectedChronicConditionCodes((prev) => {
+        const next = { ...prev };
+        delete next[value];
+        return next;
+      });
+    },
     handleSubmit: handleSubmit(handleSubmitValid, onInvalid),
     allergySearchResults,
     isAllergySearchEnabled,
@@ -266,5 +344,11 @@ export function useProfileEditViewModel(): ProfileEditViewModel {
     isAllergySearchFetchingNextPage,
     hasMoreAllergyResults,
     handleLoadMoreAllergyResults: fetchMoreAllergyResults,
+    chronicSearchResults,
+    isChronicSearchEnabled,
+    isChronicSearchFetching,
+    isChronicSearchFetchingNextPage,
+    hasMoreChronicResults,
+    handleLoadMoreChronicResults: fetchMoreChronicResults,
   };
 }

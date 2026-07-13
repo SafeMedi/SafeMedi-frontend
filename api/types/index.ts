@@ -19,6 +19,12 @@ export type {
   ReceivedFamilyRequest,
 } from "./family";
 export type {
+  DiseaseSearchItem,
+  DiseaseSearchPage,
+  DrugAllergySearchItem,
+  DrugAllergySearchPage,
+} from "./health-profile";
+export type {
   FetchNearbyMedicalFacilitiesParams,
   MedicalFacility,
   MedicalFacilityCategory,

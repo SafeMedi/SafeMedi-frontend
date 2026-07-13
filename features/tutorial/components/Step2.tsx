@@ -3,7 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { ScrollView } from "react-native";
 import { Input, Text, XStack, YStack } from "tamagui";
-import type { DrugSearchItem } from "@/api/types";
+import type { DrugAllergySearchItem } from "@/api/types";
 import type { TutorialAllergyItem } from "@/api/types/tutorial";
 import { DrugSearchResultList } from "@/components/ui/DrugSearchResultList";
 import { SelectChip } from "@/components/ui/SelectChip";
@@ -13,7 +13,7 @@ import {
   representativeMedicineAllergyOptions,
 } from "@/constants/health-profile-options";
 import type { StepHandle } from "@/features/tutorial/types";
-import { useDrugSearch } from "@/hooks/useDrugSearch";
+import { useDrugAllergySearch } from "@/hooks/useHealthProfileSearch";
 import { useUserStore } from "@/stores/userStore";
 import { toggleSelection } from "@/utils/array";
 
@@ -23,10 +23,6 @@ const medicineAllergyLabels: readonly string[] = representativeMedicineAllergyOp
 const foodAllergyLabels: readonly string[] = representativeFoodAllergyOptions.map(
   (option) => option.label,
 );
-
-function formatDrugMeta(item: DrugSearchItem): string {
-  return item.company ? `${item.company} · ${item.atcCode}` : item.atcCode;
-}
 
 export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
   const user = useUserStore((s) => s.user);
@@ -59,19 +55,19 @@ export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
     isFetchingNextPage,
     isSearchEnabled,
     loadMore,
-  } = useDrugSearch({ keyword: searchInput, excludeNames: allSelectedAllergies });
+  } = useDrugAllergySearch({ keyword: searchInput, excludeNames: allSelectedAllergies });
 
-  const handleSelectSearchResult = (item: DrugSearchItem) => {
-    const label = item.drugName;
+  const handleSelectSearchResult = (item: DrugAllergySearchItem) => {
+    const label = item.allergyName;
     if (!allSelectedAllergies.includes(label)) {
       setSelectedSearchAllergies((prev) => [...prev, label]);
     }
     setSelectedSearchAllergyItems((prev) => ({
       ...prev,
       [label]: {
-        type: "ATC_GROUP",
-        value: item.atcCode,
-        name: item.drugName,
+        type: item.allergyType,
+        value: item.allergyValue,
+        name: item.allergyName,
       },
     }));
     setSearchInput("");
@@ -162,11 +158,13 @@ export const Step2 = forwardRef<StepHandle>(function Step2(_props, ref) {
           />
 
           {searchInput.trim().length > 0 && isSearchEnabled ? (
-            <DrugSearchResultList<DrugSearchItem>
+            <DrugSearchResultList<DrugAllergySearchItem>
               items={searchResults}
-              keyExtractor={(item) => `${item.drugCode}:${item.atcCode}:${item.drugName}`}
-              getTitle={(item) => item.drugName}
-              getMeta={formatDrugMeta}
+              keyExtractor={(item) =>
+                `${item.allergyType}:${item.allergyValue}:${item.allergyName}`
+              }
+              getTitle={(item) => item.allergyName}
+              getMeta={(item) => item.allergyValue}
               onSelect={handleSelectSearchResult}
               onEndReached={loadMore}
               isFetching={isFetching}
