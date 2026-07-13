@@ -66,7 +66,7 @@ describe("튜토리얼 Step2", () => {
     const ref = createRef<StepHandle>();
     const { getByPlaceholderText, getByLabelText } = render(<Step2 ref={ref} />);
 
-    fireEvent.press(getByLabelText("아세트아미노펜"));
+    fireEvent.press(getByLabelText("기타 진통제 및 해열제"));
     fireEvent.changeText(getByPlaceholderText("알러지 약물명 검색"), "아목");
     act(() => jest.advanceTimersByTime(250));
     fireEvent.press(getByLabelText("페니실린류 베타락탐계 항박테리아제 검색 결과 선택"));
@@ -78,7 +78,7 @@ describe("튜토리얼 Step2", () => {
 
     expect(submitted).toBe(true);
     expect(mockUpdateUser).toHaveBeenCalledWith({
-      allergies: ["페니실린", "아세트아미노펜", "페니실린류 베타락탐계 항박테리아제"],
+      allergies: ["기타 진통제 및 해열제", "페니실린", "페니실린류 베타락탐계 항박테리아제"],
       allergyMappings: {
         "페니실린류 베타락탐계 항박테리아제": {
           type: "ATC_GROUP",

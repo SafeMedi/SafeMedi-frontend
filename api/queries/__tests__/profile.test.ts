@@ -195,6 +195,18 @@ describe("api/queries/profile", () => {
       isMissedAlertOn: true,
     });
 
+    expect(
+      successUpdater({
+        isMyReminderOn: true,
+        isFamilyReminderOn: true,
+        isMissedAlertOn: true,
+      }),
+    ).toEqual({
+      isMyReminderOn: true,
+      isFamilyReminderOn: true,
+      isMissedAlertOn: true,
+    });
+
     await mutation.onSettled();
     expect(mockInvalidateQueries).toHaveBeenCalledWith({
       queryKey: queryKeys.profile.notificationSettings,

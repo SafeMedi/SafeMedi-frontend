@@ -85,7 +85,7 @@ export function useUpdateNotificationSettings() {
 
           const next = { ...current };
           for (const key of NOTIFICATION_SETTING_KEYS) {
-            if (patch[key] !== undefined) {
+            if (patch[key] !== undefined && current[key] === patch[key]) {
               next[key] = updated[key];
             }
           }
