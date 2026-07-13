@@ -82,7 +82,7 @@ export type ChronicConditionOption = {
 };
 
 export const chronicConditionOptions = [
-  { emoji: "❤️", label: "당뇨병", code: "COND001" },
+  { emoji: "❤️", label: "당뇨", code: "COND001" },
   { emoji: "🩸", label: "고혈압", code: "COND002" },
   { emoji: "🫁", label: "천식", code: "COND010" },
   { emoji: "🫘", label: "신장질환", code: "COND013" },
