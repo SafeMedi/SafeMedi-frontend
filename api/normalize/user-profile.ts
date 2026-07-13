@@ -1,4 +1,4 @@
-import type { AllergyItem, UserProfile } from "@/api/types/user";
+import type { AllergyItem, DiseaseItem, UserProfile } from "@/api/types/user";
 
 type RawUserMeResponse = {
   displayName?: string | null;
@@ -9,7 +9,7 @@ type RawUserMeResponse = {
   weight?: number | null;
   bloodType?: string | null;
   rhType?: string | null;
-  diseases?: string[] | null;
+  diseases?: unknown;
   allergies?: unknown;
   isTutorialCompleted?: boolean;
 };
@@ -51,13 +51,55 @@ function normalizeAllergies(allergies: unknown): AllergyItem[] | null {
     }
     if (entry && typeof entry === "object") {
       const record = entry as Record<string, unknown>;
-      const name = typeof record.name === "string" ? record.name : "";
+      const name =
+        typeof record.name === "string"
+          ? record.name
+          : typeof record.allergyName === "string"
+            ? record.allergyName
+            : "";
       const code =
         typeof record.code === "string"
           ? record.code
           : typeof record.value === "string"
             ? record.value
-            : name;
+            : typeof record.allergyValue === "string"
+              ? record.allergyValue
+              : name;
+      if (name || code) {
+        items.push({ code, name: name || code });
+      }
+    }
+  }
+
+  return items;
+}
+
+function normalizeDiseases(diseases: unknown): DiseaseItem[] | null {
+  if (!Array.isArray(diseases)) return null;
+  if (diseases.length === 0) return [];
+
+  const items: DiseaseItem[] = [];
+  for (const entry of diseases) {
+    if (typeof entry === "string") {
+      items.push({ code: entry, name: entry });
+      continue;
+    }
+    if (entry && typeof entry === "object") {
+      const record = entry as Record<string, unknown>;
+      const name =
+        typeof record.name === "string"
+          ? record.name
+          : typeof record.diseaseName === "string"
+            ? record.diseaseName
+            : "";
+      const code =
+        typeof record.code === "string"
+          ? record.code
+          : typeof record.diseaseCode === "string"
+            ? record.diseaseCode
+            : typeof record.value === "string"
+              ? record.value
+              : name;
       if (name || code) {
         items.push({ code, name: name || code });
       }
@@ -76,7 +118,7 @@ export function normalizeUserProfile(raw: RawUserMeResponse): UserProfile {
     height: raw.height ?? null,
     weight: raw.weight ?? null,
     bloodType: combineBloodTypeFromApi(raw.bloodType, raw.rhType),
-    diseases: raw.diseases ?? null,
+    diseases: normalizeDiseases(raw.diseases),
     allergies: normalizeAllergies(raw.allergies),
     isTutorialCompleted: raw.isTutorialCompleted ?? false,
   };

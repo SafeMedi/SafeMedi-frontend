@@ -155,7 +155,7 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
       mockState.profile.displayName = patch.nickname;
     }
     if (patch.diseaseCodes) {
-      mockState.profile.diseases = [...patch.diseaseCodes];
+      mockState.profile.diseases = patch.diseaseCodes.map((code) => ({ code, name: code }));
     }
     if (patch.gender !== undefined) {
       mockState.profile.gender = patch.gender === "FEMALE" ? "F" : "M";

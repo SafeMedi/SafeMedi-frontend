@@ -40,7 +40,7 @@ export const mockState: MockOnlyState & {
     height: 180,
     weight: 75,
     bloodType: "O",
-    diseases: ["비염"],
+    diseases: [{ code: "비염", name: "비염" }],
     allergies: [
       { code: "N02BE01", name: "아세트아미노펜" },
       { code: "J01CA", name: "페니실린계 항생제" },
