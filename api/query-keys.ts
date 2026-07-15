@@ -1,4 +1,7 @@
 export const queryKeys = {
+  auth: {
+    logout: ["auth", "logout"] as const,
+  },
   dashboard: {
     todayMedicationSchedules: ["dashboard", "medication-records", "today"] as const,
   },

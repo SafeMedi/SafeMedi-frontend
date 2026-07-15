@@ -1,6 +1,6 @@
 import { api } from "@/api/client";
 import { apiPaths } from "@/api/paths";
-import type { SocialLoginResponse } from "@/api/types/auth";
+import type { LogoutBody, LogoutResponse, SocialLoginResponse } from "@/api/types/auth";
 
 export async function postSocialLogin(
   provider: "kakao" | "naver",
@@ -11,4 +11,8 @@ export async function postSocialLogin(
       json: { accessToken },
     })
     .json<SocialLoginResponse>();
+}
+
+export async function postLogout(body: LogoutBody): Promise<LogoutResponse> {
+  return api.post(apiPaths.authLogout, { json: body }).json<LogoutResponse>();
 }

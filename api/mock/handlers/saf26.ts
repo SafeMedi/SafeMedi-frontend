@@ -192,8 +192,8 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
     message: "기기 푸시 토큰이 성공적으로 등록(갱신)되었습니다.",
   }));
 
-  registry.register("DELETE", apiPaths.usersDeviceToken, () => ({
-    message: "기기 푸시 토큰이 성공적으로 해제되었습니다.",
+  registry.register("POST", apiPaths.authLogout, () => ({
+    message: "로그아웃이 성공적으로 진행되었습니다.",
   }));
 
   // --- Family: received (목록) ---
