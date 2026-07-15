@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 import { postDeviceToken } from "@/api/endpoints/device-token";
+import { queryKeys } from "@/api/query-keys";
 import {
   addNotificationReceivedListener,
   addNotificationResponseListener,
@@ -24,7 +25,7 @@ function warnPushTokenRegistration(message: string, error?: unknown): void {
 }
 
 /**
- * 로그인 후 FCM 디바이스 토큰을 서버에 등록하고, 푸시 수신 시 알림 쿼리를 갱신합니다.
+ * 로그인 후 FCM 디바이스 토큰을 서버에 등록하고, 푸시 수신 시 알림/대시보드 쿼리를 갱신합니다.
  */
 export function PushNotificationSync() {
   const hydrated = useSessionHydrated();
@@ -52,15 +53,18 @@ export function PushNotificationSync() {
         warnPushTokenRegistration("FCM 디바이스 토큰 등록 실패", error);
       });
 
-    const invalidateNotifications = () => {
+    const invalidatePushDrivenQueries = () => {
       void queryClient.invalidateQueries({ queryKey: ["notification"] });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.dashboard.todayMedicationSchedules,
+      });
     };
 
     const receivedSubscription = addNotificationReceivedListener(() => {
-      invalidateNotifications();
+      invalidatePushDrivenQueries();
     });
     const responseSubscription = addNotificationResponseListener(() => {
-      invalidateNotifications();
+      invalidatePushDrivenQueries();
     });
 
     return () => {

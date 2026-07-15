@@ -27,7 +27,7 @@ function formatTimeOfDay(date: Date): string {
   return `${period} ${hours % 12 || 12}시`;
 }
 
-/** 알림 카드용 상대 시각 라벨 (예: 10분 전, 어제, 오늘 오전) */
+/** 알림 카드용 상대 시각 라벨 */
 export function formatNotificationRelativeTime(
   value: string,
   referenceDate: Date = new Date(),
