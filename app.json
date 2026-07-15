@@ -25,7 +25,21 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": ["android.permission.RECORD_AUDIO", "android.permission.POST_NOTIFICATIONS"],
-      "package": "com.safeMedi"
+      "package": "com.safeMedi",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "35.223.15.211.nip.io",
+              "pathPrefix": "/invite"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "output": "static",
@@ -61,6 +75,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "39c34ca4-00cd-426d-b1d3-f1c56850f305"
+      }
+    },
+    "owner": "gunhee.jo"
   }
 }
