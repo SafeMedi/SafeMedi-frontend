@@ -9,6 +9,7 @@ const DEFAULT_APP_SLUG = "safeMedi";
 const LOCATION_USAGE_DESCRIPTION =
   "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.";
 const KAKAO_NATIVE_APP_KEY = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY ?? "";
+const GOOGLE_SERVICES_JSON = process.env.GOOGLE_SERVICES_JSON;
 
 type PluginEntry = NonNullable<ExpoConfig["plugins"]>[number];
 
@@ -40,6 +41,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       infoPlist: {
         ...existingInfoPlist,
       },
+    },
+    android: {
+      ...config.android,
+      ...(GOOGLE_SERVICES_JSON ? { googleServicesFile: GOOGLE_SERVICES_JSON } : {}),
     },
     plugins: [
       "./plugins/withIosNetworkSessionFix.js",
