@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 
 import { useLogoutMutation } from "@/api/queries/auth";
 import { queryKeys } from "@/api/query-keys";
@@ -23,16 +23,24 @@ const AUTH_SCOPED_QUERY_KEY_PREFIXES = [
 
 export function useLogout() {
   const queryClient = useQueryClient();
-  const logoutMutation = useLogoutMutation();
+  const { mutateAsync: logoutAsync } = useLogoutMutation();
   const clearSession = useSessionStore((s) => s.clearSession);
   const clearUser = useUserStore((s) => s.clearUser);
+  const isLoggingOutRef = useRef(false);
 
   return useCallback(async () => {
+    if (isLoggingOutRef.current) {
+      return;
+    }
+
+    isLoggingOutRef.current = true;
     const deviceToken = getRegisteredDeviceToken();
+    let didLogoutOnServer = false;
 
     try {
       if (deviceToken) {
-        await logoutMutation.mutateAsync({ deviceToken });
+        await logoutAsync({ deviceToken });
+        didLogoutOnServer = true;
       }
     } catch (error) {
       if (__DEV__) {
@@ -40,7 +48,7 @@ export function useLogout() {
         console.warn(`[useLogout] 로그아웃 API 호출 실패: ${message}`);
       }
     } finally {
-      if (deviceToken) {
+      if (didLogoutOnServer) {
         clearRegisteredDeviceToken();
       }
       clearSession();
@@ -48,6 +56,7 @@ export function useLogout() {
       for (const queryKey of AUTH_SCOPED_QUERY_KEY_PREFIXES) {
         queryClient.removeQueries({ queryKey });
       }
+      isLoggingOutRef.current = false;
     }
-  }, [clearSession, clearUser, logoutMutation, queryClient]);
+  }, [clearSession, clearUser, logoutAsync, queryClient]);
 }
