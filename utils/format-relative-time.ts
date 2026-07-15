@@ -27,7 +27,7 @@ function formatTimeOfDay(date: Date): string {
   return `${period} ${hours % 12 || 12}시`;
 }
 
-/** 알림 카드용 로컬 상대 시각 라벨 (서버 UTC 시각을 기기 로컬 시간으로 표시) */
+/** 알림 카드용 상대 시각 라벨 */
 export function formatNotificationRelativeTime(
   value: string,
   referenceDate: Date = new Date(),

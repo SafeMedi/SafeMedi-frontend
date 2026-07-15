@@ -35,7 +35,11 @@ describe("formatNotificationRelativeTime", () => {
     expect(formatNotificationRelativeTime("2026-03-20T14:00:00Z", referenceDate)).toContain("3월");
   });
 
-  it("timezone이 없는 서버 시각은 UTC로 해석해 기기 로컬 기준 상대 시간을 계산한다", () => {
-    expect(formatNotificationRelativeTime("2026-04-07T13:50:00", referenceDate)).toBe("10분 전");
+  it("timezone이 없는 서버 시각은 기기 로컬 기준 상대 시간을 계산한다", () => {
+    const localReferenceDate = new Date(2026, 3, 7, 14, 0, 0);
+
+    expect(formatNotificationRelativeTime("2026-04-07T13:50:00", localReferenceDate)).toBe(
+      "10분 전",
+    );
   });
 });
