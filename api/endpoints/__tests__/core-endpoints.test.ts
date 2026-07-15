@@ -1,5 +1,5 @@
 import { apiPaths } from "@/api/paths";
-import { postSocialLogin } from "../auth";
+import { postLogout, postSocialLogin } from "../auth";
 import { fetchFamilies, fetchFamilyDetail, fetchFamilyManageOverview } from "../family";
 import {
   fetchNotificationSettings,
@@ -45,6 +45,18 @@ describe("api/endpoints core modules", () => {
 
     expect(mockApiPost).toHaveBeenCalledWith(apiPaths.authLogin("kakao"), {
       json: { accessToken: "social-token" },
+    });
+    expect(result).toEqual(expected);
+  });
+
+  it("auth logout endpoint를 deviceToken payload로 호출한다", async () => {
+    const expected = { message: "로그아웃이 성공적으로 진행되었습니다." };
+    mockApiPost.mockReturnValueOnce({ json: jest.fn(async () => expected) });
+
+    const result = await postLogout({ deviceToken: "fcm-token" });
+
+    expect(mockApiPost).toHaveBeenCalledWith(apiPaths.authLogout, {
+      json: { deviceToken: "fcm-token" },
     });
     expect(result).toEqual(expected);
   });

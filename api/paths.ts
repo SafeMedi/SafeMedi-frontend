@@ -3,6 +3,7 @@
  */
 export const apiPaths = {
   authLogin: (provider: "kakao" | "naver") => `/api/v1/auth/login/${provider}`,
+  authLogout: "/api/v1/auth/logout",
   usersMeTutorial: "/api/v1/users/me/tutorial",
   usersMe: "/api/v1/users/me",
   usersDeviceToken: "/api/v1/users/device-token",
