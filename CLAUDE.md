@@ -161,8 +161,10 @@ features/{domain}/{feature}/
 
 ### 브랜치
 
-- 기본(base) 브랜치: **`main`**.
-- `main`에서 직접 PR 생성하지 않는다. feature 브랜치에서 작업 후 PR.
+- **`dev`가 실질적인 개발 기준 브랜치.** 신규 feature 브랜치는 `dev`에서 분기하고, 작업 후 `dev`로 PR을 올린다.
+- **`main`은 실서비스(production) 브랜치.** 직접 push·머지 금지, PR로만 반영한다.
+- 흐름: `dev`에서 feature 브랜치 분기 → 작업 → `dev`로 PR·병합 → `dev`에서 통합 테스트 → `release` 브랜치에서 검증 → `main`으로 병합.
+- `main`/`dev`에서 직접 작업하지 않는다. feature 브랜치에서 작업 후 PR.
 - 브랜치는 Linear에서 생성한 티켓명을 그대로 사용한다. 예: `SAF-00`.
 
 ### 커밋
@@ -173,6 +175,7 @@ features/{domain}/{feature}/
 
 ### PR
 
+- PR base는 기본적으로 `dev`. `release` → `main` 승격 PR만 예외적으로 `main`을 base로 한다.
 - 제목: 티켓명 뒤에 개발 내용. 예: `[SAF-00] feat: 개발 내용`.
 - 기본 assignee는 GitHub 인증 사용자(`@me`)로 설정.
 - `.github/PULL_REQUEST_TEMPLATE.md`의 섹션을 반드시 채운다: 🎟️ 관련 이슈 / 🔥 작업 배경 / 🛠️ 작업 내용 / 🧪 테스트 / 💬 기타 논의 사항 / ✅ 셀프 체크리스트.
@@ -191,7 +194,7 @@ features/{domain}/{feature}/
 
 ### CI
 
-- `pull_request` / `main` push 시 coverage 워크플로 실행 (`.github/workflows/coverage.yml`).
+- `main` 또는 `dev`로의 PR 생성·업데이트(opened/reopened/synchronize) 시 coverage 워크플로 실행 (`.github/workflows/coverage.yml`).
 
 ## 코드 리뷰 가이드라인 (`/code-review` 등)
 

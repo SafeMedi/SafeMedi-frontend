@@ -107,6 +107,8 @@ Expo Router · React Native · Tamagui · TanStack Query · Zustand.
 - 코드 식별자, 파일 경로, 커맨드, 에러 메시지는 원문(영문)을 유지한다. 설명만 한국어로 작성한다.
 - 브랜치와 커밋은 gitflow 원칙을 준수하고, 커밋도 한국어 작성을 기본으로 한다. 커밋에 linear 티켓 이름을 붙이지 않는다.
 - 브랜치는 linear에서 생성한 티켓명을 그대로 사용한다. ex) SAF-00
+- **`dev`가 실질적인 개발 기준 브랜치.** feature 브랜치는 `dev`에서 분기 → 작업 후 `dev`로 PR·병합 → `dev`에서 통합 테스트 → `release` 브랜치 검증 → `main`(실서비스) 병합 순서를 따른다. `main`은 직접 push·머지 금지, PR로만 반영.
+- PR base는 기본적으로 `dev`. `release` → `main` 승격 PR만 예외적으로 `main`을 base로 한다.
 - 커밋 요청 시 직접 관여한 파일만을 대상으로 한다. 작업하지 않은 파일은 제외한다.
 - PR을 생성할 때는 기본 assignee를 GitHub 인증 사용자(@me)로 설정한다.
 - PR의 제목은 티켓명 괄호 뒤에 개발 내용을 작성한다. 다음과 같이 작성한다 ex) [SAF-00] feat: ~~ 
