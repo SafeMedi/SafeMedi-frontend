@@ -43,15 +43,18 @@ function restoreEnvValue(key: string, Value: string | undefined): void {
 describe("app.config", () => {
   const originalKakaoAppKey = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY;
   const originalApiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+  const originalGoogleServicesJson = process.env.GOOGLE_SERVICES_JSON;
 
   afterEach(() => {
     restoreEnvValue("EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY", originalKakaoAppKey);
     restoreEnvValue("EXPO_PUBLIC_API_BASE_URL", originalApiBaseUrl);
+    restoreEnvValue("GOOGLE_SERVICES_JSON", originalGoogleServicesJson);
     jest.resetModules();
   });
 
   it("기존 managed plugin을 제거하고 필요한 plugin을 추가한다", () => {
     process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY = "test-kakao-app-key";
+    process.env.GOOGLE_SERVICES_JSON = "/tmp/google-services.json";
     const configFactory = loadAppConfigModule().default;
 
     const result = configFactory(
@@ -68,6 +71,9 @@ describe("app.config", () => {
           infoPlist: {
             ExistingFlag: "keep",
           },
+        },
+        android: {
+          package: "com.safeMedi",
         },
       } as ExpoConfig),
     );
@@ -111,6 +117,12 @@ describe("app.config", () => {
       }),
     );
     expect(result.ios?.infoPlist).not.toHaveProperty("NSAppTransportSecurity");
+    expect(result.android).toEqual(
+      expect.objectContaining({
+        package: "com.safeMedi",
+        googleServicesFile: "/tmp/google-services.json",
+      }),
+    );
   });
 
   it("name/slug가 없으면 기본값을 채운다", () => {
