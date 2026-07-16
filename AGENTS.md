@@ -8,10 +8,14 @@ Expo Router · React Native · Tamagui · TanStack Query · Zustand.
 - 경로 별칭: `@/*` → 프로젝트 루트.
 - `app/` — Expo Router 라우트만 (Screen re-export). 화면 로직은 `features/`에 둔다.
 - `features/{domain}/{feature}/` — `{Feature}Screen.tsx`, `use{Feature}ViewModel.ts`, `components/`, `__tests__/`.
-- API 레이어: `api/endpoints/` → `api/queries/` → `api/query-keys.ts` → `api/types/`.
-- 서버 상태는 TanStack Query, 세션·전역 UI는 Zustand (`stores/`).
+  - ViewModel은 `export interface {Feature}ViewModel`로 반환 shape을 명시한다. Screen은 ViewModel + presentational components 조합.
+  - `view/` 같은 별도 레이어는 기본 구조로 강제하지 않는다.
+  - 파일명은 `XxxScreen.tsx` 같은 placeholder가 아니라 기능 의미가 드러나는 이름을 사용한다 (예: `features/manage/medication-management`, `features/profile/edit`).
+- API 레이어: `api/endpoints/`(순수 fetch) → `api/queries/`(`useQuery`/`useMutation`) → `api/query-keys.ts`(키 단일 정의) → `api/types/`.
+  - Query hook은 `useSessionStore`로 `accessToken` 확인 후 `enabled: !!accessToken`, `staleTime` 등은 기존 도메인과 유사하게 설정.
+- 서버 상태는 TanStack Query, 세션·전역 UI는 Zustand (`stores/`), 화면 로컬은 `useState` 우선 (필요 시만 lift).
 - `api/mock/`은 테스트·로컬 전용. 프로덕션 경로에 연결하지 않는다.
-- `.env`, 시크릿, `coverage/`, `node_modules/` 커밋 금지.
+- `.env`, 시크릿, `coverage/`, `node_modules/` 커밋 금지. 요청 범위 밖 대규모 리팩터링 지양.
 
 ### Commands
 
@@ -25,6 +29,74 @@ Expo Router · React Native · Tamagui · TanStack Query · Zustand.
 
 ---
 
+## TypeScript & React 규칙
+
+### 타입
+
+- `strict` 준수. `any` 금지, 불확실하면 `unknown`.
+- `@ts-ignore` / `@ts-expect-error` 무단 추가 금지.
+- null/undefined 가능 값은 optional chaining·가드 등으로 명시적으로 처리.
+- 객체 shape는 `interface`, union은 `type`.
+- Props: `{ComponentName}Props` 인터페이스, `readonly` 선호.
+
+### export
+
+- 도메인 컴포넌트·hooks·utils: named export (`export function ProfileScreen`).
+- `app/` 라우트 파일만 default export 허용 (Expo Router 요구).
+
+### 컴포넌트
+
+- PascalCase 컴포넌트명. 한 파일 = 한 주요 책임 (~150줄 이하 권장).
+- UI 로직과 데이터 로직 분리: 복잡 화면은 `useXxxViewModel` hook으로 분리.
+- 이벤트 핸들러: `handle` 접두사 (`handleSubmit`).
+- boolean: `is` / `has` / `can` 접두사.
+
+### 스타일·UI
+
+- 색·타이포는 `@/constants/design-tokens`의 `palette` 등 사용. 임의 hex 남발 지양.
+- 레이아웃: Tamagui(`YStack`, `XStack` 등) + 필요 시 `StyleSheet`.
+- `@/` import로 절대 경로 사용.
+
+### 포맷 (Biome)
+
+- double quote, semicolon always, trailing commas, line width 100, indent 2 spaces.
+- Biome이 잡는 포맷은 직접 지적·수정하지 않는다 (`yarn lint:fix`에 맡긴다).
+
+### React 패턴
+
+- `useEffect`로 파생 상태만 동기화하지 말고 `useMemo`·인라인 계산 우선.
+- 리스트 `key`는 index 대신 안정 id 사용 (동적 목록).
+- premature `useMemo`/`useCallback` 지양.
+
+---
+
+## 테스트
+
+- 러너: Jest (`jest-expo`), `@testing-library/react-native`.
+- 설명·it 이름: **한국어** (`"데이터가 없으면 기본값을 반환한다"`).
+- co-locate: `__tests__/` 또는 `*.test.ts(x)`를 대상 코드 옆에 배치.
+
+### ViewModel / hook 테스트
+
+- `@/api/queries/*` 등은 `jest.mock`으로 격리.
+- mock 반환 타입: `as unknown as ReturnType<typeof hook>` 패턴 사용 (기존 테스트와 동일).
+
+### Screen 테스트
+
+- 네비게이션·store·query는 mock 후 UI·상호작용·분기 검증.
+
+### 커버리지
+
+- `jest.config.js` global threshold 60% (lines, statements, functions, branches).
+- mock-only 폴더(`api/mock/`) 등은 `collectCoverageFrom`에서 제외됨.
+
+### 작성 원칙
+
+- 의미 있는 동작만 검증. 구현 디테일·스냅샷 남용 지양.
+- 사용자가 테스트 추가를 요청하지 않으면, 버그 수정 시 관련 최소 테스트만 추가.
+
+---
+
 ## Review guidelines
 
 **Quick 리뷰**: 커밋 단위 변경에 대해 **머지 전 반드시 잡아야 할 버그·아키텍처 위반·보안**만 지적한다. Biome/포맷·사소한 네이밍·취향 리팩터는 생략한다.
@@ -35,7 +107,10 @@ Expo Router · React Native · Tamagui · TanStack Query · Zustand.
 - 코드 식별자, 파일 경로, 커맨드, 에러 메시지는 원문(영문)을 유지한다. 설명만 한국어로 작성한다.
 - 브랜치와 커밋은 gitflow 원칙을 준수하고, 커밋도 한국어 작성을 기본으로 한다. 커밋에 linear 티켓 이름을 붙이지 않는다.
 - 브랜치는 linear에서 생성한 티켓명을 그대로 사용한다. ex) SAF-00
+- **`dev`가 실질적인 개발 기준 브랜치.** feature 브랜치는 `dev`에서 분기 → 작업 후 `dev`로 PR·병합 → `dev`에서 통합 테스트 → `release` 브랜치 검증 → `main`(실서비스) 병합 순서를 따른다. `main`은 직접 push·머지 금지, PR로만 반영.
+- PR base는 기본적으로 `dev`. `release` → `main` 승격 PR만 예외적으로 `main`을 base로 한다.
 - 커밋 요청 시 직접 관여한 파일만을 대상으로 한다. 작업하지 않은 파일은 제외한다.
+- PR을 생성할 때는 기본 assignee를 GitHub 인증 사용자(@me)로 설정한다.
 - PR의 제목은 티켓명 괄호 뒤에 개발 내용을 작성한다. 다음과 같이 작성한다 ex) [SAF-00] feat: ~~ 
 - PR작성 시 `.github/PULL_REQUEST_TEMPLATE.md`파일의 규칙을 따른다. 
 - PR에서 관련된 이슈가 해결된 경우 Closed 를 사용해 PR 종료 시 닫히도록 진행한다. 

@@ -82,7 +82,8 @@ reviews:
     ignore_title_keywords: []      
     labels: []                     
     drafts: false 
-    base_branches: []              
+    base_branches:
+      - "dev"
 
   finishing_touches:
     docstrings:
@@ -114,8 +115,9 @@ knowledge_base:
   code_guidelines:
     enabled: true 
     file_patterns:
-      - "**/.cursor/rules/**" 
+      - "**/.cursor/rules/**"
       - "**/AGENTS.md"
+      - "**/CLAUDE.md"
     scope: auto  
   issues:
     scope: auto  
