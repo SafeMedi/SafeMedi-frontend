@@ -1,26 +1,31 @@
 import * as Clipboard from "expo-clipboard";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { Alert, Pressable, ScrollView, Share, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
 
-import { useFamilyManageOverview } from "@/api/queries/family";
+import { useCreateFamilyInvitation, useFamilies } from "@/api/queries/family";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { palette } from "@/constants/design-tokens";
 import { FamilyFeatureBanner } from "./components/FamilyFeatureBanner";
 import { FamilyInviteCard } from "./components/FamilyInviteCard";
 import { FamilyManageHeader } from "./components/FamilyManageHeader";
 import { FamilyMembersSection } from "./components/FamilyMembersSection";
-import { PendingInvitesSection } from "./components/PendingInvitesSection";
 
 export function FamilyManageScreen() {
   const insets = useSafeAreaInsets();
-  const { data, isLoading, isError, refetch } = useFamilyManageOverview();
-  const inviteLink = data?.inviteLink ?? "";
-  const members = data?.members ?? [];
-  const pendingInvites = data?.pendingInvites ?? [];
+  const familiesQuery = useFamilies();
+  const createInvitationMutation = useCreateFamilyInvitation();
+  const inviteLink = createInvitationMutation.data?.inviteUrl ?? "";
+  const members = familiesQuery.data ?? [];
+
+  useEffect(() => {
+    if (createInvitationMutation.isIdle) {
+      createInvitationMutation.mutate();
+    }
+  }, [createInvitationMutation]);
 
   const handleCopyLink = useCallback(async () => {
     if (!inviteLink) return;
@@ -59,18 +64,18 @@ export function FamilyManageScreen() {
       >
         <YStack gap={14}>
           <FamilyManageHeader onBack={() => router.back()} />
-          {isLoading ? (
+          {familiesQuery.isLoading ? (
             <View style={styles.feedbackContainer}>
               <LoadingSpinner accessibilityLabel="가족 정보 로딩 중" />
               <Text style={styles.feedbackText}>가족 정보를 불러오는 중입니다.</Text>
             </View>
           ) : null}
 
-          {isError ? (
+          {familiesQuery.isError ? (
             <YStack items="center" gap={12} style={styles.feedbackContainer}>
               <Text style={styles.feedbackText}>가족 정보를 불러오지 못했습니다.</Text>
               <Pressable
-                onPress={() => refetch()}
+                onPress={() => familiesQuery.refetch()}
                 accessibilityRole="button"
                 accessibilityLabel="가족 정보 다시 시도"
                 style={styles.retryButton}
@@ -80,16 +85,18 @@ export function FamilyManageScreen() {
             </YStack>
           ) : null}
 
-          {!isLoading && !isError ? (
+          {!familiesQuery.isLoading && !familiesQuery.isError ? (
             <>
               <FamilyFeatureBanner />
               <FamilyInviteCard
                 inviteLink={inviteLink}
+                isLoading={createInvitationMutation.isPending || createInvitationMutation.isIdle}
+                isError={createInvitationMutation.isError}
+                onRetry={() => createInvitationMutation.mutate()}
                 onCopyLink={handleCopyLink}
                 onShareLink={handleShareLink}
               />
               <FamilyMembersSection members={members} />
-              <PendingInvitesSection invites={pendingInvites} />
             </>
           ) : null}
         </YStack>

@@ -2,7 +2,7 @@ import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
 import { Alert, Share } from "react-native";
-import type { FamilyManageMember, PendingFamilyInviteItem } from "@/api/types";
+import type { FamilySummary } from "@/api/types";
 import { FamilyManageScreen } from "../FamilyManageScreen";
 
 interface MockFamilyInviteCardProps {
@@ -16,25 +16,12 @@ interface MockFamilyManageHeaderProps {
 }
 
 interface MockFamilyMembersSectionProps {
-  readonly members: readonly FamilyManageMember[];
+  readonly members: readonly FamilySummary[];
 }
 
-interface MockPendingInvitesSectionProps {
-  readonly invites: readonly PendingFamilyInviteItem[];
-}
-
-type MockFamilyManageOverviewData = {
-  readonly inviteLink: string;
-  readonly members: readonly FamilyManageMember[];
-  readonly pendingInvites: readonly PendingFamilyInviteItem[];
-};
-
-const mockUseFamilyManageOverview = jest.fn<
-  {
-    readonly data?: MockFamilyManageOverviewData;
-  },
-  []
->();
+const mockMutate = jest.fn();
+const mockUseFamilies = jest.fn();
+const mockUseCreateFamilyInvitation = jest.fn();
 
 jest.mock("expo-linear-gradient", () => {
   const React = require("react");
@@ -68,7 +55,8 @@ jest.mock("expo-clipboard", () => ({
 }));
 
 jest.mock("@/api/queries/family", () => ({
-  useFamilyManageOverview: () => mockUseFamilyManageOverview(),
+  useCreateFamilyInvitation: () => mockUseCreateFamilyInvitation(),
+  useFamilies: () => mockUseFamilies(),
 }));
 
 jest.mock("../components/FamilyFeatureBanner", () => ({
@@ -121,14 +109,6 @@ jest.mock("../components/FamilyMembersSection", () => ({
   },
 }));
 
-jest.mock("../components/PendingInvitesSection", () => ({
-  PendingInvitesSection: ({ invites }: MockPendingInvitesSectionProps) => {
-    const React = require("react");
-    const { Text } = require("react-native");
-    return React.createElement(Text, null, `대기초대:${invites.length}`);
-  },
-}));
-
 describe("FamilyManageScreen", () => {
   const mockAlert = jest.spyOn(Alert, "alert").mockImplementation(jest.fn());
   const mockShare = jest.spyOn(Share, "share");
@@ -139,39 +119,43 @@ describe("FamilyManageScreen", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseFamilyManageOverview.mockReturnValue({
-      data: {
-        inviteLink: "https://safemedi.app/invite/abc",
-        members: [
-          {
-            id: "1",
-            name: "홍길동",
-            relation: "아버지",
-            emoji: "👨",
-            isActive: true,
-          },
-        ],
-        pendingInvites: [
-          {
-            id: "p-1",
-            relation: "어머니",
-            email: "mother@example.com",
-            invitedAt: "2026-04-30T00:00:00.000Z",
-          },
-        ],
-      },
+    mockUseFamilies.mockReturnValue({
+      data: [{ familyId: null, name: "홍길동", relation: "본인" }],
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+    mockUseCreateFamilyInvitation.mockReturnValue({
+      data: { inviteUrl: "https://safemedi.app/invite/abc" },
+      isIdle: false,
+      isPending: false,
+      isError: false,
+      mutate: mockMutate,
     });
     mockShare.mockResolvedValue({ action: "sharedAction" });
     mockSetStringAsync.mockResolvedValue(true);
   });
 
-  it("조회 데이터가 화면에 반영된다", () => {
+  it("조회 데이터와 초대 링크가 화면에 반영된다", () => {
     const { getByText } = render(<FamilyManageScreen />);
 
     expect(getByText("패밀리 배너")).toBeTruthy();
     expect(getByText("https://safemedi.app/invite/abc")).toBeTruthy();
     expect(getByText("구성원:1")).toBeTruthy();
-    expect(getByText("대기초대:1")).toBeTruthy();
+  });
+
+  it("초대 mutation이 idle이면 링크 생성을 요청한다", () => {
+    mockUseCreateFamilyInvitation.mockReturnValue({
+      data: undefined,
+      isIdle: true,
+      isPending: false,
+      isError: false,
+      mutate: mockMutate,
+    });
+
+    render(<FamilyManageScreen />);
+
+    expect(mockMutate).toHaveBeenCalledTimes(1);
   });
 
   it("링크 복사 버튼 클릭 시 클립보드 복사 후 성공 알림을 띄운다", async () => {
@@ -207,12 +191,12 @@ describe("FamilyManageScreen", () => {
   });
 
   it("초대 링크가 비어 있으면 복사/공유를 호출하지 않는다", async () => {
-    mockUseFamilyManageOverview.mockReturnValue({
-      data: {
-        inviteLink: "",
-        members: [],
-        pendingInvites: [],
-      },
+    mockUseCreateFamilyInvitation.mockReturnValue({
+      data: undefined,
+      isIdle: false,
+      isPending: false,
+      isError: true,
+      mutate: mockMutate,
     });
 
     const { getByLabelText } = render(<FamilyManageScreen />);

@@ -4,53 +4,13 @@ import { Alert } from "react-native";
 
 import { FamilyDetailScreen } from "../FamilyDetailScreen";
 
-type MockFamilyDetail = {
-  familyId: number;
-  name: string;
-  relation: string;
-  birthDate: string;
-  gender: "M" | "F";
-  height: number;
-  weight: number;
-  bloodType: string;
-  diseases: string[];
-  allergies: { code: string; name: string }[];
-  isAlertConsent: boolean;
-  todayMedicationSummary: {
-    completedCount: number;
-    totalCount: number;
-    completionRate: number;
-    remainingCount: number;
-  };
-  todayMedicationSchedules: {
-    id: string;
-    medicineName: string;
-    scheduledTime: string;
-    status: "COMPLETED" | "PENDING";
-  }[];
-};
-
-type MockUseFamilyDetailResult = {
-  data?: MockFamilyDetail;
-  isLoading: boolean;
-  isError: boolean;
-  refetch: jest.Mock;
-};
-
-const mockUseFamilyDetail = jest.fn<MockUseFamilyDetailResult, [number | null]>();
-
-jest.mock("expo-linear-gradient", () => {
-  const React = require("react");
-  return {
-    LinearGradient: ({ children }: { children: React.ReactNode }) =>
-      React.createElement(React.Fragment, null, children),
-  };
-});
+const mockUseFamilyMember = jest.fn();
+const mockUpdateMutate = jest.fn();
+const mockDeleteMutate = jest.fn();
 
 jest.mock("expo-router", () => ({
   router: {
     back: jest.fn(),
-    push: jest.fn(),
   },
 }));
 
@@ -58,8 +18,14 @@ jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
+jest.mock("@/api/error", () => ({
+  getApiErrorMessage: jest.fn(async (_error: unknown, fallback: string) => fallback),
+}));
+
 jest.mock("@/api/queries/family", () => ({
-  useFamilyDetail: (familyId: number | null) => mockUseFamilyDetail(familyId),
+  useDeleteFamily: () => ({ isPending: false, mutate: mockDeleteMutate }),
+  useFamilyMember: (familyId: number | null) => mockUseFamilyMember(familyId),
+  useUpdateFamilyRelation: () => ({ isPending: false, mutate: mockUpdateMutate }),
 }));
 
 jest.mock("tamagui", () => {
@@ -83,53 +49,18 @@ jest.mock("../components/FamilyScreenHeader", () => ({
   },
 }));
 
-jest.mock("../components/FamilyMedicationScheduleCard", () => ({
-  FamilyMedicationScheduleCard: ({
-    schedule,
-  }: {
-    schedule: { medicineName: string; scheduledTime: string; status: string };
-  }) => {
-    const React = require("react");
-    const { Text } = require("react-native");
-    return React.createElement(
-      Text,
-      null,
-      `복약:${schedule.medicineName}:${schedule.scheduledTime}:${schedule.status}`,
-    );
-  },
-}));
-
 describe("FamilyDetailScreen", () => {
   const mockRefetch = jest.fn();
   const mockAlert = jest.spyOn(Alert, "alert").mockImplementation(jest.fn());
-  const mockRouterPush = router.push as jest.MockedFunction<typeof router.push>;
+  const mockRouterBack = router.back as jest.MockedFunction<typeof router.back>;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseFamilyDetail.mockReturnValue({
+    mockUseFamilyMember.mockReturnValue({
       data: {
         familyId: 1,
         name: "김영희",
-        relation: "MOTHER",
-        birthDate: "1965-05-15",
-        gender: "F",
-        height: 160,
-        weight: 55,
-        bloodType: "A",
-        diseases: ["고혈압"],
-        allergies: [{ code: "J01CA", name: "페니실린계 항생제" }],
-        isAlertConsent: true,
-        todayMedicationSummary: {
-          completedCount: 2,
-          totalCount: 3,
-          completionRate: 67,
-          remainingCount: 1,
-        },
-        todayMedicationSchedules: [
-          { id: "s-1", medicineName: "혈압약", scheduledTime: "08:00", status: "COMPLETED" },
-          { id: "s-2", medicineName: "당뇨약", scheduledTime: "08:00", status: "COMPLETED" },
-          { id: "s-3", medicineName: "혈압약", scheduledTime: "20:00", status: "PENDING" },
-        ],
+        relation: "어머니",
       },
       isLoading: false,
       isError: false,
@@ -137,40 +68,57 @@ describe("FamilyDetailScreen", () => {
     });
   });
 
-  it("가족 상세 데이터가 화면에 렌더링된다", () => {
-    const { getByText } = render(<FamilyDetailScreen familyId={1} />);
+  it("가족 목록에서 찾은 구성원 정보가 화면에 렌더링된다", () => {
+    const { getByText, getByDisplayValue } = render(<FamilyDetailScreen familyId={1} />);
 
     expect(getByText("헤더:어머니 님")).toBeTruthy();
-    expect(getByText("오늘의 복약 이행률")).toBeTruthy();
-    expect(getByText("2 / 3 완료")).toBeTruthy();
-    expect(getByText("67%")).toBeTruthy();
-    expect(getByText("1개 남음")).toBeTruthy();
-    expect(getByText("복약:혈압약:08:00:COMPLETED")).toBeTruthy();
-    expect(getByText("복약:당뇨약:08:00:COMPLETED")).toBeTruthy();
-    expect(getByText("복약:혈압약:20:00:PENDING")).toBeTruthy();
+    expect(getByText("김영희")).toBeTruthy();
+    expect(getByDisplayValue("어머니")).toBeTruthy();
   });
 
-  it("건강정보 상세보기 클릭 시 상세 페이지로 이동한다", () => {
+  it("호칭을 변경하고 저장하면 수정 mutation을 호출한다", () => {
     const { getByLabelText } = render(<FamilyDetailScreen familyId={1} />);
 
-    fireEvent.press(getByLabelText("건강정보 상세보기"));
+    fireEvent.changeText(getByLabelText("가족 호칭 입력"), "엄마");
+    fireEvent.press(getByLabelText("가족 호칭 저장"));
 
-    expect(mockRouterPush).toHaveBeenCalledWith("/profile/health-info");
-  });
-
-  it("가족 구성원 삭제 클릭 시 삭제 안내 알림을 띄운다", () => {
-    const { getByLabelText } = render(<FamilyDetailScreen familyId={1} />);
-
-    fireEvent.press(getByLabelText("가족 구성원 삭제"));
-
-    expect(mockAlert).toHaveBeenCalledWith(
-      "가족 구성원 삭제",
-      "삭제 기능은 다음 단계에서 API와 연결할 예정입니다.",
+    expect(mockUpdateMutate).toHaveBeenCalledWith(
+      { familyId: 1, body: { relation: "엄마" } },
+      expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
     );
   });
 
+  it("가족 연동 해제 버튼 클릭 시 확인 알림을 띄우고 확인하면 삭제한다", () => {
+    const { getByLabelText } = render(<FamilyDetailScreen familyId={1} />);
+
+    fireEvent.press(getByLabelText("가족 연동 해제"));
+
+    const destructiveButton = mockAlert.mock.calls[0]?.[2]?.[1];
+    destructiveButton?.onPress?.();
+
+    expect(mockAlert).toHaveBeenCalledWith(
+      "가족 연동 해제",
+      "이 가족과의 연동을 해제하시겠습니까?",
+      expect.any(Array),
+    );
+    expect(mockDeleteMutate).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+    );
+  });
+
+  it("삭제 성공 시 뒤로 이동한다", () => {
+    mockDeleteMutate.mockImplementation((_familyId, options) => options.onSuccess());
+    const { getByLabelText } = render(<FamilyDetailScreen familyId={1} />);
+
+    fireEvent.press(getByLabelText("가족 연동 해제"));
+    mockAlert.mock.calls[0]?.[2]?.[1]?.onPress?.();
+
+    expect(mockRouterBack).toHaveBeenCalledTimes(1);
+  });
+
   it("조회 에러 상태에서 다시 시도 클릭 시 refetch를 호출한다", () => {
-    mockUseFamilyDetail.mockReturnValue({
+    mockUseFamilyMember.mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: true,

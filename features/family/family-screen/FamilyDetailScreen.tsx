@@ -1,60 +1,96 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Alert, type DimensionValue, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, XStack, YStack } from "tamagui";
 
-import { useFamilyDetail } from "@/api/queries/family";
-import type { FamilyMedicationScheduleItem, FamilyTodayMedicationSummary } from "@/api/types";
+import { getApiErrorMessage } from "@/api/error";
+import { useDeleteFamily, useFamilyMember, useUpdateFamilyRelation } from "@/api/queries/family";
 import { Badge } from "@/components/ui/Badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { PillButton } from "@/components/ui/PillButton";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
-import { FamilyMedicationScheduleCard } from "./components/FamilyMedicationScheduleCard";
 import { FamilyScreenHeader } from "./components/FamilyScreenHeader";
 
 interface FamilyDetailScreenProps {
   readonly familyId: number | null;
 }
 
-const RELATION_LABEL: Record<string, string> = {
-  MOTHER: "어머니",
-  FATHER: "아버지",
-  SIBLING: "형제자매",
-};
-
-const EMPTY_MEDICATION_SUMMARY: FamilyTodayMedicationSummary = {
-  completedCount: 0,
-  totalCount: 0,
-  completionRate: 0,
-  remainingCount: 0,
-};
-
-const EMPTY_MEDICATION_SCHEDULES: readonly FamilyMedicationScheduleItem[] = [];
-
 export function FamilyDetailScreen({ familyId }: FamilyDetailScreenProps) {
   const insets = useSafeAreaInsets();
-  const { data, isLoading, isError, refetch } = useFamilyDetail(familyId);
+  const { data: family, isLoading, isError, refetch } = useFamilyMember(familyId);
+  const updateRelationMutation = useUpdateFamilyRelation();
+  const deleteFamilyMutation = useDeleteFamily();
+  const [relation, setRelation] = useState("");
   const isInvalidFamilyId = familyId === null;
-  const relationLabel = data?.relation ? (RELATION_LABEL[data.relation] ?? data.relation) : "가족";
-  const medicationSummary = data?.todayMedicationSummary ?? EMPTY_MEDICATION_SUMMARY;
-  const medicationSchedules = data?.todayMedicationSchedules ?? EMPTY_MEDICATION_SCHEDULES;
-  const percentage = medicationSummary.completionRate;
-  const summaryLabel = data
-    ? `${medicationSummary.completedCount} / ${medicationSummary.totalCount} 완료`
-    : "-";
-  const remainingBadgeLabel = data ? `${medicationSummary.remainingCount}개 남음` : "0개 남음";
-  const progressWidthPercent: DimensionValue = `${Math.min(100, Math.max(0, percentage))}%`;
 
-  const handleOpenHealthInfo = () => {
-    router.push("/profile/health-info");
+  useEffect(() => {
+    if (family) {
+      setRelation(family.relation);
+    }
+  }, [family]);
+
+  const trimmedRelation = relation.trim();
+  const canSave =
+    familyId !== null &&
+    !!family &&
+    trimmedRelation.length > 0 &&
+    trimmedRelation.length <= 20 &&
+    trimmedRelation !== family.relation &&
+    !updateRelationMutation.isPending;
+
+  const handleSaveRelation = () => {
+    if (!canSave || familyId === null) {
+      return;
+    }
+
+    updateRelationMutation.mutate(
+      { familyId, body: { relation: trimmedRelation } },
+      {
+        onSuccess: () => {
+          Alert.alert("호칭 수정 완료", "가족 호칭을 수정했어요.");
+        },
+        onError: async (error) => {
+          const message = await getApiErrorMessage(
+            error,
+            "가족 호칭 수정에 실패했습니다. 잠시 후 다시 시도해주세요.",
+          );
+          Alert.alert("호칭 수정 실패", message);
+        },
+      },
+    );
   };
 
   const handleDeleteFamily = () => {
-    Alert.alert("가족 구성원 삭제", "삭제 기능은 다음 단계에서 API와 연결할 예정입니다.");
+    if (familyId === null) {
+      return;
+    }
+
+    Alert.alert("가족 연동 해제", "이 가족과의 연동을 해제하시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "해제",
+        style: "destructive",
+        onPress: () => {
+          deleteFamilyMutation.mutate(familyId, {
+            onSuccess: () => {
+              Alert.alert("연동 해제 완료", "가족 연동을 해제했어요.");
+              router.back();
+            },
+            onError: async (error) => {
+              const message = await getApiErrorMessage(
+                error,
+                "가족 연동 해제에 실패했습니다. 잠시 후 다시 시도해주세요.",
+              );
+              Alert.alert("연동 해제 실패", message);
+            },
+          });
+        },
+      },
+    ]);
   };
 
   return (
@@ -69,7 +105,7 @@ export function FamilyDetailScreen({ familyId }: FamilyDetailScreenProps) {
       >
         <YStack gap={14}>
           <FamilyScreenHeader
-            title={`${relationLabel} 님`}
+            title={family ? `${family.relation} 님` : "가족 관리"}
             subtitle="가족 구성원"
             onBack={() => router.back()}
           />
@@ -81,7 +117,7 @@ export function FamilyDetailScreen({ familyId }: FamilyDetailScreenProps) {
             </View>
           ) : null}
 
-          {isInvalidFamilyId || isError ? (
+          {isInvalidFamilyId || isError || (!isLoading && !family) ? (
             <YStack gap={12} style={styles.feedbackContainer}>
               <Text style={styles.feedbackText}>
                 {isInvalidFamilyId
@@ -101,109 +137,69 @@ export function FamilyDetailScreen({ familyId }: FamilyDetailScreenProps) {
             </YStack>
           ) : null}
 
-          {!isLoading && !isInvalidFamilyId && !isError && data ? (
+          {!isLoading && !isInvalidFamilyId && !isError && family ? (
             <>
-              <LinearGradient
-                colors={[palette.blue, palette.purple]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.privacyCard}
-              >
-                <XStack gap={10} items="flex-start">
-                  <Ionicons name="shield-checkmark-outline" size={18} color={palette.white} />
-                  <YStack gap={4} flex={1}>
-                    <Text style={styles.privacyTitle}>개인정보 보호</Text>
-                    <Text style={styles.privacyDescription}>
-                      가족의 개인정보를 보호하기 위해 당일 복용 정보만 확인하실 수 있습니다.
-                    </Text>
-                  </YStack>
-                </XStack>
-              </LinearGradient>
-
-              <SurfaceCard style={styles.adherenceCard}>
-                <YStack gap={12}>
-                  <XStack items="center" justify="space-between">
-                    <YStack gap={2}>
-                      <Text style={styles.adherenceTitle}>오늘의 복약 이행률</Text>
-                      <Text style={styles.adherenceSub}>{summaryLabel}</Text>
+              <SurfaceCard style={styles.profileCard}>
+                <YStack gap={14}>
+                  <XStack items="center" justify="space-between" gap={12}>
+                    <YStack gap={4} flex={1}>
+                      <Text style={styles.name}>{family.name}</Text>
+                      <Text style={styles.description}>
+                        현재 표시 호칭은 {family.relation}입니다.
+                      </Text>
                     </YStack>
-                    <Text style={styles.adherenceRate}>{percentage}%</Text>
+                    <Badge
+                      label={family.relation}
+                      backgroundColor={palette.light_green}
+                      textColor={palette.green_deep}
+                    />
                   </XStack>
-                  <View style={styles.progressTrack}>
-                    <View style={[styles.progressFill, { width: progressWidthPercent }]} />
-                  </View>
                 </YStack>
               </SurfaceCard>
 
               <YStack gap={8}>
                 <SectionHeader
-                  icon={<Ionicons name="calendar-outline" size={16} color={palette.green} />}
-                  title="오늘의 복약 스케줄"
-                  action={
-                    <Badge
-                      label={remainingBadgeLabel}
-                      backgroundColor={palette.light_green}
-                      textColor={palette.green_deep}
-                    />
-                  }
+                  icon={<Ionicons name="create-outline" size={16} color={palette.green} />}
+                  title="가족 호칭"
                 />
-                <YStack gap={8}>
-                  {medicationSchedules.length > 0 ? (
-                    medicationSchedules.map((schedule) => (
-                      <FamilyMedicationScheduleCard key={schedule.id} schedule={schedule} />
-                    ))
-                  ) : (
-                    <SurfaceCard style={styles.adherenceCard}>
-                      <Text style={styles.feedbackText}>오늘 예정된 복약 스케줄이 없습니다.</Text>
-                    </SurfaceCard>
-                  )}
-                </YStack>
+                <SurfaceCard style={styles.formCard}>
+                  <YStack gap={10}>
+                    <TextInput
+                      value={relation}
+                      onChangeText={setRelation}
+                      maxLength={20}
+                      placeholder="호칭을 입력하세요"
+                      placeholderTextColor={palette.input_placeholder}
+                      accessibilityLabel="가족 호칭 입력"
+                      style={styles.input}
+                    />
+                    <PillButton
+                      variant="solid"
+                      disabled={!canSave}
+                      onPress={handleSaveRelation}
+                      accessibilityLabel="가족 호칭 저장"
+                      backgroundColor={palette.green}
+                    >
+                      <Text style={styles.saveText}>
+                        {updateRelationMutation.isPending ? "저장 중" : "저장"}
+                      </Text>
+                    </PillButton>
+                  </YStack>
+                </SurfaceCard>
               </YStack>
-
-              <LinearGradient
-                colors={[...palette.bg_invite_icon]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.primaryAction}
-              >
-                <Pressable
-                  style={styles.actionPressable}
-                  accessibilityRole="button"
-                  accessibilityLabel="건강정보 상세보기"
-                  onPress={handleOpenHealthInfo}
-                >
-                  <Ionicons name="shield-checkmark-outline" size={14} color={palette.white} />
-                  <Text style={styles.primaryActionText}>건강정보 상세보기</Text>
-                </Pressable>
-              </LinearGradient>
 
               <Pressable
                 style={styles.deleteAction}
                 accessibilityRole="button"
-                accessibilityLabel="가족 구성원 삭제"
+                accessibilityLabel="가족 연동 해제"
                 onPress={handleDeleteFamily}
+                disabled={deleteFamilyMutation.isPending}
               >
                 <Ionicons name="trash-outline" size={14} color={palette.red_strong} />
-                <Text style={styles.deleteActionText}>가족 구성원 삭제</Text>
+                <Text style={styles.deleteActionText}>
+                  {deleteFamilyMutation.isPending ? "해제 중" : "가족 연동 해제"}
+                </Text>
               </Pressable>
-
-              <LinearGradient
-                colors={[palette.notice_bg_start, palette.notice_bg_end]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.tipCard}
-              >
-                <XStack gap={10} items="flex-start">
-                  <Text style={styles.tipEmoji}>💡</Text>
-                  <YStack gap={4} flex={1}>
-                    <Text style={styles.tipTitle}>가족 케어 팁</Text>
-                    <Text style={styles.tipDescription}>
-                      가족이 복약을 놓쳤다면 알림을 보내 응원해주세요. 꾸준한 복약이 건강의
-                      첫걸음입니다.
-                    </Text>
-                  </YStack>
-                </XStack>
-              </LinearGradient>
             </>
           ) : null}
         </YStack>
@@ -216,56 +212,33 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { flex: 1 },
   content: { paddingHorizontal: 16 },
-  privacyCard: {
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    shadowColor: palette.shadow_base,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 6,
-  },
-  privacyTitle: {
-    color: palette.white,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  privacyDescription: {
-    color: palette.white,
-    fontSize: 12,
-    lineHeight: 17,
-    opacity: 0.92,
-  },
-  adherenceCard: {
+  profileCard: {
     paddingHorizontal: 16,
     paddingVertical: 16,
   },
-  adherenceTitle: {
-    fontSize: 14,
+  formCard: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  name: {
+    fontSize: 18,
     fontWeight: "700",
     color: palette.black,
   },
-  adherenceSub: {
-    fontSize: 12,
+  description: {
+    fontSize: 13,
     color: palette.icon,
+    lineHeight: 18,
   },
-  adherenceRate: {
-    fontSize: 40,
-    lineHeight: 42,
-    color: palette.green_deep,
-    fontWeight: "700",
-  },
-  progressTrack: {
-    height: 10,
-    borderRadius: 999,
-    backgroundColor: palette.surface_neutral,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: 10,
-    borderRadius: 999,
-    backgroundColor: palette.green,
+  input: {
+    minHeight: 46,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.dark_gray,
+    backgroundColor: palette.white,
+    paddingHorizontal: 14,
+    color: palette.black,
+    fontSize: 14,
   },
   feedbackContainer: {
     alignItems: "center",
@@ -273,64 +246,27 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
     gap: 10,
   },
-  feedbackText: { color: palette.black, fontSize: 14, fontWeight: "500" },
+  feedbackText: { color: palette.black, fontSize: 14, fontWeight: "500", textAlign: "center" },
   retryText: { color: palette.green_deep, fontSize: 14, fontWeight: "700" },
-  primaryAction: {
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  actionPressable: {
-    height: 44,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-  primaryActionText: {
+  saveText: {
     color: palette.white,
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "700",
   },
   deleteAction: {
-    height: 44,
+    minHeight: 46,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: palette.red_outline,
-    backgroundColor: palette.gray,
-    flexDirection: "row",
+    borderColor: palette.red_strong,
+    backgroundColor: palette.white,
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
     gap: 6,
   },
   deleteActionText: {
     color: palette.red_strong,
     fontSize: 13,
-    fontWeight: "600",
-  },
-  tipCard: {
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: palette.notice_border,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    shadowColor: palette.shadow_base,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 4,
-  },
-  tipEmoji: {
-    fontSize: 21,
-    lineHeight: 28,
-  },
-  tipTitle: {
-    color: palette.notice_title,
-    fontSize: 12,
     fontWeight: "700",
-  },
-  tipDescription: {
-    color: palette.notice_description,
-    fontSize: 12,
-    lineHeight: 18,
   },
 });

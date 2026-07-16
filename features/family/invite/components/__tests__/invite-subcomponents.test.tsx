@@ -2,8 +2,6 @@ import { fireEvent, render } from "@testing-library/react-native";
 import { FamilyFeatureBanner } from "../FamilyFeatureBanner";
 import { FamilyManageHeader } from "../FamilyManageHeader";
 import { FamilyMembersSection } from "../FamilyMembersSection";
-import { PendingInviteCard } from "../PendingInviteCard";
-import { PendingInvitesSection } from "../PendingInvitesSection";
 
 jest.mock("tamagui", () => {
   const React = require("react");
@@ -34,30 +32,14 @@ describe("family invite subcomponents", () => {
 
   it("FamilyMembersSection은 구성원 수와 카드 목록을 렌더링한다", () => {
     const members = [
-      { id: "1", name: "엄마", relation: "가족", emoji: "😀", isActive: true },
-      { id: "2", name: "아빠", relation: "가족", emoji: "😎", isActive: false },
+      { familyId: 1, name: "엄마", relation: "가족" },
+      { familyId: 2, name: "아빠", relation: "가족" },
     ];
-    const { getByText } = render(<FamilyMembersSection members={members as never} />);
+    const { getByText } = render(<FamilyMembersSection members={members} />);
 
     expect(getByText("현재 가족 구성원")).toBeTruthy();
     expect(getByText("2명")).toBeTruthy();
     expect(getByText("엄마")).toBeTruthy();
     expect(getByText("아빠")).toBeTruthy();
-  });
-
-  it("PendingInviteCard/PendingInvitesSection은 대기 초대 정보를 렌더링한다", () => {
-    const invite = {
-      id: "p1",
-      relation: "동생",
-      email: "family@example.com",
-      invitedAt: "2026-05-20",
-    };
-    const { getByText } = render(<PendingInviteCard invite={invite as never} />);
-    expect(getByText("대기중")).toBeTruthy();
-    expect(getByText("동생")).toBeTruthy();
-
-    const section = render(<PendingInvitesSection invites={[invite] as never} />);
-    expect(section.getByText("대기 중인 초대")).toBeTruthy();
-    expect(section.getByText("1")).toBeTruthy();
   });
 });

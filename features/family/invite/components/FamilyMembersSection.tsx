@@ -1,17 +1,20 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet } from "react-native";
 import { YStack } from "tamagui";
-import type { FamilyManageMember } from "@/api/types";
+import type { FamilySummary } from "@/api/types";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { palette } from "@/constants/design-tokens";
 import { FamilyMemberCard } from "./FamilyMemberCard";
 
 type FamilyMembersSectionProps = {
-  members: readonly FamilyManageMember[];
+  members: readonly FamilySummary[];
 };
 
 export function FamilyMembersSection({ members }: FamilyMembersSectionProps) {
+  const getMemberKey = (member: FamilySummary) =>
+    member.familyId === null ? "self" : `family-${member.familyId}`;
+
   return (
     <YStack gap={8}>
       <SectionHeader
@@ -28,7 +31,7 @@ export function FamilyMembersSection({ members }: FamilyMembersSectionProps) {
       />
       <YStack gap={8}>
         {members.map((member) => (
-          <FamilyMemberCard key={member.id} member={member} />
+          <FamilyMemberCard key={getMemberKey(member)} member={member} />
         ))}
       </YStack>
     </YStack>

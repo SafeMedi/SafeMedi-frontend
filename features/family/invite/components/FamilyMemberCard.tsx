@@ -2,16 +2,18 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
-import type { FamilyManageMember } from "@/api/types";
+import type { FamilySummary } from "@/api/types";
 import { Badge } from "@/components/ui/Badge";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
 
 type FamilyMemberCardProps = {
-  member: FamilyManageMember;
+  member: FamilySummary;
 };
 
 export function FamilyMemberCard({ member }: FamilyMemberCardProps) {
+  const isMe = member.familyId === null;
+
   return (
     <SurfaceCard style={styles.card}>
       <XStack items="center" justify="space-between" gap={12}>
@@ -22,7 +24,7 @@ export function FamilyMemberCard({ member }: FamilyMemberCardProps) {
             end={{ x: 1, y: 1 }}
             style={styles.avatar}
           >
-            <Text style={styles.avatarEmoji}>{member.emoji}</Text>
+            <Text style={styles.avatarEmoji}>{isMe ? "나" : member.relation.slice(0, 1)}</Text>
           </LinearGradient>
           <YStack gap={2} flex={1}>
             <XStack items="center" gap={4}>
@@ -32,8 +34,8 @@ export function FamilyMemberCard({ member }: FamilyMemberCardProps) {
             <Text style={styles.relation}>{member.relation}</Text>
           </YStack>
         </XStack>
-        {member.isActive ? (
-          <Badge label="활성" backgroundColor={palette.green} textColor={palette.white} />
+        {isMe ? (
+          <Badge label="본인" backgroundColor={palette.green} textColor={palette.white} />
         ) : null}
       </XStack>
     </SurfaceCard>

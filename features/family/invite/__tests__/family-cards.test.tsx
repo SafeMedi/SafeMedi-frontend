@@ -74,19 +74,15 @@ describe("family cards", () => {
     expect(getByText("초대 링크 공유")).toBeTruthy();
   });
 
-  it("FamilyMemberCard는 활성 멤버에만 활성 뱃지를 표시한다", () => {
-    const { queryByText, rerender } = render(
-      <FamilyMemberCard
-        member={{ name: "엄마", relation: "가족", emoji: "😀", isActive: true } as never}
-      />,
+  it("FamilyMemberCard는 본인 항목에만 본인 뱃지를 표시한다", () => {
+    const { getAllByText, queryByText, rerender } = render(
+      <FamilyMemberCard member={{ familyId: null, name: "홍길동", relation: "본인" } as never} />,
     );
-    expect(queryByText("활성")).toBeTruthy();
+    expect(getAllByText("본인")).toHaveLength(2);
 
     rerender(
-      <FamilyMemberCard
-        member={{ name: "아빠", relation: "가족", emoji: "😎", isActive: false } as never}
-      />,
+      <FamilyMemberCard member={{ familyId: 2, name: "김영희", relation: "어머니" } as never} />,
     );
-    expect(queryByText("활성")).toBeNull();
+    expect(queryByText("본인")).toBeNull();
   });
 });

@@ -29,20 +29,25 @@ export function useProfileViewModel() {
   const { allergies, chronicConditions } = useHealthInfo();
 
   const familyProfiles = useMemo<FamilyProfile[]>(() => {
-    const me: FamilyProfile = {
-      id: "me",
-      name: profileUser.name,
-      isActive: true,
-      avatarGradient: FAMILY_AVATAR_GRADIENTS.green,
-    };
     const members = familySummaries.map((family, index) => ({
-      id: String(family.familyId),
+      id: family.familyId === null ? "me" : String(family.familyId),
       name: family.name,
-      isActive: false,
+      isActive: family.familyId === null,
       avatarGradient: AVATAR_GRADIENT_POOL[index % AVATAR_GRADIENT_POOL.length],
     }));
 
-    return [me, ...members];
+    if (members.length > 0) {
+      return members;
+    }
+
+    return [
+      {
+        id: "me",
+        name: profileUser.name,
+        isActive: true,
+        avatarGradient: FAMILY_AVATAR_GRADIENTS.green,
+      },
+    ];
   }, [familySummaries, profileUser.name]);
 
   const appInfoItems = useMemo(
