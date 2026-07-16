@@ -18,19 +18,20 @@ export {
 } from "./queries/user";
 export { queryKeys } from "./query-keys";
 export type {
+  AcceptedFamilyInvitation,
   AllergyItem,
-  FamilyDetail,
-  FamilyManageMember,
-  FamilyManageOverview,
+  FamiliesResponse,
+  FamilyInvitation,
+  FamilyInvitationInfo,
   FamilySummary,
   NotificationItem,
   NotificationListResponse,
   NotificationSettings,
-  PendingFamilyInviteItem,
-  ReceivedFamilyRequest,
   SocialLoginResponse,
   TutorialRegistrationBody,
   TutorialRegistrationResponse,
+  UpdatedFamilyRelation,
+  UpdateFamilyRelationBody,
   UpdateUserProfileBody,
   UserProfile,
 } from "./types";

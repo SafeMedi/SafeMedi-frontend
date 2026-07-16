@@ -7,9 +7,10 @@ const SUPPORTED_PROVIDERS = new Set(["kakao", "naver"]);
 
 const RX = {
   authLogin: /^\/api\/v1\/auth\/login\/([^/]+)$/,
-  familyRequestId: /^\/api\/v1\/families\/requests\/(\d+)$/,
   familyId: /^\/api\/v1\/families\/(\d+)$/,
-  familySettings: /^\/api\/v1\/families\/(\d+)\/settings$/,
+  familyInvitation: /^\/api\/v1\/family-invitations\/([^/]+)$/,
+  familyInvitationAccept: /^\/api\/v1\/family-invitations\/([^/]+)\/accept$/,
+  familyInvitationValidation: /^\/api\/v1\/family-invitations\/([^/]+)\/validation$/,
   prescriptionId: /^\/api\/v1\/prescriptions\/(\d+)$/,
   medicationRecordId: /^\/api\/v1\/medication-records\/(\d+)$/,
 };
@@ -17,6 +18,10 @@ const RX = {
 function parsePathId(path: string, rx: RegExp): number | undefined {
   const m = path.match(rx);
   return m?.[1] ? Number(m[1]) : undefined;
+}
+
+function parsePathToken(path: string, rx: RegExp): string | undefined {
+  return path.match(rx)?.[1];
 }
 
 function clonePrescriptions() {
@@ -196,143 +201,139 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
     message: "로그아웃이 성공적으로 진행되었습니다.",
   }));
 
-  // --- Family: received (목록) ---
-  registry.register("GET", apiPaths.familiesRequestsReceived, () => [
-    ...mockState.receivedRequests,
-  ]);
+  // --- Family ---
+  registry.register("GET", apiPaths.families, () => ({
+    families: mockState.families.map((family) => ({ ...family })),
+  }));
 
   registry.register(
     "POST",
-    apiPaths.familiesRequests,
-    async (ctx) => {
-      const body = ctx.jsonBody as { targetInviteCode?: string; relation?: string };
-      if (!body?.targetInviteCode || body.targetInviteCode === "INVALID") {
-        return Response.json(
-          { code: "REQ_001", message: "유효하지 않은 초대 코드입니다. 다시 확인해 주세요." },
-          { status: 404 },
-        );
+    apiPaths.familyInvitations,
+    () => {
+      if (!mockState.currentFamilyInvitation) {
+        const invitationId = mockState.nextFamilyInvitationId++;
+        mockState.currentFamilyInvitation = {
+          invitationId,
+          inviteUrl: `https://35.223.15.211.nip.io/invite/mock-token-${invitationId}`,
+          status: "PENDING",
+          createdAt: "2026-07-14T06:00:00Z",
+          expiresAt: "2026-07-15T06:00:00Z",
+        };
       }
-      if (body.targetInviteCode === "SELF") {
-        return Response.json(
-          { code: "REQ_003", message: "자기 자신의 코드로 요청할 수 없음" },
-          { status: 400 },
-        );
-      }
-      const id = mockState.nextFamilyRequestId++;
-      return {
-        requestId: id,
-        targetName: "김영희",
-        relation: body.relation ?? "MOTHER",
-        status: "PENDING",
-        requestedAt: "2026-04-06T15:30:00",
-      };
+      return { ...mockState.currentFamilyInvitation };
     },
     { status: 201 },
   );
 
   registry.registerMatch(
-    "PATCH",
-    (p) => RX.familyRequestId.test(p) && !p.includes("/received"),
+    "GET",
+    (p) => RX.familyInvitationValidation.test(p),
     (ctx) => {
-      const id = parsePathId(ctx.path, RX.familyRequestId);
-      const body = ctx.jsonBody as { action?: string; myRelationToSender?: string };
-      if (!id || (body?.action === "ACCEPT" && !body?.myRelationToSender)) {
-        return Response.json(
-          { code: "REQ_004", message: "이미 처리되었거나 상대방이 취소한 요청입니다." },
-          { status: 400 },
-        );
+      const token = parsePathToken(ctx.path, RX.familyInvitationValidation);
+      if (!token || token === "invalid") {
+        return new Response(null, { status: 404 });
       }
-      return {
-        requestId: id,
-        status: body?.action === "REJECT" ? "REJECTED" : "ACCEPTED",
-        updatedAt: "2026-04-06T15:35:00",
-        isAlertConsent: true,
-      };
+      if (token === "expired" || token === "used") {
+        return new Response(null, { status: 410 });
+      }
+      return new Response(null, { status: 200 });
     },
-    { label: "PATCH /api/v1/families/requests/:requestId" },
-  );
-
-  registry.register("GET", apiPaths.families, () => mockState.families.map((f) => ({ ...f })));
-
-  registry.register("GET", apiPaths.familiesManage, () => ({
-    ...mockState.familyManageOverview,
-    members: mockState.familyManageOverview.members.map((member) => ({ ...member })),
-    pendingInvites: mockState.familyManageOverview.pendingInvites.map((invite) => ({ ...invite })),
-    benefits: [...mockState.familyManageOverview.benefits],
-  }));
-
-  registry.registerMatch(
-    "PATCH",
-    (p) => RX.familySettings.test(p),
-    (ctx) => {
-      const id = parsePathId(ctx.path, RX.familySettings);
-      const body = ctx.jsonBody as { isAlertConsent?: boolean };
-      if (id === undefined) {
-        return Response.json(
-          { code: "FAM_002", message: "존재하지 않는 가족 ID" },
-          { status: 404 },
-        );
-      }
-      if (typeof body?.isAlertConsent !== "boolean") {
-        return Response.json(
-          { code: "VAL_004", message: "잘못된 설정 값입니다. (Boolean 형식이 필요합니다)" },
-          { status: 400 },
-        );
-      }
-      const familyDetail = id !== undefined ? mockState.familyDetails[id] : undefined;
-      if (!familyDetail) {
-        return Response.json(
-          { code: "FAM_002", message: "존재하지 않는 가족 ID" },
-          { status: 404 },
-        );
-      }
-      mockState.familyAlertConsent.set(id, body.isAlertConsent);
-      familyDetail.isAlertConsent = body.isAlertConsent;
-      return {
-        familyId: id,
-        isAlertConsent: body.isAlertConsent,
-        message: "알림 설정이 변경되었습니다.",
-      };
-    },
-    { label: "PATCH /api/v1/families/:familyId/settings" },
+    { label: "GET /api/v1/family-invitations/:token/validation" },
   );
 
   registry.registerMatch(
     "GET",
-    (p) => RX.familyId.test(p) && !RX.familySettings.test(p),
+    (p) => RX.familyInvitation.test(p),
+    (ctx) => {
+      const token = parsePathToken(ctx.path, RX.familyInvitation);
+      if (!token || token === "invalid") {
+        return Response.json(
+          { code: "INV_001", message: "존재하지 않거나 유효하지 않은 초대 링크입니다." },
+          { status: 404 },
+        );
+      }
+      return {
+        inviterName: "홍길동",
+        expiresAt: "2026-07-16T06:00:00Z",
+      };
+    },
+    { label: "GET /api/v1/family-invitations/:token" },
+  );
+
+  registry.registerMatch(
+    "POST",
+    (p) => RX.familyInvitationAccept.test(p),
+    (ctx) => {
+      const token = parsePathToken(ctx.path, RX.familyInvitationAccept);
+      if (!token || token === "invalid") {
+        return Response.json(
+          { code: "INV_001", message: "존재하지 않거나 유효하지 않은 초대 링크입니다." },
+          { status: 404 },
+        );
+      }
+      const accepted = {
+        familyId: 12,
+        name: "홍길동",
+        relation: "가족",
+        connectedAt: "2026-07-15T06:05:00Z",
+      };
+      if (!mockState.families.some((family) => family.familyId === accepted.familyId)) {
+        mockState.families.push({
+          familyId: accepted.familyId,
+          name: accepted.name,
+          relation: accepted.relation,
+        });
+      }
+      return accepted;
+    },
+    { label: "POST /api/v1/family-invitations/:token/accept" },
+  );
+
+  registry.registerMatch(
+    "PATCH",
+    (p) => RX.familyId.test(p),
     (ctx) => {
       const id = parsePathId(ctx.path, RX.familyId);
-      if (!id) {
+      const body = ctx.jsonBody as { relation?: string };
+      const relation = body.relation?.trim() ?? "";
+      const family = mockState.families.find((item) => item.familyId === id);
+      if (!id || !family) {
         return Response.json(
-          { code: "FAM_002", message: "존재하지 않는 가족 ID" },
+          { code: "FAM_002", message: "존재하지 않거나 연동이 해제된 가족입니다." },
           { status: 404 },
         );
       }
-      const familyDetail = mockState.familyDetails[id];
-      if (!familyDetail) {
+      if (relation.length < 1 || relation.length > 20) {
         return Response.json(
-          { code: "FAM_002", message: "존재하지 않거나 연동이 해제된 가족" },
-          { status: 404 },
+          { code: "VAL_008", message: "가족 호칭이 비어 있거나 20자를 초과했습니다." },
+          { status: 400 },
         );
       }
-      const consent = mockState.familyAlertConsent.get(id) ?? familyDetail.isAlertConsent;
-      return { ...familyDetail, isAlertConsent: consent };
+      family.relation = relation;
+      return {
+        familyId: id,
+        name: family.name,
+        relation,
+        updatedAt: "2026-07-15T06:10:00Z",
+      };
     },
-    { label: "GET /api/v1/families/:familyId" },
+    { label: "PATCH /api/v1/families/:familyId" },
   );
 
   registry.registerMatch(
     "DELETE",
-    (p) => RX.familyId.test(p) && !RX.familySettings.test(p),
+    (p) => RX.familyId.test(p),
     (ctx) => {
       const id = parsePathId(ctx.path, RX.familyId);
-      if (!id || !mockState.familyDetails[id]) {
+      const index = mockState.families.findIndex((family) => family.familyId === id);
+      if (!id || index === -1) {
         return Response.json(
-          { code: "FAM_002", message: "존재하지 않는 가족 프로필입니다." },
+          { code: "FAM_002", message: "존재하지 않거나 연동이 해제된 가족입니다." },
           { status: 404 },
         );
       }
-      return { message: "가족 연동이 성공적으로 해제되었습니다." };
+      mockState.families.splice(index, 1);
+      return new Response(null, { status: 204 });
     },
     { label: "DELETE /api/v1/families/:familyId" },
   );

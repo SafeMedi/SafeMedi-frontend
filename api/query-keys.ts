@@ -17,11 +17,12 @@ export const queryKeys = {
     deleteAccount: ["user", "delete-account"] as const,
   },
   family: {
-    manageOverview: ["family", "manage-overview"] as const,
-    detail: (familyId: number) => ["family", "detail", familyId] as const,
+    list: ["family", "list"] as const,
+    invitation: (token: string) => ["family", "invitation", token] as const,
+    invitationValidation: (token: string) => ["family", "invitation", token, "validation"] as const,
   },
   profile: {
-    families: ["profile", "families"] as const,
+    families: ["family", "list"] as const,
     notificationSettings: ["profile", "notification-settings"] as const,
     searchDrugAllergies: (keyword: string) =>
       ["profile", "drug-allergies", "search", keyword] as const,
