@@ -114,8 +114,9 @@ knowledge_base:
   code_guidelines:
     enabled: true 
     file_patterns:
-      - "**/.cursor/rules/**" 
+      - "**/.cursor/rules/**"
       - "**/AGENTS.md"
+      - "**/CLAUDE.md"
     scope: auto  
   issues:
     scope: auto  
