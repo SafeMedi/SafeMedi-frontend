@@ -5,6 +5,9 @@ const EMPTY_DRUG_FALLBACK = "미확인 약물";
 const EMPTY_TITLE_FALLBACK = "처방전 스캔 등록";
 const DEFAULT_ATC_CODE = "UNKNOWN";
 const DATE_PATTERN = /\b\d{4}[./-]\d{1,2}[./-]\d{1,2}\b/g;
+const MEDICATION_KEYWORD_PATTERN = /정|캡슐|시럽|환|산제|과립|크림|연고|패치|mg|ml|mcg|IU/i;
+const NON_MEDICATION_LINE_PATTERN =
+  /병원|의원|약국|처방전|환자|생년월일|성별|연락처|전화|주소|발행일|조제일|보험|진료과|담당의|면허번호/;
 
 const medicationSchema = z.object({
   atcCode: z.string().min(1),
@@ -52,19 +55,34 @@ function extractMedications(rawText: string): readonly ScanMedicationItem[] {
     .split(/\n+/)
     .map((line) => normalizeMedicationName(line))
     .filter((line) => line.length > 0);
-  const medicationCandidates = lines.filter((line) => /정|캡슐|시럽|mg|ml|약/.test(line));
-  if (medicationCandidates.length === 0) {
+  const medicationCandidates = lines.filter(
+    (line) => MEDICATION_KEYWORD_PATTERN.test(line) && !NON_MEDICATION_LINE_PATTERN.test(line),
+  );
+  const uniqueCandidates = Array.from(new Set(medicationCandidates));
+  if (uniqueCandidates.length === 0) {
     return [{ atcCode: DEFAULT_ATC_CODE, drugName: EMPTY_DRUG_FALLBACK }];
   }
-  return medicationCandidates.map((drugName) => ({ atcCode: DEFAULT_ATC_CODE, drugName }));
+  return uniqueCandidates.map((drugName) => ({ atcCode: DEFAULT_ATC_CODE, drugName }));
+}
+
+function isDateOnlyLine(line: string): boolean {
+  return line.replace(DATE_PATTERN, "").replace(/[\s~.-]/g, "").length === 0;
 }
 
 function extractTitle(rawText: string): string {
   const firstMeaningfulLine = rawText
     .split(/\n+/)
     .map((line) => line.trim())
-    .find((line) => line.length > 2);
+    .find((line) => line.length > 2 && !isDateOnlyLine(line));
   return firstMeaningfulLine ?? EMPTY_TITLE_FALLBACK;
+}
+
+export function isPlaceholderMedication(item: ScanMedicationItem): boolean {
+  return item.atcCode === DEFAULT_ATC_CODE && item.drugName === EMPTY_DRUG_FALLBACK;
+}
+
+export function hasOnlyPlaceholderMedications(medications: readonly ScanMedicationItem[]): boolean {
+  return medications.length > 0 && medications.every((item) => isPlaceholderMedication(item));
 }
 
 export function parsePrescriptionFromOcrText(rawText: string): ScanPrescriptionDraft {

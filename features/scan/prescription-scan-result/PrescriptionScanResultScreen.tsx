@@ -42,7 +42,23 @@ export function PrescriptionScanResultScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <YStack gap={12}>
-          {viewModel.isManualInputMode ? null : (
+          {viewModel.isManualInputMode ? null : viewModel.hasLowConfidenceExtraction ? (
+            <SurfaceCard style={styles.lowConfidenceCard}>
+              <View style={styles.lowConfidenceRow}>
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={20}
+                  color={palette.warning_interaction_title}
+                />
+                <YStack gap={2} flex={1}>
+                  <Text style={styles.lowConfidenceTitle}>약물을 정확히 인식하지 못했어요</Text>
+                  <Text style={styles.lowConfidenceDescription}>
+                    약물명을 검색해서 선택하거나, 사진이 흐릿하다면 다시 스캔해 주세요.
+                  </Text>
+                </YStack>
+              </View>
+            </SurfaceCard>
+          ) : (
             <GradientCard gradientColors={POSITIVE_GRADIENT} style={styles.successCard}>
               <View style={styles.successRow}>
                 <Ionicons name="checkmark-circle-outline" size={20} color={palette.white} />
@@ -196,6 +212,29 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     opacity: 0.9,
+  },
+  lowConfidenceCard: {
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: palette.warning_interaction_bg,
+    borderColor: palette.warning_interaction_border,
+  },
+  lowConfidenceRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  lowConfidenceTitle: {
+    color: palette.warning_interaction_title,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "700",
+  },
+  lowConfidenceDescription: {
+    color: palette.warning_interaction_message,
+    fontSize: 12,
+    lineHeight: 17,
   },
   titleCard: {
     paddingHorizontal: 15,

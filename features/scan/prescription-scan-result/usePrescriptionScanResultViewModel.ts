@@ -9,6 +9,7 @@ import type {
 } from "@/api/types";
 import { formatDateLabel, formatDateToIso, parseIsoDate } from "@/utils/date";
 import { useIngredientAnalysisStore } from "../ingredient-analysis/useIngredientAnalysisStore";
+import { hasOnlyPlaceholderMedications } from "../prescription-scan/ocr-parser";
 import { usePrescriptionOcrResultStore } from "../prescription-scan/usePrescriptionOcrResultStore";
 
 export type MedicationTakeSlot = "MORNING" | "LUNCH" | "DINNER";
@@ -291,6 +292,9 @@ export function usePrescriptionScanResultViewModel() {
 
   const recognizedMedicationCount = result?.draft.medications.length ?? 0;
   const isManualInputMode = result?.imageUri.startsWith(MANUAL_INPUT_IMAGE_URI_PREFIX) ?? false;
+  const hasLowConfidenceExtraction = result
+    ? hasOnlyPlaceholderMedications(result.draft.medications)
+    : false;
   const startDate = form.watch("startDate");
   const endDate = form.watch("endDate");
 
@@ -315,6 +319,7 @@ export function usePrescriptionScanResultViewModel() {
     isSubmitting: false,
     recognizedMedicationCount,
     isManualInputMode,
+    hasLowConfidenceExtraction,
     startDate,
     endDate,
     startDateLabel,

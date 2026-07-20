@@ -273,6 +273,29 @@ describe("usePrescriptionScanResultViewModel", () => {
     expect(result.current.isManualInputMode).toBe(true);
   });
 
+  it("약물을 인식하지 못했으면 저신뢰 결과로 판별한다", () => {
+    mockResult = {
+      imageUri: "file://image.png",
+      draft: {
+        title: "스캔 처방전",
+        startDate: "2026-05-01",
+        endDate: "2026-05-07",
+        medications: [{ atcCode: "UNKNOWN", drugName: "미확인 약물" }],
+        rawText: "인식 실패",
+      },
+    };
+
+    const { result } = renderHook(() => usePrescriptionScanResultViewModel());
+
+    expect(result.current.hasLowConfidenceExtraction).toBe(true);
+  });
+
+  it("약물을 정상 인식했으면 저신뢰 결과가 아니다", () => {
+    const { result } = renderHook(() => usePrescriptionScanResultViewModel());
+
+    expect(result.current.hasLowConfidenceExtraction).toBe(false);
+  });
+
   it("다시 스캔하기를 누르면 결과를 비우고 스캔 화면으로 이동한다", async () => {
     const { result } = renderHook(() => usePrescriptionScanResultViewModel());
 

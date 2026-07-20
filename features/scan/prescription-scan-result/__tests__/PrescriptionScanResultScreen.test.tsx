@@ -98,6 +98,25 @@ describe("PrescriptionScanResultScreen", () => {
     expect(getByText("아세트아미노펜정")).toBeTruthy();
   });
 
+  it("약물을 인식하지 못했으면 저신뢰 안내 배너를 노출한다", () => {
+    usePrescriptionOcrResultStore.setState({
+      result: {
+        imageUri: "file://prescription.jpg",
+        draft: {
+          title: "처방전",
+          startDate: "2026-05-14",
+          endDate: "2026-05-20",
+          medications: [{ atcCode: "UNKNOWN", drugName: "미확인 약물" }],
+          rawText: "인식 실패",
+        },
+      },
+    });
+
+    const { getByText, queryByText } = render(<PrescriptionScanResultScreen />);
+    expect(getByText("약물을 정확히 인식하지 못했어요")).toBeTruthy();
+    expect(queryByText("텍스트 인식 완료!")).toBeNull();
+  });
+
   it("약물 추가 버튼 클릭 시 약물 입력 카드가 추가된다", () => {
     usePrescriptionOcrResultStore.setState({
       result: {
