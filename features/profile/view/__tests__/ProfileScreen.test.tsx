@@ -29,7 +29,6 @@ jest.mock("@/features/profile/view/useProfileViewModel", () => ({
     handleOpenProfileEdit: jest.fn(),
     handleOpenFamilyManage: jest.fn(),
     handleOpenHealthInfoDetail: mockHandleOpenHealthInfoDetail,
-    handleSelectFamilyProfile: jest.fn(),
   }),
 }));
 

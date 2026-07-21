@@ -1,4 +1,4 @@
-import { type Href, router } from "expo-router";
+import { router } from "expo-router";
 import { useCallback, useMemo } from "react";
 import { Alert } from "react-native";
 
@@ -32,6 +32,7 @@ export function useProfileViewModel() {
     const members = familySummaries.map((family, index) => ({
       id: family.familyId === null ? "me" : String(family.familyId),
       name: family.name,
+      relation: family.relation,
       isActive: family.familyId === null,
       avatarGradient: AVATAR_GRADIENT_POOL[index % AVATAR_GRADIENT_POOL.length],
     }));
@@ -44,6 +45,7 @@ export function useProfileViewModel() {
       {
         id: "me",
         name: profileUser.name,
+        relation: "본인",
         isActive: true,
         avatarGradient: FAMILY_AVATAR_GRADIENTS.green,
       },
@@ -69,18 +71,6 @@ export function useProfileViewModel() {
 
   const handleOpenHealthInfoDetail = () => {
     router.push("/profile/health-info");
-  };
-
-  const handleSelectFamilyProfile = (profileId: string) => {
-    if (profileId === "me") {
-      return;
-    }
-    const familyId = Number(profileId);
-    if (!Number.isInteger(familyId)) {
-      return;
-    }
-    const familyDetailHref = `/(detail)/family/${familyId}` as Href;
-    router.push(familyDetailHref);
   };
 
   const handleWithdrawAccount = useCallback(() => {
@@ -116,6 +106,5 @@ export function useProfileViewModel() {
     handleOpenProfileEdit,
     handleOpenFamilyManage,
     handleOpenHealthInfoDetail,
-    handleSelectFamilyProfile,
   };
 }

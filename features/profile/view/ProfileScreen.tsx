@@ -32,7 +32,6 @@ export function ProfileScreen() {
         <FamilyProfileSection
           profiles={viewModel.familyProfiles}
           onAddFamily={viewModel.handleOpenFamilyManage}
-          onSelectProfile={(profile) => viewModel.handleSelectFamilyProfile(profile.id)}
         />
         <HealthInfoSection
           allergies={viewModel.allergies}

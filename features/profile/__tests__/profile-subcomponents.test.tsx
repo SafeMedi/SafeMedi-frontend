@@ -67,45 +67,54 @@ describe("profile subcomponents", () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it("FamilyProfileItem은 클릭 가능 여부와 활성 라벨을 반영한다", () => {
-    const onPress = jest.fn();
+  it("FamilyProfileItem은 본인이면 이름을, 아니면 호칭과 닉네임을 함께 표시한다", () => {
     const { getByText, rerender } = render(
       <FamilyProfileItem
         name="홍길동"
+        relation="본인"
         isActive
         avatarGradient={["#000", "#111"]}
-        onPress={onPress}
       />,
     );
     expect(getByText("현재 활성")).toBeTruthy();
-    fireEvent.press(getByText("홍길동"));
-    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(getByText("홍길동")).toBeTruthy();
 
     rerender(
-      <FamilyProfileItem name="김철수" isActive={false} avatarGradient={["#000", "#111"]} />,
+      <FamilyProfileItem
+        name="김철수"
+        relation="어머니"
+        isActive={false}
+        avatarGradient={["#000", "#111"]}
+      />,
     );
-    expect(getByText("김철수")).toBeTruthy();
+    expect(getByText("어머니 (김철수)")).toBeTruthy();
   });
 
-  it("FamilyProfileSection은 추가/선택 이벤트를 전달한다", () => {
+  it("FamilyProfileSection은 추가 이벤트를 전달한다", () => {
     const onAddFamily = jest.fn();
-    const onSelectProfile = jest.fn();
     const profiles = [
-      { id: "me", name: "본인", isActive: true, avatarGradient: ["#000", "#111"] },
-      { id: "2", name: "가족", isActive: false, avatarGradient: ["#111", "#222"] },
+      {
+        id: "me",
+        name: "본인",
+        relation: "본인",
+        isActive: true,
+        avatarGradient: ["#000", "#111"],
+      },
+      {
+        id: "2",
+        name: "김영희",
+        relation: "어머니",
+        isActive: false,
+        avatarGradient: ["#111", "#222"],
+      },
     ] satisfies FamilyProfile[];
     const { getByText } = render(
-      <FamilyProfileSection
-        profiles={profiles}
-        onAddFamily={onAddFamily}
-        onSelectProfile={onSelectProfile}
-      />,
+      <FamilyProfileSection profiles={profiles} onAddFamily={onAddFamily} />,
     );
 
     fireEvent.press(getByText("+ 가족 추가"));
-    fireEvent.press(getByText("가족"));
     expect(onAddFamily).toHaveBeenCalledTimes(1);
-    expect(onSelectProfile).toHaveBeenCalledWith(profiles[1]);
+    expect(getByText("어머니 (김영희)")).toBeTruthy();
   });
 
   it("LogoutButton/UserHeroCard는 클릭 이벤트를 전달한다", () => {
