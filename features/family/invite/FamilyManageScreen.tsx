@@ -15,6 +15,7 @@ import {
 } from "@/api/queries/family";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { palette } from "@/constants/design-tokens";
+import { useScreenBottomPadding } from "@/hooks/useScreenBottomPadding";
 import { FamilyFeatureBanner } from "./components/FamilyFeatureBanner";
 import { FamilyInviteCard } from "./components/FamilyInviteCard";
 import { FamilyManageHeader } from "./components/FamilyManageHeader";
@@ -22,6 +23,7 @@ import { FamilyMembersSection } from "./components/FamilyMembersSection";
 
 export function FamilyManageScreen() {
   const insets = useSafeAreaInsets();
+  const bottomPadding = useScreenBottomPadding(30);
   const familiesQuery = useFamilies();
   const createInvitationMutation = useCreateFamilyInvitation();
   const updateRelationMutation = useUpdateFamilyRelation();
@@ -134,7 +136,7 @@ export function FamilyManageScreen() {
         style={styles.scroll}
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 30 },
+          { paddingTop: insets.top + 14, paddingBottom: bottomPadding },
         ]}
         showsVerticalScrollIndicator={false}
       >

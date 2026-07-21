@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
 
+import { useScreenBottomPadding } from "@/hooks/useScreenBottomPadding";
 import { ProfileBasicInfoCard } from "./components/ProfileBasicInfoCard";
 import { ProfileEditActionBar } from "./components/ProfileEditActionBar";
 import { ProfileEditHeader } from "./components/ProfileEditHeader";
@@ -13,6 +14,7 @@ import { useProfileEditViewModel } from "./useProfileEditViewModel";
 
 export function ProfileEditScreen() {
   const insets = useSafeAreaInsets();
+  const bottomPadding = useScreenBottomPadding(16);
   const viewModel = useProfileEditViewModel();
 
   return (
@@ -21,7 +23,7 @@ export function ProfileEditScreen() {
       testID="profile-edit-scroll"
       contentContainerStyle={[
         styles.content,
-        { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 16 },
+        { paddingTop: insets.top + 14, paddingBottom: bottomPadding },
       ]}
       showsVerticalScrollIndicator={false}
     >

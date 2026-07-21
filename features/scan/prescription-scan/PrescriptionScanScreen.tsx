@@ -6,6 +6,7 @@ import { Text, YStack } from "tamagui";
 import { GradientCard } from "@/components/ui/GradientCard";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { palette } from "@/constants/design-tokens";
+import { useScreenBottomPadding } from "@/hooks/useScreenBottomPadding";
 import { PrescriptionFrameCard } from "./components/PrescriptionFrameCard";
 import { PrescriptionScanActions } from "./components/PrescriptionScanActions";
 import { PrescriptionScanHeader } from "./components/PrescriptionScanHeader";
@@ -13,6 +14,7 @@ import { usePrescriptionScanViewModel } from "./usePrescriptionScanViewModel";
 
 export function PrescriptionScanScreen() {
   const insets = useSafeAreaInsets();
+  const bottomPadding = useScreenBottomPadding(14);
   const viewModel = usePrescriptionScanViewModel();
 
   const handlePressClose = () => {
@@ -47,7 +49,7 @@ export function PrescriptionScanScreen() {
       </YStack>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 14 }]}
+        contentContainerStyle={[styles.content, { paddingBottom: bottomPadding }]}
         showsVerticalScrollIndicator={false}
       >
         <YStack gap={12}>

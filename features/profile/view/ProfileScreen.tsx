@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
 
+import { layout } from "@/constants/design-tokens";
 import { AppInfoSection } from "./components/AppInfoSection";
 import { FamilyProfileSection } from "./components/FamilyProfileSection";
 import { HealthInfoSection } from "./components/HealthInfoSection";
@@ -19,7 +20,10 @@ export function ProfileScreen() {
   return (
     <ScrollView
       style={styles.scroll}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: 32 }]}
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: insets.top + 16, paddingBottom: layout.tabScreenBottomSpacing },
+      ]}
       showsVerticalScrollIndicator={false}
     >
       <YStack gap={20}>

@@ -9,6 +9,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
 import { PrescriptionScanHeader } from "@/features/scan/prescription-scan/components/PrescriptionScanHeader";
+import { useScreenBottomPadding } from "@/hooks/useScreenBottomPadding";
 import { MedicationEditorCard } from "./components/MedicationEditorCard";
 import { PrescriptionPeriodCard } from "./components/PrescriptionPeriodCard";
 import { usePrescriptionScanResultViewModel } from "./usePrescriptionScanResultViewModel";
@@ -18,6 +19,7 @@ const ADD_GRADIENT = [palette.purple, palette.pink] as const;
 
 export function PrescriptionScanResultScreen() {
   const insets = useSafeAreaInsets();
+  const bottomPadding = useScreenBottomPadding(96);
   const viewModel = usePrescriptionScanResultViewModel();
 
   return (
@@ -37,7 +39,7 @@ export function PrescriptionScanResultScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 96 }]}
+        contentContainerStyle={[styles.content, { paddingBottom: bottomPadding }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >

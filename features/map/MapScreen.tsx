@@ -4,7 +4,7 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } fro
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { SelectChip } from "@/components/ui/SelectChip";
-import { palette } from "@/constants/design-tokens";
+import { layout, palette } from "@/constants/design-tokens";
 import { BaseKakaoMap } from "./components/BaseKakaoMap";
 import { MedicalFacilityCard } from "./components/MedicalFacilityCard";
 import type { MedicalFacility } from "./types";
@@ -303,7 +303,12 @@ const styles = StyleSheet.create({
   categoryRow: { flexDirection: "row", gap: 8 },
   mapSection: { height: 210, overflow: "hidden" },
   listSection: { flex: 1, backgroundColor: palette.transparent },
-  listContent: { paddingHorizontal: 14, paddingTop: 14, paddingBottom: 24, gap: 12 },
+  listContent: {
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: layout.tabScreenBottomSpacing,
+    gap: 12,
+  },
   listHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   listHeaderText: { fontSize: 20, fontWeight: "700", color: palette.black },
 });

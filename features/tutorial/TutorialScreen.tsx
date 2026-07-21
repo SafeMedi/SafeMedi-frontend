@@ -12,6 +12,7 @@ import { PillButton } from "@/components/ui/PillButton";
 import { SegmentedStepProgress } from "@/components/ui/SegmentedStepProgress";
 import { palette } from "@/constants/design-tokens";
 import { useAuthRouteState } from "@/hooks/use-auth-route-state";
+import { useScreenBottomPadding } from "@/hooks/useScreenBottomPadding";
 import { useUserStore } from "@/stores/userStore";
 import { userToTutorialRegistrationBody } from "@/utils/user-mapper";
 import { Step1 } from "./components/Step1";
@@ -25,6 +26,7 @@ const TOTAL_STEPS = 4;
 export function TutorialScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const bottomPadding = useScreenBottomPadding(16);
   const authState = useAuthRouteState();
   const user = useUserStore((s) => s.user);
   const completeTutorial = useCompleteTutorialMutation();
@@ -110,7 +112,7 @@ export function TutorialScreen() {
             gap={12}
             px={20}
             pt={12}
-            pb={insets.bottom + 16}
+            pb={bottomPadding}
             width="100%"
             items="stretch"
           >
