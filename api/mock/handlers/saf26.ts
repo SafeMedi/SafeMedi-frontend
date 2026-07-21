@@ -266,6 +266,18 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
           { status: 404 },
         );
       }
+      if (token === "expired") {
+        return Response.json(
+          { code: "INV_002", message: "만료된 가족 초대 링크입니다." },
+          { status: 410 },
+        );
+      }
+      if (token === "used") {
+        return Response.json(
+          { code: "INV_003", message: "이미 사용된 가족 초대 링크입니다." },
+          { status: 409 },
+        );
+      }
       const accepted = {
         familyId: 12,
         name: "홍길동",
@@ -289,7 +301,7 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
     (p) => RX.familyId.test(p),
     (ctx) => {
       const id = parsePathId(ctx.path, RX.familyId);
-      const body = ctx.jsonBody as { relation?: string };
+      const body = (ctx.jsonBody ?? {}) as { relation?: string };
       const relation = body.relation?.trim() ?? "";
       const family = mockState.families.find((item) => item.familyId === id);
       if (!id || !family) {
