@@ -1,18 +1,18 @@
-name: EAS Preview Build
+name: EAS Production Build
 
 on:
   push:
     branches:
-      - "release/**"
+      - main
   workflow_dispatch:
 
 concurrency:
-  group: eas-preview-${{ github.ref }}
+  group: eas-production-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build-android-preview:
-    name: Android preview APK
+  build-android-production:
+    name: Android production AAB
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -45,10 +45,10 @@ jobs:
       - name: Run tests
         run: yarn test
 
-      - name: Build Android preview
+      - name: Build Android production
         id: eas_build
         run: |
-          eas build --platform android --profile preview --non-interactive --json > eas-build.json
+          eas build --platform android --profile production --non-interactive --json > eas-build.json
 
           node <<'NODE' >> "$GITHUB_OUTPUT"
           const fs = require("node:fs");
@@ -70,9 +70,9 @@ jobs:
           }
 
           const artifacts = build?.artifacts ?? {};
-          const installUrl =
-            artifacts.buildUrl ??
+          const archiveUrl =
             artifacts.applicationArchiveUrl ??
+            artifacts.buildUrl ??
             build?.applicationArchiveUrl ??
             build?.buildUrl ??
             "";
@@ -85,7 +85,7 @@ jobs:
               ? `https://expo.dev/accounts/${owner}/projects/${projectName}/builds/${build.id}`
               : "");
 
-          console.log(`install_url=${installUrl}`);
+          console.log(`archive_url=${archiveUrl}`);
           console.log(`details_url=${detailsUrl}`);
           NODE
 
@@ -94,9 +94,9 @@ jobs:
         uses: sarisia/actions-status-discord@v1
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          title: "SafeMedi EAS Preview 배포 성공"
+          title: "SafeMedi EAS Production 배포 성공"
           description: |
-            설치 URL: ${{ steps.eas_build.outputs.install_url }}
+            아카이브 URL: ${{ steps.eas_build.outputs.archive_url }}
             빌드 상세: ${{ steps.eas_build.outputs.details_url }}
             커밋: ${{ github.sha }}
             작성자: ${{ github.actor }}
