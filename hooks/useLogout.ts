@@ -6,7 +6,7 @@ import { queryKeys } from "@/api/query-keys";
 import {
   clearRegisteredDeviceToken,
   getRegisteredDeviceToken,
-} from "@/hooks/push-notification-token-store";
+} from "@/hooks/pushNotificationTokenStore";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUserStore } from "@/stores/userStore";
 

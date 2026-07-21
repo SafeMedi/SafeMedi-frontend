@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import { useUserProfile } from "@/api/queries/user";
-import { useSessionHydrated } from "@/hooks/use-session-hydrated";
+import { useSessionHydrated } from "@/hooks/useSessionHydrated";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUserStore } from "@/stores/userStore";
 import { profileToUser } from "@/utils/user-mapper";

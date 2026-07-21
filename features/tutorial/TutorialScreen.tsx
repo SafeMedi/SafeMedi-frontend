@@ -11,7 +11,7 @@ import { AuthGateView } from "@/components/AuthGateView";
 import { PillButton } from "@/components/ui/PillButton";
 import { SegmentedStepProgress } from "@/components/ui/SegmentedStepProgress";
 import { palette } from "@/constants/design-tokens";
-import { useAuthRouteState } from "@/hooks/use-auth-route-state";
+import { useAuthRouteState } from "@/hooks/useAuthRouteState";
 import { useScreenBottomPadding } from "@/hooks/useScreenBottomPadding";
 import { useUserStore } from "@/stores/userStore";
 import { userToTutorialRegistrationBody } from "@/utils/user-mapper";

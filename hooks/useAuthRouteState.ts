@@ -2,8 +2,8 @@ import { useEffect } from "react";
 
 import { isUnauthorizedError } from "@/api/error";
 import { useUserProfile } from "@/api/queries/user";
-import { useLogout } from "@/hooks/use-logout";
-import { useSessionHydrated } from "@/hooks/use-session-hydrated";
+import { useLogout } from "@/hooks/useLogout";
+import { useSessionHydrated } from "@/hooks/useSessionHydrated";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUserStore } from "@/stores/userStore";
 import { profileToUser } from "@/utils/user-mapper";

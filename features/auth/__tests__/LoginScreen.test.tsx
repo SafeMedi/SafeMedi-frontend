@@ -51,7 +51,7 @@ jest.mock("@/components/AuthGateView", () => {
   };
 });
 
-jest.mock("@/hooks/use-auth-route-state", () => ({
+jest.mock("@/hooks/useAuthRouteState", () => ({
   useAuthRouteState: () => mockAuthState,
 }));
 

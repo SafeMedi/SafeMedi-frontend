@@ -18,7 +18,7 @@ jest.mock("@/api/queries/user", () => ({
   useDeleteUserAccountMutation: (options: unknown) => mockUseDeleteUserAccountMutation(options),
 }));
 
-jest.mock("@/hooks/use-logout", () => ({
+jest.mock("@/hooks/useLogout", () => ({
   useLogout: () => mockHandleLogout,
 }));
 

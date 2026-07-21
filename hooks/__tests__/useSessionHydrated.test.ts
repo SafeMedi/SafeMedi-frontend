@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react-native";
-import { useSessionHydrated } from "@/hooks/use-session-hydrated";
+import { useSessionHydrated } from "@/hooks/useSessionHydrated";
 
 let mockHydrated = false;
 let mockCallback: null | (() => void) = null;

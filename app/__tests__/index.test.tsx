@@ -16,7 +16,7 @@ jest.mock("expo-router", () => ({
   Redirect: (props: { href: string }) => mockRedirect(props),
 }));
 
-jest.mock("@/hooks/use-auth-route-state", () => ({
+jest.mock("@/hooks/useAuthRouteState", () => ({
   useAuthRouteState: () => mockAuthState,
 }));
 

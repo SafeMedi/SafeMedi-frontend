@@ -5,7 +5,7 @@ import { Alert } from "react-native";
 import { getApiErrorMessage } from "@/api/error";
 import { useFamilyProfiles } from "@/api/queries/profile";
 import { useDeleteUserAccountMutation } from "@/api/queries/user";
-import { useLogout } from "@/hooks/use-logout";
+import { useLogout } from "@/hooks/useLogout";
 import { useHealthInfo, useProfileUser } from "@/stores/userStore";
 import type { FamilyProfile } from "./components/FamilyProfileSection";
 import { FAMILY_AVATAR_GRADIENTS } from "./constants";

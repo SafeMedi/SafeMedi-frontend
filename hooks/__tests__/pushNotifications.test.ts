@@ -47,7 +47,7 @@ jest.mock("expo-notifications", () => ({
   setNotificationHandler: (...args: unknown[]) => mockSetNotificationHandler(...args),
 }));
 
-jest.mock("@/hooks/push-notification-token-store", () => ({
+jest.mock("@/hooks/pushNotificationTokenStore", () => ({
   clearRegisteredDeviceToken: jest.fn(),
   getRegisteredDeviceToken: jest.fn(),
   setRegisteredDeviceToken: (token: string | null) => mockSetRegisteredDeviceToken(token),
@@ -55,10 +55,10 @@ jest.mock("@/hooks/push-notification-token-store", () => ({
 
 function loadPushNotifications() {
   jest.resetModules();
-  return require("../push-notifications") as typeof import("../push-notifications");
+  return require("../pushNotifications") as typeof import("../pushNotifications");
 }
 
-describe("push-notifications", () => {
+describe("pushNotifications", () => {
   const originalIosRemotePush = process.env.EXPO_PUBLIC_IOS_ENABLE_REMOTE_PUSH;
 
   beforeEach(() => {

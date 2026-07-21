@@ -13,7 +13,7 @@ jest.mock("@/api/queries/user", () => ({
   useUserProfile: () => mockUseUserProfile(),
 }));
 
-jest.mock("@/hooks/use-session-hydrated", () => ({
+jest.mock("@/hooks/useSessionHydrated", () => ({
   useSessionHydrated: () => mockHydrated,
 }));
 
