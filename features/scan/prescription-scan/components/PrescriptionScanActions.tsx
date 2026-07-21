@@ -57,6 +57,7 @@ export function PrescriptionScanActions({
 }: PrescriptionScanActionsProps) {
   return (
     <View
+      testID="prescription-scan-actions"
       style={[
         styles.container,
         { paddingBottom: Math.max(bottomInset, CONTAINER_MIN_BOTTOM_PADDING) },
