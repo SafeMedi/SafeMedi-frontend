@@ -7,6 +7,7 @@ import type {
   CreatePrescriptionMedication,
   DrugSearchItem,
 } from "@/api/types";
+import { hasOnlyPlaceholderMedications } from "@/features/scan/prescription-scan/ocr-parser";
 import { formatDateLabel, formatDateToIso, parseIsoDate } from "@/utils/date";
 import { useIngredientAnalysisStore } from "../ingredient-analysis/useIngredientAnalysisStore";
 import { usePrescriptionOcrResultStore } from "../prescription-scan/usePrescriptionOcrResultStore";
@@ -56,6 +57,17 @@ function convertTakeSlotsToTimes(takeSlots: readonly MedicationTakeSlot[]): stri
   );
 }
 
+const DAILY_DOSE_COUNT_TAKE_SLOTS: Readonly<Record<number, readonly MedicationTakeSlot[]>> = {
+  1: ["MORNING"],
+  2: ["MORNING", "DINNER"],
+  3: ["MORNING", "LUNCH", "DINNER"],
+};
+
+function takeSlotsForDailyDoseCount(dailyDoseCount: number | undefined): MedicationTakeSlot[] {
+  if (!dailyDoseCount) return [];
+  return [...(DAILY_DOSE_COUNT_TAKE_SLOTS[dailyDoseCount] ?? [])];
+}
+
 function createRequestMedications(
   medications: readonly EditableMedicationItem[],
 ): CreatePrescriptionMedication[] {
@@ -90,13 +102,13 @@ export function usePrescriptionScanResultViewModel() {
     if (!result) return null;
     return {
       title: result.draft.title,
-      startDate: "",
-      endDate: "",
+      startDate: result.draft.isDateRangeConfident ? result.draft.startDate : "",
+      endDate: result.draft.isDateRangeConfident ? result.draft.endDate : "",
       medications: result.draft.medications.map((item) => ({
         drugName: item.drugName,
-        drugCode: "",
+        drugCode: item.drugCode ?? "",
         atcCode: item.atcCode,
-        takeSlots: [],
+        takeSlots: takeSlotsForDailyDoseCount(item.dailyDoseCount),
       })),
     };
   }, [result]);
@@ -291,6 +303,9 @@ export function usePrescriptionScanResultViewModel() {
 
   const recognizedMedicationCount = result?.draft.medications.length ?? 0;
   const isManualInputMode = result?.imageUri.startsWith(MANUAL_INPUT_IMAGE_URI_PREFIX) ?? false;
+  const hasLowConfidenceExtraction = result
+    ? hasOnlyPlaceholderMedications(result.draft.medications)
+    : false;
   const startDate = form.watch("startDate");
   const endDate = form.watch("endDate");
 
@@ -315,6 +330,7 @@ export function usePrescriptionScanResultViewModel() {
     isSubmitting: false,
     recognizedMedicationCount,
     isManualInputMode,
+    hasLowConfidenceExtraction,
     startDate,
     endDate,
     startDateLabel,

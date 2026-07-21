@@ -1,6 +1,7 @@
 import { StyleSheet, View } from "react-native";
 import { Text, YStack } from "tamagui";
 import { palette } from "@/constants/design-tokens";
+import { isConfirmedAtcCode } from "@/features/scan/prescription-scan/ocr-parser";
 import {
   MEDICATION_TAKE_SLOT_OPTIONS,
   type MedicationTakeSlot,
@@ -23,6 +24,7 @@ export function MedicationEditorSummary({
       : MEDICATION_TAKE_SLOT_OPTIONS.filter((option) => selectedTakeSlots.includes(option.slot))
           .map((option) => option.label)
           .join(", ");
+  const isAtcCodeConfirmed = isConfirmedAtcCode(atcCode);
 
   return (
     <YStack gap={6}>
@@ -34,8 +36,10 @@ export function MedicationEditorSummary({
         <Text style={styles.summaryLabel}>복약 시간</Text>
         <Text style={styles.summaryValue}>{takeSlotSummary}</Text>
       </View>
-      <Text style={[styles.metaText, atcCode ? styles.verifiedText : styles.unverifiedText]}>
-        {atcCode ? `약물 코드: ${atcCode}` : "검색 결과에서 약물을 선택해야 등록됩니다."}
+      <Text
+        style={[styles.metaText, isAtcCodeConfirmed ? styles.verifiedText : styles.unverifiedText]}
+      >
+        {isAtcCodeConfirmed ? `약물 코드: ${atcCode}` : "검색 결과에서 약물을 선택해야 등록됩니다."}
       </Text>
     </YStack>
   );

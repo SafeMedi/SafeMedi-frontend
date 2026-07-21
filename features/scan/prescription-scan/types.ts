@@ -1,6 +1,8 @@
 export interface ScanMedicationItem {
   readonly atcCode: string;
   readonly drugName: string;
+  readonly drugCode?: string;
+  readonly dailyDoseCount?: number;
 }
 
 export interface ScanPrescriptionDraft {
@@ -9,6 +11,7 @@ export interface ScanPrescriptionDraft {
   readonly endDate: string;
   readonly medications: readonly ScanMedicationItem[];
   readonly rawText: string;
+  readonly isDateRangeConfident?: boolean;
 }
 
 export type PrescriptionSubmitFeedbackKind = "success" | "warning";
