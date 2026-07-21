@@ -6,7 +6,6 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
 import { PrescriptionScanHeader } from "@/features/scan/prescription-scan/components/PrescriptionScanHeader";
-import { useScreenBottomPadding } from "@/hooks/useScreenBottomPadding";
 import { AnalysisSummaryCard } from "./components/AnalysisSummaryCard";
 import { DoctorConsultationCard } from "./components/DoctorConsultationCard";
 import { MedicationAnalysisCard } from "./components/MedicationAnalysisCard";
@@ -15,7 +14,6 @@ import { useIngredientAnalysisViewModel } from "./useIngredientAnalysisViewModel
 
 export function IngredientAnalysisScreen() {
   const insets = useSafeAreaInsets();
-  const bottomPadding = useScreenBottomPadding(24);
   const viewModel = useIngredientAnalysisViewModel();
 
   const medicationCount = viewModel.result?.analyzedMedicationCount ?? 0;
@@ -50,7 +48,7 @@ export function IngredientAnalysisScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingBottom: bottomPadding }]}
+        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
         <YStack gap={12}>
@@ -142,6 +140,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 14,
     paddingTop: 14,
+    paddingBottom: 24,
   },
   loadingCard: {
     borderRadius: 18,
