@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
+import { GradientCard } from "@/components/ui/GradientCard";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { palette } from "@/constants/design-tokens";
 import { PrescriptionFrameCard } from "./components/PrescriptionFrameCard";
@@ -32,6 +33,15 @@ export function PrescriptionScanScreen() {
 
   return (
     <YStack style={styles.screen}>
+      <GradientCard
+        gradientColors={palette.bg_pink_line}
+        style={{ ...StyleSheet.absoluteFillObject }}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <View />
+      </GradientCard>
+
       <YStack style={{ paddingTop: insets.top }}>
         <PrescriptionScanHeader onPressClose={handlePressClose} />
       </YStack>
