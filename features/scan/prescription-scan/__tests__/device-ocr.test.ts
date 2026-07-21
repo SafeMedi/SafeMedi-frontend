@@ -1,5 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
 import { requireOptionalNativeModule } from "expo-modules-core";
+import { Platform } from "react-native";
 import { extractDraftFromImageSource, extractDraftFromImageUri } from "../device-ocr";
 import { parsePrescriptionFromOcrText } from "../ocr-parser";
 
@@ -7,12 +8,22 @@ const mockRequestCameraPermissionsAsync = jest.fn();
 const mockRequestMediaLibraryPermissionsAsync = jest.fn();
 const mockLaunchCameraAsync = jest.fn();
 const mockLaunchImageLibraryAsync = jest.fn();
+const mockExtractTextFromImage = jest.fn();
 const mockRequireOptionalNativeModule = requireOptionalNativeModule as jest.MockedFunction<
   typeof requireOptionalNativeModule
 >;
 const mockParsePrescriptionFromOcrText = parsePrescriptionFromOcrText as jest.MockedFunction<
   typeof parsePrescriptionFromOcrText
 >;
+let mockFileExistsSequence: boolean[] = [];
+
+jest.mock("expo-file-system", () => ({
+  File: jest.fn().mockImplementation(() => ({
+    get exists() {
+      return mockFileExistsSequence.length > 0 ? mockFileExistsSequence.shift() : true;
+    },
+  })),
+}));
 
 jest.mock("expo-image-picker", () => ({
   PermissionStatus: {
@@ -35,8 +46,12 @@ jest.mock("../ocr-parser", () => ({
 }));
 
 describe("device-ocr", () => {
+  const originalPlatformOs = Platform.OS;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFileExistsSequence = [];
+    Object.defineProperty(Platform, "OS", { value: originalPlatformOs });
     mockRequestCameraPermissionsAsync.mockResolvedValue({
       status: ImagePicker.PermissionStatus.GRANTED,
     });
@@ -51,9 +66,10 @@ describe("device-ocr", () => {
       canceled: false,
       assets: [{ uri: "file://gallery.jpg" }],
     });
+    mockExtractTextFromImage.mockResolvedValue(["처방전", "타이레놀"]);
     mockRequireOptionalNativeModule.mockReturnValue({
       isSupported: true,
-      extractTextFromImage: jest.fn().mockResolvedValue(["처방전", "타이레놀"]),
+      extractTextFromImage: mockExtractTextFromImage,
     } as unknown as ReturnType<typeof requireOptionalNativeModule>);
     mockParsePrescriptionFromOcrText.mockReturnValue({
       title: "처방전",
@@ -62,6 +78,10 @@ describe("device-ocr", () => {
       medications: [{ atcCode: "A01", drugName: "타이레놀" }],
       rawText: "처방전",
     });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(Platform, "OS", { value: originalPlatformOs });
   });
 
   it("이미지 URI OCR 추출이 성공하면 draft를 반환한다", async () => {
@@ -96,6 +116,40 @@ describe("device-ocr", () => {
     await expect(extractDraftFromImageUri("file://image.jpg")).rejects.toThrow(
       "온디바이스 OCR 모듈을 찾을 수 없습니다.",
     );
+  });
+
+  it("선택한 이미지 파일을 찾을 수 없으면 재시도 후에도 없으면 안내 에러를 던진다", async () => {
+    mockFileExistsSequence = [false, false];
+
+    await expect(extractDraftFromImageUri("file://missing.jpg")).rejects.toThrow(
+      "선택한 이미지를 찾을 수 없습니다. 사진을 다시 선택하거나 다시 촬영해 주세요.",
+    );
+  });
+
+  it("이미지 파일이 재시도 시점에 존재하면 정상적으로 OCR을 진행한다", async () => {
+    mockFileExistsSequence = [false, true];
+
+    const draft = await extractDraftFromImageUri("file://delayed.jpg");
+
+    expect(draft.title).toBe("처방전");
+  });
+
+  it("Android에서는 file:// 스킴을 제거하고 네이티브 OCR 모듈에 전달한다", async () => {
+    Object.defineProperty(Platform, "OS", { value: "android" });
+
+    await extractDraftFromImageUri("file:///data/user/0/com.safeMedi/cache/ImagePicker/x.jpeg");
+
+    expect(mockExtractTextFromImage).toHaveBeenCalledWith(
+      "/data/user/0/com.safeMedi/cache/ImagePicker/x.jpeg",
+    );
+  });
+
+  it("iOS에서는 file:// 스킴을 유지한 채 네이티브 OCR 모듈에 전달한다", async () => {
+    Object.defineProperty(Platform, "OS", { value: "ios" });
+
+    await extractDraftFromImageUri("file:///var/mobile/Containers/x.jpeg");
+
+    expect(mockExtractTextFromImage).toHaveBeenCalledWith("file:///var/mobile/Containers/x.jpeg");
   });
 
   it("텍스트 추출 미지원 기기면 지원 불가 에러를 던진다", async () => {
