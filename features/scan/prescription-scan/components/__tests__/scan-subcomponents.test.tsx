@@ -58,6 +58,7 @@ describe("prescription scan subcomponents", () => {
         isBusy={false}
         onPressGallery={onPressGallery}
         onPressCamera={onPressCamera}
+        bottomInset={0}
       />,
     );
 
@@ -71,6 +72,7 @@ describe("prescription scan subcomponents", () => {
         isBusy
         onPressGallery={onPressGallery}
         onPressCamera={onPressCamera}
+        bottomInset={0}
       />,
     );
     fireEvent.press(getByLabelText("갤러리"));

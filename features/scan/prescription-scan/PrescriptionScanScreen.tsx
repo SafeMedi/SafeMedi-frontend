@@ -63,6 +63,7 @@ export function PrescriptionScanScreen() {
         isBusy={isBusy}
         onPressGallery={viewModel.extractFromGallery}
         onPressCamera={viewModel.extractFromCamera}
+        bottomInset={insets.bottom}
       />
       {viewModel.isExtracting ? (
         <View style={styles.extractingOverlay}>
