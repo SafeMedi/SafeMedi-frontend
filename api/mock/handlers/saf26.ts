@@ -10,7 +10,6 @@ const RX = {
   familyId: /^\/api\/v1\/families\/(\d+)$/,
   familyInvitation: /^\/api\/v1\/family-invitations\/([^/]+)$/,
   familyInvitationAccept: /^\/api\/v1\/family-invitations\/([^/]+)\/accept$/,
-  familyInvitationValidation: /^\/api\/v1\/family-invitations\/([^/]+)\/validation$/,
   prescriptionId: /^\/api\/v1\/prescriptions\/(\d+)$/,
   medicationRecordId: /^\/api\/v1\/medication-records\/(\d+)$/,
 };
@@ -227,22 +226,6 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
 
   registry.registerMatch(
     "GET",
-    (p) => RX.familyInvitationValidation.test(p),
-    (ctx) => {
-      const token = parsePathToken(ctx.path, RX.familyInvitationValidation);
-      if (!token || token === "invalid") {
-        return new Response(null, { status: 404 });
-      }
-      if (token === "expired" || token === "used") {
-        return new Response(null, { status: 410 });
-      }
-      return new Response(null, { status: 200 });
-    },
-    { label: "GET /api/v1/family-invitations/:token/validation" },
-  );
-
-  registry.registerMatch(
-    "GET",
     (p) => RX.familyInvitation.test(p),
     (ctx) => {
       const token = parsePathToken(ctx.path, RX.familyInvitation);
@@ -250,6 +233,18 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
         return Response.json(
           { code: "INV_001", message: "존재하지 않거나 유효하지 않은 초대 링크입니다." },
           { status: 404 },
+        );
+      }
+      if (token === "expired") {
+        return Response.json(
+          { code: "INV_002", message: "만료된 가족 초대 링크입니다." },
+          { status: 410 },
+        );
+      }
+      if (token === "used") {
+        return Response.json(
+          { code: "INV_003", message: "이미 사용된 가족 초대 링크입니다." },
+          { status: 409 },
         );
       }
       return {

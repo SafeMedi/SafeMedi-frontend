@@ -7,7 +7,6 @@ import {
   fetchFamilies,
   fetchFamilyInvitation,
   updateFamilyRelation,
-  validateFamilyInvitation,
 } from "../family";
 import {
   fetchNotificationSettings,
@@ -84,7 +83,6 @@ describe("api/endpoints core modules", () => {
     await createFamilyInvitation();
     await fetchFamilyInvitation("token-1");
     await acceptFamilyInvitation("token-1");
-    await validateFamilyInvitation("token-1");
     await updateFamilyRelation(2, { relation: "어머니" });
     await deleteFamily(2);
 
@@ -92,7 +90,6 @@ describe("api/endpoints core modules", () => {
     expect(mockApiPost).toHaveBeenNthCalledWith(1, apiPaths.familyInvitations);
     expect(mockApiGet).toHaveBeenNthCalledWith(2, apiPaths.familyInvitation("token-1"));
     expect(mockApiPost).toHaveBeenNthCalledWith(2, apiPaths.familyInvitationAccept("token-1"));
-    expect(mockApiGet).toHaveBeenNthCalledWith(3, apiPaths.familyInvitationValidation("token-1"));
     expect(mockApiPatch).toHaveBeenCalledWith(apiPaths.family(2), {
       json: { relation: "어머니" },
     });

@@ -27,10 +27,6 @@ export async function acceptFamilyInvitation(token: string): Promise<AcceptedFam
   return api.post(apiPaths.familyInvitationAccept(token)).json<AcceptedFamilyInvitation>();
 }
 
-export async function validateFamilyInvitation(token: string): Promise<void> {
-  await api.get(apiPaths.familyInvitationValidation(token)).text();
-}
-
 export async function updateFamilyRelation(
   familyId: number,
   body: UpdateFamilyRelationBody,

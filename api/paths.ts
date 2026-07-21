@@ -13,7 +13,6 @@ export const apiPaths = {
   familyInvitations: "/api/v1/family-invitations",
   familyInvitation: (token: string) => `/api/v1/family-invitations/${token}`,
   familyInvitationAccept: (token: string) => `/api/v1/family-invitations/${token}/accept`,
-  familyInvitationValidation: (token: string) => `/api/v1/family-invitations/${token}/validation`,
 
   drugsSearch: "/api/v1/drugs/search",
   drugAllergiesSearch: "/api/v1/allergies/drugs/search",

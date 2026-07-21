@@ -7,7 +7,6 @@ import {
   fetchFamilies,
   fetchFamilyInvitation,
   updateFamilyRelation,
-  validateFamilyInvitation,
 } from "@/api/endpoints/family";
 import { queryKeys } from "@/api/query-keys";
 import type { FamilySummary, UpdateFamilyRelationBody } from "@/api/types/family";
@@ -59,20 +58,6 @@ export function useFamilyInvitation(token: string | null) {
         throw new Error("초대 토큰이 필요합니다.");
       }
       return fetchFamilyInvitation(token);
-    },
-  });
-}
-
-export function useValidateFamilyInvitation(token: string | null) {
-  return useQuery({
-    queryKey: queryKeys.family.invitationValidation(token ?? ""),
-    enabled: !!token,
-    staleTime: STALE_MS,
-    queryFn: async () => {
-      if (!token) {
-        throw new Error("초대 토큰이 필요합니다.");
-      }
-      return validateFamilyInvitation(token);
     },
   });
 }

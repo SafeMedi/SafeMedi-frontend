@@ -5,7 +5,6 @@ import {
   useFamilies,
   useFamilyInvitation,
   useFamilyMember,
-  useValidateFamilyInvitation,
 } from "../family";
 
 const mockFetchFamilies = jest.fn(async () => [
@@ -13,7 +12,6 @@ const mockFetchFamilies = jest.fn(async () => [
   { familyId: 7, name: "김영희", relation: "어머니" },
 ]);
 const mockFetchFamilyInvitation = jest.fn<Promise<unknown>, [string]>(async () => ({}));
-const mockValidateFamilyInvitation = jest.fn<Promise<void>, [string]>(async () => undefined);
 const mockAcceptFamilyInvitation = jest.fn<Promise<unknown>, [string]>(async () => ({}));
 const mockInvalidateQueries = jest.fn();
 const mockSetQueryData = jest.fn();
@@ -45,7 +43,6 @@ jest.mock("@/api/endpoints/family", () => ({
   acceptFamilyInvitation: (token: string) => mockAcceptFamilyInvitation(token),
   fetchFamilies: () => mockFetchFamilies(),
   fetchFamilyInvitation: (token: string) => mockFetchFamilyInvitation(token),
-  validateFamilyInvitation: (token: string) => mockValidateFamilyInvitation(token),
 }));
 
 jest.mock("@/stores/sessionStore", () => ({
@@ -97,20 +94,12 @@ describe("api/queries/family", () => {
     expect(mockFetchFamilyInvitation).toHaveBeenCalledWith("abc");
   });
 
-  it("공개 validation 쿼리는 인증 토큰 없이도 토큰이 있으면 활성화된다", async () => {
+  it("초대 정보 쿼리는 인증 토큰이 없으면 비활성화된다", () => {
     mockAccessToken = null;
-    const { result } = renderHook(() => useValidateFamilyInvitation("abc"));
-    const options = result.current as unknown as {
-      enabled: boolean;
-      queryKey: unknown;
-      queryFn: () => Promise<unknown>;
-    };
+    const { result } = renderHook(() => useFamilyInvitation("abc"));
+    const options = result.current as unknown as { enabled: boolean };
 
-    expect(options.enabled).toBe(true);
-    expect(options.queryKey).toEqual(queryKeys.family.invitationValidation("abc"));
-
-    await options.queryFn();
-    expect(mockValidateFamilyInvitation).toHaveBeenCalledWith("abc");
+    expect(options.enabled).toBe(false);
   });
 
   it("수락 mutation 성공 시 가족 목록을 갱신한다", async () => {

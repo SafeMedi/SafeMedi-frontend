@@ -19,7 +19,6 @@ export const queryKeys = {
   family: {
     list: ["family", "list"] as const,
     invitation: (token: string) => ["family", "invitation", token] as const,
-    invitationValidation: (token: string) => ["family", "invitation", token, "validation"] as const,
   },
   profile: {
     families: ["family", "list"] as const,
