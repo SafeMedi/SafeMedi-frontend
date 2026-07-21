@@ -179,7 +179,7 @@ features/{domain}/{feature}/
 - 제목: 티켓명 뒤에 개발 내용. 예: `[SAF-00] feat: 개발 내용`.
 - 기본 assignee는 GitHub 인증 사용자(`@me`)로 설정.
 - `.github/PULL_REQUEST_TEMPLATE.md`의 섹션을 반드시 채운다: 🎟️ 관련 이슈 / 🔥 작업 배경 / 🛠️ 작업 내용 / 🧪 테스트 / 💬 기타 논의 사항 / ✅ 셀프 체크리스트.
-- 관련 이슈가 해결되면 `Closed` 키워드로 PR 종료 시 자동 닫히도록 한다.
+- 관련 이슈에는 Linear 티켓명을 포함하고, 해당 Linear 티켓에 연결된 GitHub issue가 존재하면 그 issue도 함께 기재한다.
 - 변경은 **기능 단위** 하나에 가깝게. 무관한 리팩터링 혼합 지양.
 - Changes는 파일 나열이 아니라 **기능적 변경** 위주로 작성.
 - `package.json` 의존성, env, API 스키마 변경 시 부수 효과를 PR 본문에 명시.
