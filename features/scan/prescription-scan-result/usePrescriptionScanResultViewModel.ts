@@ -108,7 +108,7 @@ export function usePrescriptionScanResultViewModel() {
         drugName: item.drugName,
         drugCode: item.drugCode ?? "",
         atcCode: item.atcCode,
-        takeSlots: takeSlotsForDailyDoseCount(result.draft.dailyDoseCount),
+        takeSlots: takeSlotsForDailyDoseCount(item.dailyDoseCount),
       })),
     };
   }, [result]);

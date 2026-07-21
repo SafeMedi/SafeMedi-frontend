@@ -124,6 +124,32 @@ describe("usePrescriptionScanViewModel", () => {
     ]);
   });
 
+  it("약물코드 자동 매칭 후에도 OCR에서 추출한 dailyDoseCount를 유지한다", async () => {
+    mockExtractDraftFromImageSource.mockResolvedValue({
+      draft: {
+        ...BASE_DRAFT,
+        medications: [{ atcCode: "A01", drugName: "테스트 약", dailyDoseCount: 2 }],
+      },
+      imageUri: "file://gallery.png",
+    });
+    mockSearchDrugs.mockResolvedValue({
+      content: [{ drugCode: "D01", atcCode: "N02BE01", drugName: "테스트 약", company: "SAFE" }],
+      page: 0,
+      size: 5,
+      isLast: true,
+    });
+
+    const { result } = renderHook(() => usePrescriptionScanViewModel());
+
+    await act(async () => {
+      await result.current.extractFromGallery();
+    });
+
+    expect(result.current.draft?.medications).toEqual([
+      { atcCode: "N02BE01", drugName: "테스트 약", drugCode: "D01", dailyDoseCount: 2 },
+    ]);
+  });
+
   it("완전 일치는 없지만 제조사·용량이 붙은 이름이 있으면 포함 관계로 매칭한다", async () => {
     mockExtractDraftFromImageSource.mockResolvedValue({
       draft: BASE_DRAFT,

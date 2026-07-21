@@ -12,13 +12,15 @@ const TABLET_APPEARANCE_PATTERN = /색|원형|장방형|타원형|코\s*팅/;
 const DOSAGE_INSTRUCTION_PATTERN = /\d\s*정씩/;
 const CLINIC_NAME_PATTERN = /[가-힣]{2,}(?:의원|병원|약국|한의원|치과)/;
 const DAYS_SUPPLY_PATTERN = /(\d+)\s*일분/;
-const DAILY_DOSE_COUNT_PATTERN = /(?:1일|하루|일일|정씩)\s*(\d+)\s*회/;
+const DAILY_DOSE_COUNT_PATTERN = /(?:1일|하루|일일|정씩)\s*(\d+)\s*회/g;
 const MAX_DAILY_DOSE_COUNT = 3;
+const MIN_CONFIDENT_DATE_MATCH_COUNT = 2;
 
 const medicationSchema = z.object({
   atcCode: z.string().min(1),
   drugName: z.string().min(1),
   drugCode: z.string().min(1).optional(),
+  dailyDoseCount: z.number().int().min(1).max(MAX_DAILY_DOSE_COUNT).optional(),
 });
 
 const draftSchema = z.object({
@@ -27,7 +29,6 @@ const draftSchema = z.object({
   endDate: z.string().min(1),
   medications: z.array(medicationSchema).min(1),
   rawText: z.string().min(1),
-  dailyDoseCount: z.number().int().min(1).max(MAX_DAILY_DOSE_COUNT).optional(),
   isDateRangeConfident: z.boolean().optional(),
 });
 
@@ -57,17 +58,22 @@ function extractDaysSupply(rawText: string): number | undefined {
 function extractDateRangeFromDatePairs(rawText: string): {
   readonly startDate: string;
   readonly endDate: string;
+  readonly isConfident: boolean;
 } {
   const matches = rawText.match(DATE_PATTERN) ?? [];
   const normalized = matches.map((value) => normalizeDate(value));
   const today = new Date().toISOString().slice(0, 10);
   if (normalized.length === 0) {
-    return { startDate: today, endDate: today };
+    return { startDate: today, endDate: today, isConfident: false };
   }
   if (normalized.length === 1) {
-    return { startDate: normalized[0], endDate: normalized[0] };
+    return { startDate: normalized[0], endDate: normalized[0], isConfident: false };
   }
-  return { startDate: normalized[0], endDate: normalized[1] };
+  return {
+    startDate: normalized[0],
+    endDate: normalized[1],
+    isConfident: normalized.length >= MIN_CONFIDENT_DATE_MATCH_COUNT,
+  };
 }
 
 function resolveDateRange(rawText: string): {
@@ -77,22 +83,25 @@ function resolveDateRange(rawText: string): {
 } {
   const daysSupply = extractDaysSupply(rawText);
   if (daysSupply === undefined) {
-    return { ...extractDateRangeFromDatePairs(rawText), isConfident: false };
+    return extractDateRangeFromDatePairs(rawText);
   }
   const today = new Date().toISOString().slice(0, 10);
   return { startDate: today, endDate: addDaysToToday(daysSupply), isConfident: true };
 }
 
-function extractDailyDoseCount(rawText: string): number | undefined {
-  const match = rawText.match(DAILY_DOSE_COUNT_PATTERN);
-  if (!match) {
-    return undefined;
+// 약물명 줄과 "N정씩 N회" 복용법 줄은 원문에서 각각 등장 순서를 유지하므로,
+// 같은 순번끼리 짝지어 약물별 복용 횟수로 대응시킨다. 약물/복용법 순서가
+// 문서 레이아웃상 어긋나 있으면 부정확할 수 있는 휴리스틱이다.
+function extractDailyDoseCounts(rawText: string): number[] {
+  const matches = rawText.matchAll(DAILY_DOSE_COUNT_PATTERN);
+  const counts: number[] = [];
+  for (const match of matches) {
+    const count = Number(match[1]);
+    if (Number.isInteger(count) && count >= 1) {
+      counts.push(Math.min(count, MAX_DAILY_DOSE_COUNT));
+    }
   }
-  const count = Number(match[1]);
-  if (!Number.isInteger(count) || count < 1) {
-    return undefined;
-  }
-  return Math.min(count, MAX_DAILY_DOSE_COUNT);
+  return counts;
 }
 
 function normalizeMedicationName(line: string): string {
@@ -115,7 +124,13 @@ function extractMedications(rawText: string): readonly ScanMedicationItem[] {
   if (uniqueCandidates.length === 0) {
     return [{ atcCode: DEFAULT_ATC_CODE, drugName: EMPTY_DRUG_FALLBACK }];
   }
-  return uniqueCandidates.map((drugName) => ({ atcCode: DEFAULT_ATC_CODE, drugName }));
+  const dailyDoseCounts = extractDailyDoseCounts(rawText);
+  return uniqueCandidates.map((drugName, index) => {
+    const dailyDoseCount = dailyDoseCounts[index];
+    return dailyDoseCount === undefined
+      ? { atcCode: DEFAULT_ATC_CODE, drugName }
+      : { atcCode: DEFAULT_ATC_CODE, drugName, dailyDoseCount };
+  });
 }
 
 function isDateOnlyLine(line: string): boolean {
@@ -159,7 +174,6 @@ export function parsePrescriptionFromOcrText(rawText: string): ScanPrescriptionD
     endDate: dateRange.endDate,
     medications: extractMedications(trimmedText),
     rawText: trimmedText,
-    dailyDoseCount: extractDailyDoseCount(trimmedText),
     isDateRangeConfident: dateRange.isConfident,
   };
   return draftSchema.parse(candidate);

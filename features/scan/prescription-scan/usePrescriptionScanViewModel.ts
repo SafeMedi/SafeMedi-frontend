@@ -78,6 +78,7 @@ async function matchMedicationWithDrugDatabase(
       atcCode: match.atcCode,
       drugName: match.drugName,
       drugCode: match.drugCode,
+      dailyDoseCount: medication.dailyDoseCount,
     };
   } catch {
     return medication;

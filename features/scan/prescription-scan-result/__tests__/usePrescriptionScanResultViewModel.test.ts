@@ -191,9 +191,8 @@ describe("usePrescriptionScanResultViewModel", () => {
         title: "스캔 처방전",
         startDate: "2026-05-01",
         endDate: "2026-05-07",
-        medications: [{ atcCode: "A01", drugName: "타이레놀" }],
+        medications: [{ atcCode: "A01", drugName: "타이레놀", dailyDoseCount: 3 }],
         rawText: "타이레놀",
-        dailyDoseCount: 3,
       },
     };
 
@@ -211,9 +210,8 @@ describe("usePrescriptionScanResultViewModel", () => {
         title: "스캔 처방전",
         startDate: "2026-05-01",
         endDate: "2026-05-07",
-        medications: [{ atcCode: "A01", drugName: "타이레놀" }],
+        medications: [{ atcCode: "A01", drugName: "타이레놀", dailyDoseCount: 2 }],
         rawText: "타이레놀",
-        dailyDoseCount: 2,
       },
     };
 
@@ -231,9 +229,8 @@ describe("usePrescriptionScanResultViewModel", () => {
         title: "스캔 처방전",
         startDate: "2026-05-01",
         endDate: "2026-05-07",
-        medications: [{ atcCode: "A01", drugName: "타이레놀" }],
+        medications: [{ atcCode: "A01", drugName: "타이레놀", dailyDoseCount: 1 }],
         rawText: "타이레놀",
-        dailyDoseCount: 1,
       },
     };
 

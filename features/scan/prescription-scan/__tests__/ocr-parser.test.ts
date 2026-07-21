@@ -18,6 +18,7 @@ describe("ocr-parser", () => {
     expect(draft.startDate).toBe("2026-05-13");
     expect(draft.endDate).toBe("2026-05-20");
     expect(draft.medications.length).toBeGreaterThan(0);
+    expect(draft.isDateRangeConfident).toBe(true);
   });
 
   it("직접 입력 JSON을 검증하여 draft로 변환한다", () => {
@@ -129,16 +130,42 @@ describe("ocr-parser", () => {
 
     expect(draft.startDate).toBe(today.toISOString().slice(0, 10));
     expect(draft.endDate).toBe(expectedEndDate.toISOString().slice(0, 10));
+    expect(draft.isDateRangeConfident).toBe(true);
   });
 
-  it("1일 N회 표기가 있으면 dailyDoseCount로 추출한다", () => {
+  it("명시적 날짜가 2개 인식되면 신뢰도 높음으로 판단한다", () => {
+    const draft = parsePrescriptionFromOcrText(`
+      처방전
+      멕시네정
+      2026.05.13 ~ 2026.05.20
+    `);
+
+    expect(draft.isDateRangeConfident).toBe(true);
+  });
+
+  it("날짜를 하나도 못 찾거나 하나만 찾으면 신뢰도가 낮다고 판단한다", () => {
+    const noDateDraft = parsePrescriptionFromOcrText(`
+      처방전
+      멕시네정
+    `);
+    const oneDateDraft = parsePrescriptionFromOcrText(`
+      처방전
+      멕시네정
+      2026.05.13
+    `);
+
+    expect(noDateDraft.isDateRangeConfident).toBe(false);
+    expect(oneDateDraft.isDateRangeConfident).toBe(false);
+  });
+
+  it("1일 N회 표기가 있으면 해당 약물의 dailyDoseCount로 추출한다", () => {
     const draft = parsePrescriptionFromOcrText(`
       처방전
       멕시네정
       1일 3회 복용
     `);
 
-    expect(draft.dailyDoseCount).toBe(3);
+    expect(draft.medications[0]?.dailyDoseCount).toBe(3);
   });
 
   it("1일 N회 표기가 없으면 dailyDoseCount는 undefined다", () => {
@@ -147,17 +174,17 @@ describe("ocr-parser", () => {
       멕시네정
     `);
 
-    expect(draft.dailyDoseCount).toBeUndefined();
+    expect(draft.medications[0]?.dailyDoseCount).toBeUndefined();
   });
 
-  it("N정씩 N회 표기가 있으면 dailyDoseCount로 추출한다", () => {
+  it("N정씩 N회 표기가 있으면 해당 약물의 dailyDoseCount로 추출한다", () => {
     const draft = parsePrescriptionFromOcrText(`
       처방전
       멕시네정
       1정씩 3회5일분
     `);
 
-    expect(draft.dailyDoseCount).toBe(3);
+    expect(draft.medications[0]?.dailyDoseCount).toBe(3);
   });
 
   it("약품명 옆 외형 설명(색상/모양/코팅)과 복용법 줄은 약물 후보에서 제외한다", () => {
@@ -175,9 +202,24 @@ describe("ocr-parser", () => {
     `);
 
     expect(draft.medications).toEqual([
-      { atcCode: "UNKNOWN", drugName: "멕시네정" },
-      { atcCode: "UNKNOWN", drugName: "베포리진정5mg" },
-      { atcCode: "UNKNOWN", drugName: "코대원정" },
+      { atcCode: "UNKNOWN", drugName: "멕시네정", dailyDoseCount: 3 },
+      { atcCode: "UNKNOWN", drugName: "베포리진정5mg", dailyDoseCount: 3 },
+      { atcCode: "UNKNOWN", drugName: "코대원정", dailyDoseCount: 2 },
+    ]);
+  });
+
+  it("약물마다 복용법 줄 순서가 대응되면 서로 다른 dailyDoseCount를 갖는다", () => {
+    const draft = parsePrescriptionFromOcrText(`
+      처방전
+      멕시네정
+      1정씩 3회5일분
+      베포리진정5mg
+      1정씩2회5일분
+    `);
+
+    expect(draft.medications).toEqual([
+      { atcCode: "UNKNOWN", drugName: "멕시네정", dailyDoseCount: 3 },
+      { atcCode: "UNKNOWN", drugName: "베포리진정5mg", dailyDoseCount: 2 },
     ]);
   });
 });
