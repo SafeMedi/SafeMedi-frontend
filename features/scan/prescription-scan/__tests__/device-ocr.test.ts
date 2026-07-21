@@ -9,6 +9,10 @@ const mockRequestMediaLibraryPermissionsAsync = jest.fn();
 const mockLaunchCameraAsync = jest.fn();
 const mockLaunchImageLibraryAsync = jest.fn();
 const mockExtractTextFromImage = jest.fn();
+const mockManipulate = jest.fn();
+const mockRotate = jest.fn();
+const mockRenderAsync = jest.fn();
+const mockSaveAsync = jest.fn();
 const mockRequireOptionalNativeModule = requireOptionalNativeModule as jest.MockedFunction<
   typeof requireOptionalNativeModule
 >;
@@ -23,6 +27,13 @@ jest.mock("expo-file-system", () => ({
       return mockFileExistsSequence.length > 0 ? mockFileExistsSequence.shift() : true;
     },
   })),
+}));
+
+jest.mock("expo-image-manipulator", () => ({
+  SaveFormat: { JPEG: "jpeg" },
+  ImageManipulator: {
+    manipulate: (...args: unknown[]) => mockManipulate(...args),
+  },
 }));
 
 jest.mock("expo-image-picker", () => ({
@@ -66,7 +77,14 @@ describe("device-ocr", () => {
       canceled: false,
       assets: [{ uri: "file://gallery.jpg" }],
     });
-    mockExtractTextFromImage.mockResolvedValue(["처방전", "타이레놀"]);
+    mockExtractTextFromImage.mockResolvedValue([
+      "서울가정의학과 처방전입니다",
+      "타이레놀정 500mg 복용 안내",
+    ]);
+    mockSaveAsync.mockResolvedValue({ uri: "file://rotated.jpg" });
+    mockRenderAsync.mockResolvedValue({ saveAsync: mockSaveAsync });
+    mockRotate.mockReturnValue({ renderAsync: mockRenderAsync });
+    mockManipulate.mockReturnValue({ rotate: mockRotate });
     mockRequireOptionalNativeModule.mockReturnValue({
       isSupported: true,
       extractTextFromImage: mockExtractTextFromImage,
@@ -88,8 +106,60 @@ describe("device-ocr", () => {
     const draft = await extractDraftFromImageUri("file://image.jpg");
 
     expect(mockRequireOptionalNativeModule).toHaveBeenCalledWith("ExpoTextExtractor");
-    expect(mockParsePrescriptionFromOcrText).toHaveBeenCalledWith("처방전\n타이레놀");
+    expect(mockParsePrescriptionFromOcrText).toHaveBeenCalledWith(
+      "서울가정의학과 처방전입니다\n타이레놀정 500mg 복용 안내",
+    );
     expect(draft.title).toBe("처방전");
+  });
+
+  it("정면 인식 결과의 한글이 충분하면 회전을 재시도하지 않는다", async () => {
+    await extractDraftFromImageUri("file://image.jpg");
+
+    expect(mockManipulate).not.toHaveBeenCalled();
+    expect(mockExtractTextFromImage).toHaveBeenCalledTimes(1);
+  });
+
+  it("정면 인식 결과의 한글이 적으면 회전한 이미지로 재시도해 더 나은 결과를 사용한다", async () => {
+    mockExtractTextFromImage
+      .mockResolvedValueOnce(["ab12"])
+      .mockResolvedValueOnce(["서울가정의학과 처방전입니다 타이레놀정 500mg 복용 안내"]);
+
+    await extractDraftFromImageUri("file://image.jpg");
+
+    expect(mockManipulate).toHaveBeenCalledWith("file://image.jpg");
+    expect(mockRotate).toHaveBeenCalledWith(90);
+    expect(mockExtractTextFromImage).toHaveBeenCalledTimes(2);
+    expect(mockParsePrescriptionFromOcrText).toHaveBeenCalledWith(
+      "서울가정의학과 처방전입니다 타이레놀정 500mg 복용 안내",
+    );
+  });
+
+  it("특정 각도 회전이 실패해도 다음 각도로 계속 시도한다", async () => {
+    mockExtractTextFromImage
+      .mockResolvedValueOnce(["ab12"])
+      .mockRejectedValueOnce(new Error("rotate failed"))
+      .mockResolvedValueOnce(["서울가정의학과 처방전입니다 타이레놀정 500mg 복용 안내"]);
+
+    const draft = await extractDraftFromImageUri("file://image.jpg");
+
+    expect(mockExtractTextFromImage).toHaveBeenCalledTimes(3);
+    expect(mockParsePrescriptionFromOcrText).toHaveBeenCalledWith(
+      "서울가정의학과 처방전입니다 타이레놀정 500mg 복용 안내",
+    );
+    expect(draft.title).toBe("처방전");
+  });
+
+  it("모든 각도의 신뢰도가 낮으면 그중 한글이 가장 많이 인식된 결과를 사용한다", async () => {
+    mockExtractTextFromImage
+      .mockResolvedValueOnce(["가"])
+      .mockResolvedValueOnce([""])
+      .mockResolvedValueOnce(["가나다"])
+      .mockResolvedValueOnce(["가나"]);
+
+    await extractDraftFromImageUri("file://image.jpg");
+
+    expect(mockExtractTextFromImage).toHaveBeenCalledTimes(4);
+    expect(mockParsePrescriptionFromOcrText).toHaveBeenCalledWith("가나다");
   });
 
   it("카메라 권한이 없으면 의미 있는 에러를 던진다", async () => {
