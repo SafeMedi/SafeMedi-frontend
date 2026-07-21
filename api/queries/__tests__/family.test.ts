@@ -1,6 +1,12 @@
 import { renderHook } from "@testing-library/react-native";
 import { queryKeys } from "@/api/query-keys";
-import { useAcceptFamilyInvitation, useFamilies, useFamilyInvitation } from "../family";
+import {
+  useAcceptFamilyInvitation,
+  useDeleteFamily,
+  useFamilies,
+  useFamilyInvitation,
+  useUpdateFamilyRelation,
+} from "../family";
 
 const mockFetchFamilies = jest.fn(async () => [
   { familyId: null, name: "홍길동", relation: "본인" },
@@ -8,6 +14,10 @@ const mockFetchFamilies = jest.fn(async () => [
 ]);
 const mockFetchFamilyInvitation = jest.fn<Promise<unknown>, [string]>(async () => ({}));
 const mockAcceptFamilyInvitation = jest.fn<Promise<unknown>, [string]>(async () => ({}));
+const mockUpdateFamilyRelation = jest.fn<Promise<unknown>, [number, { relation: string }]>(
+  async () => ({}),
+);
+const mockDeleteFamily = jest.fn<Promise<unknown>, [number]>(async () => ({}));
 const mockInvalidateQueries = jest.fn();
 const mockSetQueryData = jest.fn();
 
@@ -36,8 +46,11 @@ jest.mock("@tanstack/react-query", () => ({
 
 jest.mock("@/api/endpoints/family", () => ({
   acceptFamilyInvitation: (token: string) => mockAcceptFamilyInvitation(token),
+  deleteFamily: (familyId: number) => mockDeleteFamily(familyId),
   fetchFamilies: () => mockFetchFamilies(),
   fetchFamilyInvitation: (token: string) => mockFetchFamilyInvitation(token),
+  updateFamilyRelation: (familyId: number, body: { relation: string }) =>
+    mockUpdateFamilyRelation(familyId, body),
 }));
 
 jest.mock("@/stores/sessionStore", () => ({
@@ -102,6 +115,36 @@ describe("api/queries/family", () => {
     await options.onSuccess({ familyId: 9, name: "박민수", relation: "가족" });
 
     expect(mockAcceptFamilyInvitation).toHaveBeenCalledWith("abc");
+    expect(mockSetQueryData).toHaveBeenCalledWith(queryKeys.family.list, expect.any(Function));
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.family.list });
+  });
+
+  it("호칭 수정 mutation 성공 시 가족 목록을 갱신한다", async () => {
+    const { result } = renderHook(() => useUpdateFamilyRelation());
+    const options = result.current as unknown as {
+      mutationFn: (variables: { familyId: number; body: { relation: string } }) => Promise<unknown>;
+      onSuccess: (data: { familyId: number; name: string; relation: string }) => Promise<void>;
+    };
+
+    await options.mutationFn({ familyId: 7, body: { relation: "엄마" } });
+    await options.onSuccess({ familyId: 7, name: "김영희", relation: "엄마" });
+
+    expect(mockUpdateFamilyRelation).toHaveBeenCalledWith(7, { relation: "엄마" });
+    expect(mockSetQueryData).toHaveBeenCalledWith(queryKeys.family.list, expect.any(Function));
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.family.list });
+  });
+
+  it("가족 삭제 mutation 성공 시 가족 목록을 갱신한다", async () => {
+    const { result } = renderHook(() => useDeleteFamily());
+    const options = result.current as unknown as {
+      mutationFn: (familyId: number) => Promise<unknown>;
+      onSuccess: (result: unknown, familyId: number) => Promise<void>;
+    };
+
+    await options.mutationFn(7);
+    await options.onSuccess(undefined, 7);
+
+    expect(mockDeleteFamily).toHaveBeenCalledWith(7);
     expect(mockSetQueryData).toHaveBeenCalledWith(queryKeys.family.list, expect.any(Function));
     expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.family.list });
   });

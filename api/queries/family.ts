@@ -14,6 +14,19 @@ import { useSessionStore } from "@/stores/sessionStore";
 
 const STALE_MS = 5 * 60 * 1000;
 
+type FamilyListUpdater = (current: FamilySummary[] | undefined) => FamilySummary[] | undefined;
+
+function useFamilyListMutationEffects() {
+  const queryClient = useQueryClient();
+
+  const applyFamilyListUpdate = async (updater: FamilyListUpdater) => {
+    queryClient.setQueryData<FamilySummary[]>(queryKeys.family.list, updater);
+    await queryClient.invalidateQueries({ queryKey: queryKeys.family.list });
+  };
+
+  return { applyFamilyListUpdate };
+}
+
 export function useFamilies() {
   const accessToken = useSessionStore((s) => s.accessToken);
 
@@ -48,12 +61,12 @@ export function useFamilyInvitation(token: string | null) {
 }
 
 export function useAcceptFamilyInvitation() {
-  const queryClient = useQueryClient();
+  const { applyFamilyListUpdate } = useFamilyListMutationEffects();
 
   return useMutation({
     mutationFn: acceptFamilyInvitation,
     onSuccess: async (accepted) => {
-      queryClient.setQueryData<FamilySummary[]>(queryKeys.family.list, (current) => {
+      await applyFamilyListUpdate((current) => {
         if (!current) {
           return current;
         }
@@ -67,19 +80,18 @@ export function useAcceptFamilyInvitation() {
           },
         ];
       });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.family.list });
     },
   });
 }
 
 export function useUpdateFamilyRelation() {
-  const queryClient = useQueryClient();
+  const { applyFamilyListUpdate } = useFamilyListMutationEffects();
 
   return useMutation({
     mutationFn: ({ familyId, body }: { familyId: number; body: UpdateFamilyRelationBody }) =>
       updateFamilyRelation(familyId, body),
     onSuccess: async (updated) => {
-      queryClient.setQueryData<FamilySummary[]>(queryKeys.family.list, (current) => {
+      await applyFamilyListUpdate((current) => {
         if (!current) {
           return current;
         }
@@ -89,21 +101,19 @@ export function useUpdateFamilyRelation() {
             : family,
         );
       });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.family.list });
     },
   });
 }
 
 export function useDeleteFamily() {
-  const queryClient = useQueryClient();
+  const { applyFamilyListUpdate } = useFamilyListMutationEffects();
 
   return useMutation({
     mutationFn: deleteFamily,
     onSuccess: async (_result, familyId) => {
-      queryClient.setQueryData<FamilySummary[]>(queryKeys.family.list, (current) =>
+      await applyFamilyListUpdate((current) =>
         current?.filter((family) => family.familyId !== familyId),
       );
-      await queryClient.invalidateQueries({ queryKey: queryKeys.family.list });
     },
   });
 }
