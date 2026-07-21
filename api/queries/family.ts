@@ -14,10 +14,6 @@ import { useSessionStore } from "@/stores/sessionStore";
 
 const STALE_MS = 5 * 60 * 1000;
 
-function isValidFamilyId(familyId: number | null): familyId is number {
-  return typeof familyId === "number" && Number.isInteger(familyId);
-}
-
 export function useFamilies() {
   const accessToken = useSessionStore((s) => s.accessToken);
 
@@ -27,17 +23,6 @@ export function useFamilies() {
     staleTime: STALE_MS,
     queryFn: fetchFamilies,
   });
-}
-
-export function useFamilyMember(familyId: number | null) {
-  const familiesQuery = useFamilies();
-
-  return {
-    ...familiesQuery,
-    data: isValidFamilyId(familyId)
-      ? familiesQuery.data?.find((family) => family.familyId === familyId)
-      : undefined,
-  };
 }
 
 export function useCreateFamilyInvitation() {

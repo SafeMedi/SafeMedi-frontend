@@ -1,11 +1,6 @@
 import { renderHook } from "@testing-library/react-native";
 import { queryKeys } from "@/api/query-keys";
-import {
-  useAcceptFamilyInvitation,
-  useFamilies,
-  useFamilyInvitation,
-  useFamilyMember,
-} from "../family";
+import { useAcceptFamilyInvitation, useFamilies, useFamilyInvitation } from "../family";
 
 const mockFetchFamilies = jest.fn(async () => [
   { familyId: null, name: "홍길동", relation: "본인" },
@@ -71,12 +66,6 @@ describe("api/queries/family", () => {
 
     await options.queryFn();
     expect(mockFetchFamilies).toHaveBeenCalledTimes(1);
-  });
-
-  it("가족 구성원 훅은 목록에서 familyId가 일치하는 항목을 선택한다", () => {
-    const { result } = renderHook(() => useFamilyMember(7));
-
-    expect(result.current.data).toEqual({ familyId: 7, name: "김영희", relation: "어머니" });
   });
 
   it("초대 정보 쿼리는 토큰과 인증 토큰이 있을 때 활성화된다", async () => {

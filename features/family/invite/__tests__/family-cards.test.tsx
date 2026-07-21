@@ -74,15 +74,99 @@ describe("family cards", () => {
     expect(getByText("초대 링크 공유")).toBeTruthy();
   });
 
-  it("FamilyMemberCard는 본인 항목에만 본인 뱃지를 표시한다", () => {
-    const { getAllByText, queryByText, rerender } = render(
-      <FamilyMemberCard member={{ familyId: null, name: "홍길동", relation: "본인" } as never} />,
+  const noop = () => {};
+  const baseMemberCardProps = {
+    isEditing: false,
+    relationDraft: "",
+    canSaveRelation: false,
+    isSavingRelation: false,
+    isUnlinking: false,
+    onChangeRelationDraft: noop,
+    onStartEdit: noop,
+    onCancelEdit: noop,
+    onSaveRelation: noop,
+    onUnlink: noop,
+  };
+
+  it("FamilyMemberCard는 본인 항목에만 본인 뱃지를 표시하고 액션 버튼은 숨긴다", () => {
+    const { getAllByText, queryByText, queryByLabelText, rerender } = render(
+      <FamilyMemberCard
+        member={{ familyId: null, name: "홍길동", relation: "본인" } as never}
+        {...baseMemberCardProps}
+      />,
     );
     expect(getAllByText("본인")).toHaveLength(2);
+    expect(queryByLabelText("홍길동 호칭 수정")).toBeNull();
 
     rerender(
-      <FamilyMemberCard member={{ familyId: 2, name: "김영희", relation: "어머니" } as never} />,
+      <FamilyMemberCard
+        member={{ familyId: 2, name: "김영희", relation: "어머니" } as never}
+        {...baseMemberCardProps}
+      />,
     );
     expect(queryByText("본인")).toBeNull();
+  });
+
+  it("FamilyMemberCard는 본인이 아닌 항목에 호칭 수정/연동 해제 버튼을 표시한다", () => {
+    const onStartEdit = jest.fn();
+    const onUnlink = jest.fn();
+    const { getByLabelText } = render(
+      <FamilyMemberCard
+        member={{ familyId: 2, name: "김영희", relation: "어머니" } as never}
+        {...baseMemberCardProps}
+        onStartEdit={onStartEdit}
+        onUnlink={onUnlink}
+      />,
+    );
+
+    fireEvent.press(getByLabelText("김영희 호칭 수정"));
+    expect(onStartEdit).toHaveBeenCalledTimes(1);
+
+    fireEvent.press(getByLabelText("김영희 가족 연동 해제"));
+    expect(onUnlink).toHaveBeenCalledTimes(1);
+  });
+
+  it("FamilyMemberCard는 편집 중이면 입력창과 저장/취소 버튼을 보여준다", () => {
+    const onChangeRelationDraft = jest.fn();
+    const onSaveRelation = jest.fn();
+    const onCancelEdit = jest.fn();
+    const { getByLabelText } = render(
+      <FamilyMemberCard
+        member={{ familyId: 2, name: "김영희", relation: "어머니" } as never}
+        {...baseMemberCardProps}
+        isEditing
+        relationDraft="새 호칭"
+        canSaveRelation
+        onChangeRelationDraft={onChangeRelationDraft}
+        onSaveRelation={onSaveRelation}
+        onCancelEdit={onCancelEdit}
+      />,
+    );
+
+    fireEvent.changeText(getByLabelText("김영희 호칭 입력"), "엄마");
+    expect(onChangeRelationDraft).toHaveBeenCalledWith("엄마");
+
+    fireEvent.press(getByLabelText("김영희 호칭 저장"));
+    expect(onSaveRelation).toHaveBeenCalledTimes(1);
+
+    fireEvent.press(getByLabelText("김영희 호칭 수정 취소"));
+    expect(onCancelEdit).toHaveBeenCalledTimes(1);
+  });
+
+  it("FamilyMemberCard는 저장 불가 상태이면 저장 버튼이 동작하지 않는다", () => {
+    const onSaveRelation = jest.fn();
+    const { getByLabelText } = render(
+      <FamilyMemberCard
+        member={{ familyId: 2, name: "김영희", relation: "어머니" } as never}
+        {...baseMemberCardProps}
+        isEditing
+        relationDraft="어머니"
+        canSaveRelation={false}
+        onSaveRelation={onSaveRelation}
+      />,
+    );
+
+    fireEvent.press(getByLabelText("김영희 호칭 저장"));
+    expect(onSaveRelation).not.toHaveBeenCalled();
   });
 });
