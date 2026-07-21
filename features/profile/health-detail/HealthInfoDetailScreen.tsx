@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PillButton } from "@/components/ui/PillButton";
 import { palette } from "@/constants/design-tokens";
+import { useScreenBottomPadding } from "@/hooks/useScreenBottomPadding";
 import { useHealthInfo, useUserStore } from "@/stores/userStore";
 import { splitBloodTypeWithRh } from "@/utils/blood-type";
 import { ClinicalAlertCard } from "./components/ClinicalAlertCard";
@@ -105,6 +106,7 @@ function createAlertSection(
 
 export function HealthInfoDetailScreen() {
   const insets = useSafeAreaInsets();
+  const bottomPadding = useScreenBottomPadding(24);
   const user = useUserStore((state) => state.user);
   const data = useHealthInfo();
   const allergies = data.allergies ?? [];
@@ -170,7 +172,7 @@ export function HealthInfoDetailScreen() {
         style={styles.scroll}
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 24 },
+          { paddingTop: insets.top + 14, paddingBottom: bottomPadding },
         ]}
         showsVerticalScrollIndicator={false}
       >

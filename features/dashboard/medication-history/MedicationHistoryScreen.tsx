@@ -8,6 +8,7 @@ import { PillButton } from "@/components/ui/PillButton";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
+import { useScreenBottomPadding } from "@/hooks/useScreenBottomPadding";
 import { MedicationHistoryCard } from "./components/MedicationHistoryCard";
 import { MedicationHistoryHeader } from "./components/MedicationHistoryHeader";
 import { MedicationWarningBanner } from "./components/MedicationWarningBanner";
@@ -17,6 +18,7 @@ const SCREEN_TITLE = "스캔 기록 상세";
 
 export function MedicationHistoryScreen() {
   const insets = useSafeAreaInsets();
+  const bottomPadding = useScreenBottomPadding(24);
   const params = useLocalSearchParams();
   const prescriptionIdParam =
     typeof params.prescriptionId === "string" ? params.prescriptionId : undefined;
@@ -31,7 +33,7 @@ export function MedicationHistoryScreen() {
       style={styles.screen}
       contentContainerStyle={[
         styles.content,
-        { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 24 },
+        { paddingTop: insets.top + 14, paddingBottom: bottomPadding },
       ]}
       showsVerticalScrollIndicator={false}
     >

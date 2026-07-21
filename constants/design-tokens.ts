@@ -133,6 +133,17 @@ type FontFaces = {
   mono: string;
 };
 
+/**
+ * 화면 여백 관련 공통 값. 하드코딩된 매직 넘버 대신 여기서 파생합니다.
+ */
+export const layout = {
+  /**
+   * 탭 화면(대시보드/관리/지도/프로필)의 스크롤 콘텐츠 하단 여백.
+   * 탭바가 이미 시스템 하단 안전영역(insets.bottom)을 확보하므로 화면에서 추가로 더하지 않는다.
+   */
+  tabScreenBottomSpacing: 32,
+} as const;
+
 export const Fonts = Platform.select({
   ios: {
     sans: "system-ui",

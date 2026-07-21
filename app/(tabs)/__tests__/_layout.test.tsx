@@ -7,6 +7,7 @@ const mockAuthGateView = jest.fn<
   [{ kind: "loading" | "error"; onRetry?: () => void; onLogout?: () => void }]
 >(() => null);
 const mockTabsScreen = jest.fn<null, [unknown]>(() => null);
+const mockTabsProps = jest.fn<null, [unknown]>(() => null);
 const mockRouterPush = jest.fn<unknown, unknown[]>();
 
 let mockAuthState:
@@ -14,12 +15,15 @@ let mockAuthState:
   | { kind: "error"; retry: () => void; logout: () => void }
   | { kind: "ready"; href: string };
 let mockUser: { id: string } | null = { id: "user-1" };
+let mockInsets = { top: 0, bottom: 0, left: 0, right: 0 };
 
 jest.mock("expo-router", () => {
   const React = require("react");
   const { View } = require("react-native");
-  const Tabs = ({ children }: { children: React.ReactNode }) =>
-    React.createElement(View, {}, children);
+  const Tabs = (props: { children: React.ReactNode }) => {
+    mockTabsProps(props);
+    return React.createElement(View, {}, props.children);
+  };
   Tabs.Screen = (props: unknown) => {
     mockTabsScreen(props);
     return null;
@@ -51,11 +55,16 @@ jest.mock("@/components/AuthGateView", () => ({
   }) => mockAuthGateView(props),
 }));
 
+jest.mock("react-native-safe-area-context", () => ({
+  useSafeAreaInsets: () => mockInsets,
+}));
+
 describe("app/(tabs)/_layout", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockAuthState = { kind: "ready", href: "/(tabs)/dashboard" };
     mockUser = { id: "user-1" };
+    mockInsets = { top: 0, bottom: 0, left: 0, right: 0 };
   });
 
   it("loading 상태면 AuthGateView loading을 렌더링한다", () => {
@@ -107,5 +116,17 @@ describe("app/(tabs)/_layout", () => {
 
     expect(preventDefault).toHaveBeenCalledTimes(1);
     expect(mockRouterPush).toHaveBeenCalledWith("/(detail)/scan/scan");
+  });
+
+  it("하단 시스템 인셋이 있으면 탭바 높이와 하단 패딩에 반영한다", () => {
+    mockInsets = { top: 0, bottom: 34, left: 0, right: 0 };
+    render(<TabLayout />);
+
+    const tabsProps = mockTabsProps.mock.calls[0]?.[0] as unknown as {
+      screenOptions: { tabBarStyle: { height: number; paddingBottom: number } };
+    };
+
+    expect(tabsProps.screenOptions.tabBarStyle.height).toBe(70 + 34);
+    expect(tabsProps.screenOptions.tabBarStyle.paddingBottom).toBe(34);
   });
 });

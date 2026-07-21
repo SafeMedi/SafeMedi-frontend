@@ -6,10 +6,13 @@ import { Text } from "tamagui";
 import { GradientCard } from "@/components/ui/GradientCard";
 import { palette } from "@/constants/design-tokens";
 
+const CONTAINER_MIN_BOTTOM_PADDING = 12;
+
 interface PrescriptionScanActionsProps {
   readonly isBusy: boolean;
   readonly onPressGallery: () => void;
   readonly onPressCamera: () => void;
+  readonly bottomInset: number;
 }
 
 const GALLERY_GRADIENT = [palette.blue, palette.purple] as const;
@@ -50,9 +53,16 @@ export function PrescriptionScanActions({
   isBusy,
   onPressGallery,
   onPressCamera,
+  bottomInset,
 }: PrescriptionScanActionsProps) {
   return (
-    <View style={styles.container}>
+    <View
+      testID="prescription-scan-actions"
+      style={[
+        styles.container,
+        { paddingBottom: Math.max(bottomInset, CONTAINER_MIN_BOTTOM_PADDING) },
+      ]}
+    >
       <View style={styles.row}>
         <ActionButton
           label="갤러리"
@@ -81,7 +91,6 @@ const styles = StyleSheet.create({
     backgroundColor: palette.overlay_white_90,
     paddingHorizontal: 20,
     paddingTop: 18,
-    paddingBottom: 12,
     gap: 10,
   },
   row: {

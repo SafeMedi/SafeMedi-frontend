@@ -7,12 +7,14 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { PillButton } from "@/components/ui/PillButton";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
+import { useScreenBottomPadding } from "@/hooks/useScreenBottomPadding";
 import { NotificationCard } from "./components/NotificationCard";
 import { NotificationHeader } from "./components/NotificationHeader";
 import { useNotificationsViewModel } from "./useNotificationsViewModel";
 
 export function NotificationsScreen() {
   const insets = useSafeAreaInsets();
+  const bottomPadding = useScreenBottomPadding(24);
   const viewModel = useNotificationsViewModel();
 
   const renderItem = ({ item }: { item: NotificationItem }) => (
@@ -24,7 +26,7 @@ export function NotificationsScreen() {
       style={styles.screen}
       contentContainerStyle={[
         styles.content,
-        { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 24 },
+        { paddingTop: insets.top + 14, paddingBottom: bottomPadding },
       ]}
       data={[...viewModel.items]}
       keyExtractor={(item) => String(item.notificationId)}

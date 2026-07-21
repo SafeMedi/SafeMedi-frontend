@@ -48,7 +48,7 @@ export function IngredientAnalysisScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 96 }]}
+        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
         <YStack gap={12}>
@@ -140,6 +140,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 14,
     paddingTop: 14,
+    paddingBottom: 24,
   },
   loadingCard: {
     borderRadius: 18,

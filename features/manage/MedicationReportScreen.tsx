@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
 
+import { layout } from "@/constants/design-tokens";
 import { MedicationReportHeader } from "./components/MedicationReportHeader";
 import { MedicationReportTabBar } from "./components/MedicationReportTabBar";
 import { MedicationCalendarTab } from "./medication-calendar";
@@ -19,7 +20,7 @@ export function MedicationReportScreen() {
       style={styles.screen}
       contentContainerStyle={[
         styles.content,
-        { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 32 },
+        { paddingTop: insets.top + 14, paddingBottom: layout.tabScreenBottomSpacing },
       ]}
       showsVerticalScrollIndicator={false}
     >

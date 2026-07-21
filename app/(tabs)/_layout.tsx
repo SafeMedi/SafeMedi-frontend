@@ -5,6 +5,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Redirect, router, Tabs } from "expo-router";
 import { Image, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ScanIcon from "@/assets/images/scan_icon.png";
 import { AuthGateView } from "@/components/AuthGateView";
 import { palette } from "@/constants/design-tokens";
@@ -12,10 +13,12 @@ import { useAuthRouteState } from "@/hooks/use-auth-route-state";
 import { useUserStore } from "@/stores/userStore";
 
 const BG_PINK_LINE_STOPS = [0, 0.5, 1] as const;
+const TAB_BAR_CONTENT_HEIGHT = 70;
 
 export default function TabLayout() {
   const authState = useAuthRouteState();
   const user = useUserStore((s) => s.user);
+  const insets = useSafeAreaInsets();
 
   if (authState.kind === "loading") {
     return <AuthGateView kind="loading" />;
@@ -52,8 +55,9 @@ export default function TabLayout() {
             fontSize: 14,
           },
           tabBarStyle: {
-            height: 70,
+            height: TAB_BAR_CONTENT_HEIGHT + insets.bottom,
             paddingTop: 6,
+            paddingBottom: insets.bottom,
             paddingHorizontal: 18,
           },
         }}

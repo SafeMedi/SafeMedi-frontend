@@ -6,7 +6,7 @@ import { Text, YStack } from "tamagui";
 import { useUnreadNotificationCount } from "@/api/queries/notification";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { PillButton } from "@/components/ui/PillButton";
-import { palette } from "@/constants/design-tokens";
+import { layout, palette } from "@/constants/design-tokens";
 import { AdherenceSummaryCard } from "./components/AdherenceSummaryCard";
 import { DashboardTopHeader } from "./components/DashboardTopHeader";
 import { HealthTipCard } from "./components/HealthTipCard";
@@ -39,7 +39,10 @@ export function DashboardScreen() {
   return (
     <ScrollView
       style={styles.scroll}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: 32 }]}
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: insets.top + 16, paddingBottom: layout.tabScreenBottomSpacing },
+      ]}
       showsVerticalScrollIndicator={false}
     >
       <YStack gap={14}>

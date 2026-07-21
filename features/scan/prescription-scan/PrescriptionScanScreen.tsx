@@ -47,7 +47,7 @@ export function PrescriptionScanScreen() {
       </YStack>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 14 }]}
+        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
         <YStack gap={12}>
@@ -61,6 +61,7 @@ export function PrescriptionScanScreen() {
         isBusy={isBusy}
         onPressGallery={viewModel.extractFromGallery}
         onPressCamera={viewModel.extractFromCamera}
+        bottomInset={insets.bottom}
       />
       {viewModel.isExtracting ? (
         <View style={styles.extractingOverlay}>
@@ -84,6 +85,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 14,
     paddingTop: 14,
+    paddingBottom: 14,
   },
   extractingOverlay: {
     ...StyleSheet.absoluteFillObject,

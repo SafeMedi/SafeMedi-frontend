@@ -1,4 +1,5 @@
 import { fireEvent, render } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import { ExtractedDraftCard } from "../ExtractedDraftCard";
 import { PrescriptionFrameCard } from "../PrescriptionFrameCard";
 import { PrescriptionScanActions } from "../PrescriptionScanActions";
@@ -58,6 +59,7 @@ describe("prescription scan subcomponents", () => {
         isBusy={false}
         onPressGallery={onPressGallery}
         onPressCamera={onPressCamera}
+        bottomInset={0}
       />,
     );
 
@@ -71,9 +73,38 @@ describe("prescription scan subcomponents", () => {
         isBusy
         onPressGallery={onPressGallery}
         onPressCamera={onPressCamera}
+        bottomInset={0}
       />,
     );
     fireEvent.press(getByLabelText("갤러리"));
     expect(onPressGallery).toHaveBeenCalledTimes(1);
+  });
+
+  it("PrescriptionScanActions는 bottomInset이 최소 여백보다 크면 그대로 반영한다", () => {
+    const { getByTestId } = render(
+      <PrescriptionScanActions
+        isBusy={false}
+        onPressGallery={jest.fn()}
+        onPressCamera={jest.fn()}
+        bottomInset={34}
+      />,
+    );
+
+    const container = getByTestId("prescription-scan-actions");
+    expect(StyleSheet.flatten(container.props.style).paddingBottom).toBe(34);
+  });
+
+  it("PrescriptionScanActions는 bottomInset이 최소 여백보다 작으면 최소 여백을 사용한다", () => {
+    const { getByTestId } = render(
+      <PrescriptionScanActions
+        isBusy={false}
+        onPressGallery={jest.fn()}
+        onPressCamera={jest.fn()}
+        bottomInset={0}
+      />,
+    );
+
+    const container = getByTestId("prescription-scan-actions");
+    expect(StyleSheet.flatten(container.props.style).paddingBottom).toBe(12);
   });
 });

@@ -37,7 +37,7 @@ export function PrescriptionScanResultScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 96 }]}
+        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -190,6 +190,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 14,
     paddingTop: 14,
+    paddingBottom: 24,
   },
   successCard: {
     borderRadius: 18,
