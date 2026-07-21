@@ -59,12 +59,9 @@ jest.mock("../ocr-parser", () => ({
 }));
 
 describe("device-ocr", () => {
-  const originalPlatformOs = Platform.OS;
-
   beforeEach(() => {
     jest.clearAllMocks();
     mockFileExistsSequence = [];
-    Object.defineProperty(Platform, "OS", { value: originalPlatformOs });
     mockRequestCameraPermissionsAsync.mockResolvedValue({
       status: ImagePicker.PermissionStatus.GRANTED,
     });
@@ -101,7 +98,7 @@ describe("device-ocr", () => {
   });
 
   afterEach(() => {
-    Object.defineProperty(Platform, "OS", { value: originalPlatformOs });
+    jest.restoreAllMocks();
   });
 
   it("이미지 URI OCR 추출이 성공하면 draft를 반환한다", async () => {
@@ -218,7 +215,7 @@ describe("device-ocr", () => {
   });
 
   it("Android에서는 file:// 스킴을 제거하고 네이티브 OCR 모듈에 전달한다", async () => {
-    Object.defineProperty(Platform, "OS", { value: "android" });
+    jest.replaceProperty(Platform, "OS", "android");
 
     await extractDraftFromImageUri("file:///data/user/0/com.safeMedi/cache/ImagePicker/x.jpeg");
 
@@ -228,7 +225,7 @@ describe("device-ocr", () => {
   });
 
   it("iOS에서는 file:// 스킴을 유지한 채 네이티브 OCR 모듈에 전달한다", async () => {
-    Object.defineProperty(Platform, "OS", { value: "ios" });
+    jest.replaceProperty(Platform, "OS", "ios");
 
     await extractDraftFromImageUri("file:///var/mobile/Containers/x.jpeg");
 
