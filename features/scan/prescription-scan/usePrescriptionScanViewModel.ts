@@ -127,7 +127,7 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
   const navigateToResultScreen = useCallback(
     (nextDraft: ScanPrescriptionDraft, imageUri: string) => {
       setOcrResult({ draft: nextDraft, imageUri });
-      router.push("/(detail)/scan/scan-result");
+      router.replace("/(detail)/scan/scan-result");
     },
     [setOcrResult],
   );

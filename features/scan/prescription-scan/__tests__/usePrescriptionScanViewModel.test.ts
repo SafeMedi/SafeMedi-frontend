@@ -24,7 +24,7 @@ const BASE_DRAFT: ScanPrescriptionDraft = {
 
 jest.mock("expo-router", () => ({
   router: {
-    push: jest.fn(),
+    replace: jest.fn(),
   },
 }));
 
@@ -57,7 +57,7 @@ jest.mock("@/api/queries/prescription-scan", () => ({
 }));
 
 describe("usePrescriptionScanViewModel", () => {
-  const mockRouterPush = router.push as jest.MockedFunction<typeof router.push>;
+  const mockRouterReplace = router.replace as jest.MockedFunction<typeof router.replace>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -94,7 +94,7 @@ describe("usePrescriptionScanViewModel", () => {
       draft: BASE_DRAFT,
       imageUri: "file://gallery.png",
     });
-    expect(mockRouterPush).toHaveBeenCalledWith("/(detail)/scan/scan-result");
+    expect(mockRouterReplace).toHaveBeenCalledWith("/(detail)/scan/scan-result");
   });
 
   it("검색 결과와 이름이 정확히 일치하는 약물이 있으면 코드를 자동으로 채운다", async () => {
@@ -219,7 +219,7 @@ describe("usePrescriptionScanViewModel", () => {
     });
 
     expect(result.current.draft).toBeNull();
-    expect(mockRouterPush).not.toHaveBeenCalled();
+    expect(mockRouterReplace).not.toHaveBeenCalled();
     expect(mockSetResult).not.toHaveBeenCalled();
   });
 
