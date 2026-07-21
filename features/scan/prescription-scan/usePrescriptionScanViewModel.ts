@@ -1,13 +1,15 @@
 import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
+import { searchDrugs } from "@/api/endpoints/drugs";
 import { getApiErrorMessage } from "@/api/error";
 import { useCreatePrescriptionByScanMutation } from "@/api/queries/prescription-scan";
-import type { CreatePrescriptionRequest } from "@/api/types";
+import type { CreatePrescriptionRequest, DrugSearchItem } from "@/api/types";
 import { extractDraftFromImageSource, extractDraftFromImageUri } from "./device-ocr";
-import { parsePrescriptionFromJson } from "./ocr-parser";
+import { isPlaceholderMedication, parsePrescriptionFromJson } from "./ocr-parser";
 import type {
   PrescriptionScanViewModel,
   PrescriptionSubmitFeedback,
+  ScanMedicationItem,
   ScanPrescriptionDraft,
 } from "./types";
 import { usePrescriptionOcrResultStore } from "./usePrescriptionOcrResultStore";
@@ -24,11 +26,69 @@ const MANUAL_INPUT_IMAGE_URI = "manual://input";
 const JSON_PRETTY_SPACE = 2;
 const NO_SELECTED_IMAGE_ERROR = "재시도할 이미지가 없습니다. 먼저 사진을 선택해 주세요.";
 const UNKNOWN_OCR_ERROR = "OCR 추출 중 알 수 없는 오류가 발생했습니다.";
+const DRUG_MATCH_SEARCH_SIZE = 5;
 
 type OcrImageSource = "camera" | "gallery";
 
 function normalizeUnknownError(error: unknown): Error {
   return error instanceof Error ? error : new Error(UNKNOWN_OCR_ERROR);
+}
+
+function normalizeDrugNameForMatch(name: string): string {
+  return name.replace(/\s+/g, "").toLowerCase();
+}
+
+function findConfidentDrugMatch(
+  candidates: readonly DrugSearchItem[],
+  ocrDrugName: string,
+): DrugSearchItem | undefined {
+  const normalizedOcrName = normalizeDrugNameForMatch(ocrDrugName);
+  const exactMatch = candidates.find(
+    (item) => normalizeDrugNameForMatch(item.drugName) === normalizedOcrName,
+  );
+  if (exactMatch) {
+    return exactMatch;
+  }
+  // DB 약물명은 제조사·용량이 붙는 경우가 많아(예: OCR "멕시네정" vs DB "OO제약멕시네정10mg")
+  // 완전 일치 대신 이름 포함 관계로도 매칭한다.
+  return candidates.find((item) => {
+    const normalizedCandidate = normalizeDrugNameForMatch(item.drugName);
+    return (
+      normalizedCandidate.includes(normalizedOcrName) ||
+      normalizedOcrName.includes(normalizedCandidate)
+    );
+  });
+}
+
+async function matchMedicationWithDrugDatabase(
+  medication: ScanMedicationItem,
+): Promise<ScanMedicationItem> {
+  if (isPlaceholderMedication(medication) || medication.drugCode) {
+    return medication;
+  }
+  try {
+    const page = await searchDrugs({ keyword: medication.drugName, size: DRUG_MATCH_SEARCH_SIZE });
+    const match = findConfidentDrugMatch(page.content, medication.drugName);
+    if (!match) {
+      return medication;
+    }
+    return {
+      atcCode: match.atcCode,
+      drugName: match.drugName,
+      drugCode: match.drugCode,
+    };
+  } catch {
+    return medication;
+  }
+}
+
+async function matchDraftMedicationsWithDrugDatabase(
+  draft: ScanPrescriptionDraft,
+): Promise<ScanPrescriptionDraft> {
+  const medications = await Promise.all(
+    draft.medications.map((medication) => matchMedicationWithDrugDatabase(medication)),
+  );
+  return { ...draft, medications };
 }
 
 function toCreatePrescriptionBody(draft: ScanPrescriptionDraft): CreatePrescriptionRequest {
@@ -81,8 +141,9 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
         if (!result) {
           return;
         }
-        applyExtractedDraft(result.draft, result.imageUri);
-        navigateToResultScreen(result.draft, result.imageUri);
+        const matchedDraft = await matchDraftMedicationsWithDrugDatabase(result.draft);
+        applyExtractedDraft(matchedDraft, result.imageUri);
+        navigateToResultScreen(matchedDraft, result.imageUri);
       } catch (extractError) {
         setError(normalizeUnknownError(extractError));
       } finally {
@@ -137,8 +198,9 @@ export function usePrescriptionScanViewModel(): PrescriptionScanViewModel {
     setError(null);
     try {
       const nextDraft = await extractDraftFromImageUri(selectedImageUri);
-      applyExtractedDraft(nextDraft, selectedImageUri);
-      navigateToResultScreen(nextDraft, selectedImageUri);
+      const matchedDraft = await matchDraftMedicationsWithDrugDatabase(nextDraft);
+      applyExtractedDraft(matchedDraft, selectedImageUri);
+      navigateToResultScreen(matchedDraft, selectedImageUri);
     } catch (extractError) {
       setError(normalizeUnknownError(extractError));
     } finally {

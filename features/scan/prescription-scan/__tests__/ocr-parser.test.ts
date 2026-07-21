@@ -104,4 +104,80 @@ describe("ocr-parser", () => {
 
     expect(draft.title).toBe("서울가정의학과 처방전");
   });
+
+  it("병원/약국 등 사업자명이 있으면 해당 줄을 제목으로 사용한다", () => {
+    const draft = parsePrescriptionFromOcrText(`
+      약제비 계산서·영수증
+      용인서울이비인후과의원(황정원)
+      환자정보 조건희
+      멕시네정
+    `);
+
+    expect(draft.title).toBe("용인서울이비인후과의원(황정원)");
+  });
+
+  it("N일분 표기가 있으면 오늘부터 N일 뒤까지를 복약 기간으로 설정한다", () => {
+    const draft = parsePrescriptionFromOcrText(`
+      처방전
+      멕시네정
+      5일분
+    `);
+
+    const today = new Date();
+    const expectedEndDate = new Date(today);
+    expectedEndDate.setDate(expectedEndDate.getDate() + 5);
+
+    expect(draft.startDate).toBe(today.toISOString().slice(0, 10));
+    expect(draft.endDate).toBe(expectedEndDate.toISOString().slice(0, 10));
+  });
+
+  it("1일 N회 표기가 있으면 dailyDoseCount로 추출한다", () => {
+    const draft = parsePrescriptionFromOcrText(`
+      처방전
+      멕시네정
+      1일 3회 복용
+    `);
+
+    expect(draft.dailyDoseCount).toBe(3);
+  });
+
+  it("1일 N회 표기가 없으면 dailyDoseCount는 undefined다", () => {
+    const draft = parsePrescriptionFromOcrText(`
+      처방전
+      멕시네정
+    `);
+
+    expect(draft.dailyDoseCount).toBeUndefined();
+  });
+
+  it("N정씩 N회 표기가 있으면 dailyDoseCount로 추출한다", () => {
+    const draft = parsePrescriptionFromOcrText(`
+      처방전
+      멕시네정
+      1정씩 3회5일분
+    `);
+
+    expect(draft.dailyDoseCount).toBe(3);
+  });
+
+  it("약품명 옆 외형 설명(색상/모양/코팅)과 복용법 줄은 약물 후보에서 제외한다", () => {
+    const draft = parsePrescriptionFromOcrText(`
+      용인서울이비인후과의원(황정원)
+      멕시네정
+      분홍색 장방형 필름코 팅정
+      1정씩 3회5일분
+      베포리진정5mg
+      흰색 원형 필름코 팅정
+      1정씩3회5일분
+      코대원정
+      흰색원형정제
+      1정씩2회5일분
+    `);
+
+    expect(draft.medications).toEqual([
+      { atcCode: "UNKNOWN", drugName: "멕시네정" },
+      { atcCode: "UNKNOWN", drugName: "베포리진정5mg" },
+      { atcCode: "UNKNOWN", drugName: "코대원정" },
+    ]);
+  });
 });

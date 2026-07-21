@@ -8,10 +8,17 @@ const DATE_PATTERN = /\b\d{4}[./-]\d{1,2}[./-]\d{1,2}\b/g;
 const MEDICATION_KEYWORD_PATTERN = /정|캡슐|시럽|환|산제|과립|크림|연고|패치|mg|ml|mcg|IU/i;
 const NON_MEDICATION_LINE_PATTERN =
   /병원|의원|약국|처방전|환자|생년월일|성별|연락처|전화|주소|발행일|조제일|보험|진료과|담당의|면허번호/;
+const TABLET_APPEARANCE_PATTERN = /색|원형|장방형|타원형|코\s*팅/;
+const DOSAGE_INSTRUCTION_PATTERN = /\d\s*정씩/;
+const CLINIC_NAME_PATTERN = /[가-힣]{2,}(?:의원|병원|약국|한의원|치과)/;
+const DAYS_SUPPLY_PATTERN = /(\d+)\s*일분/;
+const DAILY_DOSE_COUNT_PATTERN = /(?:1일|하루|일일|정씩)\s*(\d+)\s*회/;
+const MAX_DAILY_DOSE_COUNT = 3;
 
 const medicationSchema = z.object({
   atcCode: z.string().min(1),
   drugName: z.string().min(1),
+  drugCode: z.string().min(1).optional(),
 });
 
 const draftSchema = z.object({
@@ -20,6 +27,8 @@ const draftSchema = z.object({
   endDate: z.string().min(1),
   medications: z.array(medicationSchema).min(1),
   rawText: z.string().min(1),
+  dailyDoseCount: z.number().int().min(1).max(MAX_DAILY_DOSE_COUNT).optional(),
+  isDateRangeConfident: z.boolean().optional(),
 });
 
 function normalizeDate(rawDate: string): string {
@@ -30,7 +39,22 @@ function normalizeDate(rawDate: string): string {
   return `${year}-${String(monthNumber).padStart(2, "0")}-${String(dayNumber).padStart(2, "0")}`;
 }
 
-function extractDateRange(rawText: string): {
+function addDaysToToday(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function extractDaysSupply(rawText: string): number | undefined {
+  const match = rawText.match(DAYS_SUPPLY_PATTERN);
+  if (!match) {
+    return undefined;
+  }
+  const days = Number(match[1]);
+  return Number.isInteger(days) && days > 0 ? days : undefined;
+}
+
+function extractDateRangeFromDatePairs(rawText: string): {
   readonly startDate: string;
   readonly endDate: string;
 } {
@@ -46,6 +70,31 @@ function extractDateRange(rawText: string): {
   return { startDate: normalized[0], endDate: normalized[1] };
 }
 
+function resolveDateRange(rawText: string): {
+  readonly startDate: string;
+  readonly endDate: string;
+  readonly isConfident: boolean;
+} {
+  const daysSupply = extractDaysSupply(rawText);
+  if (daysSupply === undefined) {
+    return { ...extractDateRangeFromDatePairs(rawText), isConfident: false };
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  return { startDate: today, endDate: addDaysToToday(daysSupply), isConfident: true };
+}
+
+function extractDailyDoseCount(rawText: string): number | undefined {
+  const match = rawText.match(DAILY_DOSE_COUNT_PATTERN);
+  if (!match) {
+    return undefined;
+  }
+  const count = Number(match[1]);
+  if (!Number.isInteger(count) || count < 1) {
+    return undefined;
+  }
+  return Math.min(count, MAX_DAILY_DOSE_COUNT);
+}
+
 function normalizeMedicationName(line: string): string {
   return line.replace(/[-*•]/g, "").trim();
 }
@@ -56,7 +105,11 @@ function extractMedications(rawText: string): readonly ScanMedicationItem[] {
     .map((line) => normalizeMedicationName(line))
     .filter((line) => line.length > 0);
   const medicationCandidates = lines.filter(
-    (line) => MEDICATION_KEYWORD_PATTERN.test(line) && !NON_MEDICATION_LINE_PATTERN.test(line),
+    (line) =>
+      MEDICATION_KEYWORD_PATTERN.test(line) &&
+      !NON_MEDICATION_LINE_PATTERN.test(line) &&
+      !TABLET_APPEARANCE_PATTERN.test(line) &&
+      !DOSAGE_INSTRUCTION_PATTERN.test(line),
   );
   const uniqueCandidates = Array.from(new Set(medicationCandidates));
   if (uniqueCandidates.length === 0) {
@@ -70,10 +123,15 @@ function isDateOnlyLine(line: string): boolean {
 }
 
 function extractTitle(rawText: string): string {
-  const firstMeaningfulLine = rawText
+  const lines = rawText
     .split(/\n+/)
     .map((line) => line.trim())
-    .find((line) => line.length > 2 && !isDateOnlyLine(line));
+    .filter((line) => line.length > 0);
+  const clinicNameLine = lines.find((line) => CLINIC_NAME_PATTERN.test(line));
+  if (clinicNameLine) {
+    return clinicNameLine;
+  }
+  const firstMeaningfulLine = lines.find((line) => line.length > 2 && !isDateOnlyLine(line));
   return firstMeaningfulLine ?? EMPTY_TITLE_FALLBACK;
 }
 
@@ -90,13 +148,15 @@ export function parsePrescriptionFromOcrText(rawText: string): ScanPrescriptionD
   if (trimmedText.length === 0) {
     throw new Error("OCR 결과가 비어 있습니다. 이미지가 선명한지 확인해 주세요.");
   }
-  const dateRange = extractDateRange(trimmedText);
+  const dateRange = resolveDateRange(trimmedText);
   const candidate = {
     title: extractTitle(trimmedText),
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
     medications: extractMedications(trimmedText),
     rawText: trimmedText,
+    dailyDoseCount: extractDailyDoseCount(trimmedText),
+    isDateRangeConfident: dateRange.isConfident,
   };
   return draftSchema.parse(candidate);
 }

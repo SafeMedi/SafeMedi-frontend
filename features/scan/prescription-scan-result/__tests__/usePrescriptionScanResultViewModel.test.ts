@@ -165,6 +165,62 @@ describe("usePrescriptionScanResultViewModel", () => {
     expect(result.current.isAnalyzeDisabled).toBe(true);
   });
 
+  it("복약 기간이 신뢰 가능하면 OCR 추출 날짜를 그대로 초기값으로 사용한다", () => {
+    mockResult = {
+      imageUri: "file://image.png",
+      draft: {
+        title: "스캔 처방전",
+        startDate: "2026-07-14",
+        endDate: "2026-07-19",
+        medications: [{ atcCode: "A01", drugName: "타이레놀" }],
+        rawText: "타이레놀",
+        isDateRangeConfident: true,
+      },
+    };
+
+    const { result } = renderHook(() => usePrescriptionScanResultViewModel());
+
+    expect(result.current.startDate).toBe("2026-07-14");
+    expect(result.current.endDate).toBe("2026-07-19");
+  });
+
+  it("dailyDoseCount만큼 복용시간을 자동으로 선택한다", () => {
+    mockResult = {
+      imageUri: "file://image.png",
+      draft: {
+        title: "스캔 처방전",
+        startDate: "2026-05-01",
+        endDate: "2026-05-07",
+        medications: [{ atcCode: "A01", drugName: "타이레놀" }],
+        rawText: "타이레놀",
+        dailyDoseCount: 3,
+      },
+    };
+
+    const { result } = renderHook(() => usePrescriptionScanResultViewModel());
+
+    expect(result.current.fields[0]).toMatchObject({
+      takeSlots: ["MORNING", "LUNCH", "DINNER"],
+    });
+  });
+
+  it("draft에 drugCode가 포함되어 있으면 초기값으로 사용한다", () => {
+    mockResult = {
+      imageUri: "file://image.png",
+      draft: {
+        title: "스캔 처방전",
+        startDate: "2026-05-01",
+        endDate: "2026-05-07",
+        medications: [{ atcCode: "N02BE01", drugName: "타이레놀", drugCode: "D01" }],
+        rawText: "타이레놀",
+      },
+    };
+
+    const { result } = renderHook(() => usePrescriptionScanResultViewModel());
+
+    expect(result.current.fields[0]).toMatchObject({ drugCode: "D01" });
+  });
+
   it("복약 시작일/종료일을 선택하면 분석 버튼 비활성화가 해제된다", async () => {
     const { result } = renderHook(() => usePrescriptionScanResultViewModel());
 
