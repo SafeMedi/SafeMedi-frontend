@@ -19,13 +19,15 @@ const mockRequireOptionalNativeModule = requireOptionalNativeModule as jest.Mock
 const mockParsePrescriptionFromOcrText = parsePrescriptionFromOcrText as jest.MockedFunction<
   typeof parsePrescriptionFromOcrText
 >;
+const mockFileDelete = jest.fn();
 let mockFileExistsSequence: boolean[] = [];
 
 jest.mock("expo-file-system", () => ({
-  File: jest.fn().mockImplementation(() => ({
+  File: jest.fn().mockImplementation((uri: string) => ({
     get exists() {
       return mockFileExistsSequence.length > 0 ? mockFileExistsSequence.shift() : true;
     },
+    delete: () => mockFileDelete(uri),
   })),
 }));
 
@@ -132,6 +134,17 @@ describe("device-ocr", () => {
     expect(mockParsePrescriptionFromOcrText).toHaveBeenCalledWith(
       "서울가정의학과 처방전입니다 타이레놀정 500mg 복용 안내",
     );
+  });
+
+  it("회전 재시도로 만든 임시 이미지는 사용 후 삭제하고 원본은 삭제하지 않는다", async () => {
+    mockExtractTextFromImage
+      .mockResolvedValueOnce(["ab12"])
+      .mockResolvedValueOnce(["서울가정의학과 처방전입니다 타이레놀정 500mg 복용 안내"]);
+
+    await extractDraftFromImageUri("file://image.jpg");
+
+    expect(mockFileDelete).toHaveBeenCalledWith("file://rotated.jpg");
+    expect(mockFileDelete).not.toHaveBeenCalledWith("file://image.jpg");
   });
 
   it("특정 각도 회전이 실패해도 다음 각도로 계속 시도한다", async () => {

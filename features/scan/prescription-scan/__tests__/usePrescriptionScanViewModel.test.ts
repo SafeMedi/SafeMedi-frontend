@@ -154,6 +154,40 @@ describe("usePrescriptionScanViewModel", () => {
     ]);
   });
 
+  it("포함 관계로 매칭되는 후보가 여러 개면 자동 매칭하지 않고 원본을 유지한다", async () => {
+    mockExtractDraftFromImageSource.mockResolvedValue({
+      draft: BASE_DRAFT,
+      imageUri: "file://gallery.png",
+    });
+    mockSearchDrugs.mockResolvedValue({
+      content: [
+        {
+          drugCode: "D01",
+          atcCode: "N02BE01",
+          drugName: "한미약품테스트 약500mg",
+          company: "한미약품",
+        },
+        {
+          drugCode: "D02",
+          atcCode: "N02BE02",
+          drugName: "종근당테스트 약250mg",
+          company: "종근당",
+        },
+      ],
+      page: 0,
+      size: 5,
+      isLast: true,
+    });
+
+    const { result } = renderHook(() => usePrescriptionScanViewModel());
+
+    await act(async () => {
+      await result.current.extractFromGallery();
+    });
+
+    expect(result.current.draft?.medications).toEqual(BASE_DRAFT.medications);
+  });
+
   it("검색 결과에 정확히 일치하는 이름이 없으면 원본 약물명을 그대로 유지한다", async () => {
     mockExtractDraftFromImageSource.mockResolvedValue({
       draft: BASE_DRAFT,

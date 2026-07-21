@@ -50,14 +50,16 @@ function findConfidentDrugMatch(
     return exactMatch;
   }
   // DB 약물명은 제조사·용량이 붙는 경우가 많아(예: OCR "멕시네정" vs DB "OO제약멕시네정10mg")
-  // 완전 일치 대신 이름 포함 관계로도 매칭한다.
-  return candidates.find((item) => {
+  // 완전 일치 대신 이름 포함 관계로도 매칭한다. 다만 후보가 여러 개면 어느 게 맞는지
+  // 확신할 수 없으므로 자동 매칭하지 않고 사용자가 직접 검색해서 고르도록 남겨둔다.
+  const partialMatches = candidates.filter((item) => {
     const normalizedCandidate = normalizeDrugNameForMatch(item.drugName);
     return (
       normalizedCandidate.includes(normalizedOcrName) ||
       normalizedOcrName.includes(normalizedCandidate)
     );
   });
+  return partialMatches.length === 1 ? partialMatches[0] : undefined;
 }
 
 async function matchMedicationWithDrugDatabase(

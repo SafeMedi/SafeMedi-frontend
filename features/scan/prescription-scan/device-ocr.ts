@@ -94,16 +94,35 @@ async function rotateImage(uri: string, degrees: number): Promise<string> {
   return saved.uri;
 }
 
+function deleteFileQuietly(uri: string): void {
+  try {
+    new File(uri).delete();
+  } catch {
+    // 임시 회전 이미지 정리 실패는 OCR 결과에 영향이 없으므로 무시한다.
+  }
+}
+
 async function extractRawTextAtRotation(
   textExtractorModule: TextExtractorModule,
   imageUri: string,
   degrees: number,
 ): Promise<string> {
-  const rotatedUri = degrees === 0 ? imageUri : await rotateImage(imageUri, degrees);
-  const extractedTexts = await textExtractorModule.extractTextFromImage(
-    toTextExtractorUri(rotatedUri),
-  );
-  return extractedTexts.join("\n");
+  if (degrees === 0) {
+    const extractedTexts = await textExtractorModule.extractTextFromImage(
+      toTextExtractorUri(imageUri),
+    );
+    return extractedTexts.join("\n");
+  }
+
+  const rotatedUri = await rotateImage(imageUri, degrees);
+  try {
+    const extractedTexts = await textExtractorModule.extractTextFromImage(
+      toTextExtractorUri(rotatedUri),
+    );
+    return extractedTexts.join("\n");
+  } finally {
+    deleteFileQuietly(rotatedUri);
+  }
 }
 
 // 문서 자체가 기울어진 채 촬영되면 인식률이 크게 떨어지므로, 정면 결과의 한글

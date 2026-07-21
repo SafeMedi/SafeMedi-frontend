@@ -57,9 +57,15 @@ function convertTakeSlotsToTimes(takeSlots: readonly MedicationTakeSlot[]): stri
   );
 }
 
+const DAILY_DOSE_COUNT_TAKE_SLOTS: Readonly<Record<number, readonly MedicationTakeSlot[]>> = {
+  1: ["MORNING"],
+  2: ["MORNING", "DINNER"],
+  3: ["MORNING", "LUNCH", "DINNER"],
+};
+
 function takeSlotsForDailyDoseCount(dailyDoseCount: number | undefined): MedicationTakeSlot[] {
   if (!dailyDoseCount) return [];
-  return MEDICATION_TAKE_SLOT_OPTIONS.slice(0, dailyDoseCount).map((option) => option.slot);
+  return [...(DAILY_DOSE_COUNT_TAKE_SLOTS[dailyDoseCount] ?? [])];
 }
 
 function createRequestMedications(

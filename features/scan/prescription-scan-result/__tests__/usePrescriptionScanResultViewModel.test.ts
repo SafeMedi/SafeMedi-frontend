@@ -184,7 +184,7 @@ describe("usePrescriptionScanResultViewModel", () => {
     expect(result.current.endDate).toBe("2026-07-19");
   });
 
-  it("dailyDoseCount만큼 복용시간을 자동으로 선택한다", () => {
+  it("dailyDoseCount가 3이면 아침/점심/저녁을 자동으로 선택한다", () => {
     mockResult = {
       imageUri: "file://image.png",
       draft: {
@@ -201,6 +201,46 @@ describe("usePrescriptionScanResultViewModel", () => {
 
     expect(result.current.fields[0]).toMatchObject({
       takeSlots: ["MORNING", "LUNCH", "DINNER"],
+    });
+  });
+
+  it("dailyDoseCount가 2이면 아침/저녁을 자동으로 선택한다", () => {
+    mockResult = {
+      imageUri: "file://image.png",
+      draft: {
+        title: "스캔 처방전",
+        startDate: "2026-05-01",
+        endDate: "2026-05-07",
+        medications: [{ atcCode: "A01", drugName: "타이레놀" }],
+        rawText: "타이레놀",
+        dailyDoseCount: 2,
+      },
+    };
+
+    const { result } = renderHook(() => usePrescriptionScanResultViewModel());
+
+    expect(result.current.fields[0]).toMatchObject({
+      takeSlots: ["MORNING", "DINNER"],
+    });
+  });
+
+  it("dailyDoseCount가 1이면 아침만 자동으로 선택한다", () => {
+    mockResult = {
+      imageUri: "file://image.png",
+      draft: {
+        title: "스캔 처방전",
+        startDate: "2026-05-01",
+        endDate: "2026-05-07",
+        medications: [{ atcCode: "A01", drugName: "타이레놀" }],
+        rawText: "타이레놀",
+        dailyDoseCount: 1,
+      },
+    };
+
+    const { result } = renderHook(() => usePrescriptionScanResultViewModel());
+
+    expect(result.current.fields[0]).toMatchObject({
+      takeSlots: ["MORNING"],
     });
   });
 
