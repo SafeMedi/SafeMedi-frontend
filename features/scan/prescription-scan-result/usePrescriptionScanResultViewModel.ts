@@ -7,9 +7,9 @@ import type {
   CreatePrescriptionMedication,
   DrugSearchItem,
 } from "@/api/types";
+import { hasOnlyPlaceholderMedications } from "@/features/scan/prescription-scan/ocr-parser";
 import { formatDateLabel, formatDateToIso, parseIsoDate } from "@/utils/date";
 import { useIngredientAnalysisStore } from "../ingredient-analysis/useIngredientAnalysisStore";
-import { hasOnlyPlaceholderMedications } from "../prescription-scan/ocr-parser";
 import { usePrescriptionOcrResultStore } from "../prescription-scan/usePrescriptionOcrResultStore";
 
 export type MedicationTakeSlot = "MORNING" | "LUNCH" | "DINNER";

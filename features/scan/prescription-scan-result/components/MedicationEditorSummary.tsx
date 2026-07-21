@@ -1,7 +1,7 @@
 import { StyleSheet, View } from "react-native";
 import { Text, YStack } from "tamagui";
 import { palette } from "@/constants/design-tokens";
-import { isConfirmedAtcCode } from "../../prescription-scan/ocr-parser";
+import { isConfirmedAtcCode } from "@/features/scan/prescription-scan/ocr-parser";
 import {
   MEDICATION_TAKE_SLOT_OPTIONS,
   type MedicationTakeSlot,

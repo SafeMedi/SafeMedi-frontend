@@ -4,7 +4,7 @@ import { StyleSheet } from "react-native";
 import type { DrugSearchItem } from "@/api/types";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
-import { isConfirmedAtcCode } from "../../prescription-scan/ocr-parser";
+import { isConfirmedAtcCode } from "@/features/scan/prescription-scan/ocr-parser";
 import type {
   MedicationTakeSlot,
   PrescriptionScanResultFormValues,
