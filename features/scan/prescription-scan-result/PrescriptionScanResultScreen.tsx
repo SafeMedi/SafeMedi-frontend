@@ -19,7 +19,7 @@ const ADD_GRADIENT = [palette.purple, palette.pink] as const;
 
 export function PrescriptionScanResultScreen() {
   const insets = useSafeAreaInsets();
-  const bottomPadding = useScreenBottomPadding(96);
+  const bottomPadding = useScreenBottomPadding(24);
   const viewModel = usePrescriptionScanResultViewModel();
 
   return (

@@ -15,7 +15,7 @@ import { useIngredientAnalysisViewModel } from "./useIngredientAnalysisViewModel
 
 export function IngredientAnalysisScreen() {
   const insets = useSafeAreaInsets();
-  const bottomPadding = useScreenBottomPadding(96);
+  const bottomPadding = useScreenBottomPadding(24);
   const viewModel = useIngredientAnalysisViewModel();
 
   const medicationCount = viewModel.result?.analyzedMedicationCount ?? 0;
