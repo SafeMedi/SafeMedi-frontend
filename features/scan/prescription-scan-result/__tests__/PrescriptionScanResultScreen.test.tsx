@@ -96,6 +96,26 @@ describe("PrescriptionScanResultScreen", () => {
     expect(getByText("복약 등록")).toBeTruthy();
     expect(getByText("인식된 약물")).toBeTruthy();
     expect(getByText("아세트아미노펜정")).toBeTruthy();
+    expect(getByText("검색 결과에서 약물을 선택해야 등록됩니다.")).toBeTruthy();
+  });
+
+  it("약물 코드가 정상 매칭되면 코드를 노출한다", () => {
+    usePrescriptionOcrResultStore.setState({
+      result: {
+        imageUri: "file://prescription.jpg",
+        draft: {
+          title: "처방전",
+          startDate: "2026-05-14",
+          endDate: "2026-05-20",
+          medications: [{ atcCode: "N02BE01", drugName: "타이레놀정", drugCode: "195700007" }],
+          rawText: "타이레놀정 500mg",
+        },
+      },
+    });
+
+    const { getByText, queryByText } = render(<PrescriptionScanResultScreen />);
+    expect(getByText("약물 코드: N02BE01")).toBeTruthy();
+    expect(queryByText("검색 결과에서 약물을 선택해야 등록됩니다.")).toBeNull();
   });
 
   it("약물을 인식하지 못했으면 저신뢰 안내 배너를 노출한다", () => {

@@ -4,6 +4,7 @@ import { StyleSheet } from "react-native";
 import type { DrugSearchItem } from "@/api/types";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
+import { isConfirmedAtcCode } from "../../prescription-scan/ocr-parser";
 import type {
   MedicationTakeSlot,
   PrescriptionScanResultFormValues,
@@ -54,7 +55,7 @@ export function MedicationEditorCard({
 
   const isCompleteEnabled = useMemo(() => {
     const hasMedicationName = medicationName.trim().length > 0;
-    const hasMedicationCode = atcCode.trim().length > 0;
+    const hasMedicationCode = isConfirmedAtcCode(atcCode);
     const hasTakeSlot = selectedTakeSlots.length > 0;
     return hasMedicationName && hasMedicationCode && hasTakeSlot;
   }, [atcCode, medicationName, selectedTakeSlots]);

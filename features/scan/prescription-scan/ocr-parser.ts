@@ -3,7 +3,7 @@ import type { ScanMedicationItem, ScanPrescriptionDraft } from "./types";
 
 const EMPTY_DRUG_FALLBACK = "미확인 약물";
 const EMPTY_TITLE_FALLBACK = "처방전 스캔 등록";
-const DEFAULT_ATC_CODE = "UNKNOWN";
+export const DEFAULT_ATC_CODE = "UNKNOWN";
 const DATE_PATTERN = /\b\d{4}[./-]\d{1,2}[./-]\d{1,2}\b/g;
 const MEDICATION_KEYWORD_PATTERN = /정|캡슐|시럽|환|산제|과립|크림|연고|패치|mg|ml|mcg|IU/i;
 const NON_MEDICATION_LINE_PATTERN =
@@ -133,6 +133,10 @@ function extractTitle(rawText: string): string {
   }
   const firstMeaningfulLine = lines.find((line) => line.length > 2 && !isDateOnlyLine(line));
   return firstMeaningfulLine ?? EMPTY_TITLE_FALLBACK;
+}
+
+export function isConfirmedAtcCode(atcCode: string): boolean {
+  return atcCode.trim().length > 0 && atcCode !== DEFAULT_ATC_CODE;
 }
 
 export function isPlaceholderMedication(item: ScanMedicationItem): boolean {
