@@ -1,11 +1,9 @@
 import type {
-  FamilyDetail,
-  FamilyManageOverview,
+  FamilyInvitation,
   FamilySummary,
   NotificationListResponse,
   NotificationSettings,
   PrescriptionListItem,
-  ReceivedFamilyRequest,
   UserProfile,
 } from "@/api/types";
 
@@ -13,20 +11,17 @@ import type {
 type MockOnlyState = {
   userDeleted: boolean;
   tutorialCompleted: boolean;
-  nextFamilyRequestId: number;
+  nextFamilyInvitationId: number;
   prescriptionIdSeq: number;
   medicationIdSeq: number;
   medicationRecordIdSeq: number;
-  familyAlertConsent: Map<number, boolean>;
+  currentFamilyInvitation: FamilyInvitation | null;
 };
 
 /** SAF-26 mock 인메모리 상태 — 값의 형태는 API 응답 타입(`@/api/types`)과 맞춥니다. */
 export const mockState: MockOnlyState & {
   profile: UserProfile;
-  receivedRequests: ReceivedFamilyRequest[];
   families: FamilySummary[];
-  familyManageOverview: FamilyManageOverview;
-  familyDetails: Record<number, FamilyDetail>;
   notificationSettings: NotificationSettings;
   notifications: NotificationListResponse;
   prescriptions: PrescriptionListItem[];
@@ -49,116 +44,26 @@ export const mockState: MockOnlyState & {
     isTutorialCompleted: false,
   },
 
-  nextFamilyRequestId: 103,
-
-  receivedRequests: [
-    {
-      requestId: 100,
-      senderId: 5,
-      senderName: "정민성",
-      proposedRelation: "MOTHER",
-      status: "PENDING",
-      requestedAt: "2026-04-06T15:30:00",
-    },
-    {
-      requestId: 102,
-      senderId: 12,
-      senderName: "김동생",
-      proposedRelation: "SIBLING",
-      status: "PENDING",
-      requestedAt: "2026-04-05T09:00:00",
-    },
-  ],
+  nextFamilyInvitationId: 101,
+  currentFamilyInvitation: null,
 
   families: [
     {
+      familyId: null,
+      name: "홍길동",
+      relation: "본인",
+    },
+    {
       familyId: 1,
-      name: "어머니",
-      relation: "MOTHER",
-      birthDate: "1965-05-15",
-      gender: "F",
+      name: "김영희",
+      relation: "어머니",
     },
     {
       familyId: 2,
-      name: "아버지",
-      relation: "FATHER",
-      birthDate: "1962-03-10",
-      gender: "M",
+      name: "김민수",
+      relation: "아버지",
     },
   ],
-
-  familyManageOverview: {
-    inviteLink: "https://medisafe.app/invite/ABC123XYZ",
-    members: [
-      { id: "me", name: "홍길동", relation: "본인", emoji: "👨", isActive: true },
-      { id: "mother", name: "김영희", relation: "어머니", emoji: "👩", isActive: true },
-    ],
-    pendingInvites: [
-      {
-        id: "father",
-        relation: "아버지",
-        email: "father@email.com",
-        invitedAt: "2026.03.18",
-      },
-    ],
-    benefits: [
-      "가족의 복약 알림을 함께 받아보세요",
-      "복약을 놓친 가족에게 알림을 보낼 수 있어요",
-      "가족의 건강 정보를 응급 상황에서 확인할 수 있어요",
-    ],
-  },
-
-  familyDetails: {
-    1: {
-      familyId: 1,
-      name: "김영희",
-      relation: "MOTHER",
-      birthDate: "1965-05-15",
-      gender: "F",
-      height: 160,
-      weight: 55,
-      bloodType: "A",
-      diseases: ["고혈압"],
-      allergies: [{ code: "J01CA", name: "페니실린계 항생제" }],
-      isAlertConsent: true,
-      todayMedicationSummary: {
-        completedCount: 2,
-        totalCount: 3,
-        completionRate: 67,
-        remainingCount: 1,
-      },
-      todayMedicationSchedules: [
-        { id: "s-1", medicineName: "혈압약", scheduledTime: "08:00", status: "COMPLETED" },
-        { id: "s-2", medicineName: "당뇨약", scheduledTime: "08:00", status: "COMPLETED" },
-        { id: "s-3", medicineName: "혈압약", scheduledTime: "20:00", status: "PENDING" },
-      ],
-    },
-    2: {
-      familyId: 2,
-      name: "김민수",
-      relation: "FATHER",
-      birthDate: "1962-03-10",
-      gender: "M",
-      height: 171,
-      weight: 69,
-      bloodType: "O",
-      diseases: ["고지혈증"],
-      allergies: [{ code: "N02BE01", name: "아세트아미노펜" }],
-      isAlertConsent: false,
-      todayMedicationSummary: {
-        completedCount: 1,
-        totalCount: 2,
-        completionRate: 50,
-        remainingCount: 1,
-      },
-      todayMedicationSchedules: [
-        { id: "s-4", medicineName: "혈압약", scheduledTime: "09:00", status: "COMPLETED" },
-        { id: "s-5", medicineName: "고지혈증약", scheduledTime: "21:00", status: "PENDING" },
-      ],
-    },
-  },
-
-  familyAlertConsent: new Map<number, boolean>([[1, true]]),
 
   prescriptionIdSeq: 26,
   medicationIdSeq: 202,

@@ -10,14 +10,29 @@ import { palette } from "@/constants/design-tokens";
 
 type FamilyInviteCardProps = {
   inviteLink: string;
+  isLoading?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
   onCopyLink?: () => void;
   onShareLink?: () => void;
 };
 
 const NOOP = (): void => {};
 
-export function FamilyInviteCard({ inviteLink, onCopyLink, onShareLink }: FamilyInviteCardProps) {
+export function FamilyInviteCard({
+  inviteLink,
+  isLoading = false,
+  isError = false,
+  onRetry,
+  onCopyLink,
+  onShareLink,
+}: FamilyInviteCardProps) {
   const hasInviteLink = inviteLink.trim().length > 0;
+  const linkText = isLoading
+    ? "초대 링크 생성 중"
+    : isError
+      ? "초대 링크를 생성하지 못했습니다"
+      : inviteLink;
 
   return (
     <YStack gap={10}>
@@ -43,7 +58,7 @@ export function FamilyInviteCard({ inviteLink, onCopyLink, onShareLink }: Family
 
         <XStack style={styles.linkBox} items="center" justify="space-between" gap={8}>
           <Text style={styles.link} numberOfLines={1}>
-            {inviteLink}
+            {linkText}
           </Text>
           <Pressable onPress={onCopyLink} hitSlop={8} style={styles.copyButton}>
             <Ionicons name="copy-outline" size={16} color={palette.black} />
@@ -51,16 +66,28 @@ export function FamilyInviteCard({ inviteLink, onCopyLink, onShareLink }: Family
         </XStack>
 
         <XStack gap={8}>
-          <PillButton
-            variant="outline"
-            disabled={!hasInviteLink}
-            onPress={hasInviteLink ? (onCopyLink ?? NOOP) : NOOP}
-            borderColor={palette.green_soft}
-            backgroundColor={palette.gray}
-            leftElement={<Ionicons name="copy-outline" size={14} color={palette.green_deep} />}
-          >
-            <Text style={styles.outlineButtonLabel}>링크 복사</Text>
-          </PillButton>
+          {isError ? (
+            <PillButton
+              variant="outline"
+              onPress={onRetry ?? NOOP}
+              borderColor={palette.green_soft}
+              backgroundColor={palette.gray}
+              leftElement={<Ionicons name="refresh-outline" size={14} color={palette.green_deep} />}
+            >
+              <Text style={styles.outlineButtonLabel}>다시 생성</Text>
+            </PillButton>
+          ) : (
+            <PillButton
+              variant="outline"
+              disabled={!hasInviteLink}
+              onPress={hasInviteLink ? (onCopyLink ?? NOOP) : NOOP}
+              borderColor={palette.green_soft}
+              backgroundColor={palette.gray}
+              leftElement={<Ionicons name="copy-outline" size={14} color={palette.green_deep} />}
+            >
+              <Text style={styles.outlineButtonLabel}>링크 복사</Text>
+            </PillButton>
+          )}
           <PillButton
             variant="solid"
             disabled={!hasInviteLink}

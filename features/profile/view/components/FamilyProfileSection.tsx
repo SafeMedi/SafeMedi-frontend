@@ -8,6 +8,7 @@ import { FamilyProfileItem } from "./FamilyProfileItem";
 export type FamilyProfile = {
   id: string;
   name: string;
+  relation: string;
   isActive: boolean;
   avatarGradient: readonly [string, string];
 };
@@ -15,14 +16,9 @@ export type FamilyProfile = {
 export type FamilyProfileSectionProps = {
   profiles: readonly FamilyProfile[];
   onAddFamily?: () => void;
-  onSelectProfile?: (profile: FamilyProfile) => void;
 };
 
-export function FamilyProfileSection({
-  profiles,
-  onAddFamily,
-  onSelectProfile,
-}: FamilyProfileSectionProps) {
+export function FamilyProfileSection({ profiles, onAddFamily }: FamilyProfileSectionProps) {
   return (
     <YStack gap={10}>
       <SectionHeader
@@ -36,15 +32,12 @@ export function FamilyProfileSection({
       />
       <YStack gap={7}>
         {profiles.map((profile) => (
-          // "본인" 카드는 상세 전환 대상이 아니므로 클릭을 비활성화합니다.
           <FamilyProfileItem
             key={profile.id}
             name={profile.name}
+            relation={profile.relation}
             isActive={profile.isActive}
             avatarGradient={profile.avatarGradient}
-            onPress={
-              profile.id === "me" || !onSelectProfile ? undefined : () => onSelectProfile(profile)
-            }
           />
         ))}
       </YStack>

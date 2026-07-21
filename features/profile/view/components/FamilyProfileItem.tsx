@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
@@ -9,63 +9,48 @@ import { FAMILY_ACTIVE_STYLE } from "../constants";
 
 export type FamilyProfileItemProps = {
   name: string;
+  relation: string;
   isActive: boolean;
   avatarGradient: readonly [string, string];
-  onPress?: () => void;
 };
 
 export function FamilyProfileItem({
   name,
+  relation,
   isActive,
   avatarGradient,
-  onPress,
 }: FamilyProfileItemProps) {
-  const isClickable = typeof onPress === "function";
-
-  return (
-    <Pressable
-      disabled={!isClickable}
-      onPress={onPress}
-      style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
+  return isActive ? (
+    <LinearGradient
+      colors={[...FAMILY_ACTIVE_STYLE.gradientColors]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={[styles.card, styles.activeCard, { borderColor: FAMILY_ACTIVE_STYLE.borderColor }]}
     >
-      {isActive ? (
-        <LinearGradient
-          colors={[...FAMILY_ACTIVE_STYLE.gradientColors]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={[styles.card, styles.activeCard, { borderColor: FAMILY_ACTIVE_STYLE.borderColor }]}
-        >
-          <ItemContent
-            name={name}
-            isActive
-            avatarGradient={avatarGradient}
-            isClickable={isClickable}
-          />
-        </LinearGradient>
-      ) : (
-        <SurfaceCard style={[styles.card, styles.inactiveCard]}>
-          <ItemContent
-            name={name}
-            isActive={false}
-            avatarGradient={avatarGradient}
-            isClickable={isClickable}
-          />
-        </SurfaceCard>
-      )}
-    </Pressable>
+      <ItemContent name={name} relation={relation} isActive avatarGradient={avatarGradient} />
+    </LinearGradient>
+  ) : (
+    <SurfaceCard style={[styles.card, styles.inactiveCard]}>
+      <ItemContent
+        name={name}
+        relation={relation}
+        isActive={false}
+        avatarGradient={avatarGradient}
+      />
+    </SurfaceCard>
   );
 }
 
 function ItemContent({
   name,
+  relation,
   isActive,
   avatarGradient,
-  isClickable,
 }: {
   name: string;
+  relation: string;
   isActive: boolean;
   avatarGradient: readonly [string, string];
-  isClickable: boolean;
 }) {
   return (
     <View style={styles.row}>
@@ -79,7 +64,10 @@ function ItemContent({
           <Ionicons name="person" size={18} color={palette.white} />
         </LinearGradient>
         <View style={styles.textWrap}>
-          <Text style={styles.name}>{name}</Text>
+          <Text style={styles.name}>
+            {isActive ? name : relation}
+            {!isActive ? <Text style={styles.nickname}> ({name})</Text> : null}
+          </Text>
           {isActive ? (
             <Text style={[styles.activeLabel, { color: FAMILY_ACTIVE_STYLE.activeTextColor }]}>
               현재 활성
@@ -87,18 +75,11 @@ function ItemContent({
           ) : null}
         </View>
       </View>
-      {isClickable ? <Ionicons name="chevron-forward" size={18} color={palette.icon} /> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  pressable: {
-    borderRadius: 18,
-  },
-  pressed: {
-    opacity: 0.8,
-  },
   card: {
     padding: 14,
     shadowColor: palette.shadow_base,
@@ -139,6 +120,11 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: palette.text,
     letterSpacing: -0.15,
+  },
+  nickname: {
+    fontSize: 11,
+    fontWeight: "400",
+    color: palette.icon,
   },
   activeLabel: {
     fontSize: 10,

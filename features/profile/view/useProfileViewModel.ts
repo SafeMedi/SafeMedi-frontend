@@ -1,4 +1,4 @@
-import { type Href, router } from "expo-router";
+import { router } from "expo-router";
 import { useCallback, useMemo } from "react";
 import { Alert } from "react-native";
 
@@ -29,20 +29,27 @@ export function useProfileViewModel() {
   const { allergies, chronicConditions } = useHealthInfo();
 
   const familyProfiles = useMemo<FamilyProfile[]>(() => {
-    const me: FamilyProfile = {
-      id: "me",
-      name: profileUser.name,
-      isActive: true,
-      avatarGradient: FAMILY_AVATAR_GRADIENTS.green,
-    };
     const members = familySummaries.map((family, index) => ({
-      id: String(family.familyId),
+      id: family.familyId === null ? "me" : String(family.familyId),
       name: family.name,
-      isActive: false,
+      relation: family.relation,
+      isActive: family.familyId === null,
       avatarGradient: AVATAR_GRADIENT_POOL[index % AVATAR_GRADIENT_POOL.length],
     }));
 
-    return [me, ...members];
+    if (members.length > 0) {
+      return members;
+    }
+
+    return [
+      {
+        id: "me",
+        name: profileUser.name,
+        relation: "본인",
+        isActive: true,
+        avatarGradient: FAMILY_AVATAR_GRADIENTS.green,
+      },
+    ];
   }, [familySummaries, profileUser.name]);
 
   const appInfoItems = useMemo(
@@ -64,18 +71,6 @@ export function useProfileViewModel() {
 
   const handleOpenHealthInfoDetail = () => {
     router.push("/profile/health-info");
-  };
-
-  const handleSelectFamilyProfile = (profileId: string) => {
-    if (profileId === "me") {
-      return;
-    }
-    const familyId = Number(profileId);
-    if (!Number.isInteger(familyId)) {
-      return;
-    }
-    const familyDetailHref = `/(detail)/family/${familyId}` as Href;
-    router.push(familyDetailHref);
   };
 
   const handleWithdrawAccount = useCallback(() => {
@@ -111,6 +106,5 @@ export function useProfileViewModel() {
     handleOpenProfileEdit,
     handleOpenFamilyManage,
     handleOpenHealthInfoDetail,
-    handleSelectFamilyProfile,
   };
 }

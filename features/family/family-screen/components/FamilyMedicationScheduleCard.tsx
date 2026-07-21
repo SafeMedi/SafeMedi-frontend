@@ -3,10 +3,16 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, View } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
 
-import type { FamilyMedicationScheduleItem } from "@/api/types";
 import { Badge } from "@/components/ui/Badge";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
+
+type FamilyMedicationScheduleItem = {
+  id: string;
+  medicineName: string;
+  scheduledTime: string;
+  status: "COMPLETED" | "PENDING";
+};
 
 interface FamilyMedicationScheduleCardProps {
   readonly schedule: FamilyMedicationScheduleItem;

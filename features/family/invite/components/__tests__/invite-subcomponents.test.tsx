@@ -2,8 +2,6 @@ import { fireEvent, render } from "@testing-library/react-native";
 import { FamilyFeatureBanner } from "../FamilyFeatureBanner";
 import { FamilyManageHeader } from "../FamilyManageHeader";
 import { FamilyMembersSection } from "../FamilyMembersSection";
-import { PendingInviteCard } from "../PendingInviteCard";
-import { PendingInvitesSection } from "../PendingInvitesSection";
 
 jest.mock("tamagui", () => {
   const React = require("react");
@@ -32,12 +30,25 @@ describe("family invite subcomponents", () => {
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
+  const noop = () => {};
+  const baseSectionProps = {
+    editingFamilyId: null,
+    relationDraft: "",
+    isSavingRelation: false,
+    unlinkingFamilyId: null,
+    onChangeRelationDraft: noop,
+    onStartEdit: noop,
+    onCancelEdit: noop,
+    onSaveRelation: noop,
+    onUnlink: noop,
+  };
+
   it("FamilyMembersSection은 구성원 수와 카드 목록을 렌더링한다", () => {
     const members = [
-      { id: "1", name: "엄마", relation: "가족", emoji: "😀", isActive: true },
-      { id: "2", name: "아빠", relation: "가족", emoji: "😎", isActive: false },
+      { familyId: 1, name: "엄마", relation: "가족" },
+      { familyId: 2, name: "아빠", relation: "가족" },
     ];
-    const { getByText } = render(<FamilyMembersSection members={members as never} />);
+    const { getByText } = render(<FamilyMembersSection members={members} {...baseSectionProps} />);
 
     expect(getByText("현재 가족 구성원")).toBeTruthy();
     expect(getByText("2명")).toBeTruthy();
@@ -45,19 +56,25 @@ describe("family invite subcomponents", () => {
     expect(getByText("아빠")).toBeTruthy();
   });
 
-  it("PendingInviteCard/PendingInvitesSection은 대기 초대 정보를 렌더링한다", () => {
-    const invite = {
-      id: "p1",
-      relation: "동생",
-      email: "family@example.com",
-      invitedAt: "2026-05-20",
-    };
-    const { getByText } = render(<PendingInviteCard invite={invite as never} />);
-    expect(getByText("대기중")).toBeTruthy();
-    expect(getByText("동생")).toBeTruthy();
+  it("FamilyMembersSection은 편집 중인 familyId에만 편집 모드를 전달한다", () => {
+    const members = [
+      { familyId: 1, name: "엄마", relation: "가족" },
+      { familyId: 2, name: "아빠", relation: "아빠" },
+    ];
+    const onStartEdit = jest.fn();
+    const { getByLabelText } = render(
+      <FamilyMembersSection
+        members={members}
+        {...baseSectionProps}
+        editingFamilyId={1}
+        relationDraft="엄마 최고"
+        onStartEdit={onStartEdit}
+      />,
+    );
 
-    const section = render(<PendingInvitesSection invites={[invite] as never} />);
-    expect(section.getByText("대기 중인 초대")).toBeTruthy();
-    expect(section.getByText("1")).toBeTruthy();
+    expect(getByLabelText("엄마 호칭 입력").props.value).toBe("엄마 최고");
+
+    fireEvent.press(getByLabelText("아빠 호칭 수정"));
+    expect(onStartEdit).toHaveBeenCalledWith(2);
   });
 });

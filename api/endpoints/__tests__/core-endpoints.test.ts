@@ -1,6 +1,13 @@
 import { apiPaths } from "@/api/paths";
 import { postLogout, postSocialLogin } from "../auth";
-import { fetchFamilies, fetchFamilyDetail, fetchFamilyManageOverview } from "../family";
+import {
+  acceptFamilyInvitation,
+  createFamilyInvitation,
+  deleteFamily,
+  fetchFamilies,
+  fetchFamilyInvitation,
+  updateFamilyRelation,
+} from "../family";
 import {
   fetchNotificationSettings,
   fetchNotifications,
@@ -62,18 +69,31 @@ describe("api/endpoints core modules", () => {
   });
 
   it("family endpoints를 각각 호출한다", async () => {
-    mockApiGet
-      .mockReturnValueOnce({ json: jest.fn(async () => [{ familyId: 1 }]) })
-      .mockReturnValueOnce({ json: jest.fn(async () => ({ members: [] })) })
-      .mockReturnValueOnce({ json: jest.fn(async () => ({ familyId: 2 })) });
+    mockApiGet.mockReturnValue({
+      json: jest.fn(async () => ({ families: [{ familyId: 1 }] })),
+      text: jest.fn(async () => ""),
+    });
+    mockApiPost.mockReturnValue({
+      json: jest.fn(async () => ({ invitationId: 1, inviteUrl: "https://invite" })),
+    });
+    mockApiPatch.mockReturnValue({ json: jest.fn(async () => ({ familyId: 2 })) });
+    mockApiDelete.mockReturnValue({ text: jest.fn(async () => "") });
 
     await fetchFamilies();
-    await fetchFamilyManageOverview();
-    await fetchFamilyDetail(2);
+    await createFamilyInvitation();
+    await fetchFamilyInvitation("token-1");
+    await acceptFamilyInvitation("token-1");
+    await updateFamilyRelation(2, { relation: "어머니" });
+    await deleteFamily(2);
 
     expect(mockApiGet).toHaveBeenNthCalledWith(1, apiPaths.families);
-    expect(mockApiGet).toHaveBeenNthCalledWith(2, apiPaths.familiesManage);
-    expect(mockApiGet).toHaveBeenNthCalledWith(3, apiPaths.family(2));
+    expect(mockApiPost).toHaveBeenNthCalledWith(1, apiPaths.familyInvitations);
+    expect(mockApiGet).toHaveBeenNthCalledWith(2, apiPaths.familyInvitation("token-1"));
+    expect(mockApiPost).toHaveBeenNthCalledWith(2, apiPaths.familyInvitationAccept("token-1"));
+    expect(mockApiPatch).toHaveBeenCalledWith(apiPaths.family(2), {
+      json: { relation: "어머니" },
+    });
+    expect(mockApiDelete).toHaveBeenCalledWith(apiPaths.family(2));
   });
 
   it("notification endpoints를 조회/수정 호출한다", async () => {

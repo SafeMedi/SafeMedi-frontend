@@ -1,17 +1,40 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet } from "react-native";
 import { YStack } from "tamagui";
-import type { FamilyManageMember } from "@/api/types";
+import type { FamilySummary } from "@/api/types";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { palette } from "@/constants/design-tokens";
 import { FamilyMemberCard } from "./FamilyMemberCard";
 
 type FamilyMembersSectionProps = {
-  members: readonly FamilyManageMember[];
+  members: readonly FamilySummary[];
+  editingFamilyId: number | null;
+  relationDraft: string;
+  isSavingRelation: boolean;
+  unlinkingFamilyId: number | null;
+  onChangeRelationDraft: (text: string) => void;
+  onStartEdit: (familyId: number) => void;
+  onCancelEdit: () => void;
+  onSaveRelation: () => void;
+  onUnlink: (familyId: number) => void;
 };
 
-export function FamilyMembersSection({ members }: FamilyMembersSectionProps) {
+export function FamilyMembersSection({
+  members,
+  editingFamilyId,
+  relationDraft,
+  isSavingRelation,
+  unlinkingFamilyId,
+  onChangeRelationDraft,
+  onStartEdit,
+  onCancelEdit,
+  onSaveRelation,
+  onUnlink,
+}: FamilyMembersSectionProps) {
+  const getMemberKey = (member: FamilySummary) =>
+    member.familyId === null ? "self" : `family-${member.familyId}`;
+
   return (
     <YStack gap={8}>
       <SectionHeader
@@ -27,9 +50,32 @@ export function FamilyMembersSection({ members }: FamilyMembersSectionProps) {
         }
       />
       <YStack gap={8}>
-        {members.map((member) => (
-          <FamilyMemberCard key={member.id} member={member} />
-        ))}
+        {members.map((member) => {
+          const isEditing = member.familyId !== null && member.familyId === editingFamilyId;
+          const trimmedDraft = relationDraft.trim();
+          const canSaveRelation =
+            isEditing &&
+            trimmedDraft.length > 0 &&
+            trimmedDraft.length <= 20 &&
+            trimmedDraft !== member.relation;
+
+          return (
+            <FamilyMemberCard
+              key={getMemberKey(member)}
+              member={member}
+              isEditing={isEditing}
+              relationDraft={isEditing ? relationDraft : member.relation}
+              canSaveRelation={canSaveRelation}
+              isSavingRelation={isEditing && isSavingRelation}
+              isUnlinking={member.familyId !== null && member.familyId === unlinkingFamilyId}
+              onChangeRelationDraft={onChangeRelationDraft}
+              onStartEdit={() => member.familyId !== null && onStartEdit(member.familyId)}
+              onCancelEdit={onCancelEdit}
+              onSaveRelation={onSaveRelation}
+              onUnlink={() => member.familyId !== null && onUnlink(member.familyId)}
+            />
+          );
+        })}
       </YStack>
     </YStack>
   );

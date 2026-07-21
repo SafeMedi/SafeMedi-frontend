@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchFamilies } from "@/api/endpoints/family";
 import { fetchNotificationSettings, patchNotificationSettings } from "@/api/endpoints/notification";
 import { queryKeys } from "@/api/query-keys";
-import type { FamilySummary, NotificationSettings } from "@/api/types";
+import type { NotificationSettings } from "@/api/types";
 import { useSessionStore } from "@/stores/sessionStore";
+import { useFamilies } from "./family";
 
 const STALE_MS = 5 * 60 * 1000;
 type NotificationSettingsPatch = Partial<
@@ -17,14 +17,7 @@ const NOTIFICATION_SETTING_KEYS = [
 ] as const;
 
 export function useFamilyProfiles() {
-  const accessToken = useSessionStore((s) => s.accessToken);
-
-  return useQuery({
-    queryKey: queryKeys.profile.families,
-    enabled: !!accessToken,
-    staleTime: STALE_MS,
-    queryFn: async (): Promise<FamilySummary[]> => fetchFamilies(),
-  });
+  return useFamilies();
 }
 
 /** 알림 설정 조회 */

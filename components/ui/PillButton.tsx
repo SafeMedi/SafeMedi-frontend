@@ -4,6 +4,11 @@ import { palette } from "@/constants/design-tokens";
 
 const BORDER_SUBTLE = palette.dark_gray;
 
+const SIZE_PADDING = {
+  md: { paddingVertical: 14, paddingHorizontal: 16 },
+  sm: { paddingVertical: 8, paddingHorizontal: 12 },
+} as const;
+
 export type PillButtonProps = {
   variant: "outline" | "solid";
   onPress: () => void;
@@ -15,6 +20,7 @@ export type PillButtonProps = {
   flex?: number;
   borderColor?: string;
   backgroundColor?: string;
+  size?: "md" | "sm";
 };
 
 export function PillButton({
@@ -28,6 +34,7 @@ export function PillButton({
   flex: flexGrow = 1,
   borderColor = BORDER_SUBTLE,
   backgroundColor,
+  size = "md",
 }: PillButtonProps) {
   const isOutline = variant === "outline";
   const resolvedBackgroundColor =
@@ -49,8 +56,7 @@ export function PillButton({
         return {
           flex: flexGrow,
           opacity,
-          paddingVertical: 14,
-          paddingHorizontal: 16,
+          ...SIZE_PADDING[size],
           borderRadius: 999,
           ...(isOutline
             ? {

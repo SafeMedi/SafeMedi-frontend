@@ -2,7 +2,7 @@ import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
 import { Alert, Share } from "react-native";
-import type { FamilyManageMember, PendingFamilyInviteItem } from "@/api/types";
+import type { FamilySummary } from "@/api/types";
 import { FamilyManageScreen } from "../FamilyManageScreen";
 
 interface MockFamilyInviteCardProps {
@@ -16,25 +16,21 @@ interface MockFamilyManageHeaderProps {
 }
 
 interface MockFamilyMembersSectionProps {
-  readonly members: readonly FamilyManageMember[];
+  readonly members: readonly FamilySummary[];
+  readonly editingFamilyId: number | null;
+  readonly onStartEdit: (familyId: number) => void;
+  readonly onUnlink: (familyId: number) => void;
+  readonly onChangeRelationDraft: (text: string) => void;
+  readonly onSaveRelation: () => void;
 }
 
-interface MockPendingInvitesSectionProps {
-  readonly invites: readonly PendingFamilyInviteItem[];
-}
-
-type MockFamilyManageOverviewData = {
-  readonly inviteLink: string;
-  readonly members: readonly FamilyManageMember[];
-  readonly pendingInvites: readonly PendingFamilyInviteItem[];
-};
-
-const mockUseFamilyManageOverview = jest.fn<
-  {
-    readonly data?: MockFamilyManageOverviewData;
-  },
-  []
->();
+const mockMutate = jest.fn();
+const mockUseFamilies = jest.fn();
+const mockUseCreateFamilyInvitation = jest.fn();
+const mockUseUpdateFamilyRelation = jest.fn();
+const mockUseDeleteFamily = jest.fn();
+const mockUpdateRelationMutate = jest.fn();
+const mockDeleteFamilyMutate = jest.fn();
 
 jest.mock("expo-linear-gradient", () => {
   const React = require("react");
@@ -68,7 +64,10 @@ jest.mock("expo-clipboard", () => ({
 }));
 
 jest.mock("@/api/queries/family", () => ({
-  useFamilyManageOverview: () => mockUseFamilyManageOverview(),
+  useCreateFamilyInvitation: () => mockUseCreateFamilyInvitation(),
+  useFamilies: () => mockUseFamilies(),
+  useUpdateFamilyRelation: () => mockUseUpdateFamilyRelation(),
+  useDeleteFamily: () => mockUseDeleteFamily(),
 }));
 
 jest.mock("../components/FamilyFeatureBanner", () => ({
@@ -114,18 +113,58 @@ jest.mock("../components/FamilyInviteCard", () => ({
 }));
 
 jest.mock("../components/FamilyMembersSection", () => ({
-  FamilyMembersSection: ({ members }: MockFamilyMembersSectionProps) => {
+  FamilyMembersSection: ({
+    members,
+    editingFamilyId,
+    onStartEdit,
+    onUnlink,
+    onChangeRelationDraft,
+    onSaveRelation,
+  }: MockFamilyMembersSectionProps) => {
     const React = require("react");
-    const { Text } = require("react-native");
-    return React.createElement(Text, null, `구성원:${members.length}`);
-  },
-}));
-
-jest.mock("../components/PendingInvitesSection", () => ({
-  PendingInvitesSection: ({ invites }: MockPendingInvitesSectionProps) => {
-    const React = require("react");
-    const { Text } = require("react-native");
-    return React.createElement(Text, null, `대기초대:${invites.length}`);
+    const { Pressable, Text, View } = require("react-native");
+    return React.createElement(
+      View,
+      null,
+      React.createElement(Text, null, `구성원:${members.length}`),
+      React.createElement(Text, null, `편집중:${editingFamilyId ?? "없음"}`),
+      React.createElement(
+        Pressable,
+        {
+          onPress: () => onStartEdit(2),
+          accessibilityRole: "button",
+          accessibilityLabel: "호칭 수정 트리거",
+        },
+        React.createElement(Text, null, "호칭 수정 트리거"),
+      ),
+      React.createElement(
+        Pressable,
+        {
+          onPress: () => onUnlink(2),
+          accessibilityRole: "button",
+          accessibilityLabel: "연동 해제 트리거",
+        },
+        React.createElement(Text, null, "연동 해제 트리거"),
+      ),
+      React.createElement(
+        Pressable,
+        {
+          onPress: () => onChangeRelationDraft("엄마"),
+          accessibilityRole: "button",
+          accessibilityLabel: "호칭 입력 트리거",
+        },
+        React.createElement(Text, null, "호칭 입력 트리거"),
+      ),
+      React.createElement(
+        Pressable,
+        {
+          onPress: onSaveRelation,
+          accessibilityRole: "button",
+          accessibilityLabel: "호칭 저장 트리거",
+        },
+        React.createElement(Text, null, "호칭 저장 트리거"),
+      ),
+    );
   },
 }));
 
@@ -139,39 +178,55 @@ describe("FamilyManageScreen", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseFamilyManageOverview.mockReturnValue({
-      data: {
-        inviteLink: "https://safemedi.app/invite/abc",
-        members: [
-          {
-            id: "1",
-            name: "홍길동",
-            relation: "아버지",
-            emoji: "👨",
-            isActive: true,
-          },
-        ],
-        pendingInvites: [
-          {
-            id: "p-1",
-            relation: "어머니",
-            email: "mother@example.com",
-            invitedAt: "2026-04-30T00:00:00.000Z",
-          },
-        ],
-      },
+    mockUseFamilies.mockReturnValue({
+      data: [
+        { familyId: null, name: "홍길동", relation: "본인" },
+        { familyId: 2, name: "김영희", relation: "어머니" },
+      ],
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+    mockUseCreateFamilyInvitation.mockReturnValue({
+      data: { inviteUrl: "https://safemedi.app/invite/abc" },
+      isIdle: false,
+      isPending: false,
+      isError: false,
+      mutate: mockMutate,
+    });
+    mockUseUpdateFamilyRelation.mockReturnValue({
+      mutate: mockUpdateRelationMutate,
+      isPending: false,
+    });
+    mockUseDeleteFamily.mockReturnValue({
+      mutate: mockDeleteFamilyMutate,
+      isPending: false,
+      variables: undefined,
     });
     mockShare.mockResolvedValue({ action: "sharedAction" });
     mockSetStringAsync.mockResolvedValue(true);
   });
 
-  it("조회 데이터가 화면에 반영된다", () => {
+  it("조회 데이터와 초대 링크가 화면에 반영된다", () => {
     const { getByText } = render(<FamilyManageScreen />);
 
     expect(getByText("패밀리 배너")).toBeTruthy();
     expect(getByText("https://safemedi.app/invite/abc")).toBeTruthy();
-    expect(getByText("구성원:1")).toBeTruthy();
-    expect(getByText("대기초대:1")).toBeTruthy();
+    expect(getByText("구성원:2")).toBeTruthy();
+  });
+
+  it("초대 mutation이 idle이면 링크 생성을 요청한다", () => {
+    mockUseCreateFamilyInvitation.mockReturnValue({
+      data: undefined,
+      isIdle: true,
+      isPending: false,
+      isError: false,
+      mutate: mockMutate,
+    });
+
+    render(<FamilyManageScreen />);
+
+    expect(mockMutate).toHaveBeenCalledTimes(1);
   });
 
   it("링크 복사 버튼 클릭 시 클립보드 복사 후 성공 알림을 띄운다", async () => {
@@ -207,12 +262,12 @@ describe("FamilyManageScreen", () => {
   });
 
   it("초대 링크가 비어 있으면 복사/공유를 호출하지 않는다", async () => {
-    mockUseFamilyManageOverview.mockReturnValue({
-      data: {
-        inviteLink: "",
-        members: [],
-        pendingInvites: [],
-      },
+    mockUseCreateFamilyInvitation.mockReturnValue({
+      data: undefined,
+      isIdle: false,
+      isPending: false,
+      isError: true,
+      mutate: mockMutate,
     });
 
     const { getByLabelText } = render(<FamilyManageScreen />);
@@ -223,5 +278,51 @@ describe("FamilyManageScreen", () => {
       expect(mockSetStringAsync).not.toHaveBeenCalled();
       expect(mockShare).not.toHaveBeenCalled();
     });
+  });
+
+  it("호칭 수정을 시작하면 해당 familyId가 편집 상태가 된다", () => {
+    const { getByText, getByLabelText } = render(<FamilyManageScreen />);
+
+    fireEvent.press(getByLabelText("호칭 수정 트리거"));
+
+    expect(getByText("편집중:2")).toBeTruthy();
+  });
+
+  it("호칭 저장 시 수정된 값으로 mutation을 호출한다", () => {
+    const { getByLabelText } = render(<FamilyManageScreen />);
+
+    fireEvent.press(getByLabelText("호칭 수정 트리거"));
+    fireEvent.press(getByLabelText("호칭 입력 트리거"));
+    fireEvent.press(getByLabelText("호칭 저장 트리거"));
+
+    expect(mockUpdateRelationMutate).toHaveBeenCalledWith(
+      { familyId: 2, body: { relation: "엄마" } },
+      expect.any(Object),
+    );
+
+    const { onSuccess } = mockUpdateRelationMutate.mock.calls[0][1];
+    onSuccess();
+    expect(mockAlert).toHaveBeenCalledWith("호칭 수정 완료", "가족 호칭을 수정했어요.");
+  });
+
+  it("연동 해제 트리거 시 확인 알림을 띄우고 확인하면 mutation을 호출한다", () => {
+    const { getByLabelText } = render(<FamilyManageScreen />);
+
+    fireEvent.press(getByLabelText("연동 해제 트리거"));
+
+    expect(mockAlert).toHaveBeenCalledWith(
+      "가족 연동 해제",
+      "이 가족과의 연동을 해제하시겠습니까?",
+      expect.any(Array),
+    );
+
+    const buttons = mockAlert.mock.calls[0][2] as Array<{ text: string; onPress?: () => void }>;
+    buttons.find((button) => button.text === "해제")?.onPress?.();
+
+    expect(mockDeleteFamilyMutate).toHaveBeenCalledWith(2, expect.any(Object));
+
+    const { onSuccess } = mockDeleteFamilyMutate.mock.calls[0][1];
+    onSuccess();
+    expect(mockAlert).toHaveBeenCalledWith("연동 해제 완료", "가족 연동을 해제했어요.");
   });
 });

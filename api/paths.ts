@@ -8,14 +8,11 @@ export const apiPaths = {
   usersMe: "/api/v1/users/me",
   usersDeviceToken: "/api/v1/users/device-token",
 
-  familiesRequests: "/api/v1/families/requests",
-  familiesRequestsReceived: "/api/v1/families/requests/received",
-  familyRequest: (requestId: number | string) => `/api/v1/families/requests/${requestId}`,
-
   families: "/api/v1/families",
-  familiesManage: "/api/v1/families/manage",
   family: (familyId: number | string) => `/api/v1/families/${familyId}`,
-  familySettings: (familyId: number | string) => `/api/v1/families/${familyId}/settings`,
+  familyInvitations: "/api/v1/family-invitations",
+  familyInvitation: (token: string) => `/api/v1/family-invitations/${token}`,
+  familyInvitationAccept: (token: string) => `/api/v1/family-invitations/${token}/accept`,
 
   drugsSearch: "/api/v1/drugs/search",
   drugAllergiesSearch: "/api/v1/allergies/drugs/search",

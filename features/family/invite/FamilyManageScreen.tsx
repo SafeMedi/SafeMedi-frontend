@@ -1,26 +1,42 @@
 import * as Clipboard from "expo-clipboard";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, Share, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
 
-import { useFamilyManageOverview } from "@/api/queries/family";
+import { getApiErrorMessage } from "@/api/error";
+import {
+  useCreateFamilyInvitation,
+  useDeleteFamily,
+  useFamilies,
+  useUpdateFamilyRelation,
+} from "@/api/queries/family";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { palette } from "@/constants/design-tokens";
 import { FamilyFeatureBanner } from "./components/FamilyFeatureBanner";
 import { FamilyInviteCard } from "./components/FamilyInviteCard";
 import { FamilyManageHeader } from "./components/FamilyManageHeader";
 import { FamilyMembersSection } from "./components/FamilyMembersSection";
-import { PendingInvitesSection } from "./components/PendingInvitesSection";
 
 export function FamilyManageScreen() {
   const insets = useSafeAreaInsets();
-  const { data, isLoading, isError, refetch } = useFamilyManageOverview();
-  const inviteLink = data?.inviteLink ?? "";
-  const members = data?.members ?? [];
-  const pendingInvites = data?.pendingInvites ?? [];
+  const familiesQuery = useFamilies();
+  const createInvitationMutation = useCreateFamilyInvitation();
+  const updateRelationMutation = useUpdateFamilyRelation();
+  const deleteFamilyMutation = useDeleteFamily();
+  const inviteLink = createInvitationMutation.data?.inviteUrl ?? "";
+  const members = familiesQuery.data ?? [];
+
+  const [editingFamilyId, setEditingFamilyId] = useState<number | null>(null);
+  const [relationDraft, setRelationDraft] = useState("");
+
+  useEffect(() => {
+    if (createInvitationMutation.isIdle) {
+      createInvitationMutation.mutate();
+    }
+  }, [createInvitationMutation]);
 
   const handleCopyLink = useCallback(async () => {
     if (!inviteLink) return;
@@ -41,6 +57,71 @@ export function FamilyManageScreen() {
     }
   }, [inviteLink]);
 
+  const handleStartEdit = useCallback(
+    (familyId: number) => {
+      const target = members.find((member) => member.familyId === familyId);
+      setEditingFamilyId(familyId);
+      setRelationDraft(target?.relation ?? "");
+    },
+    [members],
+  );
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingFamilyId(null);
+    setRelationDraft("");
+  }, []);
+
+  const handleSaveRelation = useCallback(() => {
+    if (editingFamilyId === null) return;
+    const trimmedRelation = relationDraft.trim();
+
+    updateRelationMutation.mutate(
+      { familyId: editingFamilyId, body: { relation: trimmedRelation } },
+      {
+        onSuccess: () => {
+          Alert.alert("호칭 수정 완료", "가족 호칭을 수정했어요.");
+          setEditingFamilyId(null);
+          setRelationDraft("");
+        },
+        onError: async (error) => {
+          const message = await getApiErrorMessage(
+            error,
+            "가족 호칭 수정에 실패했습니다. 잠시 후 다시 시도해주세요.",
+          );
+          Alert.alert("호칭 수정 실패", message);
+        },
+      },
+    );
+  }, [editingFamilyId, relationDraft, updateRelationMutation]);
+
+  const handleUnlink = useCallback(
+    (familyId: number) => {
+      Alert.alert("가족 연동 해제", "이 가족과의 연동을 해제하시겠습니까?", [
+        { text: "취소", style: "cancel" },
+        {
+          text: "해제",
+          style: "destructive",
+          onPress: () => {
+            deleteFamilyMutation.mutate(familyId, {
+              onSuccess: () => {
+                Alert.alert("연동 해제 완료", "가족 연동을 해제했어요.");
+                setEditingFamilyId((current) => (current === familyId ? null : current));
+              },
+              onError: async (error) => {
+                const message = await getApiErrorMessage(
+                  error,
+                  "가족 연동 해제에 실패했습니다. 잠시 후 다시 시도해주세요.",
+                );
+                Alert.alert("연동 해제 실패", message);
+              },
+            });
+          },
+        },
+      ]);
+    },
+    [deleteFamilyMutation],
+  );
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -59,18 +140,18 @@ export function FamilyManageScreen() {
       >
         <YStack gap={14}>
           <FamilyManageHeader onBack={() => router.back()} />
-          {isLoading ? (
+          {familiesQuery.isLoading ? (
             <View style={styles.feedbackContainer}>
               <LoadingSpinner accessibilityLabel="가족 정보 로딩 중" />
               <Text style={styles.feedbackText}>가족 정보를 불러오는 중입니다.</Text>
             </View>
           ) : null}
 
-          {isError ? (
+          {familiesQuery.isError ? (
             <YStack items="center" gap={12} style={styles.feedbackContainer}>
               <Text style={styles.feedbackText}>가족 정보를 불러오지 못했습니다.</Text>
               <Pressable
-                onPress={() => refetch()}
+                onPress={() => familiesQuery.refetch()}
                 accessibilityRole="button"
                 accessibilityLabel="가족 정보 다시 시도"
                 style={styles.retryButton}
@@ -80,16 +161,31 @@ export function FamilyManageScreen() {
             </YStack>
           ) : null}
 
-          {!isLoading && !isError ? (
+          {!familiesQuery.isLoading && !familiesQuery.isError ? (
             <>
               <FamilyFeatureBanner />
               <FamilyInviteCard
                 inviteLink={inviteLink}
+                isLoading={createInvitationMutation.isPending || createInvitationMutation.isIdle}
+                isError={createInvitationMutation.isError}
+                onRetry={() => createInvitationMutation.mutate()}
                 onCopyLink={handleCopyLink}
                 onShareLink={handleShareLink}
               />
-              <FamilyMembersSection members={members} />
-              <PendingInvitesSection invites={pendingInvites} />
+              <FamilyMembersSection
+                members={members}
+                editingFamilyId={editingFamilyId}
+                relationDraft={relationDraft}
+                isSavingRelation={updateRelationMutation.isPending}
+                unlinkingFamilyId={
+                  deleteFamilyMutation.isPending ? (deleteFamilyMutation.variables ?? null) : null
+                }
+                onChangeRelationDraft={setRelationDraft}
+                onStartEdit={handleStartEdit}
+                onCancelEdit={handleCancelEdit}
+                onSaveRelation={handleSaveRelation}
+                onUnlink={handleUnlink}
+              />
             </>
           ) : null}
         </YStack>
