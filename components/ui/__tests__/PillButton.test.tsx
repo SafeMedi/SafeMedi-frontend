@@ -1,5 +1,5 @@
 import { fireEvent, render } from "@testing-library/react-native";
-import { Text } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import { PillButton } from "../PillButton";
 
 describe("PillButton", () => {
@@ -42,5 +42,31 @@ describe("PillButton", () => {
     expect(getByText("왼쪽")).toBeTruthy();
     expect(getByText("본문")).toBeTruthy();
     expect(getByText("오른쪽")).toBeTruthy();
+  });
+
+  it("size가 sm이면 md보다 작은 패딩을 사용한다", () => {
+    const { getByLabelText } = render(
+      <PillButton variant="solid" size="sm" accessibilityLabel="작은 버튼" onPress={() => {}}>
+        <Text>저장</Text>
+      </PillButton>,
+    );
+
+    expect(StyleSheet.flatten(getByLabelText("작은 버튼").props.style)).toMatchObject({
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+    });
+  });
+
+  it("size를 지정하지 않으면 기본(md) 패딩을 사용한다", () => {
+    const { getByLabelText } = render(
+      <PillButton variant="solid" accessibilityLabel="기본 버튼" onPress={() => {}}>
+        <Text>저장</Text>
+      </PillButton>,
+    );
+
+    expect(StyleSheet.flatten(getByLabelText("기본 버튼").props.style)).toMatchObject({
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+    });
   });
 });
