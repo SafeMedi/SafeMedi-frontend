@@ -159,6 +159,19 @@ describe("데이터가 있으면 데이터를 반환한다.", () => {
     );
   });
 
+  it("처방전 이름이 2자 미만이면 저장 버튼을 비활성화한다", () => {
+    const { result } = renderHook(() => useMedicationManagementViewModel());
+
+    act(() => {
+      result.current.startEditPrescriptionTitle(11);
+    });
+    act(() => {
+      result.current.changePrescriptionTitleDraft("A");
+    });
+
+    expect(result.current.isPrescriptionTitleSaveEnabled).toBe(false);
+  });
+
   it("처방전 이름 수정은 빈 제목을 막고 성공 시 편집을 닫는다", () => {
     const { result } = renderHook(() => useMedicationManagementViewModel());
 

@@ -53,7 +53,11 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
       (item) => item.prescriptionId === editingPrescriptionId,
     );
     const nextTitle = prescriptionTitleDraft.trim();
-    return !!currentPrescription && nextTitle.length > 0 && nextTitle !== currentPrescription.title;
+    return (
+      !!currentPrescription &&
+      getPrescriptionTitleError(nextTitle, "이름") === null &&
+      nextTitle !== currentPrescription.title
+    );
   }, [editingPrescriptionId, prescriptionTitleDraft, prescriptions]);
 
   const handleTogglePrescriptionExpanded = useCallback((prescriptionId: number) => {
