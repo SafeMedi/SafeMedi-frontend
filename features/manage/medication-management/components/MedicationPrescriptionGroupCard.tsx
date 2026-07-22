@@ -7,6 +7,7 @@ import { Text, XStack, YStack } from "tamagui";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
 import type { MedicationTakeSlot } from "@/features/scan/prescription-scan-result/usePrescriptionScanResultViewModel";
+import { PRESCRIPTION_TITLE_MAX_LENGTH } from "@/utils/prescription";
 import type { MedicationEditDraft } from "../medicationEditModel";
 import type { MedicationManagementMedicationItem } from "../medicationManagementModel";
 import { MedicationManagementItemCard } from "./MedicationManagementItemCard";
@@ -114,6 +115,7 @@ export function MedicationPrescriptionGroupCard({
                 onChangeText={onChangeTitleDraft}
                 placeholder="처방전 이름을 입력해주세요"
                 placeholderTextColor={palette.icon}
+                maxLength={PRESCRIPTION_TITLE_MAX_LENGTH}
                 style={styles.titleInput}
                 editable={!isSaving}
                 returnKeyType="done"

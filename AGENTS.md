@@ -101,6 +101,10 @@ Expo Router · React Native · Tamagui · TanStack Query · Zustand.
 
 **Quick 리뷰**: 커밋 단위 변경에 대해 **머지 전 반드시 잡아야 할 버그·아키텍처 위반·보안**만 지적한다. Biome/포맷·사소한 네이밍·취향 리팩터는 생략한다.
 
+### 리뷰 실행 방식
+
+로컬 diff·커밋·PR을 리뷰할 때는 `safemedi-reviewer` 서브에이전트 단독으로 끝내지 않는다. `safemedi-reviewer`와 Codex(`codex:codex-rescue` 에이전트 또는 `codex:rescue` 스킬)를 **병렬로 함께 호출**해 두 개의 독립적인 리뷰를 받고, 그 결과를 종합해서 보고한다. 어느 한쪽에서만 잡아낸 이슈도 누락하지 않고, 두 리뷰 결과가 상충하면 근거를 비교해 판단한다. PR 생성 직전 최종 점검처럼 리뷰가 필요한 모든 상황에 적용한다.
+
 ### Language
 
 - 모든 리뷰 코멘트, 요약, 수정 제안은 한국어로 작성한다.

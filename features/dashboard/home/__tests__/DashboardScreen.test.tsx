@@ -13,6 +13,18 @@ jest.mock("expo-router", () => ({
   },
 }));
 
+let mockPreviousFocusEffect: (() => undefined | (() => void)) | null = null;
+
+jest.mock("@react-navigation/native", () => ({
+  useFocusEffect: (callback: () => undefined | (() => void)) => {
+    if (callback === mockPreviousFocusEffect) {
+      return;
+    }
+    mockPreviousFocusEffect = callback;
+    callback();
+  },
+}));
+
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
@@ -187,7 +199,9 @@ function createViewModel(overrides?: Partial<DashboardViewModel>): DashboardView
     isError: false,
     takingPrescriptionId: null,
     markPrescriptionAsTaken: jest.fn(),
-    refetch: mockRefetch,
+    // 실제 useDashboardViewModel처럼 훅 호출마다 새 함수 참조를 반환해
+    // DashboardScreen의 focus effect가 참조 불안정성에 견고한지 검증한다.
+    refetch: () => mockRefetch(),
     ...overrides,
   };
 }
@@ -197,7 +211,8 @@ describe("DashboardScreen 통합 테스트", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseDashboardViewModel.mockReturnValue(createViewModel());
+    mockPreviousFocusEffect = null;
+    mockUseDashboardViewModel.mockImplementation(() => createViewModel());
   });
 
   it("정상 상태에서 대시보드 주요 섹션을 렌더링한다", () => {
@@ -259,8 +274,24 @@ describe("DashboardScreen 통합 테스트", () => {
     );
 
     const { getByLabelText } = render(<DashboardScreen />);
+    const callCountBeforeRetry = mockRefetch.mock.calls.length;
     fireEvent.press(getByLabelText("다시 시도 버튼"));
 
-    expect(mockRefetch).toHaveBeenCalledTimes(1);
+    expect(mockRefetch.mock.calls.length).toBe(callCountBeforeRetry + 1);
+  });
+
+  it("화면에 포커스될 때마다 대시보드 데이터를 새로고침한다", () => {
+    render(<DashboardScreen />);
+
+    expect(mockRefetch).toHaveBeenCalled();
+  });
+
+  it("리렌더링되어도 focus effect가 다시 실행되어 과도하게 refetch되지 않는다", () => {
+    const { rerender } = render(<DashboardScreen />);
+    const callCountAfterMount = mockRefetch.mock.calls.length;
+
+    rerender(<DashboardScreen />);
+
+    expect(mockRefetch.mock.calls.length).toBe(callCountAfterMount);
   });
 });

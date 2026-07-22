@@ -54,6 +54,9 @@ export function useUpdatePrescriptionMutation() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.prescriptions.list });
       await queryClient.invalidateQueries({ queryKey: ["prescriptions", "detail"] });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.dashboard.todayMedicationSchedules,
+      });
     },
   });
 }
@@ -66,6 +69,9 @@ export function useDeletePrescriptionMutation() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.prescriptions.list });
       await queryClient.invalidateQueries({ queryKey: ["prescriptions", "detail"] });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.dashboard.todayMedicationSchedules,
+      });
     },
   });
 }

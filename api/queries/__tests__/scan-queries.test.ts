@@ -11,10 +11,14 @@ const mockSearchDrugs = jest.fn<Promise<unknown>, [unknown]>(async () => ({
 }));
 const mockCreatePrescriptionByScan = jest.fn<Promise<unknown>, [unknown]>(async () => ({}));
 const mockUseInfiniteQuery = jest.fn();
+const mockInvalidateQueries = jest.fn(async () => undefined);
 
 jest.mock("@tanstack/react-query", () => ({
   useInfiniteQuery: (options: unknown) => mockUseInfiniteQuery(options),
   useMutation: jest.fn((options: unknown) => options),
+  useQueryClient: jest.fn(() => ({
+    invalidateQueries: mockInvalidateQueries,
+  })),
 }));
 
 jest.mock("@/api/endpoints/drugs", () => ({
@@ -75,10 +79,25 @@ describe("api/queries scan modules", () => {
     const mutation = result.current as unknown as {
       mutationKey: unknown;
       mutationFn: (body: unknown) => Promise<unknown>;
+      onSuccess: () => Promise<void>;
     };
 
     expect(mutation.mutationKey).toEqual(queryKeys.scan.createPrescription);
     await mutation.mutationFn({ title: "처방전" });
     expect(mockCreatePrescriptionByScan).toHaveBeenCalledWith({ title: "처방전" });
+  });
+
+  it("처방전 생성 성공 시 대시보드 관련 쿼리를 무효화한다", async () => {
+    const { result } = renderHook(() => useCreatePrescriptionByScanMutation());
+    const mutation = result.current as unknown as {
+      onSuccess: () => Promise<void>;
+    };
+
+    await mutation.onSuccess();
+
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.prescriptions.list });
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: queryKeys.dashboard.todayMedicationSchedules,
+    });
   });
 });

@@ -8,6 +8,7 @@ import {
   useUpdatePrescriptionMutation,
 } from "@/api/queries/prescriptions";
 import type { MedicationTakeSlot } from "@/features/scan/prescription-scan-result/usePrescriptionScanResultViewModel";
+import { getPrescriptionTitleError } from "@/utils/prescription";
 import {
   buildUpdatedMedicationsAfterEdit,
   createMedicationEditDraft,
@@ -52,7 +53,11 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
       (item) => item.prescriptionId === editingPrescriptionId,
     );
     const nextTitle = prescriptionTitleDraft.trim();
-    return !!currentPrescription && nextTitle.length > 0 && nextTitle !== currentPrescription.title;
+    return (
+      !!currentPrescription &&
+      getPrescriptionTitleError(nextTitle, "이름") === null &&
+      nextTitle !== currentPrescription.title
+    );
   }, [editingPrescriptionId, prescriptionTitleDraft, prescriptions]);
 
   const handleTogglePrescriptionExpanded = useCallback((prescriptionId: number) => {
@@ -115,8 +120,9 @@ export function useMedicationManagementViewModel(): MedicationManagementViewMode
     }
 
     const nextTitle = prescriptionTitleDraft.trim();
-    if (nextTitle.length === 0) {
-      Alert.alert("입력 확인", "처방전 이름을 입력해주세요.");
+    const titleError = getPrescriptionTitleError(nextTitle, "이름");
+    if (titleError) {
+      Alert.alert("입력 확인", titleError);
       return;
     }
 

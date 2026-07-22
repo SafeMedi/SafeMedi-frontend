@@ -9,6 +9,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { palette } from "@/constants/design-tokens";
 import { PrescriptionScanHeader } from "@/features/scan/prescription-scan/components/PrescriptionScanHeader";
+import { PRESCRIPTION_TITLE_MAX_LENGTH } from "@/utils/prescription";
 import { MedicationEditorCard } from "./components/MedicationEditorCard";
 import { PrescriptionPeriodCard } from "./components/PrescriptionPeriodCard";
 import { usePrescriptionScanResultViewModel } from "./usePrescriptionScanResultViewModel";
@@ -83,6 +84,7 @@ export function PrescriptionScanResultScreen() {
                   onChangeText={onChange}
                   placeholder="약국 처방"
                   placeholderTextColor={palette.input_placeholder}
+                  maxLength={PRESCRIPTION_TITLE_MAX_LENGTH}
                   style={styles.titleInput}
                 />
               )}
