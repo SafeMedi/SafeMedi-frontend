@@ -3,12 +3,12 @@ import { requireOptionalNativeModule } from "expo-modules-core";
 import { Platform } from "react-native";
 
 import type { DeviceType } from "@/api/types";
-import { setRegisteredDeviceToken } from "@/hooks/push-notification-token-store";
+import { setRegisteredDeviceToken } from "@/hooks/pushNotificationTokenStore";
 
 export {
   clearRegisteredDeviceToken,
   getRegisteredDeviceToken,
-} from "@/hooks/push-notification-token-store";
+} from "@/hooks/pushNotificationTokenStore";
 
 type ExpoNotificationsModule = typeof import("expo-notifications");
 

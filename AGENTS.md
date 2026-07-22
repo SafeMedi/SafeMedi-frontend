@@ -113,7 +113,7 @@ Expo Router · React Native · Tamagui · TanStack Query · Zustand.
 - PR을 생성할 때는 기본 assignee를 GitHub 인증 사용자(@me)로 설정한다.
 - PR의 제목은 티켓명 괄호 뒤에 개발 내용을 작성한다. 다음과 같이 작성한다 ex) [SAF-00] feat: ~~ 
 - PR작성 시 `.github/PULL_REQUEST_TEMPLATE.md`파일의 규칙을 따른다. 
-- PR에서 관련된 이슈가 해결된 경우 Closed 를 사용해 PR 종료 시 닫히도록 진행한다. 
+- PR의 관련 이슈에는 Linear 티켓명을 포함하고, 해당 Linear 티켓에 연결된 GitHub issue가 존재하면 그 issue도 함께 기재한다.
 
 ### P0 / P1 — 반드시 지적 (blocking)
 

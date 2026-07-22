@@ -8,7 +8,7 @@ import KakaoButtonImage from "@/assets/images/kakaoLoginButton.png";
 import { AuthGateView } from "@/components/AuthGateView";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { palette } from "@/constants/design-tokens";
-import { useAuthRouteState } from "@/hooks/use-auth-route-state";
+import { useAuthRouteState } from "@/hooks/useAuthRouteState";
 
 import { useLoginViewModel } from "./useLoginViewModel";
 

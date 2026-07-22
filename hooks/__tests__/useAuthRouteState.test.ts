@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react-native";
-import { useAuthRouteState } from "@/hooks/use-auth-route-state";
+import { useAuthRouteState } from "@/hooks/useAuthRouteState";
 import type { User } from "@/stores/userStore";
 
 const mockRemoveQueries = jest.fn();
@@ -24,7 +24,7 @@ jest.mock("@tanstack/react-query", () => ({
   }),
 }));
 
-jest.mock("@/hooks/use-session-hydrated", () => ({
+jest.mock("@/hooks/useSessionHydrated", () => ({
   useSessionHydrated: () => mockHydrated,
 }));
 
@@ -71,7 +71,7 @@ jest.mock("@/stores/userStore", () => ({
 
 const mockLogout = jest.fn();
 
-jest.mock("@/hooks/use-logout", () => ({
+jest.mock("@/hooks/useLogout", () => ({
   useLogout: () => mockLogout,
 }));
 

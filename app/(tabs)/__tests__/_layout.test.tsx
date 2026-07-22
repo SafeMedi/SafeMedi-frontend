@@ -38,7 +38,7 @@ jest.mock("expo-router", () => {
   };
 });
 
-jest.mock("@/hooks/use-auth-route-state", () => ({
+jest.mock("@/hooks/useAuthRouteState", () => ({
   useAuthRouteState: () => mockAuthState,
 }));
 

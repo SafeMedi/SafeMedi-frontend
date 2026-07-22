@@ -7,8 +7,8 @@ import {
   addNotificationReceivedListener,
   addNotificationResponseListener,
   registerPushTokenWithBackend,
-} from "@/hooks/push-notifications";
-import { useSessionHydrated } from "@/hooks/use-session-hydrated";
+} from "@/hooks/pushNotifications";
+import { useSessionHydrated } from "@/hooks/useSessionHydrated";
 import { useSessionStore } from "@/stores/sessionStore";
 
 function warnPushTokenRegistration(message: string, error?: unknown): void {

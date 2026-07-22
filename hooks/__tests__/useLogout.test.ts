@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react-native";
-import { useLogout } from "@/hooks/use-logout";
+import { useLogout } from "@/hooks/useLogout";
 
 const mockRemoveQueries = jest.fn();
 const mockClearSession = jest.fn();
@@ -21,7 +21,7 @@ jest.mock("@/api/queries/auth", () => ({
   }),
 }));
 
-jest.mock("@/hooks/push-notification-token-store", () => ({
+jest.mock("@/hooks/pushNotificationTokenStore", () => ({
   getRegisteredDeviceToken: () => mockRegisteredDeviceToken,
   clearRegisteredDeviceToken: (...args: unknown[]) => mockClearRegisteredDeviceToken(...args),
 }));

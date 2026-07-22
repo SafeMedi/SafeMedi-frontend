@@ -1,6 +1,6 @@
 import { Redirect } from "expo-router";
 import { AuthGateView } from "@/components/AuthGateView";
-import { useAuthRouteState } from "@/hooks/use-auth-route-state";
+import { useAuthRouteState } from "@/hooks/useAuthRouteState";
 
 export default function IndexRedirect() {
   const authState = useAuthRouteState();

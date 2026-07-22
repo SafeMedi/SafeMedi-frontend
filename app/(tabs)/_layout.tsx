@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ScanIcon from "@/assets/images/scan_icon.png";
 import { AuthGateView } from "@/components/AuthGateView";
 import { palette } from "@/constants/design-tokens";
-import { useAuthRouteState } from "@/hooks/use-auth-route-state";
+import { useAuthRouteState } from "@/hooks/useAuthRouteState";
 import { useUserStore } from "@/stores/userStore";
 
 const BG_PINK_LINE_STOPS = [0, 0.5, 1] as const;

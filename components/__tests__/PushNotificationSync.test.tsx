@@ -25,7 +25,7 @@ jest.mock("@/api/endpoints/device-token", () => ({
   postDeviceToken: (body: unknown) => mockPostDeviceToken(body),
 }));
 
-jest.mock("@/hooks/push-notifications", () => ({
+jest.mock("@/hooks/pushNotifications", () => ({
   addNotificationReceivedListener: (listener: () => void) =>
     mockAddNotificationReceivedListener(listener),
   addNotificationResponseListener: (listener: () => void) =>
@@ -34,7 +34,7 @@ jest.mock("@/hooks/push-notifications", () => ({
     mockRegisterPushTokenWithBackend(registerFn),
 }));
 
-jest.mock("@/hooks/use-session-hydrated", () => ({
+jest.mock("@/hooks/useSessionHydrated", () => ({
   useSessionHydrated: () => mockHydrated,
 }));
 

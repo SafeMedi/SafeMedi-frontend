@@ -117,7 +117,7 @@ jest.mock("@/components/ui/SegmentedStepProgress", () => {
   };
 });
 
-jest.mock("@/hooks/use-auth-route-state", () => ({
+jest.mock("@/hooks/useAuthRouteState", () => ({
   useAuthRouteState: () => mockAuthState,
 }));
 
