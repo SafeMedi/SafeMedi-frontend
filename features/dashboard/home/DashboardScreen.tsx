@@ -1,4 +1,6 @@
+import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
+import { useCallback } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, YStack } from "tamagui";
@@ -20,6 +22,13 @@ export function DashboardScreen() {
   const viewModel = useDashboardViewModel();
   const unreadCountQuery = useUnreadNotificationCount();
   const hasUnreadNotification = (unreadCountQuery.data?.unreadCount ?? 0) > 0;
+  const refetchDashboard = viewModel.refetch;
+
+  useFocusEffect(
+    useCallback(() => {
+      void refetchDashboard();
+    }, [refetchDashboard]),
+  );
 
   const handlePressScan = () => {
     router.push("/(detail)/scan/scan");

@@ -13,6 +13,12 @@ jest.mock("expo-router", () => ({
   },
 }));
 
+jest.mock("@react-navigation/native", () => ({
+  useFocusEffect: (callback: () => undefined | (() => void)) => {
+    callback();
+  },
+}));
+
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
@@ -259,8 +265,15 @@ describe("DashboardScreen 통합 테스트", () => {
     );
 
     const { getByLabelText } = render(<DashboardScreen />);
+    const callCountBeforeRetry = mockRefetch.mock.calls.length;
     fireEvent.press(getByLabelText("다시 시도 버튼"));
 
-    expect(mockRefetch).toHaveBeenCalledTimes(1);
+    expect(mockRefetch.mock.calls.length).toBe(callCountBeforeRetry + 1);
+  });
+
+  it("화면에 포커스될 때마다 대시보드 데이터를 새로고침한다", () => {
+    render(<DashboardScreen />);
+
+    expect(mockRefetch).toHaveBeenCalled();
   });
 });
