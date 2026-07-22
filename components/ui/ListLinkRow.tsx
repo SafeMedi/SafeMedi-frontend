@@ -51,7 +51,9 @@ export function ListLinkRow({
       <View style={styles.leading}>
         {icon ? <View style={styles.iconWrap}>{icon}</View> : null}
         <View style={styles.textWrap}>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+            {title}
+          </Text>
           {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
         </View>
       </View>

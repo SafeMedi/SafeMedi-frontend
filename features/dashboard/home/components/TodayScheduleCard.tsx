@@ -136,12 +136,12 @@ export function TodayScheduleCard({
                 style={styles.bottom}
               >
                 <XStack items="center" justify="space-between">
-                  <XStack items="center" gap={8}>
+                  <XStack items="center" gap={8} style={styles.prescriptionInfo}>
                     <View style={styles.bottomIconCircle}>
                       <Ionicons name="document-text-outline" size={12} color={palette.white} />
                     </View>
-                    <YStack gap={2}>
-                      <Text style={styles.prescriptionTitle}>
+                    <YStack gap={2} style={styles.prescriptionTitleWrap}>
+                      <Text style={styles.prescriptionTitle} numberOfLines={1} ellipsizeMode="tail">
                         📋 {prescription.prescriptionTitle}
                       </Text>
                       <Text style={styles.medicationCount}>
@@ -149,7 +149,7 @@ export function TodayScheduleCard({
                       </Text>
                     </YStack>
                   </XStack>
-                  <XStack items="center" gap={6}>
+                  <XStack items="center" gap={6} style={styles.prescriptionActions}>
                     {prescription.canMarkAsTaken ? (
                       <Pressable
                         accessibilityRole="button"
@@ -248,6 +248,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: palette.overlay_white_25,
+  },
+  prescriptionInfo: {
+    flex: 1,
+    flexShrink: 1,
+  },
+  prescriptionTitleWrap: {
+    flexShrink: 1,
+  },
+  prescriptionActions: {
+    flexShrink: 0,
   },
   prescriptionTitle: {
     color: palette.white,

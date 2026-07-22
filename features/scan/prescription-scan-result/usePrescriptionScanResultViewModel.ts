@@ -9,6 +9,7 @@ import type {
 } from "@/api/types";
 import { hasOnlyPlaceholderMedications } from "@/features/scan/prescription-scan/ocr-parser";
 import { formatDateLabel, formatDateToIso, parseIsoDate } from "@/utils/date";
+import { getPrescriptionTitleError } from "@/utils/prescription";
 import { useIngredientAnalysisStore } from "../ingredient-analysis/useIngredientAnalysisStore";
 import { usePrescriptionOcrResultStore } from "../prescription-scan/usePrescriptionOcrResultStore";
 
@@ -253,8 +254,9 @@ export function usePrescriptionScanResultViewModel() {
     const parsedStartDate = parseIsoDate(startDate);
     const parsedEndDate = parseIsoDate(endDate);
 
-    if (!title) {
-      Alert.alert("입력 확인", "처방전 제목을 입력해주세요.");
+    const titleError = getPrescriptionTitleError(title);
+    if (titleError) {
+      Alert.alert("입력 확인", titleError);
       return;
     }
     if (!parsedStartDate || !parsedEndDate) {
