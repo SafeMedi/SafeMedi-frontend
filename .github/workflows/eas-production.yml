@@ -17,6 +17,9 @@ jobs:
     timeout-minutes: 60
     permissions:
       contents: read
+    environment:
+      name: production
+      url: ${{ steps.eas_build.outputs.archive_url }}
 
     steps:
       - name: Checkout repository

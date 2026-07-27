@@ -17,6 +17,9 @@ jobs:
     timeout-minutes: 60
     permissions:
       contents: read
+    environment:
+      name: preview
+      url: ${{ steps.eas_build.outputs.install_url }}
 
     steps:
       - name: Checkout repository
