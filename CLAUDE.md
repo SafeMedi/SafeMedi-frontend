@@ -1,3 +1,5 @@
+@AGENTS.md 파일 참조
+
 # safeMedi
 
 Expo Router · React Native · Tamagui · TanStack Query · Zustand.
@@ -172,7 +174,7 @@ features/{domain}/{feature}/
 - gitflow 원칙 준수, 커밋 메시지는 한국어로 작성.
 - 커밋에 Linear 티켓 이름을 붙이지 않는다.
 - 커밋 요청 시 직접 관여한 파일만 대상으로 한다. 작업하지 않은 파일은 제외.
-
+- Claude Code로 커밋을 만들 때는 예외 없이 커밋 메시지 마지막 줄에 Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>를 붙인다. 이게 있어야 GitHub이 커밋/PR에 공동 작성자로 표시한다. 반드시 커밋은 항상 축약형으로 작성. 본문은 꼭 필요할 때만 1~2줄로 붙이고, 장문 서술은 하지 않는다.
 ### PR
 
 - PR base는 기본적으로 `dev`. `release` → `main` 승격 PR만 예외적으로 `main`을 base로 한다.
