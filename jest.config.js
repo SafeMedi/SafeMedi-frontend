@@ -29,7 +29,7 @@ module.exports = {
     },
   },
   transformIgnorePatterns: [
-    "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|@tamagui|tamagui|ky))",
+    "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/.*|native-base|@tamagui|tamagui|ky))",
     "/node_modules/react-native-reanimated/plugin/",
   ],
   testPathIgnorePatterns: ["/node_modules/", "/.expo/"],

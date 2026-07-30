@@ -3,6 +3,7 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 const KAKAO_LOGIN_PLUGIN_NAME = "@react-native-seoul/kakao-login";
 const EXPO_BUILD_PROPERTIES_PLUGIN_NAME = "expo-build-properties";
 const EXPO_LOCATION_PLUGIN_NAME = "expo-location";
+const SENTRY_PLUGIN_NAME = "@sentry/react-native/expo";
 const KAKAO_MAVEN_REPOSITORY = "https://devrepo.kakao.com/nexus/content/groups/public/";
 const DEFAULT_APP_NAME = "safeMedi";
 const DEFAULT_APP_SLUG = "safeMedi";
@@ -10,6 +11,8 @@ const LOCATION_USAGE_DESCRIPTION =
   "현재 위치를 기반으로 지도를 표시하기 위해 위치 접근 권한이 필요합니다.";
 const KAKAO_NATIVE_APP_KEY = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY ?? "";
 const GOOGLE_SERVICES_JSON = process.env.GOOGLE_SERVICES_JSON;
+const SENTRY_ORG_SLUG = process.env.SENTRY_ORG_SLUG;
+const SENTRY_PROJECT_SLUG = process.env.SENTRY_PROJECT_SLUG;
 
 type PluginEntry = NonNullable<ExpoConfig["plugins"]>[number];
 
@@ -71,6 +74,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         {
           locationAlwaysAndWhenInUsePermission: LOCATION_USAGE_DESCRIPTION,
           locationWhenInUsePermission: LOCATION_USAGE_DESCRIPTION,
+        },
+      ],
+      [
+        SENTRY_PLUGIN_NAME,
+        {
+          organization: SENTRY_ORG_SLUG,
+          project: SENTRY_PROJECT_SLUG,
         },
       ],
     ],
