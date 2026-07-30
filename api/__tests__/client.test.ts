@@ -338,16 +338,42 @@ describe("api/client", () => {
     logSpy.mockRestore();
   });
 
-  it("beforeError 훅이 5xx 에러를 Sentry로 전송한다", async () => {
+  it("beforeError 훅이 5xx 에러를 정제된 정보로 Sentry에 전송한다", async () => {
     const options = loadClient();
     const request = new Request("https://api.example.com/users/me");
     const error = new MockHTTPError(new Response("server error", { status: 500 }), request);
 
     await options.hooks.beforeError[0]?.(createBeforeErrorState(request, error));
 
-    expect(mockCaptureException).toHaveBeenCalledWith(error, {
+    expect(mockCaptureException).toHaveBeenCalledTimes(1);
+    const [sentError, context] = mockCaptureException.mock.calls[0];
+    expect(sentError).not.toBe(error);
+    expect((sentError as Error).message).toBe("HTTP 500 GET https://api.example.com/users/me");
+    expect(context).toEqual({
       tags: { http_status: "500" },
       extra: { method: "GET", url: "https://api.example.com/users/me" },
+      fingerprint: ["api-5xx", "GET", "https://api.example.com/users/me", "500"],
+    });
+  });
+
+  it("beforeError 훅이 5xx 캡처 시 URL의 토큰·id 세그먼트와 query string을 redact한다", async () => {
+    const options = loadClient();
+    const request = new Request(
+      "https://api.example.com/api/v1/family-invitations/aZ9xTok3n/accept?ref=email",
+    );
+    const error = new MockHTTPError(new Response("server error", { status: 500 }), request);
+
+    await options.hooks.beforeError[0]?.(createBeforeErrorState(request, error));
+
+    const [sentError, context] = mockCaptureException.mock.calls[0];
+    const sanitizedUrl = "https://api.example.com/api/v1/family-invitations/[redacted]/accept";
+    expect((sentError as Error).message).toBe(`HTTP 500 GET ${sanitizedUrl}`);
+    expect((sentError as Error).message).not.toContain("aZ9xTok3n");
+    expect((sentError as Error).message).not.toContain("ref=email");
+    expect(context).toEqual({
+      tags: { http_status: "500" },
+      extra: { method: "GET", url: sanitizedUrl },
+      fingerprint: ["api-5xx", "GET", sanitizedUrl, "500"],
     });
   });
 
@@ -465,9 +491,12 @@ describe("api/client", () => {
 
     await options.hooks.beforeError[0]?.(createBeforeErrorState(request, error));
 
-    expect(mockCaptureException).toHaveBeenCalledWith(error, {
+    expect(mockCaptureException).toHaveBeenCalledTimes(1);
+    const [, context] = mockCaptureException.mock.calls[0];
+    expect(context).toEqual({
       tags: { http_status: "500" },
       extra: { method: "GET", url: "https://api.example.com/users/me" },
+      fingerprint: ["api-5xx", "GET", "https://api.example.com/users/me", "500"],
     });
     expect(logSpy).not.toHaveBeenCalled();
     logSpy.mockRestore();
