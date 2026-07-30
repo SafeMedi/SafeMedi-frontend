@@ -90,7 +90,8 @@ function isSafeUrlSegment(segment: string): boolean {
 
 // URL path 파라미터(초대 토큰 등)와 query string(검색어 등)이 그대로 노출되지 않도록,
 // 알려진 정적 라우트 세그먼트만 남기고 나머지는 redact한다. query string은 통째로 제거한다.
-function sanitizeUrlForLog(rawUrl: string): string {
+// Sentry의 자동 breadcrumb(app/_layout.tsx의 beforeBreadcrumb)에도 재사용하므로 export한다.
+export function sanitizeUrlForLog(rawUrl: string): string {
   try {
     const url = new URL(rawUrl);
     const sanitizedPath = url.pathname

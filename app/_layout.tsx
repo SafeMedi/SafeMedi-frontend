@@ -6,6 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { TamaguiProvider } from "tamagui";
 
+import { sanitizeUrlForLog } from "@/api/client";
 import { ProfileSync } from "@/components/ProfileSync";
 import { PushNotificationSync } from "@/components/PushNotificationSync";
 import { palette } from "@/constants/design-tokens";
@@ -21,6 +22,15 @@ Sentry.init({
   tracesSampleRate: sentryEnvironment === "production" ? 0.2 : 1.0,
   integrations: [Sentry.expoRouterIntegration()],
   enableAutoSessionTracking: true,
+  // fetch/XHR breadcrumb는 SDK가 자동으로 원본 URL을 담아 생성하므로,
+  // api/client.ts의 captureServerError와 동일한 기준으로 여기서도 redact한다.
+  beforeBreadcrumb: (breadcrumb) => {
+    const url = breadcrumb.data?.url;
+    if (typeof url === "string") {
+      breadcrumb.data = { ...breadcrumb.data, url: sanitizeUrlForLog(url) };
+    }
+    return breadcrumb;
+  },
 });
 
 const queryClient = new QueryClient({
