@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import ky, { HTTPError, type KyInstance, TimeoutError } from "ky";
 import { mockRegistry, resolveFetchImplementation } from "@/api/mock";
 import { apiConfig } from "@/constants/api-config";
@@ -83,6 +84,16 @@ function logApiDev(message: string, ...details: unknown[]): void {
   console.log(message, ...details);
 }
 
+function captureServerError(error: HTTPError): void {
+  Sentry.captureException(error, {
+    tags: { http_status: String(error.response.status) },
+    extra: {
+      method: error.request.method,
+      url: error.request.url,
+    },
+  });
+}
+
 /**
  * 앱 전역에서 사용하는 ky 인스턴스.
  * mock 모드일 때는 등록된 핸들러만 응답합니다 (`/api/mock/handlers.ts`에서 등록).
@@ -124,6 +135,10 @@ export const api: KyInstance = ky.create({
     ],
     beforeError: [
       async ({ error }) => {
+        if (error instanceof HTTPError && error.response.status >= 500) {
+          captureServerError(error);
+        }
+
         if (!__DEV__) {
           return error;
         }

@@ -20,6 +20,13 @@ class MockTimeoutError extends Error {
   }
 }
 
+const mockCaptureException = jest.fn();
+
+jest.mock("@sentry/react-native", () => ({
+  __esModule: true,
+  captureException: (...args: unknown[]) => mockCaptureException(...args),
+}));
+
 const mockKyCreate = jest.fn();
 
 type KyHookOptions = Record<string, never>;
@@ -329,5 +336,28 @@ describe("api/client", () => {
     expect(logSpy).toHaveBeenCalledWith("[api] ✕ timeout · GET https://api.example.com/users");
     expect(logSpy).toHaveBeenCalledWith("[api] ✕ boom · unknown request");
     logSpy.mockRestore();
+  });
+
+  it("beforeError 훅이 5xx 에러를 Sentry로 전송한다", async () => {
+    const options = loadClient();
+    const request = new Request("https://api.example.com/users/me");
+    const error = new MockHTTPError(new Response("server error", { status: 500 }), request);
+
+    await options.hooks.beforeError[0]?.(createBeforeErrorState(request, error));
+
+    expect(mockCaptureException).toHaveBeenCalledWith(error, {
+      tags: { http_status: "500" },
+      extra: { method: "GET", url: "https://api.example.com/users/me" },
+    });
+  });
+
+  it("beforeError 훅이 4xx 에러는 Sentry로 전송하지 않는다", async () => {
+    const options = loadClient();
+    const request = new Request("https://api.example.com/users/me");
+    const error = new MockHTTPError(new Response("bad request", { status: 400 }), request);
+
+    await options.hooks.beforeError[0]?.(createBeforeErrorState(request, error));
+
+    expect(mockCaptureException).not.toHaveBeenCalled();
   });
 });
