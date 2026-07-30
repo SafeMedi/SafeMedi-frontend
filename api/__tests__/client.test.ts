@@ -360,4 +360,116 @@ describe("api/client", () => {
 
     expect(mockCaptureException).not.toHaveBeenCalled();
   });
+
+  it("POST 요청은 JSON 바디를 debug 로그로 남긴다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient() as unknown as {
+      hooks: { beforeRequest: Array<(arg: BeforeRequestHookArg) => Promise<void>> };
+    };
+    const request = new Request("https://api.example.com/users", {
+      method: "POST",
+      body: JSON.stringify({ name: "test" }),
+    });
+
+    await options.hooks.beforeRequest[0]?.(createBeforeRequestState(request));
+
+    expect(logSpy).toHaveBeenCalledWith("[api] → POST https://api.example.com/users", {
+      name: "test",
+    });
+    logSpy.mockRestore();
+  });
+
+  it("POST 바디가 JSON이 아니면 텍스트 그대로 로그한다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient() as unknown as {
+      hooks: { beforeRequest: Array<(arg: BeforeRequestHookArg) => Promise<void>> };
+    };
+    const request = new Request("https://api.example.com/users", {
+      method: "POST",
+      body: "plain text",
+    });
+
+    await options.hooks.beforeRequest[0]?.(createBeforeRequestState(request));
+
+    expect(logSpy).toHaveBeenCalledWith("[api] → POST https://api.example.com/users", "plain text");
+    logSpy.mockRestore();
+  });
+
+  it("비개발 모드에서는 요청 debug 로그를 남기지 않는다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = false;
+    const options = loadClient() as unknown as {
+      hooks: { beforeRequest: Array<(arg: BeforeRequestHookArg) => Promise<void>> };
+    };
+    const request = new Request("https://api.example.com/users", {
+      method: "POST",
+      body: JSON.stringify({ name: "test" }),
+    });
+
+    await options.hooks.beforeRequest[0]?.(createBeforeRequestState(request));
+
+    expect(logSpy).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+  });
+
+  it("beforeError 훅이 객체가 아닌 오류도 readable하게 로그한다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient();
+    const request = new Request("https://api.example.com/users");
+
+    await options.hooks.beforeError[0]?.(
+      createBeforeErrorState(request, "network down" as unknown as Error),
+    );
+
+    expect(logSpy).toHaveBeenCalledWith("[api] ✕ network down · unknown request");
+    logSpy.mockRestore();
+  });
+
+  it("beforeError 훅이 cause가 있는 오류는 cause와 함께 로그한다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient();
+    const request = new Request("https://api.example.com/users");
+    const cause = { reason: "network" };
+    const error = Object.assign(new Error("boom"), { request, cause });
+
+    await options.hooks.beforeError[0]?.(createBeforeErrorState(request, error));
+
+    expect(logSpy).toHaveBeenCalledWith("[api] ✕ boom · GET https://api.example.com/users", cause);
+    logSpy.mockRestore();
+  });
+
+  it("바디 없는 POST 요청은 바디 없이 debug 로그를 남긴다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient() as unknown as {
+      hooks: { beforeRequest: Array<(arg: BeforeRequestHookArg) => Promise<void>> };
+    };
+    const request = new Request("https://api.example.com/users", { method: "POST" });
+
+    await options.hooks.beforeRequest[0]?.(createBeforeRequestState(request));
+
+    expect(logSpy).toHaveBeenCalledWith("[api] → POST https://api.example.com/users");
+    logSpy.mockRestore();
+  });
+
+  it("비개발 모드에서는 5xx를 Sentry로 보내되 debug 로그는 남기지 않는다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = false;
+    const options = loadClient();
+    const request = new Request("https://api.example.com/users/me");
+    const error = new MockHTTPError(new Response("server error", { status: 500 }), request);
+
+    await options.hooks.beforeError[0]?.(createBeforeErrorState(request, error));
+
+    expect(mockCaptureException).toHaveBeenCalledWith(error, {
+      tags: { http_status: "500" },
+      extra: { method: "GET", url: "https://api.example.com/users/me" },
+    });
+    expect(logSpy).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+  });
 });
