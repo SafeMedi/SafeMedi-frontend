@@ -14,6 +14,12 @@ const GOOGLE_SERVICES_JSON = process.env.GOOGLE_SERVICES_JSON;
 const SENTRY_ORG_SLUG = process.env.SENTRY_ORG_SLUG;
 const SENTRY_PROJECT_SLUG = process.env.SENTRY_PROJECT_SLUG;
 
+if (!SENTRY_ORG_SLUG || !SENTRY_PROJECT_SLUG) {
+  throw new Error(
+    "SENTRY_ORG_SLUG / SENTRY_PROJECT_SLUG 환경변수가 필요합니다. .env 또는 EAS 환경변수 설정을 확인하세요.",
+  );
+}
+
 type PluginEntry = NonNullable<ExpoConfig["plugins"]>[number];
 
 function getPluginName(plugin: PluginEntry): string {
