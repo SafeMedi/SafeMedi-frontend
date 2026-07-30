@@ -109,11 +109,38 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
 
       return {
         accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock",
+        refreshToken: "mock-refresh-token",
         isTutorialCompleted: mockState.profile.isTutorialCompleted,
       };
     },
     { label: "POST /api/v1/auth/login/:provider" },
   );
+
+  registry.register("POST", apiPaths.authReissue, async (ctx) => {
+    const body = ctx.jsonBody as { refreshToken?: string } | undefined;
+    if (!body?.refreshToken) {
+      return Response.json(
+        { code: "VAL_001", message: "필수 입력값(refreshToken)이 누락되었거나 비어있습니다." },
+        { status: 400 },
+      );
+    }
+    if (body.refreshToken === "expired") {
+      return Response.json(
+        { code: "AUTH_003", message: "만료된 refreshToken입니다. 다시 로그인해주세요." },
+        { status: 401 },
+      );
+    }
+    if (body.refreshToken !== "mock-refresh-token") {
+      return Response.json(
+        { code: "AUTH_002", message: "유효하지 않은 refreshToken입니다." },
+        { status: 401 },
+      );
+    }
+    return {
+      accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock-reissued",
+      refreshToken: "mock-refresh-token",
+    };
+  });
 
   // --- User: tutorial (구체 경로를 /users/me 보다 먼저 등록) ---
   registry.register(

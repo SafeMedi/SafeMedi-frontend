@@ -1,6 +1,11 @@
 import { api } from "@/api/client";
 import { apiPaths } from "@/api/paths";
-import type { LogoutBody, LogoutResponse, SocialLoginResponse } from "@/api/types/auth";
+import type {
+  LogoutBody,
+  LogoutResponse,
+  ReissueTokenResponse,
+  SocialLoginResponse,
+} from "@/api/types/auth";
 
 export async function postSocialLogin(
   provider: "kakao" | "naver",
@@ -15,4 +20,12 @@ export async function postSocialLogin(
 
 export async function postLogout(body: LogoutBody): Promise<LogoutResponse> {
   return api.post(apiPaths.authLogout, { json: body }).json<LogoutResponse>();
+}
+
+export async function postReissueToken(refreshToken: string): Promise<ReissueTokenResponse> {
+  return api
+    .post(apiPaths.authReissue, {
+      json: { refreshToken },
+    })
+    .json<ReissueTokenResponse>();
 }

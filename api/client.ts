@@ -1,6 +1,8 @@
 import * as Sentry from "@sentry/react-native";
 import ky, { HTTPError, type KyInstance, TimeoutError } from "ky";
 import { mockRegistry, resolveFetchImplementation } from "@/api/mock";
+import { apiPaths } from "@/api/paths";
+import { refreshAccessToken } from "@/api/token-refresh";
 import { apiConfig } from "@/constants/api-config";
 import { useSessionStore } from "@/stores/sessionStore";
 
@@ -158,6 +160,20 @@ export const api: KyInstance = ky.create({
         const body = await readResponseBodyForLog(response);
         logApiDev(`[api] ← ${response.status} ${request.method} ${request.url}`, body);
         return response;
+      },
+      async ({ request, response, retryCount }) => {
+        const isReissueRequest = request.url.endsWith(apiPaths.authReissue);
+        if (response.status !== 401 || retryCount > 0 || isReissueRequest) {
+          return;
+        }
+
+        const newAccessToken = await refreshAccessToken();
+        if (!newAccessToken) {
+          return;
+        }
+
+        request.headers.set("Authorization", `Bearer ${newAccessToken}`);
+        return ky.retry();
       },
     ],
     beforeError: [
