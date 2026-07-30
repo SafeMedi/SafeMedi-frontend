@@ -20,6 +20,13 @@ class MockTimeoutError extends Error {
   }
 }
 
+const mockCaptureException = jest.fn();
+
+jest.mock("@sentry/react-native", () => ({
+  __esModule: true,
+  captureException: (...args: unknown[]) => mockCaptureException(...args),
+}));
+
 const mockKyCreate = jest.fn();
 
 type KyHookOptions = Record<string, never>;
@@ -328,6 +335,170 @@ describe("api/client", () => {
     expect(logSpy).toHaveBeenCalledWith("[api] ✕ 400 GET https://api.example.com/users", "bad");
     expect(logSpy).toHaveBeenCalledWith("[api] ✕ timeout · GET https://api.example.com/users");
     expect(logSpy).toHaveBeenCalledWith("[api] ✕ boom · unknown request");
+    logSpy.mockRestore();
+  });
+
+  it("beforeError 훅이 5xx 에러를 정제된 정보로 Sentry에 전송한다", async () => {
+    const options = loadClient();
+    const request = new Request("https://api.example.com/users/me");
+    const error = new MockHTTPError(new Response("server error", { status: 500 }), request);
+
+    await options.hooks.beforeError[0]?.(createBeforeErrorState(request, error));
+
+    expect(mockCaptureException).toHaveBeenCalledTimes(1);
+    const [sentError, context] = mockCaptureException.mock.calls[0];
+    expect(sentError).not.toBe(error);
+    expect((sentError as Error).message).toBe("HTTP 500 GET https://api.example.com/users/me");
+    expect(context).toEqual({
+      tags: { http_status: "500" },
+      extra: { method: "GET", url: "https://api.example.com/users/me" },
+      fingerprint: ["api-5xx", "GET", "https://api.example.com/users/me", "500"],
+    });
+  });
+
+  it("beforeError 훅이 5xx 캡처 시 URL의 토큰·id 세그먼트와 query string을 redact한다", async () => {
+    const options = loadClient();
+    const request = new Request(
+      "https://api.example.com/api/v1/family-invitations/aZ9xTok3n/accept?ref=email",
+    );
+    const error = new MockHTTPError(new Response("server error", { status: 500 }), request);
+
+    await options.hooks.beforeError[0]?.(createBeforeErrorState(request, error));
+
+    const [sentError, context] = mockCaptureException.mock.calls[0];
+    const sanitizedUrl = "https://api.example.com/api/v1/family-invitations/[redacted]/accept";
+    expect((sentError as Error).message).toBe(`HTTP 500 GET ${sanitizedUrl}`);
+    expect((sentError as Error).message).not.toContain("aZ9xTok3n");
+    expect((sentError as Error).message).not.toContain("ref=email");
+    expect(context).toEqual({
+      tags: { http_status: "500" },
+      extra: { method: "GET", url: sanitizedUrl },
+      fingerprint: ["api-5xx", "GET", sanitizedUrl, "500"],
+    });
+  });
+
+  it("beforeError 훅이 4xx 에러는 Sentry로 전송하지 않는다", async () => {
+    const options = loadClient();
+    const request = new Request("https://api.example.com/users/me");
+    const error = new MockHTTPError(new Response("bad request", { status: 400 }), request);
+
+    await options.hooks.beforeError[0]?.(createBeforeErrorState(request, error));
+
+    expect(mockCaptureException).not.toHaveBeenCalled();
+  });
+
+  it("POST 요청은 JSON 바디를 debug 로그로 남긴다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient() as unknown as {
+      hooks: { beforeRequest: Array<(arg: BeforeRequestHookArg) => Promise<void>> };
+    };
+    const request = new Request("https://api.example.com/users", {
+      method: "POST",
+      body: JSON.stringify({ name: "test" }),
+    });
+
+    await options.hooks.beforeRequest[0]?.(createBeforeRequestState(request));
+
+    expect(logSpy).toHaveBeenCalledWith("[api] → POST https://api.example.com/users", {
+      name: "test",
+    });
+    logSpy.mockRestore();
+  });
+
+  it("POST 바디가 JSON이 아니면 텍스트 그대로 로그한다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient() as unknown as {
+      hooks: { beforeRequest: Array<(arg: BeforeRequestHookArg) => Promise<void>> };
+    };
+    const request = new Request("https://api.example.com/users", {
+      method: "POST",
+      body: "plain text",
+    });
+
+    await options.hooks.beforeRequest[0]?.(createBeforeRequestState(request));
+
+    expect(logSpy).toHaveBeenCalledWith("[api] → POST https://api.example.com/users", "plain text");
+    logSpy.mockRestore();
+  });
+
+  it("비개발 모드에서는 요청 debug 로그를 남기지 않는다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = false;
+    const options = loadClient() as unknown as {
+      hooks: { beforeRequest: Array<(arg: BeforeRequestHookArg) => Promise<void>> };
+    };
+    const request = new Request("https://api.example.com/users", {
+      method: "POST",
+      body: JSON.stringify({ name: "test" }),
+    });
+
+    await options.hooks.beforeRequest[0]?.(createBeforeRequestState(request));
+
+    expect(logSpy).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+  });
+
+  it("beforeError 훅이 객체가 아닌 오류도 readable하게 로그한다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient();
+    const request = new Request("https://api.example.com/users");
+
+    await options.hooks.beforeError[0]?.(
+      createBeforeErrorState(request, "network down" as unknown as Error),
+    );
+
+    expect(logSpy).toHaveBeenCalledWith("[api] ✕ network down · unknown request");
+    logSpy.mockRestore();
+  });
+
+  it("beforeError 훅이 cause가 있는 오류는 cause와 함께 로그한다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient();
+    const request = new Request("https://api.example.com/users");
+    const cause = { reason: "network" };
+    const error = Object.assign(new Error("boom"), { request, cause });
+
+    await options.hooks.beforeError[0]?.(createBeforeErrorState(request, error));
+
+    expect(logSpy).toHaveBeenCalledWith("[api] ✕ boom · GET https://api.example.com/users", cause);
+    logSpy.mockRestore();
+  });
+
+  it("바디 없는 POST 요청은 바디 없이 debug 로그를 남긴다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient() as unknown as {
+      hooks: { beforeRequest: Array<(arg: BeforeRequestHookArg) => Promise<void>> };
+    };
+    const request = new Request("https://api.example.com/users", { method: "POST" });
+
+    await options.hooks.beforeRequest[0]?.(createBeforeRequestState(request));
+
+    expect(logSpy).toHaveBeenCalledWith("[api] → POST https://api.example.com/users");
+    logSpy.mockRestore();
+  });
+
+  it("비개발 모드에서는 5xx를 Sentry로 보내되 debug 로그는 남기지 않는다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = false;
+    const options = loadClient();
+    const request = new Request("https://api.example.com/users/me");
+    const error = new MockHTTPError(new Response("server error", { status: 500 }), request);
+
+    await options.hooks.beforeError[0]?.(createBeforeErrorState(request, error));
+
+    expect(mockCaptureException).toHaveBeenCalledTimes(1);
+    const [, context] = mockCaptureException.mock.calls[0];
+    expect(context).toEqual({
+      tags: { http_status: "500" },
+      extra: { method: "GET", url: "https://api.example.com/users/me" },
+      fingerprint: ["api-5xx", "GET", "https://api.example.com/users/me", "500"],
+    });
+    expect(logSpy).not.toHaveBeenCalled();
     logSpy.mockRestore();
   });
 });

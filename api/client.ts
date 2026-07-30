@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import ky, { HTTPError, type KyInstance, TimeoutError } from "ky";
 import { mockRegistry, resolveFetchImplementation } from "@/api/mock";
 import { apiConfig } from "@/constants/api-config";
@@ -83,6 +84,43 @@ function logApiDev(message: string, ...details: unknown[]): void {
   console.log(message, ...details);
 }
 
+function isSafeUrlSegment(segment: string): boolean {
+  return segment === "" || /^[a-z-]+$/.test(segment) || /^v\d+$/.test(segment);
+}
+
+// URL path 파라미터(초대 토큰 등)와 query string(검색어 등)이 그대로 노출되지 않도록,
+// 알려진 정적 라우트 세그먼트만 남기고 나머지는 redact한다. query string은 통째로 제거한다.
+// Sentry의 자동 breadcrumb(app/_layout.tsx의 beforeBreadcrumb)에도 재사용하므로 export한다.
+export function sanitizeUrlForLog(rawUrl: string): string {
+  try {
+    const url = new URL(rawUrl);
+    const sanitizedPath = url.pathname
+      .split("/")
+      .map((segment) => (isSafeUrlSegment(segment) ? segment : "[redacted]"))
+      .join("/");
+    return `${url.origin}${sanitizedPath}`;
+  } catch {
+    return "[invalid-url]";
+  }
+}
+
+function captureServerError(error: HTTPError): void {
+  const method = error.request.method;
+  const url = sanitizeUrlForLog(error.request.url);
+  const status = error.response.status;
+
+  // ky HTTPError.message에는 원본 URL 전체가 포함돼 있어(https://github.com/sindresorhus/ky),
+  // 그대로 캡처하면 redact가 무의미해진다. 정제된 정보만 담은 새 Error를 캡처한다.
+  const sanitizedError = new Error(`HTTP ${status} ${method} ${url}`);
+  sanitizedError.name = "HTTPError";
+
+  Sentry.captureException(sanitizedError, {
+    tags: { http_status: String(status) },
+    extra: { method, url },
+    fingerprint: ["api-5xx", method, url, String(status)],
+  });
+}
+
 /**
  * 앱 전역에서 사용하는 ky 인스턴스.
  * mock 모드일 때는 등록된 핸들러만 응답합니다 (`/api/mock/handlers.ts`에서 등록).
@@ -124,6 +162,10 @@ export const api: KyInstance = ky.create({
     ],
     beforeError: [
       async ({ error }) => {
+        if (error instanceof HTTPError && error.response.status >= 500) {
+          captureServerError(error);
+        }
+
         if (!__DEV__) {
           return error;
         }

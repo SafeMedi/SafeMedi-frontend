@@ -7,6 +7,9 @@
       "developmentClient": true,
       "distribution": "internal",
       "node": "22.14.0",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "development"
+      },
       "android": {
         "buildType": "apk"
       }
@@ -14,12 +17,18 @@
     "preview": {
       "distribution": "internal",
       "node": "22.14.0",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "preview"
+      },
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
       "node": "22.14.0",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production"
+      },
       "android": {
         "buildType": "app-bundle"
       }

@@ -44,11 +44,20 @@ describe("app.config", () => {
   const originalKakaoAppKey = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY;
   const originalApiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
   const originalGoogleServicesJson = process.env.GOOGLE_SERVICES_JSON;
+  const originalSentryOrgSlug = process.env.SENTRY_ORG_SLUG;
+  const originalSentryProjectSlug = process.env.SENTRY_PROJECT_SLUG;
+
+  beforeEach(() => {
+    process.env.SENTRY_ORG_SLUG = "test-org";
+    process.env.SENTRY_PROJECT_SLUG = "test-project";
+  });
 
   afterEach(() => {
     restoreEnvValue("EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY", originalKakaoAppKey);
     restoreEnvValue("EXPO_PUBLIC_API_BASE_URL", originalApiBaseUrl);
     restoreEnvValue("GOOGLE_SERVICES_JSON", originalGoogleServicesJson);
+    restoreEnvValue("SENTRY_ORG_SLUG", originalSentryOrgSlug);
+    restoreEnvValue("SENTRY_PROJECT_SLUG", originalSentryProjectSlug);
     jest.resetModules();
   });
 
@@ -175,6 +184,30 @@ describe("app.config", () => {
           },
         ],
       ]),
+    );
+  });
+
+  it("Sentry organization/project plugin 옵션을 env 값으로 채운다", () => {
+    const configFactory = loadAppConfigModule().default;
+
+    const result = configFactory(
+      createConfigContext({
+        plugins: [],
+      } as unknown as ExpoConfig),
+    );
+
+    expect(result.plugins).toEqual(
+      expect.arrayContaining([
+        ["@sentry/react-native/expo", { organization: "test-org", project: "test-project" }],
+      ]),
+    );
+  });
+
+  it("SENTRY_ORG_SLUG/SENTRY_PROJECT_SLUG가 없으면 config 평가 시 에러를 던진다", () => {
+    delete process.env.SENTRY_ORG_SLUG;
+
+    expect(() => loadAppConfigModule()).toThrow(
+      "SENTRY_ORG_SLUG / SENTRY_PROJECT_SLUG 환경변수가 필요합니다",
     );
   });
 });
