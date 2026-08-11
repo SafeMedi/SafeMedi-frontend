@@ -4,9 +4,19 @@ const mockSetRefreshToken = jest.fn();
 
 let mockRefreshToken: string | null = "old-refresh-token";
 
+jest.mock("ky", () => ({
+  __esModule: true,
+  isHTTPError: (error: unknown): boolean =>
+    typeof error === "object" && error !== null && "response" in error,
+}));
+
 jest.mock("@/api/endpoints/auth", () => ({
   postReissueToken: (refreshToken: string) => mockPostReissueToken(refreshToken),
 }));
+
+function httpError(status: number): { response: { status: number } } {
+  return { response: { status } };
+}
 
 jest.mock("@/stores/sessionStore", () => ({
   useSessionStore: {
@@ -60,13 +70,32 @@ describe("api/token-refresh", () => {
     expect(result).toBeNull();
   });
 
-  it("재발급 API가 실패하면 null을 반환하고 세션을 갱신하지 않는다", async () => {
-    mockPostReissueToken.mockRejectedValue(new Error("401"));
+  it("재발급 API가 401(refreshToken 거부)로 실패하면 null을 반환하고 세션을 갱신하지 않는다", async () => {
+    mockPostReissueToken.mockRejectedValue(httpError(401));
     const { refreshAccessToken } = loadTokenRefresh();
 
     const result = await refreshAccessToken();
 
     expect(result).toBeNull();
+    expect(mockSetAccessToken).not.toHaveBeenCalled();
+    expect(mockSetRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it("재발급 API가 네트워크 오류로 실패하면 세션을 정리하지 않고 오류를 그대로 던진다", async () => {
+    const networkError = new Error("network down");
+    mockPostReissueToken.mockRejectedValue(networkError);
+    const { refreshAccessToken } = loadTokenRefresh();
+
+    await expect(refreshAccessToken()).rejects.toBe(networkError);
+    expect(mockSetAccessToken).not.toHaveBeenCalled();
+    expect(mockSetRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it("재발급 API가 5xx로 실패하면 세션을 정리하지 않고 오류를 그대로 던진다", async () => {
+    mockPostReissueToken.mockRejectedValue(httpError(500));
+    const { refreshAccessToken } = loadTokenRefresh();
+
+    await expect(refreshAccessToken()).rejects.toEqual(httpError(500));
     expect(mockSetAccessToken).not.toHaveBeenCalled();
     expect(mockSetRefreshToken).not.toHaveBeenCalled();
   });

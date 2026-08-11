@@ -1,7 +1,14 @@
+import { isHTTPError } from "ky";
 import { postReissueToken } from "@/api/endpoints/auth";
 import { useSessionStore } from "@/stores/sessionStore";
 
 let refreshPromise: Promise<string | null> | null = null;
+
+// refreshToken이 만료·폐기되어 서버가 401로 명시적으로 거부한 경우에만 세션을 정리한다.
+// 네트워크 오류·timeout·5xx 같은 일시적 실패는 그대로 던져서 호출부의 오류·재시도 흐름으로 보낸다.
+function isRefreshTokenRejected(error: unknown): boolean {
+  return isHTTPError(error) && error.response.status === 401;
+}
 
 async function performRefresh(): Promise<string | null> {
   const refreshToken = useSessionStore.getState().refreshToken;
@@ -9,18 +16,23 @@ async function performRefresh(): Promise<string | null> {
     return null;
   }
 
-  try {
-    const response = await postReissueToken(refreshToken);
-    // 응답을 기다리는 동안 로그아웃/재로그인으로 세션이 바뀌었다면 오래된 응답을 버린다.
-    if (useSessionStore.getState().refreshToken !== refreshToken) {
+  const response = await postReissueToken(refreshToken).catch((error) => {
+    if (isRefreshTokenRejected(error)) {
       return null;
     }
-    useSessionStore.getState().setAccessToken(response.accessToken);
-    useSessionStore.getState().setRefreshToken(response.refreshToken);
-    return response.accessToken;
-  } catch {
+    throw error;
+  });
+  if (!response) {
     return null;
   }
+
+  // 응답을 기다리는 동안 로그아웃/재로그인으로 세션이 바뀌었다면 오래된 응답을 버린다.
+  if (useSessionStore.getState().refreshToken !== refreshToken) {
+    return null;
+  }
+  useSessionStore.getState().setAccessToken(response.accessToken);
+  useSessionStore.getState().setRefreshToken(response.refreshToken);
+  return response.accessToken;
 }
 
 /**

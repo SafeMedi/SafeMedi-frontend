@@ -387,7 +387,7 @@ describe("api/client", () => {
       message.includes("network fail"),
     ) as [string, { accessToken: string; self: unknown }];
     expect(loggedCause.accessToken).toBe("***");
-    expect(loggedCause.self).toBe(circularCause);
+    expect(loggedCause.self).toBe("[Circular]");
     logSpy.mockRestore();
   });
 
@@ -647,6 +647,21 @@ describe("api/client", () => {
     expect(request.headers.get("Authorization")).toBeNull();
     expect(mockKyRetry).not.toHaveBeenCalled();
     expect(result).toBeUndefined();
+  });
+
+  it("재발급 중 일시적 오류가 발생하면 401로 위장하지 않고 오류를 그대로 전파한다", async () => {
+    const transientError = new Error("network down");
+    mockRefreshAccessToken.mockRejectedValue(transientError);
+    const options = loadClient();
+    const request = new Request("https://api.example.com/api/v1/users/me");
+
+    await expect(
+      options.hooks.afterResponse[1]?.(
+        createAfterResponseState(request, new Response("unauthorized", { status: 401 })),
+      ),
+    ).rejects.toBe(transientError);
+
+    expect(mockKyRetry).not.toHaveBeenCalled();
   });
 
   it("401이 아닌 응답이면 재발급을 시도하지 않는다", async () => {

@@ -24,7 +24,7 @@ function maskSensitiveFieldsForLog(value: unknown, seen: WeakSet<object> = new W
   }
 
   if (seen.has(value)) {
-    return value;
+    return "[Circular]";
   }
   seen.add(value);
 
