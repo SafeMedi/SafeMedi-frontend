@@ -13,7 +13,63 @@ PR을 생성하기 전, 아래 순서를 하나도 건너뛰지 않고 실행한
 
 하나라도 실패하면 여기서 중단하고 사용자에게 보고한다. PR을 생성하지 않는다.
 
-## 2단계 — 커버리지 게이트 (분기 커버리지 80% 권장)
+## 2단계 - 병렬 리뷰
+
+### 1. 병렬 리뷰 — 반드시 한 메시지에 두 Agent 호출을 함께 보낸다
+
+두 리뷰는 서로 독립적이므로 같은 응답 안에서 병렬로 호출한다
+(순서대로 하나씩 부르지 않는다). 둘 다 결과가 있어야 다음 단계로
+진행할 수 있으므로 `run_in_background: false`로 호출한다.
+
+**Claude 측 리뷰**
+
+```
+Agent({
+  subagent_type: "pr-code-reviewer",
+  description: "ChartGym PR 리뷰 (Claude)",
+  run_in_background: false,
+  prompt: "브랜치 `<현재 브랜치>`를 `<base>` 기준으로 리뷰해줘.
+    `git diff <base>...HEAD`로 변경 내용을 확인하고, 위 지시(AGENTS.md/
+    CLAUDE.md 컨벤션, Phase 범위, README 반영 여부)에 따라 검토한 뒤
+    정해진 마크다운 형식으로만 답해줘."
+})
+```
+
+**Codex 측 리뷰** — `codex:codex-rescue`는 `task`로만 전달하는 순수
+포워더이므로, 리뷰 전용임을 프롬프트에 분명히 적어 Codex가 파일을
+수정하지 않게 한다(포워더 규칙상 "review/diagnosis만 원한다"고 명시하면
+`--write`를 붙이지 않는다).
+
+```
+Agent({
+  subagent_type: "codex:codex-rescue",
+  description: "ChartGym PR 리뷰 (Codex)",
+  run_in_background: false,
+  prompt: "Review-only request, do not modify any files. Review the diff
+    between `<base>` and the current branch `<현재 브랜치>` in this repo
+    (chart-gym). Check for correctness/security bugs and any deviation
+    from the conventions in AGENTS.md and CLAUDE.md (arrow-function-only
+    ESLint rule, MarketDataProvider abstraction for market data, base-ui
+    `render` prop pattern, Promise-based `params`/`searchParams`, Next.js
+    16 `proxy.ts` convention, domestic candle color convention, Phase 1
+    scope). Report findings as a list with file:line and severity
+    (blocking vs note). This is diagnosis/review only — make no edits.
+    Respond in Korean (한국어로 답변할 것) — AGENTS.md의 응답 언어 규칙."
+})
+```
+
+### 2. 결과 종합
+
+두 리뷰 결과를 모두 받은 뒤:
+
+- 둘 중 하나라도 **blocking** 이슈를 보고했다면, PR을 만들지 않는다.
+  두 리뷰 결과를 사용자에게 요약해서 보여주고 `AskUserQuestion`으로
+  "지금 고치기 / 그래도 PR 생성 / 중단" 중 선택하게 한다. 사용자가
+  "그래도 PR 생성"을 고르지 않는 한 여기서 멈춘다.
+- blocking 이슈가 없으면(둘 다 PASS이거나 note만 있으면) 3단계로
+  진행한다. note는 PR 본문에 참고로 남기되 진행을 막지 않는다.
+
+## 3단계 — 커버리지 게이트 (분기 커버리지 80% 권장)
 
 1. `yarn test --coverage`를 실행한다.
 2. `coverage/coverage-summary.json`을 읽어 `total.branches.pct` 값을 확인한다.
@@ -22,16 +78,6 @@ PR을 생성하기 전, 아래 순서를 하나도 건너뛰지 않고 실행한
    - PR 생성을 막지는 않는다 (경고만).
    - 현재 분기 커버리지 수치를 사용자에게 알리고, 이대로 계속 진행할지 확인한다.
 4. 80 이상이면 통과로 보고하고 다음 단계로 진행한다.
-
-## 3단계 — 코드 리뷰 (병렬, 필수)
-
-PR 생성 직전 최종 점검이므로 절대 건너뛰지 않는다.
-
-1. **base 브랜치를 먼저 결정한다** — 기본은 `dev`, release→main 승격 PR만 예외적으로 `main`. 이후 모든 단계(리뷰 diff, PR 생성)는 여기서 정한 base 브랜치를 기준으로 한다.
-2. 이번 브랜치의 전체 변경(`git diff <base>...HEAD` 기준, `<base>`는 1번에서 정한 브랜치)에 대해 `safemedi-reviewer` 서브에이전트와 Codex(`codex:codex-rescue` 에이전트 또는 `codex:rescue` 스킬)를 **병렬로 함께 호출**해 두 개의 독립적인 리뷰를 받는다. 어느 한쪽만 단독으로 돌리고 끝내지 않는다.
-3. 두 리뷰 결과를 종합해서 사용자에게 보고한다 — 한쪽에서만 잡아낸 이슈도 누락하지 않고, 두 리뷰가 상충하면 근거를 비교해서 판단한다.
-4. P0/P1(반드시 지적) 이슈가 있으면 먼저 수정하고, 관련 있는 경우 1단계(lint/test)를 다시 통과시킨다. 수정 없이 다음 단계로 넘어가지 않는다.
-5. Suggestion(non-blocking) 이슈는 사용자에게 알리고 반영 여부를 확인한다.
 
 ## 4단계 — PR 생성
 

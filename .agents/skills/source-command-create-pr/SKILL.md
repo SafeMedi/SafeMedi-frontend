@@ -19,7 +19,63 @@ PR을 생성하기 전, 아래 순서를 하나도 건너뛰지 않고 실행한
 
 하나라도 실패하면 여기서 중단하고 사용자에게 보고한다. PR을 생성하지 않는다.
 
-## 2단계 — 커버리지 게이트 (분기 커버리지 80% 권장)
+## 2단계 - 병렬 리뷰
+
+### 1. 병렬 리뷰 — 반드시 한 메시지에 두 Agent 호출을 함께 보낸다
+
+두 리뷰는 서로 독립적이므로 같은 응답 안에서 병렬로 호출한다
+(순서대로 하나씩 부르지 않는다). 둘 다 결과가 있어야 다음 단계로
+진행할 수 있으므로 `run_in_background: false`로 호출한다.
+
+**Claude 측 리뷰**
+
+```
+Agent({
+  subagent_type: "pr-code-reviewer",
+  description: "ChartGym PR 리뷰 (Claude)",
+  run_in_background: false,
+  prompt: "브랜치 `<현재 브랜치>`를 `<base>` 기준으로 리뷰해줘.
+    `git diff <base>...HEAD`로 변경 내용을 확인하고, 위 지시(AGENTS.md/
+    CLAUDE.md 컨벤션, Phase 범위, README 반영 여부)에 따라 검토한 뒤
+    정해진 마크다운 형식으로만 답해줘."
+})
+```
+
+**Codex 측 리뷰** — `codex:codex-rescue`는 `task`로만 전달하는 순수
+포워더이므로, 리뷰 전용임을 프롬프트에 분명히 적어 Codex가 파일을
+수정하지 않게 한다(포워더 규칙상 "review/diagnosis만 원한다"고 명시하면
+`--write`를 붙이지 않는다).
+
+```
+Agent({
+  subagent_type: "codex:codex-rescue",
+  description: "ChartGym PR 리뷰 (Codex)",
+  run_in_background: false,
+  prompt: "Review-only request, do not modify any files. Review the diff
+    between `<base>` and the current branch `<현재 브랜치>` in this repo
+    (chart-gym). Check for correctness/security bugs and any deviation
+    from the conventions in AGENTS.md and CLAUDE.md (arrow-function-only
+    ESLint rule, MarketDataProvider abstraction for market data, base-ui
+    `render` prop pattern, Promise-based `params`/`searchParams`, Next.js
+    16 `proxy.ts` convention, domestic candle color convention, Phase 1
+    scope). Report findings as a list with file:line and severity
+    (blocking vs note). This is diagnosis/review only — make no edits.
+    Respond in Korean (한국어로 답변할 것) — AGENTS.md의 응답 언어 규칙."
+})
+```
+
+### 2. 결과 종합
+
+두 리뷰 결과를 모두 받은 뒤:
+
+- 둘 중 하나라도 **blocking** 이슈를 보고했다면, PR을 만들지 않는다.
+  두 리뷰 결과를 사용자에게 요약해서 보여주고 `AskUserQuestion`으로
+  "지금 고치기 / 그래도 PR 생성 / 중단" 중 선택하게 한다. 사용자가
+  "그래도 PR 생성"을 고르지 않는 한 여기서 멈춘다.
+- blocking 이슈가 없으면(둘 다 PASS이거나 note만 있으면) 3단계로
+  진행한다. note는 PR 본문에 참고로 남기되 진행을 막지 않는다.
+
+## 3단계 — 커버리지 게이트 (분기 커버리지 80% 권장)
 
 1. `yarn test --coverage`를 실행한다.
 2. `coverage/coverage-summary.json`을 읽어 `total.branches.pct` 값을 확인한다.
@@ -29,7 +85,7 @@ PR을 생성하기 전, 아래 순서를 하나도 건너뛰지 않고 실행한
    - 현재 분기 커버리지 수치를 사용자에게 알리고, 이대로 계속 진행할지 확인한다.
 4. 80 이상이면 통과로 보고하고 다음 단계로 진행한다.
 
-## 3단계 — PR 생성
+## 4단계 — PR 생성
 
 1. 현재 브랜치가 `main`/`dev`가 아닌지 확인한다 (gitflow 규칙상 이 브랜치들에서 직접 작업 금지).
 2. 원격에 브랜치가 push 되어 있는지 확인하고, 안 되어 있으면 push해도 되는지 사용자에게 확인 후 진행한다 (임의 force push 금지).
