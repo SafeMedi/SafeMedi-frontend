@@ -7,8 +7,11 @@
       "developmentClient": true,
       "distribution": "internal",
       "node": "22.14.0",
+      "environment": "development",
       "env": {
-        "EXPO_PUBLIC_APP_ENV": "development"
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "SENTRY_ORG_SLUG": "safemedi",
+        "SENTRY_PROJECT_SLUG": "react-native"
       },
       "android": {
         "buildType": "apk"
@@ -17,8 +20,11 @@
     "preview": {
       "distribution": "internal",
       "node": "22.14.0",
+      "environment": "preview",
       "env": {
-        "EXPO_PUBLIC_APP_ENV": "preview"
+        "EXPO_PUBLIC_APP_ENV": "preview",
+        "SENTRY_ORG_SLUG": "safemedi",
+        "SENTRY_PROJECT_SLUG": "react-native"
       },
       "android": {
         "buildType": "apk"
@@ -26,8 +32,11 @@
     },
     "production": {
       "node": "22.14.0",
+      "environment": "production",
       "env": {
-        "EXPO_PUBLIC_APP_ENV": "production"
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "SENTRY_ORG_SLUG": "safemedi",
+        "SENTRY_PROJECT_SLUG": "react-native"
       },
       "android": {
         "buildType": "app-bundle"
