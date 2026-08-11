@@ -44,7 +44,7 @@ export function ProfileScreen() {
           onEditAllergies={viewModel.handleOpenProfileEdit}
           onEditChronicConditions={viewModel.handleOpenProfileEdit}
         />
-        <SettingsSection />
+        <SettingsSection onPrivacyPress={viewModel.handleOpenSettingsGuide} />
         <AppInfoSection items={viewModel.appInfoItems} />
         <YStack gap={8}>
           <LogoutButton onPress={viewModel.handleLogout} disabled={viewModel.isWithdrawing} />
