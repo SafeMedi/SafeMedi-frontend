@@ -31,7 +31,7 @@ PR을 생성하기 전, 아래 순서를 하나도 건너뛰지 않고 실행한
 
 ```
 Agent({
-  subagent_type: "pr-code-reviewer",
+  subagent_type: "safemedi-reviewer",
   description: "ChartGym PR 리뷰 (Claude)",
   run_in_background: false,
   prompt: "브랜치 `<현재 브랜치>`를 `<base>` 기준으로 리뷰해줘.
