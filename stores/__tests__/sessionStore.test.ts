@@ -10,6 +10,7 @@ describe("useSessionStore", () => {
   beforeEach(() => {
     useSessionStore.setState({
       accessToken: null,
+      refreshToken: null,
       isTutorialCompleted: false,
     });
   });
@@ -18,6 +19,7 @@ describe("useSessionStore", () => {
     const state = useSessionStore.getState();
 
     expect(state.accessToken).toBeNull();
+    expect(state.refreshToken).toBeNull();
     expect(state.isTutorialCompleted).toBe(false);
   });
 
@@ -25,6 +27,12 @@ describe("useSessionStore", () => {
     useSessionStore.getState().setAccessToken("token-123");
 
     expect(useSessionStore.getState().accessToken).toBe("token-123");
+  });
+
+  it("setRefreshToken이 refreshToken을 갱신한다", () => {
+    useSessionStore.getState().setRefreshToken("refresh-token-123");
+
+    expect(useSessionStore.getState().refreshToken).toBe("refresh-token-123");
   });
 
   it("setTutorialCompleted가 isTutorialCompleted를 갱신한다", () => {
@@ -36,6 +44,7 @@ describe("useSessionStore", () => {
   it("clearSession이 세션 상태를 초기화한다", () => {
     useSessionStore.setState({
       accessToken: "token-123",
+      refreshToken: "refresh-token-123",
       isTutorialCompleted: true,
     });
 
@@ -43,6 +52,7 @@ describe("useSessionStore", () => {
 
     const state = useSessionStore.getState();
     expect(state.accessToken).toBeNull();
+    expect(state.refreshToken).toBeNull();
     expect(state.isTutorialCompleted).toBe(false);
   });
 
@@ -52,14 +62,17 @@ describe("useSessionStore", () => {
 
     const partialized = partialize?.({
       accessToken: "token-123",
+      refreshToken: "refresh-token-123",
       isTutorialCompleted: true,
       setAccessToken: () => undefined,
+      setRefreshToken: () => undefined,
       setTutorialCompleted: () => undefined,
       clearSession: () => undefined,
     });
 
     expect(partialized).toEqual({
       accessToken: "token-123",
+      refreshToken: "refresh-token-123",
       isTutorialCompleted: true,
     });
   });

@@ -18,6 +18,7 @@ const mockPatchUserProfile = jest.fn<Promise<unknown>, [unknown]>();
 const mockDeleteUserAccount = jest.fn<Promise<unknown>, []>();
 const mockProfileToUser = jest.fn<unknown, [unknown]>();
 const mockSetAccessToken = jest.fn();
+const mockSetRefreshToken = jest.fn();
 const mockSetTutorialCompleted = jest.fn();
 const mockSetUser = jest.fn();
 const mockSetQueryData = jest.fn<unknown, [unknown, unknown]>();
@@ -53,12 +54,14 @@ jest.mock("@/stores/sessionStore", () => ({
     selector: (state: {
       accessToken: string | null;
       setAccessToken: (token: string | null) => void;
+      setRefreshToken: (token: string | null) => void;
       setTutorialCompleted: (value: boolean) => void;
     }) => unknown,
   ) =>
     selector({
       accessToken: mockAccessToken,
       setAccessToken: mockSetAccessToken,
+      setRefreshToken: mockSetRefreshToken,
       setTutorialCompleted: mockSetTutorialCompleted,
     }),
 }));
@@ -83,7 +86,11 @@ describe("api/queries/user", () => {
       setQueryData: mockSetQueryData,
       invalidateQueries: mockInvalidateQueries,
     } as unknown as ReturnType<typeof useQueryClient>);
-    mockPostSocialLogin.mockResolvedValue({ accessToken: "new-token", isTutorialCompleted: true });
+    mockPostSocialLogin.mockResolvedValue({
+      accessToken: "new-token",
+      refreshToken: "new-refresh-token",
+      isTutorialCompleted: true,
+    });
     mockFetchUserProfileWithAccessToken.mockResolvedValue({ isTutorialCompleted: true });
     mockPostTutorialRegistration.mockResolvedValue({});
     mockPatchUserProfile.mockResolvedValue({ id: "me", isTutorialCompleted: true });
@@ -110,11 +117,13 @@ describe("api/queries/user", () => {
     const mutation = result.current as unknown as {
       mutationFn: (args: { provider: "kakao" | "naver"; accessToken: string }) => Promise<{
         accessToken: string;
+        refreshToken: string;
         isTutorialCompleted: boolean;
         profile: { isTutorialCompleted: boolean };
       }>;
       onSuccess: (value: {
         accessToken: string;
+        refreshToken: string;
         isTutorialCompleted: boolean;
         profile: { isTutorialCompleted: boolean };
       }) => void;
@@ -122,12 +131,14 @@ describe("api/queries/user", () => {
 
     const payload = await mutation.mutationFn({ provider: "kakao", accessToken: "kakao-token" });
     expect(payload.accessToken).toBe("new-token");
+    expect(payload.refreshToken).toBe("new-refresh-token");
     expect(payload.isTutorialCompleted).toBe(true);
     expect(mockPostSocialLogin).toHaveBeenCalledWith("kakao", "kakao-token");
     expect(mockFetchUserProfileWithAccessToken).toHaveBeenCalledWith("new-token");
 
     mutation.onSuccess(payload);
     expect(mockSetAccessToken).toHaveBeenCalledWith("new-token");
+    expect(mockSetRefreshToken).toHaveBeenCalledWith("new-refresh-token");
     // 명세서 기준: 로그인 응답의 isTutorialCompleted를 사용해 튜토리얼 라우팅을 결정합니다.
     expect(mockSetTutorialCompleted).toHaveBeenCalledWith(true);
     expect(mockSetQueryData).toHaveBeenCalledWith(queryKeys.user.me, payload.profile);

@@ -28,6 +28,8 @@ jest.mock("@sentry/react-native", () => ({
 }));
 
 const mockKyCreate = jest.fn();
+const mockKyRetry = jest.fn((..._args: unknown[]) => "RETRY_MARKER");
+const mockRefreshAccessToken = jest.fn<Promise<string | null>, []>();
 
 type KyHookOptions = Record<string, never>;
 
@@ -35,6 +37,13 @@ type BeforeRequestHookArg = {
   request: Request;
   options: KyHookOptions;
   retryCount: 0;
+};
+
+type AfterResponseHookArg = {
+  request: Request;
+  options: KyHookOptions;
+  response: Response;
+  retryCount: number;
 };
 
 type BeforeErrorHookArg = {
@@ -48,6 +57,14 @@ function createBeforeRequestState(request: Request): BeforeRequestHookArg {
   return { request, options: {}, retryCount: 0 };
 }
 
+function createAfterResponseState(
+  request: Request,
+  response: Response,
+  retryCount = 0,
+): AfterResponseHookArg {
+  return { request, options: {}, response, retryCount };
+}
+
 function createBeforeErrorState(request: Request, error: Error): BeforeErrorHookArg {
   return { request, options: {}, error, retryCount: 0 };
 }
@@ -58,7 +75,12 @@ jest.mock("ky", () => ({
   TimeoutError: MockTimeoutError,
   default: {
     create: (...args: unknown[]) => mockKyCreate(...args),
+    retry: (...args: unknown[]) => mockKyRetry(...args),
   },
+}));
+
+jest.mock("@/api/token-refresh", () => ({
+  refreshAccessToken: () => mockRefreshAccessToken(),
 }));
 
 describe("api/client", () => {
@@ -93,7 +115,7 @@ describe("api/client", () => {
     });
     return mockKyCreate.mock.calls[0]?.[0] as {
       hooks: {
-        afterResponse: Array<(arg: { request: Request; response: Response }) => Promise<Response>>;
+        afterResponse: Array<(arg: AfterResponseHookArg) => Promise<Response | string | undefined>>;
         beforeError: Array<(arg: BeforeErrorHookArg) => Promise<Error>>;
       };
     };
@@ -229,6 +251,65 @@ describe("api/client", () => {
     logSpy.mockRestore();
   });
 
+  it("dev 로그는 요청·응답 본문의 accessToken/refreshToken을 마스킹한다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient({ token: "old-access-token" });
+    const request = new Request("https://api.example.com/api/v1/auth/reissue", {
+      method: "POST",
+      body: JSON.stringify({ refreshToken: "secret-refresh-token" }),
+    });
+
+    await options.hooks.beforeRequest[0]?.(createBeforeRequestState(request));
+
+    expect(logSpy).toHaveBeenCalledWith(
+      "[api] → POST https://api.example.com/api/v1/auth/reissue",
+      { refreshToken: "***" },
+    );
+
+    await options.hooks.afterResponse[0]?.(
+      createAfterResponseState(
+        request,
+        new Response(
+          JSON.stringify({ accessToken: "new-access-token", refreshToken: "new-refresh-token" }),
+          { status: 200 },
+        ),
+      ),
+    );
+
+    expect(logSpy).toHaveBeenCalledWith(
+      "[api] ← 200 POST https://api.example.com/api/v1/auth/reissue",
+      { accessToken: "***", refreshToken: "***" },
+    );
+    logSpy.mockRestore();
+  });
+
+  it("dev 로그는 중첩된 객체·배열 안의 accessToken/refreshToken도 마스킹한다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient();
+    const request = new Request("https://api.example.com/api/v1/users");
+
+    await options.hooks.afterResponse[0]?.(
+      createAfterResponseState(
+        request,
+        new Response(
+          JSON.stringify({
+            user: { accessToken: "nested-access-token", name: "test" },
+            sessions: [{ refreshToken: "nested-refresh-token" }],
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
+
+    expect(logSpy).toHaveBeenCalledWith("[api] ← 200 GET https://api.example.com/api/v1/users", {
+      user: { accessToken: "***", name: "test" },
+      sessions: [{ refreshToken: "***" }],
+    });
+    logSpy.mockRestore();
+  });
+
   it("beforeError 훅이 HTTP가 아닌 네트워크 오류를 readable하게 로그한다", async () => {
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     (global as { __DEV__?: boolean }).__DEV__ = true;
@@ -269,24 +350,62 @@ describe("api/client", () => {
     logSpy.mockRestore();
   });
 
+  it("beforeError 훅은 네트워크 오류의 cause에 담긴 토큰도 마스킹한다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient();
+    const request = new Request("https://api.example.com/api/v1/users/me");
+    const networkError = Object.assign(new Error("network fail"), {
+      request,
+      cause: { accessToken: "leaked-access-token" },
+    });
+
+    await options.hooks.beforeError[0]?.(createBeforeErrorState(request, networkError));
+
+    expect(logSpy).toHaveBeenCalledWith(
+      "[api] ✕ network fail · GET https://api.example.com/api/v1/users/me",
+      { accessToken: "***" },
+    );
+    logSpy.mockRestore();
+  });
+
+  it("cause에 순환 참조가 있어도 무한 재귀 없이 안전하게 마스킹한다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient();
+    const request = new Request("https://api.example.com/api/v1/users/me");
+    const circularCause: Record<string, unknown> = { accessToken: "leaked-access-token" };
+    circularCause.self = circularCause;
+    const networkError = Object.assign(new Error("network fail"), {
+      request,
+      cause: circularCause,
+    });
+
+    await options.hooks.beforeError[0]?.(createBeforeErrorState(request, networkError));
+
+    const [, loggedCause] = logSpy.mock.calls.find(([message]) =>
+      message.includes("network fail"),
+    ) as [string, { accessToken: string; self: unknown }];
+    expect(loggedCause.accessToken).toBe("***");
+    expect(loggedCause.self).toBe("[Circular]");
+    logSpy.mockRestore();
+  });
+
   it("개발 모드 성공 응답의 JSON, 텍스트, 빈 본문을 로그한다", async () => {
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     (global as { __DEV__?: boolean }).__DEV__ = true;
     const options = loadClient();
     const request = new Request("https://api.example.com/users");
 
-    await options.hooks.afterResponse[0]?.({
-      request,
-      response: new Response('{"id":1}', { status: 200 }),
-    });
-    await options.hooks.afterResponse[0]?.({
-      request,
-      response: new Response("plain", { status: 200 }),
-    });
-    await options.hooks.afterResponse[0]?.({
-      request,
-      response: new Response(null, { status: 204 }),
-    });
+    await options.hooks.afterResponse[0]?.(
+      createAfterResponseState(request, new Response('{"id":1}', { status: 200 })),
+    );
+    await options.hooks.afterResponse[0]?.(
+      createAfterResponseState(request, new Response("plain", { status: 200 })),
+    );
+    await options.hooks.afterResponse[0]?.(
+      createAfterResponseState(request, new Response(null, { status: 204 })),
+    );
 
     expect(logSpy).toHaveBeenCalledWith("[api] ← 200 GET https://api.example.com/users", { id: 1 });
     expect(logSpy).toHaveBeenCalledWith("[api] ← 200 GET https://api.example.com/users", "plain");
@@ -300,14 +419,12 @@ describe("api/client", () => {
     const request = new Request("https://api.example.com/users");
     (global as { __DEV__?: boolean }).__DEV__ = false;
 
-    await options.hooks.afterResponse[0]?.({
-      request,
-      response: new Response("no", { status: 500 }),
-    });
-    await options.hooks.afterResponse[0]?.({
-      request,
-      response: new Response("yes", { status: 200 }),
-    });
+    await options.hooks.afterResponse[0]?.(
+      createAfterResponseState(request, new Response("no", { status: 500 })),
+    );
+    await options.hooks.afterResponse[0]?.(
+      createAfterResponseState(request, new Response("yes", { status: 200 })),
+    );
 
     expect(logSpy).not.toHaveBeenCalled();
     logSpy.mockRestore();
@@ -500,5 +617,86 @@ describe("api/client", () => {
     });
     expect(logSpy).not.toHaveBeenCalled();
     logSpy.mockRestore();
+  });
+
+  it("401 응답을 받으면 accessToken을 재발급받아 헤더를 갱신하고 재시도한다", async () => {
+    mockRefreshAccessToken.mockResolvedValue("new-access-token");
+    const options = loadClient({ token: "old-access-token" });
+    const request = new Request("https://api.example.com/api/v1/users/me");
+
+    const result = await options.hooks.afterResponse[1]?.(
+      createAfterResponseState(request, new Response("unauthorized", { status: 401 })),
+    );
+
+    expect(mockRefreshAccessToken).toHaveBeenCalledTimes(1);
+    expect(request.headers.get("Authorization")).toBe("Bearer new-access-token");
+    expect(mockKyRetry).toHaveBeenCalledTimes(1);
+    expect(result).toBe("RETRY_MARKER");
+  });
+
+  it("재발급에 실패하면 재시도하지 않고 401 응답을 그대로 둔다", async () => {
+    mockRefreshAccessToken.mockResolvedValue(null);
+    const options = loadClient();
+    const request = new Request("https://api.example.com/api/v1/users/me");
+
+    const result = await options.hooks.afterResponse[1]?.(
+      createAfterResponseState(request, new Response("unauthorized", { status: 401 })),
+    );
+
+    expect(mockRefreshAccessToken).toHaveBeenCalledTimes(1);
+    expect(request.headers.get("Authorization")).toBeNull();
+    expect(mockKyRetry).not.toHaveBeenCalled();
+    expect(result).toBeUndefined();
+  });
+
+  it("재발급 중 일시적 오류가 발생하면 401로 위장하지 않고 오류를 그대로 전파한다", async () => {
+    const transientError = new Error("network down");
+    mockRefreshAccessToken.mockRejectedValue(transientError);
+    const options = loadClient();
+    const request = new Request("https://api.example.com/api/v1/users/me");
+
+    await expect(
+      options.hooks.afterResponse[1]?.(
+        createAfterResponseState(request, new Response("unauthorized", { status: 401 })),
+      ),
+    ).rejects.toBe(transientError);
+
+    expect(mockKyRetry).not.toHaveBeenCalled();
+  });
+
+  it("401이 아닌 응답이면 재발급을 시도하지 않는다", async () => {
+    const options = loadClient();
+    const request = new Request("https://api.example.com/api/v1/users/me");
+
+    const result = await options.hooks.afterResponse[1]?.(
+      createAfterResponseState(request, new Response("ok", { status: 200 })),
+    );
+
+    expect(mockRefreshAccessToken).not.toHaveBeenCalled();
+    expect(result).toBeUndefined();
+  });
+
+  it("이미 한 번 재시도된 요청이 다시 401이면 재발급을 재시도하지 않는다", async () => {
+    const options = loadClient();
+    const request = new Request("https://api.example.com/api/v1/users/me");
+
+    const result = await options.hooks.afterResponse[1]?.(
+      createAfterResponseState(request, new Response("unauthorized", { status: 401 }), 1),
+    );
+
+    expect(mockRefreshAccessToken).not.toHaveBeenCalled();
+    expect(result).toBeUndefined();
+  });
+
+  it("토큰 재발급 요청 자체가 401이면 무한 재시도를 방지하기 위해 재발급을 시도하지 않는다", async () => {
+    const options = loadClient();
+    const request = new Request("https://api.example.com/api/v1/auth/reissue");
+
+    const result = await options.hooks.afterResponse[1]?.(
+      createAfterResponseState(request, new Response("unauthorized", { status: 401 })),
+    );
+
+    expect(mockRefreshAccessToken).not.toHaveBeenCalled();
+    expect(result).toBeUndefined();
   });
 });

@@ -31,6 +31,7 @@ export function useUserProfile() {
 export function useLoginMutation() {
   const queryClient = useQueryClient();
   const setAccessToken = useSessionStore((s) => s.setAccessToken);
+  const setRefreshToken = useSessionStore((s) => s.setRefreshToken);
   const setTutorialCompleted = useSessionStore((s) => s.setTutorialCompleted);
 
   return useMutation({
@@ -49,12 +50,14 @@ export function useLoginMutation() {
       const profile = await fetchUserProfileWithAccessToken(loginResponse.accessToken);
       return {
         accessToken: loginResponse.accessToken,
+        refreshToken: loginResponse.refreshToken,
         isTutorialCompleted: loginResponse.isTutorialCompleted,
         profile,
       };
     },
-    onSuccess: ({ accessToken, isTutorialCompleted, profile }) => {
+    onSuccess: ({ accessToken, refreshToken, isTutorialCompleted, profile }) => {
       setAccessToken(accessToken);
+      setRefreshToken(refreshToken);
       setTutorialCompleted(isTutorialCompleted);
       queryClient.setQueryData(queryKeys.user.me, profile);
       useUserStore.getState().setUser(profileToUser(profile));

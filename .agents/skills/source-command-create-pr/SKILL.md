@@ -1,7 +1,13 @@
 ---
-description: 린트·테스트·분기 커버리지 체크와 safemedi-reviewer+Codex 병렬 코드 리뷰를 거쳐 safeMedi PR 템플릿에 맞춰 PR 생성
-argument-hint: [선택: Linear 티켓명이나 PR 설명]
+name: "source-command-create-pr"
+description: "린트·테스트·분기 커버리지 체크 후 safeMedi PR 템플릿에 맞춰 PR 생성"
 ---
+
+# source-command-create-pr
+
+Use this skill when the user asks to run the migrated source command `create-pr`.
+
+## Command Template
 
 PR을 생성하기 전, 아래 순서를 하나도 건너뛰지 않고 실행한다.
 

@@ -1,5 +1,5 @@
 import { apiPaths } from "@/api/paths";
-import { postLogout, postSocialLogin } from "../auth";
+import { postLogout, postReissueToken, postSocialLogin } from "../auth";
 import {
   acceptFamilyInvitation,
   createFamilyInvitation,
@@ -64,6 +64,18 @@ describe("api/endpoints core modules", () => {
 
     expect(mockApiPost).toHaveBeenCalledWith(apiPaths.authLogout, {
       json: { deviceToken: "fcm-token" },
+    });
+    expect(result).toEqual(expected);
+  });
+
+  it("auth reissue endpoint를 refreshToken payload로 호출한다", async () => {
+    const expected = { accessToken: "new-access-token", refreshToken: "new-refresh-token" };
+    mockApiPost.mockReturnValueOnce({ json: jest.fn(async () => expected) });
+
+    const result = await postReissueToken("old-refresh-token");
+
+    expect(mockApiPost).toHaveBeenCalledWith(apiPaths.authReissue, {
+      json: { refreshToken: "old-refresh-token" },
     });
     expect(result).toEqual(expected);
   });

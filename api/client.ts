@@ -1,6 +1,8 @@
 import * as Sentry from "@sentry/react-native";
 import ky, { HTTPError, type KyInstance, TimeoutError } from "ky";
 import { mockRegistry, resolveFetchImplementation } from "@/api/mock";
+import { apiPaths } from "@/api/paths";
+import { refreshAccessToken } from "@/api/token-refresh";
 import { apiConfig } from "@/constants/api-config";
 import { useSessionStore } from "@/stores/sessionStore";
 
@@ -9,6 +11,33 @@ const fetchImpl = resolveFetchImplementation(mockRegistry);
 type KyRequestError = {
   request?: Request;
 };
+
+const SENSITIVE_LOG_KEYS = new Set(["accessToken", "refreshToken"]);
+
+function maskSensitiveFieldsForLog(value: unknown, seen: WeakSet<object> = new WeakSet()): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => maskSensitiveFieldsForLog(item, seen));
+  }
+
+  if (!value || typeof value !== "object") {
+    return value;
+  }
+
+  if (seen.has(value)) {
+    return "[Circular]";
+  }
+  seen.add(value);
+
+  const record = value as Record<string, unknown>;
+  const masked: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(record)) {
+    masked[key] =
+      SENSITIVE_LOG_KEYS.has(key) && typeof entry === "string"
+        ? "***"
+        : maskSensitiveFieldsForLog(entry, seen);
+  }
+  return masked;
+}
 
 async function readRequestBodyForLog(request: Request): Promise<unknown> {
   if (request.method === "GET" || request.method === "HEAD") {
@@ -22,7 +51,7 @@ async function readRequestBodyForLog(request: Request): Promise<unknown> {
     }
 
     try {
-      return JSON.parse(text) as unknown;
+      return maskSensitiveFieldsForLog(JSON.parse(text));
     } catch {
       return text;
     }
@@ -39,7 +68,7 @@ async function readResponseBodyForLog(response: Response): Promise<unknown> {
     }
 
     try {
-      return JSON.parse(text) as unknown;
+      return maskSensitiveFieldsForLog(JSON.parse(text));
     } catch {
       return text;
     }
@@ -159,6 +188,20 @@ export const api: KyInstance = ky.create({
         logApiDev(`[api] ← ${response.status} ${request.method} ${request.url}`, body);
         return response;
       },
+      async ({ request, response, retryCount }) => {
+        const isReissueRequest = request.url.endsWith(apiPaths.authReissue);
+        if (response.status !== 401 || retryCount > 0 || isReissueRequest) {
+          return;
+        }
+
+        const newAccessToken = await refreshAccessToken();
+        if (!newAccessToken) {
+          return;
+        }
+
+        request.headers.set("Authorization", `Bearer ${newAccessToken}`);
+        return ky.retry();
+      },
     ],
     beforeError: [
       async ({ error }) => {
@@ -181,7 +224,7 @@ export const api: KyInstance = ky.create({
               ? (error as Error & { cause?: unknown }).cause
               : undefined;
           if (cause !== undefined) {
-            logApiDev(`[api] ✕ ${label}`, cause);
+            logApiDev(`[api] ✕ ${label}`, maskSensitiveFieldsForLog(cause));
           } else {
             logApiDev(`[api] ✕ ${label}`);
           }
