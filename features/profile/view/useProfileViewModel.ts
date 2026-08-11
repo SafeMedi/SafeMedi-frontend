@@ -1,6 +1,7 @@
+import Constants from "expo-constants";
 import { router } from "expo-router";
 import { useCallback, useMemo } from "react";
-import { Alert } from "react-native";
+import { Alert, Linking } from "react-native";
 
 import { getApiErrorMessage } from "@/api/error";
 import { useFamilyProfiles } from "@/api/queries/profile";
@@ -10,7 +11,9 @@ import { useHealthInfo, useProfileUser } from "@/stores/userStore";
 import type { FamilyProfile } from "./components/FamilyProfileSection";
 import { FAMILY_AVATAR_GRADIENTS } from "./constants";
 
-const APP_VERSION = "v1.0.0";
+const APP_VERSION = `v${Constants.expoConfig?.version ?? "0.0.0"}`;
+const SETTINGS_GUIDE_URL =
+  "https://jet-captain-13f.notion.site/3a23b2c548ec8094a804c90c59d14e29?pvs=74";
 const WITHDRAW_CONFIRM_MESSAGE =
   "탈퇴 시 계정과 연관된 모든 데이터가 삭제되며 복구할 수 없습니다. 정말 탈퇴하시겠습니까?";
 const AVATAR_GRADIENT_POOL = [
@@ -73,6 +76,14 @@ export function useProfileViewModel() {
     router.push("/profile/health-info");
   };
 
+  const handleOpenSettingsGuide = useCallback(async () => {
+    try {
+      await Linking.openURL(SETTINGS_GUIDE_URL);
+    } catch (error) {
+      console.error("Failed to open external URL:", SETTINGS_GUIDE_URL, error);
+    }
+  }, []);
+
   const handleWithdrawAccount = useCallback(() => {
     Alert.alert("회원 탈퇴", WITHDRAW_CONFIRM_MESSAGE, [
       { text: "취소", style: "cancel" },
@@ -106,5 +117,6 @@ export function useProfileViewModel() {
     handleOpenProfileEdit,
     handleOpenFamilyManage,
     handleOpenHealthInfoDetail,
+    handleOpenSettingsGuide,
   };
 }
