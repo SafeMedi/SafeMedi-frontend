@@ -48,3 +48,6 @@ app-example
 
 # Claude Code personal overrides
 .claude/settings.local.json
+
+# Google Services JSON 파일
+google-services.json
