@@ -617,6 +617,8 @@ describe("api/client", () => {
     });
     expect(logSpy).not.toHaveBeenCalled();
     logSpy.mockRestore();
+  });
+
   it("401 응답을 받으면 accessToken을 재발급받아 헤더를 갱신하고 재시도한다", async () => {
     mockRefreshAccessToken.mockResolvedValue("new-access-token");
     const options = loadClient({ token: "old-access-token" });
