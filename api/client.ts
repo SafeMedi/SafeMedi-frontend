@@ -14,17 +14,27 @@ type KyRequestError = {
 
 const SENSITIVE_LOG_KEYS = new Set(["accessToken", "refreshToken"]);
 
-function maskSensitiveFieldsForLog(value: unknown): unknown {
+function maskSensitiveFieldsForLog(value: unknown, seen: WeakSet<object> = new WeakSet()): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => maskSensitiveFieldsForLog(item, seen));
+  }
+
   if (!value || typeof value !== "object") {
     return value;
   }
 
+  if (seen.has(value)) {
+    return value;
+  }
+  seen.add(value);
+
   const record = value as Record<string, unknown>;
-  const masked: Record<string, unknown> = { ...record };
-  for (const key of Object.keys(masked)) {
-    if (SENSITIVE_LOG_KEYS.has(key) && typeof masked[key] === "string") {
-      masked[key] = "***";
-    }
+  const masked: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(record)) {
+    masked[key] =
+      SENSITIVE_LOG_KEYS.has(key) && typeof entry === "string"
+        ? "***"
+        : maskSensitiveFieldsForLog(entry, seen);
   }
   return masked;
 }
@@ -214,7 +224,7 @@ export const api: KyInstance = ky.create({
               ? (error as Error & { cause?: unknown }).cause
               : undefined;
           if (cause !== undefined) {
-            logApiDev(`[api] ✕ ${label}`, cause);
+            logApiDev(`[api] ✕ ${label}`, maskSensitiveFieldsForLog(cause));
           } else {
             logApiDev(`[api] ✕ ${label}`);
           }

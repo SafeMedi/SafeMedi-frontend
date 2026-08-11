@@ -284,6 +284,32 @@ describe("api/client", () => {
     logSpy.mockRestore();
   });
 
+  it("dev 로그는 중첩된 객체·배열 안의 accessToken/refreshToken도 마스킹한다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient();
+    const request = new Request("https://api.example.com/api/v1/users");
+
+    await options.hooks.afterResponse[0]?.(
+      createAfterResponseState(
+        request,
+        new Response(
+          JSON.stringify({
+            user: { accessToken: "nested-access-token", name: "test" },
+            sessions: [{ refreshToken: "nested-refresh-token" }],
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
+
+    expect(logSpy).toHaveBeenCalledWith("[api] ← 200 GET https://api.example.com/api/v1/users", {
+      user: { accessToken: "***", name: "test" },
+      sessions: [{ refreshToken: "***" }],
+    });
+    logSpy.mockRestore();
+  });
+
   it("beforeError 훅이 HTTP가 아닌 네트워크 오류를 readable하게 로그한다", async () => {
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     (global as { __DEV__?: boolean }).__DEV__ = true;
@@ -321,6 +347,47 @@ describe("api/client", () => {
     expect(logSpy).toHaveBeenCalledWith(
       "[api] ✕ Error · GET https://api.example.com/api/v1/users/me",
     );
+    logSpy.mockRestore();
+  });
+
+  it("beforeError 훅은 네트워크 오류의 cause에 담긴 토큰도 마스킹한다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient();
+    const request = new Request("https://api.example.com/api/v1/users/me");
+    const networkError = Object.assign(new Error("network fail"), {
+      request,
+      cause: { accessToken: "leaked-access-token" },
+    });
+
+    await options.hooks.beforeError[0]?.(createBeforeErrorState(request, networkError));
+
+    expect(logSpy).toHaveBeenCalledWith(
+      "[api] ✕ network fail · GET https://api.example.com/api/v1/users/me",
+      { accessToken: "***" },
+    );
+    logSpy.mockRestore();
+  });
+
+  it("cause에 순환 참조가 있어도 무한 재귀 없이 안전하게 마스킹한다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient();
+    const request = new Request("https://api.example.com/api/v1/users/me");
+    const circularCause: Record<string, unknown> = { accessToken: "leaked-access-token" };
+    circularCause.self = circularCause;
+    const networkError = Object.assign(new Error("network fail"), {
+      request,
+      cause: circularCause,
+    });
+
+    await options.hooks.beforeError[0]?.(createBeforeErrorState(request, networkError));
+
+    const [, loggedCause] = logSpy.mock.calls.find(([message]) =>
+      message.includes("network fail"),
+    ) as [string, { accessToken: string; self: unknown }];
+    expect(loggedCause.accessToken).toBe("***");
+    expect(loggedCause.self).toBe(circularCause);
     logSpy.mockRestore();
   });
 
