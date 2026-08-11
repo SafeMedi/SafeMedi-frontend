@@ -251,6 +251,39 @@ describe("api/client", () => {
     logSpy.mockRestore();
   });
 
+  it("dev 로그는 요청·응답 본문의 accessToken/refreshToken을 마스킹한다", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const options = loadClient({ token: "old-access-token" });
+    const request = new Request("https://api.example.com/api/v1/auth/reissue", {
+      method: "POST",
+      body: JSON.stringify({ refreshToken: "secret-refresh-token" }),
+    });
+
+    await options.hooks.beforeRequest[0]?.(createBeforeRequestState(request));
+
+    expect(logSpy).toHaveBeenCalledWith(
+      "[api] → POST https://api.example.com/api/v1/auth/reissue",
+      { refreshToken: "***" },
+    );
+
+    await options.hooks.afterResponse[0]?.(
+      createAfterResponseState(
+        request,
+        new Response(
+          JSON.stringify({ accessToken: "new-access-token", refreshToken: "new-refresh-token" }),
+          { status: 200 },
+        ),
+      ),
+    );
+
+    expect(logSpy).toHaveBeenCalledWith(
+      "[api] ← 200 POST https://api.example.com/api/v1/auth/reissue",
+      { accessToken: "***", refreshToken: "***" },
+    );
+    logSpy.mockRestore();
+  });
+
   it("beforeError 훅이 HTTP가 아닌 네트워크 오류를 readable하게 로그한다", async () => {
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     (global as { __DEV__?: boolean }).__DEV__ = true;

@@ -11,6 +11,10 @@ async function performRefresh(): Promise<string | null> {
 
   try {
     const response = await postReissueToken(refreshToken);
+    // 응답을 기다리는 동안 로그아웃/재로그인으로 세션이 바뀌었다면 오래된 응답을 버린다.
+    if (useSessionStore.getState().refreshToken !== refreshToken) {
+      return null;
+    }
     useSessionStore.getState().setAccessToken(response.accessToken);
     useSessionStore.getState().setRefreshToken(response.refreshToken);
     return response.accessToken;

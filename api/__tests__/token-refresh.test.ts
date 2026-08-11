@@ -71,6 +71,25 @@ describe("api/token-refresh", () => {
     expect(mockSetRefreshToken).not.toHaveBeenCalled();
   });
 
+  it("응답을 기다리는 동안 세션의 refreshToken이 바뀌면 응답을 버리고 세션을 갱신하지 않는다", async () => {
+    let resolvePromise: (value: { accessToken: string; refreshToken: string }) => void = () => {};
+    mockPostReissueToken.mockReturnValue(
+      new Promise((resolve) => {
+        resolvePromise = resolve;
+      }),
+    );
+    const { refreshAccessToken } = loadTokenRefresh();
+
+    const resultPromise = refreshAccessToken();
+    mockRefreshToken = "changed-during-request";
+    resolvePromise({ accessToken: "new-access-token", refreshToken: "new-refresh-token" });
+    const result = await resultPromise;
+
+    expect(result).toBeNull();
+    expect(mockSetAccessToken).not.toHaveBeenCalled();
+    expect(mockSetRefreshToken).not.toHaveBeenCalled();
+  });
+
   it("동시에 여러 번 호출되어도 재발급 API는 한 번만 호출된다(single-flight)", async () => {
     let resolvePromise: (value: { accessToken: string; refreshToken: string }) => void = () => {};
     mockPostReissueToken.mockReturnValue(

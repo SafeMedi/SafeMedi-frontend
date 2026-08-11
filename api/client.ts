@@ -12,6 +12,23 @@ type KyRequestError = {
   request?: Request;
 };
 
+const SENSITIVE_LOG_KEYS = new Set(["accessToken", "refreshToken"]);
+
+function maskSensitiveFieldsForLog(value: unknown): unknown {
+  if (!value || typeof value !== "object") {
+    return value;
+  }
+
+  const record = value as Record<string, unknown>;
+  const masked: Record<string, unknown> = { ...record };
+  for (const key of Object.keys(masked)) {
+    if (SENSITIVE_LOG_KEYS.has(key) && typeof masked[key] === "string") {
+      masked[key] = "***";
+    }
+  }
+  return masked;
+}
+
 async function readRequestBodyForLog(request: Request): Promise<unknown> {
   if (request.method === "GET" || request.method === "HEAD") {
     return undefined;
@@ -24,7 +41,7 @@ async function readRequestBodyForLog(request: Request): Promise<unknown> {
     }
 
     try {
-      return JSON.parse(text) as unknown;
+      return maskSensitiveFieldsForLog(JSON.parse(text));
     } catch {
       return text;
     }
@@ -41,7 +58,7 @@ async function readResponseBodyForLog(response: Response): Promise<unknown> {
     }
 
     try {
-      return JSON.parse(text) as unknown;
+      return maskSensitiveFieldsForLog(JSON.parse(text));
     } catch {
       return text;
     }
