@@ -47,7 +47,7 @@ Agent({
   run_in_background: false,
   prompt: "Review-only request, do not modify any files. Review the diff
     between `<base>` and the current branch `<현재 브랜치>` in this repo
-    (chart-gym). Check for correctness/security bugs and any deviation
+    (safemedi-frontend). Check for correctness/security bugs and any deviation
     from the conventions in AGENTS.md and CLAUDE.md (arrow-function-only
     ESLint rule, MarketDataProvider abstraction for market data, base-ui
     `render` prop pattern, Promise-based `params`/`searchParams`, Next.js
