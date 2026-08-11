@@ -2,7 +2,6 @@ import { fireEvent, render } from "@testing-library/react-native";
 import { SettingsSection } from "../components/SettingsSection";
 
 const mockMutate = jest.fn();
-const mockPrivacyPress = jest.fn();
 
 let mockSettings:
   | { isMyReminderOn: boolean; isFamilyReminderOn: boolean; isMissedAlertOn: boolean }
@@ -99,7 +98,7 @@ describe("SettingsSection", () => {
   });
 
   it("알림 토글 변경 시 해당 키로 patch mutate를 호출한다", () => {
-    const { getByLabelText } = render(<SettingsSection onPrivacyPress={mockPrivacyPress} />);
+    const { getByLabelText } = render(<SettingsSection />);
 
     fireEvent.press(getByLabelText("복약 알림 토글"));
     expect(mockMutate).toHaveBeenCalledWith({ isMyReminderOn: false });
@@ -109,12 +108,6 @@ describe("SettingsSection", () => {
 
     fireEvent.press(getByLabelText("미복용 알림 토글"));
     expect(mockMutate).toHaveBeenCalledWith({ isMissedAlertOn: false });
-  });
-
-  it("개인정보 보호 행 클릭 시 onPrivacyPress를 호출한다", () => {
-    const { getByLabelText } = render(<SettingsSection onPrivacyPress={mockPrivacyPress} />);
-    fireEvent.press(getByLabelText("row-개인정보 보호"));
-    expect(mockPrivacyPress).toHaveBeenCalledTimes(1);
   });
 
   it("설정 데이터가 없을 때만 토글을 비활성화한다", () => {

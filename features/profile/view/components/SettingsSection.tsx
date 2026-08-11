@@ -8,11 +8,7 @@ import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 import { palette } from "@/constants/design-tokens";
 
-export type SettingsSectionProps = {
-  onPrivacyPress?: () => void;
-};
-
-export function SettingsSection({ onPrivacyPress }: SettingsSectionProps) {
+export function SettingsSection() {
   const { data: settings } = useNotificationSettings();
   const { mutate: updateSettings } = useUpdateNotificationSettings();
   const isSettingsReady = !!settings;
@@ -77,13 +73,6 @@ export function SettingsSection({ onPrivacyPress }: SettingsSectionProps) {
               accessibilityLabel="미복용 알림 토글"
             />
           }
-          hasBorderBottom
-        />
-        <ListLinkRow
-          icon={<Ionicons name="lock-closed-outline" size={18} color={palette.black} />}
-          title="개인정보 보호"
-          showChevron
-          onPress={onPrivacyPress}
         />
       </SurfaceCard>
     </YStack>

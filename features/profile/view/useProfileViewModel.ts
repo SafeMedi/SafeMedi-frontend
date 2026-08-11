@@ -12,8 +12,8 @@ import type { FamilyProfile } from "./components/FamilyProfileSection";
 import { FAMILY_AVATAR_GRADIENTS } from "./constants";
 
 const APP_VERSION = `v${Constants.expoConfig?.version ?? "0.0.0"}`;
-const SETTINGS_GUIDE_URL =
-  "https://jet-captain-13f.notion.site/3a23b2c548ec8094a804c90c59d14e29?pvs=74";
+const TERMS_URL = "https://jet-captain-13f.notion.site/3b93b2c548ec80aa8ec5e1e4db2e2029";
+const PRIVACY_POLICY_URL = "https://jet-captain-13f.notion.site/3a23b2c548ec8094a804c90c59d14e29";
 const WITHDRAW_CONFIRM_MESSAGE =
   "탈퇴 시 계정과 연관된 모든 데이터가 삭제되며 복구할 수 없습니다. 정말 탈퇴하시겠습니까?";
 const AVATAR_GRADIENT_POOL = [
@@ -55,15 +55,6 @@ export function useProfileViewModel() {
     ];
   }, [familySummaries, profileUser.name]);
 
-  const appInfoItems = useMemo(
-    () => [
-      { id: "app-info", label: "앱 정보", trailingText: APP_VERSION },
-      { id: "terms", label: "이용약관" },
-      { id: "privacy-policy", label: "개인정보 처리방침" },
-    ],
-    [],
-  );
-
   const handleOpenProfileEdit = () => {
     router.push("/profile/edit");
   };
@@ -76,13 +67,30 @@ export function useProfileViewModel() {
     router.push("/profile/health-info");
   };
 
-  const handleOpenSettingsGuide = useCallback(async () => {
+  const handleOpenTerms = useCallback(async () => {
     try {
-      await Linking.openURL(SETTINGS_GUIDE_URL);
+      await Linking.openURL(TERMS_URL);
     } catch (error) {
-      console.error("Failed to open external URL:", SETTINGS_GUIDE_URL, error);
+      console.error("Failed to open external URL:", TERMS_URL, error);
     }
   }, []);
+
+  const handleOpenPrivacyPolicy = useCallback(async () => {
+    try {
+      await Linking.openURL(PRIVACY_POLICY_URL);
+    } catch (error) {
+      console.error("Failed to open external URL:", PRIVACY_POLICY_URL, error);
+    }
+  }, []);
+
+  const appInfoItems = useMemo(
+    () => [
+      { id: "app-info", label: "앱 정보", trailingText: APP_VERSION },
+      { id: "terms", label: "이용약관", onPress: handleOpenTerms },
+      { id: "privacy-policy", label: "개인정보 처리방침", onPress: handleOpenPrivacyPolicy },
+    ],
+    [handleOpenTerms, handleOpenPrivacyPolicy],
+  );
 
   const handleWithdrawAccount = useCallback(() => {
     Alert.alert("회원 탈퇴", WITHDRAW_CONFIRM_MESSAGE, [
@@ -117,6 +125,5 @@ export function useProfileViewModel() {
     handleOpenProfileEdit,
     handleOpenFamilyManage,
     handleOpenHealthInfoDetail,
-    handleOpenSettingsGuide,
   };
 }
