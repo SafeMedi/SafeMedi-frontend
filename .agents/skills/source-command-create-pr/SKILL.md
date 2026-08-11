@@ -11,6 +11,10 @@ Use this skill when the user asks to run the migrated source command `create-pr`
 
 PR을 생성하기 전, 아래 순서를 하나도 건너뛰지 않고 실행한다.
 
+## 0단계 — Base 브랜치 결정
+
+가장 먼저 이번 PR의 base 브랜치를 정한다: 기본은 `dev`, `release` → `main` 승격 PR만 예외적으로 `main`. 이후 모든 단계(2단계 병렬 리뷰의 `git diff <base>...HEAD`, 4단계 PR 생성)는 여기서 정한 값을 그대로 사용하고 다시 묻지 않는다.
+
 ## 1단계 — 사전 체크 (`/pr-check`와 동일)
 
 1. `git status` — uncommitted 변경이 없어야 한다. 있으면 커밋 여부를 사용자에게 확인한다 (자동 커밋 금지).
@@ -89,8 +93,8 @@ Agent({
 
 1. 현재 브랜치가 `main`/`dev`가 아닌지 확인한다 (gitflow 규칙상 이 브랜치들에서 직접 작업 금지).
 2. 원격에 브랜치가 push 되어 있는지 확인하고, 안 되어 있으면 push해도 되는지 사용자에게 확인 후 진행한다 (임의 force push 금지).
-3. base 브랜치는 기본적으로 `dev` (release→main 승격 PR만 예외적으로 `main`).
-4. `git log`/`git diff dev...HEAD`로 이번 브랜치의 전체 커밋을 파악해 제목과 본문 초안을 작성한다:
+3. base 브랜치는 0단계에서 이미 결정한 브랜치를 그대로 사용한다 (여기서 다시 정하지 않는다).
+4. `git log`/`git diff <base>...HEAD`로 이번 브랜치의 전체 커밋을 파악해 제목과 본문 초안을 작성한다:
    - 제목: `[SAF-00] type: 작업 내용` 형식 — 실제 Linear 티켓명이 있으면 사용자에게 확인한다.
    - 본문: `.github/PULL_REQUEST_TEMPLATE.md`의 섹션(🎟️ 관련 이슈 / 🔥 작업 배경 / 🛠️ 작업 내용 / 🧪 테스트 / 💬 기타 논의 사항 / ✅ 셀프 체크리스트)을 실제 내용으로 채운다. 빈 placeholder로 남기지 않는다.
 5. `gh pr create`로 생성한다. assignee는 `@me`, base는 위에서 정한 브랜치.
@@ -99,5 +103,6 @@ Agent({
 ## 금지 사항
 
 - `--no-verify`, hook 우회, force push 금지.
-- 1단계·2단계 결과를 조용히 넘기지 않는다 — 매 단계 결과를 사용자에게 보고한다.
+- 1단계·2단계·3단계 결과를 조용히 넘기지 않는다 — 매 단계 결과를 사용자에게 보고한다.
+- 2단계(병렬 코드 리뷰)를 생략하고 곧바로 PR을 생성하지 않는다.
 - 관련 없는 파일 변경을 커밋·PR에 포함시키지 않는다.
