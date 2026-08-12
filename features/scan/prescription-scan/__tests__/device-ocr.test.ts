@@ -217,10 +217,10 @@ describe("device-ocr", () => {
   it("Android에서는 file:// 스킴을 제거하고 네이티브 OCR 모듈에 전달한다", async () => {
     jest.replaceProperty(Platform, "OS", "android");
 
-    await extractDraftFromImageUri("file:///data/user/0/com.safeMedi/cache/ImagePicker/x.jpeg");
+    await extractDraftFromImageUri("file:///data/user/0/com.safemedi/cache/ImagePicker/x.jpeg");
 
     expect(mockExtractTextFromImage).toHaveBeenCalledWith(
-      "/data/user/0/com.safeMedi/cache/ImagePicker/x.jpeg",
+      "/data/user/0/com.safemedi/cache/ImagePicker/x.jpeg",
     );
   });
 

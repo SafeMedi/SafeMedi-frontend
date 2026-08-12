@@ -82,7 +82,7 @@ describe("app.config", () => {
           },
         },
         android: {
-          package: "com.safeMedi",
+          package: "com.safemedi",
         },
       } as ExpoConfig),
     );
@@ -128,7 +128,7 @@ describe("app.config", () => {
     expect(result.ios?.infoPlist).not.toHaveProperty("NSAppTransportSecurity");
     expect(result.android).toEqual(
       expect.objectContaining({
-        package: "com.safeMedi",
+        package: "com.safemedi",
         googleServicesFile: "/tmp/google-services.json",
       }),
     );
