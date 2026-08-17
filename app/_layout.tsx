@@ -18,6 +18,8 @@ const sentryEnvironment =
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
   environment: sentryEnvironment,
+  // development 환경 이벤트는 Sentry로 전송하지 않는다 (prd, preview만 추적).
+  enabled: sentryEnvironment !== "development",
   // production은 트랜잭션 수집량을 낮춰 Sentry 쿼터를 아끼고, 그 외 환경은 테스트가 쉽도록 전량 수집한다.
   tracesSampleRate: sentryEnvironment === "production" ? 0.2 : 1.0,
   integrations: [Sentry.expoRouterIntegration()],
