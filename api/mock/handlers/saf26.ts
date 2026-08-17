@@ -745,19 +745,19 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
             fraction: "2/3",
             items: [
               {
-                recordId: 500,
+                recordIds: [500],
                 prescriptionTitle: "두통/해열 약물 관리",
                 scheduledTime: "08:00",
                 status: "SUCCESS",
               },
               {
-                recordId: 501,
+                recordIds: [501],
                 prescriptionTitle: "위장 약물 관리",
                 scheduledTime: "08:00",
                 status: "SUCCESS",
               },
               {
-                recordId: 502,
+                recordIds: [502],
                 prescriptionTitle: "혈압 약물 관리",
                 scheduledTime: "14:00",
                 status: "PENDING",
@@ -786,7 +786,7 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
       summary: { totalCount: 3, takenCount: 1, fraction: "1/3" },
       records: [
         {
-          recordId: 500,
+          recordIds: [500],
           prescriptionTitle: "감기약",
           medicationNames: ["플루티카손 (스프레이)", "타이레놀 500mg"],
           scheduledTime: "08:00",
@@ -795,7 +795,7 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
           isGoldenTime: false,
         },
         {
-          recordId: 501,
+          recordIds: [501],
           prescriptionTitle: "감기약",
           medicationNames: ["플루티카손 (스프레이)", "타이레놀 500mg"],
           scheduledTime: "13:00",
@@ -804,7 +804,7 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
           isGoldenTime: true,
         },
         {
-          recordId: 502,
+          recordIds: [502],
           prescriptionTitle: "감기약",
           medicationNames: ["플루티카손 (스프레이)", "타이레놀 500mg"],
           scheduledTime: "19:00",
