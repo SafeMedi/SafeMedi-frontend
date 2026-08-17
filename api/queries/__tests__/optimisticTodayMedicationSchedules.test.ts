@@ -56,6 +56,14 @@ describe("optimisticTodayMedicationSchedules", () => {
     expect(updated.summary.completionRate).toBe(75);
   });
 
+  it("PENDING(취소) 처리 시 완료된 스케줄을 대기 상태로 되돌리고 completedCount를 감소시킨다", () => {
+    const updated = applyOptimisticMedicationRecordUpdate(baseData, 3, { status: "PENDING" });
+
+    expect(updated.schedules[2]?.displayStatus).toBe("WAITING");
+    expect(updated.summary.completedCount).toBe(0);
+    expect(updated.summary.completionRate).toBe(0);
+  });
+
   it("한 약봉투(스케줄)에 recordIds가 여러 개 있어도 봉투 단위로 1건만 완료 처리한다", () => {
     // GET /medication-records/today 명세 예시와 동일한 형태: 08:00 봉투는 drugCount 2,
     // recordIds [101, 102]를 함께 갖고 있고, 완료 시 completedCount는 recordId 개수(2)가 아니라
