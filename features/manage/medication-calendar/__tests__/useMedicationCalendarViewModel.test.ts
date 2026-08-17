@@ -38,7 +38,7 @@ const mockDailyRecords = {
   },
   records: [
     {
-      recordIds: [500],
+      recordIds: [499],
       prescriptionTitle: "신장내과 처방전",
       medicationNames: ["타이레놀정 500mg"],
       scheduledTime: "08:00",
@@ -46,7 +46,7 @@ const mockDailyRecords = {
       status: "SUCCESS" as const,
     },
     {
-      recordIds: [501],
+      recordIds: [500, 501],
       prescriptionTitle: "신장내과 처방전",
       medicationNames: ["오메프라졸캡슐 20mg"],
       scheduledTime: "08:00",
