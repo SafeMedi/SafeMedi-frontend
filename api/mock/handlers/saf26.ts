@@ -11,7 +11,6 @@ const RX = {
   familyInvitation: /^\/api\/v1\/family-invitations\/([^/]+)$/,
   familyInvitationAccept: /^\/api\/v1\/family-invitations\/([^/]+)\/accept$/,
   prescriptionId: /^\/api\/v1\/prescriptions\/(\d+)$/,
-  medicationRecordId: /^\/api\/v1\/medication-records\/(\d+)$/,
 };
 
 function parsePathId(path: string, rx: RegExp): number | undefined {
@@ -680,34 +679,38 @@ export function registerSaf26Mocks(registry: MockRegistry): void {
   );
 
   // --- Medication records ---
-  registry.registerMatch(
-    "PATCH",
-    (p) => RX.medicationRecordId.test(p),
-    (ctx) => {
-      const id = parsePathId(ctx.path, RX.medicationRecordId);
-      const body = ctx.jsonBody as { status?: string };
-      if (id === 99999) {
-        return Response.json(
-          { code: "REC_001", message: "존재하지 않는 복약 기록 ID" },
-          { status: 404 },
-        );
-      }
-      if (id === 888) {
-        return Response.json(
-          { code: "REC_002", message: "해당 시간에 이미 복용 처리가 완료된 기록입니다." },
-          { status: 409 },
-        );
-      }
-      return {
-        recordId: id ?? 500,
-        prescriptionId: 10,
-        scheduledAt: "2026-04-06T08:00:00",
-        takenAt: body?.status === "SUCCESS" ? "2026-04-06T08:05:30" : null,
-        status: body?.status ?? "SUCCESS",
-      };
-    },
-    { label: "PATCH /api/v1/medication-records/:recordId" },
-  );
+  registry.register("PATCH", apiPaths.medicationRecords, (ctx) => {
+    const body = ctx.jsonBody as { recordIds?: number[]; status?: string };
+    const recordIds = body?.recordIds ?? [];
+
+    if (recordIds.length === 0) {
+      return Response.json(
+        { code: "VAL_001", message: "요청 값이 올바르지 않습니다." },
+        { status: 400 },
+      );
+    }
+    if (recordIds.includes(99999)) {
+      return Response.json(
+        { code: "REC_001", message: "존재하지 않거나 본인 소유가 아닌 복약 기록이 있습니다." },
+        { status: 404 },
+      );
+    }
+    if (recordIds.includes(888)) {
+      return Response.json(
+        { code: "REC_002", message: "해당 시간에 이미 복용 처리가 완료된 기록입니다." },
+        { status: 409 },
+      );
+    }
+
+    return {
+      recordIds,
+      prescriptionId: 10,
+      scheduledAt: "2026-04-06T08:00:00",
+      drugNames: ["타이레놀", "아스피린"],
+      takenAt: body?.status === "SUCCESS" ? "2026-04-06T08:05:30" : null,
+      status: body?.status ?? "SUCCESS",
+    };
+  });
 
   registry.register("GET", apiPaths.medicationRecords, (ctx) => {
     const type = ctx.searchParams.get("type");
